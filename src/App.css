@@ -1,0 +1,138 @@
+/* Estilos generales de la App */
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Estilos para los filtros de la página de inicio (Home) */
+.filters-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+  padding: 0 20px;
+  flex-wrap: wrap; /* Opcional: para que en pantallas pequeñas los filtros no se rompan */
+}
+
+/* Estilos para el filtro de búsqueda */
+.search-input {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 250px;
+  max-width: 100%;
+  margin-right: 20px;
+}
+
+/* Estilos para el filtro de categoría */
+.category-select {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 200px;
+  max-width: 100%;
+  cursor: pointer;
+}
+
+/* Estilos para el título de la página */
+h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Estilos para la sección de carga */
+.loading {
+  font-size: 1.2rem;
+  color: #888;
+  margin-top: 20px;
+}
+
+/* Estilos para el mensaje cuando no hay productos */
+.no-products {
+  font-size: 1.2rem;
+  color: #888;
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+/* Estilos para el grid de productos */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+  padding: 0 20px; /* Mejor que padding:20px para no empujar demasiado desde arriba */
+}
+
+/* Estilos para cada tarjeta de producto */
+.product-card {
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  background-color: #fff; /* Fondo blanco */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Ligera sombra */
+  transition: transform 0.2s ease-in-out;
+}
+
+.product-card:hover {
+  transform: scale(1.02);
+}
+
+/* Estilos para la imagen del producto */
+.product-card img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* Estilos para el nombre del producto */
+.product-card h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 10px 0 5px;
+}
+
+/* Estilos para la descripción del producto */
+.product-card p {
+  font-size: 14px;
+  color: #555;
+}
