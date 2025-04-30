@@ -1,14 +1,15 @@
 // src/components/ImageUploader.js
-import React, { useState } from 'react';
-import supabase from '../supabase'; // ✅ Importar el cliente configurado correctamente
 
+import React, { useState } from 'react';
+import supabase from '../supabase';
 
 const ImageUploader = ({ setImageUrls }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  
-  // Función para subir las imágenes
+
   const uploadImages = async (files) => {
+    if (!files.length) return;
+
     setIsUploading(true);
     const uploadedUrls = [];
 
@@ -16,30 +17,34 @@ const ImageUploader = ({ setImageUrls }) => {
       const file = files[i];
       const fileName = `${Date.now()}-${file.name}`;
 
-      // Subir la imagen a Supabase Storage (bucket 'products')
-      const { data, error } = await supabase.storage
-        .from('products')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) {
-        console.error("Error uploading image:", error.message);
-      } else {
-        // Si la imagen se sube correctamente, obtenemos la URL pública
-        const publicUrl = supabase.storage
+      try {
+        const { data, error } = await supabase.storage
           .from('products')
-          .getPublicUrl(fileName).publicURL;
-        
-        uploadedUrls.push(publicUrl);
-      }
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
 
-      // Actualizar el progreso (opcional)
-      setProgress(Math.round(((i + 1) / files.length) * 100));
+        if (error) {
+          console.error(`Error subiendo imagen ${file.name}:`, error.message);
+        } else {
+          const publicUrl = supabase
+            .storage
+            .from('products')
+            .getPublicUrl(data.path)
+            .publicURL;
+
+          if (publicUrl) {
+            uploadedUrls.push(publicUrl);
+          }
+        }
+
+        setProgress(Math.round(((i + 1) / files.length) * 100));
+      } catch (err) {
+        console.error('Error inesperado al subir imagen:', err.message);
+      }
     }
 
-    // Llamamos a setImageUrls para pasar las URLs al componente padre
     setImageUrls(uploadedUrls);
     setIsUploading(false);
   };

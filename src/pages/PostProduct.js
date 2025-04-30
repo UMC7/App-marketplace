@@ -1,6 +1,8 @@
+// src/pages/PostProduct.js
+
 import React, { useState, useEffect } from 'react';
-import supabase from '../supabase';  // Asegúrate de que supabase esté correctamente configurado
-import ImageUploader from '../components/ImageUploader';  // Componente para subir imágenes
+import supabase from '../supabase';
+import ImageUploader from '../components/ImageUploader';
 
 const PostProduct = () => {
   const [uploading, setUploading] = useState(false);
@@ -8,32 +10,43 @@ const PostProduct = () => {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [categoryId, setCategoryId] = useState(''); // Para manejar la categoría seleccionada
+  const [categoryId, setCategoryId] = useState('');
   const [photos, setPhotos] = useState([]);
   const [mainPhoto, setMainPhoto] = useState('');
-  const [ownerId, setOwnerId] = useState(null); // Almacenamos el ID del propietario
-
+  const [ownerId, setOwnerId] = useState(null);
   const isUploading = uploading;
 
   useEffect(() => {
-    // Obtener el usuario autenticado al cargar el componente
     const fetchUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Error al obtener el usuario:', error);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.error('Error al obtener el usuario:', authError.message);
         alert('Error al obtener el usuario.');
         return;
       }
 
-      if (user) {
-        setOwnerId(user.id); // Asignamos el ID del propietario desde Supabase
-      } else {
+      if (!authData?.user) {
         alert('No estás autenticado. Debes iniciar sesión primero.');
+        return;
       }
+
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (userError) {
+        console.error('Error al buscar usuario registrado:', userError.message);
+        alert('Tu cuenta no está completamente registrada.');
+        return;
+      }
+
+      setOwnerId(userData.id);
     };
 
     fetchUser();
-  }, []); // Esto solo se ejecutará al montar el componente
+  }, []);
 
   const handleMainPhotoUpload = async (e) => {
     const file = e.target.files[0];
@@ -43,6 +56,7 @@ const PostProduct = () => {
 
     try {
       setUploading(true);
+
       const { data, error } = await supabase.storage
         .from('products')
         .upload(fileName, file, {
@@ -51,20 +65,19 @@ const PostProduct = () => {
         });
 
       if (error) {
-        throw new Error(`Error uploading main photo: ${error.message}`);
+        throw new Error(`Error subiendo imagen: ${error.message}`);
       }
+
       if (!data) {
-        throw new Error('No se pudo obtener data al subir la imagen.');
+        throw new Error('No se pudo obtener data del archivo subido.');
       }
-      const publicUrl = supabase.storage
-        .from('products')
-        .getPublicUrl(data.path).publicURL;
 
-      setMainPhoto(publicUrl);
-      console.log("Foto principal cargada correctamente:", publicUrl);
+      const publicURL = `${supabase.storageUrl}/object/public/products/${fileName}`;
 
+      setMainPhoto(publicURL);
+      console.log("Foto principal cargada correctamente:", publicURL);
     } catch (error) {
-      console.error("Error al cargar la foto principal:", error);
+      console.error("Error al cargar la foto principal:", error.message);
       alert("Error al subir la foto principal.");
     } finally {
       setUploading(false);
@@ -79,7 +92,11 @@ const PostProduct = () => {
       return;
     }
     if (!ownerId) {
-      alert('No se ha encontrado un propietario para este producto.');
+      alert('No se ha encontrado un propietario válido para este producto.');
+      return;
+    }
+    if (!mainPhoto) {
+      alert('Por favor, sube una foto principal.');
       return;
     }
 
@@ -90,11 +107,11 @@ const PostProduct = () => {
           {
             name,
             description,
-            price,
-            quantity,
-            category_id: categoryId,
+            price: parseFloat(price),
+            quantity: parseInt(quantity, 10),
+            category_id: parseInt(categoryId, 10), // 👈 casteamos para asegurar
             owner: ownerId,
-            owneremail: 'usuario@ejemplo.com', // Este es un valor fijo; ajusta según lo necesites
+            owneremail: '', 
             photos,
             mainphoto: mainPhoto,
           }
@@ -103,7 +120,7 @@ const PostProduct = () => {
       if (error) {
         console.error("Error al guardar el producto:", error.message);
         alert(`Error al guardar el producto: ${error.message}`);
-      } else {
+      } else if (data && data.length > 0) {
         console.log('Producto guardado correctamente:', data);
         alert('Producto guardado correctamente');
         setName('');
@@ -113,10 +130,13 @@ const PostProduct = () => {
         setCategoryId('');
         setPhotos([]);
         setMainPhoto('');
+      } else {
+        console.error("No se devolvió ningún producto al guardar.");
+        alert('Hubo un error desconocido al guardar el producto.');
       }
     } catch (error) {
       console.error('Error inesperado:', error.message);
-      alert('Hubo un error al guardar el producto.');
+      alert('Hubo un error inesperado al guardar el producto.');
     }
   };
 
@@ -136,6 +156,7 @@ const PostProduct = () => {
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          required
         />
 
         <label>Precio:</label>
@@ -144,6 +165,7 @@ const PostProduct = () => {
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           required
+          min="0"
         />
 
         <label>Cantidad:</label>
@@ -152,6 +174,7 @@ const PostProduct = () => {
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
           required
+          min="1"
         />
 
         <label>Categoría:</label>
@@ -177,6 +200,7 @@ const PostProduct = () => {
           type="file"
           accept="image/*"
           onChange={handleMainPhotoUpload}
+          required
         />
 
         <button type="submit" disabled={isUploading}>

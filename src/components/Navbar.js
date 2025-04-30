@@ -1,4 +1,5 @@
 // src/components/Navbar.js
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -9,9 +10,16 @@ function Navbar() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-    window.location.reload(); // Refrescar para limpiar AuthContext
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error al cerrar sesión:', error.message);
+      }
+      navigate('/login');
+      window.location.reload();
+    } catch (err) {
+      console.error('Error inesperado al cerrar sesión:', err.message);
+    }
   };
 
   return (
@@ -24,7 +32,7 @@ function Navbar() {
         {currentUser ? (
           <>
             <Link to="/profile" style={styles.navLink}>Perfil</Link>
-            <Link to="/post-product" style={styles.navLink}>Publicar Producto</Link> {/* ✅ Nuevo enlace */}
+            <Link to="/post-product" style={styles.navLink}>Publicar Producto</Link>
             <button onClick={handleLogout} style={styles.logoutButton}>Cerrar sesión</button>
           </>
         ) : (
@@ -47,16 +55,20 @@ const styles = {
     backgroundColor: '#0077cc',
     color: 'white',
   },
-  logo: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: 'white',
-    textDecoration: 'none',
+  leftSection: {
+    display: 'flex',
+    alignItems: 'center',
   },
   rightSection: {
     display: 'flex',
     gap: '15px',
     alignItems: 'center',
+  },
+  logo: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: 'white',
+    textDecoration: 'none',
   },
   navLink: {
     color: 'white',
