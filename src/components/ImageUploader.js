@@ -3,63 +3,59 @@
 import React, { useState } from 'react';
 import supabase from '../supabase';
 
-const ImageUploader = ({ setImageUrls }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+function ImageUploader({ onUpload }) {
+  const [files, setFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
-  const uploadImages = async (files) => {
-    if (!files.length) return;
+  const handleFileChange = (e) => {
+    setFiles(Array.from(e.target.files));
+  };
 
-    setIsUploading(true);
+  const uploadImages = async () => {
+    setUploading(true);
     const uploadedUrls = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    for (const file of files) {
       const fileName = `${Date.now()}-${file.name}`;
+      const filePath = `additional/${fileName}`;
 
-      try {
-        const { data, error } = await supabase.storage
-          .from('products')
-          .upload(fileName, file, {
-            cacheControl: '3600',
-            upsert: false,
-          });
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type,
+        });
 
-        if (error) {
-          console.error(`Error subiendo imagen ${file.name}:`, error.message);
-        } else {
-          const publicUrl = supabase
-            .storage
-            .from('products')
-            .getPublicUrl(data.path)
-            .publicURL;
+      if (uploadError) {
+        console.error('Error al subir imagen:', uploadError.message);
+        continue;
+      }
 
-          if (publicUrl) {
-            uploadedUrls.push(publicUrl);
-          }
-        }
+      const { data: publicUrlData } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath);
 
-        setProgress(Math.round(((i + 1) / files.length) * 100));
-      } catch (err) {
-        console.error('Error inesperado al subir imagen:', err.message);
+      if (publicUrlData?.publicUrl) {
+        uploadedUrls.push(publicUrlData.publicUrl);
+        console.log('Imagen subida:', publicUrlData.publicUrl);
+      } else {
+        console.warn(`No se obtuvo publicURL para ${fileName}`);
       }
     }
 
-    setImageUrls(uploadedUrls);
-    setIsUploading(false);
+    setUploading(false);
+    onUpload(uploadedUrls);
   };
 
   return (
     <div>
-      <input
-        type="file"
-        multiple
-        accept="image/*"
-        onChange={(e) => uploadImages(e.target.files)}
-      />
-      {isUploading && <p>Subiendo imágenes... {progress}%</p>}
+      <input type="file" multiple onChange={handleFileChange} />
+      <button onClick={uploadImages} disabled={uploading}>
+        {uploading ? 'Subiendo...' : 'Subir imágenes'}
+      </button>
     </div>
   );
-};
+}
 
 export default ImageUploader;

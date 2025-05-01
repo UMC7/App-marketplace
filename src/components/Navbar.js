@@ -1,26 +1,34 @@
-// src/components/Navbar.js
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCarrito } from '../context/CarritoContext';
 import supabase from '../supabase';
 
 function Navbar() {
   const { currentUser } = useAuth();
+  const { cartItems } = useCarrito();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
+      // ⚠️ Forzar recuperación de sesión antes de cerrar sesión
+      await supabase.auth.getSession();
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error al cerrar sesión:', error.message);
+        alert('Error al cerrar sesión.');
+        return;
       }
+
       navigate('/login');
-      window.location.reload();
     } catch (err) {
       console.error('Error inesperado al cerrar sesión:', err.message);
+      alert('Error inesperado.');
     }
   };
+
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <nav style={styles.navbar}>
@@ -33,6 +41,10 @@ function Navbar() {
           <>
             <Link to="/profile" style={styles.navLink}>Perfil</Link>
             <Link to="/post-product" style={styles.navLink}>Publicar Producto</Link>
+            <Link to="/favorites" style={styles.navLink}>Favoritos</Link>
+            <Link to="/cart" style={styles.navLink}>
+              Carrito {totalItems > 0 && <span style={styles.badge}>{totalItems}</span>}
+            </Link>
             <button onClick={handleLogout} style={styles.logoutButton}>Cerrar sesión</button>
           </>
         ) : (
@@ -74,6 +86,7 @@ const styles = {
     color: 'white',
     textDecoration: 'none',
     fontSize: '16px',
+    position: 'relative',
   },
   logoutButton: {
     backgroundColor: 'transparent',
@@ -82,6 +95,14 @@ const styles = {
     padding: '5px 10px',
     borderRadius: '4px',
     cursor: 'pointer',
+  },
+  badge: {
+    backgroundColor: 'red',
+    color: 'white',
+    borderRadius: '50%',
+    padding: '2px 8px',
+    fontSize: '12px',
+    marginLeft: '5px',
   },
 };
 

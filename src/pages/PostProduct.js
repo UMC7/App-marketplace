@@ -14,35 +14,19 @@ const PostProduct = () => {
   const [photos, setPhotos] = useState([]);
   const [mainPhoto, setMainPhoto] = useState('');
   const [ownerId, setOwnerId] = useState(null);
-  const isUploading = uploading;
+  const [ownerEmail, setOwnerEmail] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
       const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError) {
-        console.error('Error al obtener el usuario:', authError.message);
-        alert('Error al obtener el usuario.');
+      if (authError || !authData?.user) {
+        console.error('Error al obtener el usuario:', authError?.message || 'Usuario no autenticado');
+        alert('Debes iniciar sesión primero.');
         return;
       }
 
-      if (!authData?.user) {
-        alert('No estás autenticado. Debes iniciar sesión primero.');
-        return;
-      }
-
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', authData.user.id)
-        .single();
-
-      if (userError) {
-        console.error('Error al buscar usuario registrado:', userError.message);
-        alert('Tu cuenta no está completamente registrada.');
-        return;
-      }
-
-      setOwnerId(userData.id);
+      setOwnerId(authData.user.id);
+      setOwnerEmail(authData.user.email);
     };
 
     fetchUser();
@@ -53,29 +37,29 @@ const PostProduct = () => {
     if (!file) return;
 
     const fileName = `main-${Date.now()}-${file.name}`;
+    const filePath = `${fileName}`;
 
     try {
       setUploading(true);
 
       const { data, error } = await supabase.storage
         .from('products')
-        .upload(fileName, file, {
+        .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false,
         });
 
-      if (error) {
-        throw new Error(`Error subiendo imagen: ${error.message}`);
+      if (error || !data?.path) {
+        throw new Error(error?.message || 'Error al subir la imagen.');
       }
 
-      if (!data) {
-        throw new Error('No se pudo obtener data del archivo subido.');
-      }
+      const { publicUrl } = supabase
+        .storage
+        .from('products')
+        .getPublicUrl(data.path).data;
 
-      const publicURL = `${supabase.storageUrl}/object/public/products/${fileName}`;
-
-      setMainPhoto(publicURL);
-      console.log("Foto principal cargada correctamente:", publicURL);
+      setMainPhoto(publicUrl);
+      console.log("Foto principal cargada correctamente:", publicUrl);
     } catch (error) {
       console.error("Error al cargar la foto principal:", error.message);
       alert("Error al subir la foto principal.");
@@ -87,35 +71,27 @@ const PostProduct = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!categoryId) {
-      alert('Por favor, selecciona una categoría.');
-      return;
-    }
-    if (!ownerId) {
-      alert('No se ha encontrado un propietario válido para este producto.');
-      return;
-    }
-    if (!mainPhoto) {
-      alert('Por favor, sube una foto principal.');
-      return;
-    }
+    if (!categoryId) return alert('Por favor, selecciona una categoría.');
+    if (!ownerId || !ownerEmail) return alert('Usuario inválido.');
+    if (!mainPhoto) return alert('Por favor, sube una foto principal.');
+
+    console.log("Fotos adicionales subidas:", photos);
 
     try {
       const { data, error } = await supabase
         .from('products')
-        .insert([
-          {
-            name,
-            description,
-            price: parseFloat(price),
-            quantity: parseInt(quantity, 10),
-            category_id: parseInt(categoryId, 10), // 👈 casteamos para asegurar
-            owner: ownerId,
-            owneremail: '', 
-            photos,
-            mainphoto: mainPhoto,
-          }
-        ]);
+        .insert([{
+          name,
+          description,
+          price: parseFloat(price),
+          quantity: parseInt(quantity, 10),
+          category_id: parseInt(categoryId, 10),
+          owner: ownerId,
+          owneremail: ownerEmail,
+          photos: photos,
+          mainphoto: mainPhoto,
+        }])
+        .select('*');
 
       if (error) {
         console.error("Error al guardar el producto:", error.message);
@@ -193,7 +169,7 @@ const PostProduct = () => {
         </select>
 
         <label>Fotos adicionales:</label>
-        <ImageUploader setImageUrls={setPhotos} />
+        <ImageUploader onUpload={(urls) => setPhotos(urls)} />
 
         <label>Foto principal:</label>
         <input
@@ -203,8 +179,8 @@ const PostProduct = () => {
           required
         />
 
-        <button type="submit" disabled={isUploading}>
-          {isUploading ? 'Subiendo imágenes...' : 'Guardar Producto'}
+        <button type="submit" disabled={uploading}>
+          {uploading ? 'Subiendo imágenes...' : 'Guardar Producto'}
         </button>
       </form>
     </div>

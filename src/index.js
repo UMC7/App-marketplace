@@ -1,20 +1,21 @@
-// src/index.js
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css'; // CSS global
+import './index.css';
 import App from './App';
-import { AuthProvider } from './context/AuthContext'; // Contexto de autenticación
-import reportWebVitals from './reportWebVitals'; // Medición de rendimiento opcional
+import { AuthProvider } from './context/AuthContext';
+import { CarritoProvider } from './context/CarritoContext'; // ✅ nuevo
+
+import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <AuthProvider>
-      <App />
+      <CarritoProvider> {/* ✅ envolvemos la app en el proveedor del carrito */}
+        <App />
+      </CarritoProvider>
     </AuthProvider>
   </React.StrictMode>
 );
 
-// Si quieres medir el rendimiento de tu app, pasa una función a reportWebVitals
 reportWebVitals();

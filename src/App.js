@@ -16,6 +16,9 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import PostProduct from './pages/PostProduct';
+import ProductDetailPage from './pages/ProductDetailPage';
+import FavoritesPage from './pages/FavoritesPage';
+import CartPage from './pages/CartPage'; // ✅ nueva importación
 
 function App() {
   const { currentUser, loading } = useAuth();
@@ -39,6 +42,7 @@ function App() {
           path="/register"
           element={!currentUser ? <RegisterPage /> : <Navigate to="/profile" replace />}
         />
+        <Route path="/product/:id" element={<ProductDetailPage />} />
 
         {/* Rutas protegidas */}
         <Route
@@ -57,6 +61,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/favorites"
+          element={
+            <ProtectedRoute>
+              <FavoritesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <CartPage />
+            </ProtectedRoute>
+          }
+        /> {/* ✅ nueva ruta protegida */}
 
         {/* Fallback para rutas no encontradas */}
         <Route path="*" element={<Navigate to="/" replace />} />
