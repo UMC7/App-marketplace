@@ -1,5 +1,3 @@
-// src/pages/FavoritesPage.js
-
 import React, { useEffect, useState } from 'react';
 import supabase from '../supabase';
 import { useAuth } from '../context/AuthContext';
@@ -76,11 +74,17 @@ function FavoritesPage() {
       ) : (
         <div className="products-grid">
           {favorites.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onRemoveFavorite={handleRemoveFavorite}
-            />
+            <div key={product.id}>
+              {product.status === 'paused' ? (
+                <p style={{ color: 'red' }}>Producto Pausado. Solo puedes eliminarlo de tu lista.</p>
+              ) : (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onRemoveFavorite={handleRemoveFavorite}
+                />
+              )}
+            </div>
           ))}
         </div>
       )}

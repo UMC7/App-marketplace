@@ -1,52 +1,161 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import supabase from '../supabase';
+import { useAuth } from './AuthContext';
 
 const CarritoContext = createContext();
 
-export const useCarrito = () => useContext(CarritoContext);
+export function useCarrito() {
+  return useContext(CarritoContext);
+}
 
-export const CarritoProvider = ({ children }) => {
+export function CarritoProvider({ children }) {
+  const { currentUser } = useAuth();
   const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Persistencia en localStorage (opcional)
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+    if (currentUser) {
+      fetchCarrito();
+    } else {
+      setCartItems([]);
+      setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+  const fetchCarrito = async () => {
+    setLoading(true);
 
-  const addToCart = (product, quantity = 1) => {
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      } else {
-        return [...prev, { ...product, quantity }];
+    const { data, error } = await supabase
+      .from('cart')
+      .select(`
+        *,
+        products (
+          id,
+          name,
+          price,
+          quantity,
+          mainphoto,
+          status
+        )
+      `)
+      .eq('user_id', currentUser.id);
+
+    if (error) {
+      console.error('Error al obtener el carrito:', error.message);
+    } else {
+      const formattedCart = data.map((item) => ({
+        id: item.product_id,
+        quantity: item.quantity,
+        price: item.products?.price,
+        name: item.products?.name,
+        stock: item.products?.quantity,
+        mainphoto: item.products?.mainphoto,
+        status: item.products?.status,
+      }));
+      setCartItems(formattedCart);
+    }
+
+    setLoading(false);
+  };
+
+  const addToCart = async (product, quantity = 1) => {
+    if (!currentUser) return;
+
+    const { data: existingItem, error: fetchError } = await supabase
+      .from('cart')
+      .select('id, quantity')
+      .eq('user_id', currentUser.id)
+      .eq('product_id', product.id)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('Error verificando existencia en carrito:', fetchError.message);
+      return;
+    }
+
+    if (existingItem) {
+      const newQuantity = existingItem.quantity + quantity;
+      if (newQuantity > product.quantity) {
+        alert(`Solo hay ${product.quantity} unidades disponibles.`);
+        return;
       }
-    });
+
+      const { error: updateError } = await supabase
+        .from('cart')
+        .update({ quantity: newQuantity })
+        .eq('id', existingItem.id);
+
+      if (updateError) {
+        console.error('Error actualizando carrito:', updateError.message);
+        return;
+      }
+    } else {
+      if (quantity > product.quantity) {
+        alert(`Solo hay ${product.quantity} unidades disponibles.`);
+        return;
+      }
+
+      const { error: insertError } = await supabase
+        .from('cart')
+        .insert({
+          user_id: currentUser.id,
+          product_id: product.id,
+          quantity,
+        });
+
+      if (insertError) {
+        console.error('Error agregando al carrito:', insertError.message);
+        return;
+      }
+    }
+
+    fetchCarrito();
   };
 
-  const updateQuantity = (productId, quantity) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
-      )
-    );
+  const updateQuantity = async (productId, newQty) => {
+    if (!currentUser) return;
+
+    const { error } = await supabase
+      .from('cart')
+      .update({ quantity: newQty })
+      .eq('user_id', currentUser.id)
+      .eq('product_id', productId);
+
+    if (error) {
+      console.error('Error actualizando cantidad:', error.message);
+    }
+
+    fetchCarrito();
   };
 
-  const removeFromCart = (productId) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== productId));
+  const removeFromCart = async (productId) => {
+    if (!currentUser) return;
+
+    const { error } = await supabase
+      .from('cart')
+      .delete()
+      .eq('user_id', currentUser.id)
+      .eq('product_id', productId);
+
+    if (error) {
+      console.error('Error eliminando del carrito:', error.message);
+    }
+
+    fetchCarrito();
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
+    if (!currentUser) return;
+
+    const { error } = await supabase
+      .from('cart')
+      .delete()
+      .eq('user_id', currentUser.id);
+
+    if (error) {
+      console.error('Error al limpiar el carrito:', error.message);
+    }
+
     setCartItems([]);
   };
 
@@ -54,13 +163,15 @@ export const CarritoProvider = ({ children }) => {
     <CarritoContext.Provider
       value={{
         cartItems,
+        setCartItems,
         addToCart,
         updateQuantity,
         removeFromCart,
         clearCart,
+        loading,
       }}
     >
       {children}
     </CarritoContext.Provider>
   );
-};
+}

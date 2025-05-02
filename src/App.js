@@ -1,5 +1,3 @@
-// src/App.js
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -18,7 +16,8 @@ import ProfilePage from './pages/ProfilePage';
 import PostProduct from './pages/PostProduct';
 import ProductDetailPage from './pages/ProductDetailPage';
 import FavoritesPage from './pages/FavoritesPage';
-import CartPage from './pages/CartPage'; // ✅ nueva importación
+import CartPage from './pages/CartPage';
+import EditProductPage from './pages/EditProductPage'; // ✅ NUEVO
 
 function App() {
   const { currentUser, loading } = useAuth();
@@ -76,7 +75,15 @@ function App() {
               <CartPage />
             </ProtectedRoute>
           }
-        /> {/* ✅ nueva ruta protegida */}
+        />
+        <Route
+          path="/editproduct/:id"
+          element={
+            <ProtectedRoute>
+              <EditProductPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Fallback para rutas no encontradas */}
         <Route path="*" element={<Navigate to="/" replace />} />

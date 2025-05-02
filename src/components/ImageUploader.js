@@ -3,12 +3,19 @@
 import React, { useState } from 'react';
 import supabase from '../supabase';
 
-function ImageUploader({ onUpload }) {
+function ImageUploader({ onUpload, existingImages = [] }) {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [previewUrls, setPreviewUrls] = useState(existingImages);
 
   const handleFileChange = (e) => {
-    setFiles(Array.from(e.target.files));
+    const selectedFiles = Array.from(e.target.files);
+    setFiles(selectedFiles);
+
+    const newPreviewUrls = selectedFiles.map((file) =>
+      URL.createObjectURL(file)
+    );
+    setPreviewUrls((prev) => [...prev, ...newPreviewUrls]);
   };
 
   const uploadImages = async () => {
@@ -54,6 +61,16 @@ function ImageUploader({ onUpload }) {
       <button onClick={uploadImages} disabled={uploading}>
         {uploading ? 'Subiendo...' : 'Subir imágenes'}
       </button>
+      <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: '10px' }}>
+        {previewUrls.map((url, index) => (
+          <img
+            key={index}
+            src={url}
+            alt={`Vista previa ${index + 1}`}
+            style={{ width: '100px', height: '100px', objectFit: 'cover', marginRight: '10px', marginBottom: '10px' }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

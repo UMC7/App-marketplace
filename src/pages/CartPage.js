@@ -1,12 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useCarrito } from '../context/CarritoContext';
 import { useAuth } from '../context/AuthContext';
 import supabase from '../supabase';
 
 function CartPage() {
-  const { cartItems, updateQuantity, removeFromCart, clearCart } = useCarrito();
+  const { cartItems, setCartItems, updateQuantity, removeFromCart, clearCart } = useCarrito();
   const { currentUser } = useAuth();
   const [processing, setProcessing] = useState(false);
+
+  const fetchCartItems = useCallback(async () => {
+    if (currentUser) {
+      const { data, error } = await supabase
+        .from('cart')
+        .select(`
+          *,
+          products (
+            id,
+            name,
+            price,
+            quantity,
+            mainphoto,
+            status
+          )
+        `)
+        .eq('user_id', currentUser.id);
+
+      if (!error && data) {
+        const formattedCart = data.map((item) => ({
+          id: item.product_id,
+          quantity: item.quantity,
+          price: item.products?.price,
+          name: item.products?.name,
+          stock: item.products?.quantity, // ✅ Usamos quantity como stock
+          mainphoto: item.products?.mainphoto,
+          status: item.products?.status,
+        }));
+        setCartItems(formattedCart);
+      } else {
+        console.error('Error al cargar el carrito:', error?.message);
+      }
+    }
+  }, [currentUser, setCartItems]);
+
+  useEffect(() => {
+    fetchCartItems();
+  }, [fetchCartItems]);
 
   const total = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -67,6 +105,33 @@ function CartPage() {
     setProcessing(false);
   };
 
+  const handleRemoveFromCart = async (productId) => {
+    try {
+      const product = cartItems.find((item) => item.id === productId);
+
+      if (product.status === 'paused') {
+        alert('Este producto está pausado. Solo puedes eliminarlo de tu carrito.');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('cart')
+        .delete()
+        .eq('product_id', productId)
+        .eq('user_id', currentUser.id);
+
+      if (error) {
+        console.error('Error al eliminar producto del carrito:', error.message);
+        alert('No se pudo eliminar el producto del carrito.');
+      } else {
+        removeFromCart(productId);
+        alert('Producto eliminado del carrito.');
+      }
+    } catch (err) {
+      console.error('Error inesperado al eliminar producto del carrito:', err.message);
+    }
+  };
+
   return (
     <div style={{ padding: '20px' }}>
       <h1>Carrito de Compras</h1>
@@ -89,16 +154,30 @@ function CartPage() {
                 <input
                   type="number"
                   min="1"
-                  max={item.quantity}
+                  max={item.stock}
                   value={item.quantity}
-                  onChange={(e) =>
-                    updateQuantity(item.id, parseInt(e.target.value))
-                  }
+                  onChange={(e) => {
+                    const newQty = parseInt(e.target.value);
+                    if (!isNaN(newQty) && newQty <= item.stock) {
+                      updateQuantity(item.id, newQty);
+                      supabase.from('cart')
+                        .update({ quantity: newQty })
+                        .eq('user_id', currentUser.id)
+                        .eq('product_id', item.id);
+                    } else {
+                      alert(`No puedes seleccionar más de ${item.stock} unidades.`);
+                    }
+                  }}
                   style={{ width: '60px', marginLeft: '10px' }}
+                  disabled={item.status === 'paused'}
                 />
               </p>
               <p>Subtotal: ${item.price * item.quantity}</p>
-              <button onClick={() => removeFromCart(item.id)}>Eliminar</button>
+              {item.status === 'paused' ? (
+                <p>Este producto está pausado. Solo puedes eliminarlo.</p>
+              ) : (
+                <button onClick={() => handleRemoveFromCart(item.id)}>Eliminar</button>
+              )}
             </div>
           ))}
 

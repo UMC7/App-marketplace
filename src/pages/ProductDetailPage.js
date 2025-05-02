@@ -1,5 +1,3 @@
-// src/pages/ProductDetailPage.js
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import supabase from '../supabase';
@@ -10,7 +8,7 @@ import Slider from 'react-slick';
 function ProductDetailPage() {
   const { id } = useParams();
   const { currentUser } = useAuth();
-  const { addToCart } = useCarrito();
+  const { addToCart, cartItems = [] } = useCarrito(); // ✅ valor por defecto agregado
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,50 +21,93 @@ function ProductDetailPage() {
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState('');
 
-  const fetchProduct = async () => {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', id)
-      .single();
+  useEffect(() => {
+    const fetchProduct = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    if (!error) setProduct(data);
-    setLoading(false);
-  };
+      if (!error) setProduct(data);
+      setLoading(false);
+    };
 
-  const fetchMessages = async () => {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('id, content, sender_id, sent_at, product_id, receiver_id, users(nickname)')
-      .eq('product_id', parseInt(id))
-      .order('sent_at', { ascending: true });
+    const fetchMessages = async () => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('id, content, sender_id, sent_at, product_id, receiver_id, users(nickname)')
+        .eq('product_id', parseInt(id))
+        .order('sent_at', { ascending: true });
 
-    if (!error) setMessages(data);
-    else console.error('Error al obtener mensajes:', error.message);
-  };
+      if (!error) setMessages(data);
+    };
 
-  const checkIfFavorite = async () => {
-    if (!currentUser) return;
-    const { data } = await supabase
-      .from('favorites')
-      .select('id')
-      .eq('product_id', id)
-      .eq('user_id', currentUser.id)
-      .single();
+    const checkIfFavorite = async () => {
+      if (!currentUser) return;
+      const { data } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('product_id', id)
+        .eq('user_id', currentUser.id)
+        .single();
 
-    if (data) setIsFavorite(true);
+      if (data) setIsFavorite(true);
+    };
+
+    fetchProduct();
+    fetchMessages();
+    checkIfFavorite();
+  }, [id, currentUser]);
+
+  if (loading) return <p>Cargando producto...</p>;
+  if (!product) return <p>Producto no encontrado.</p>;
+
+  const isOwner = currentUser?.id === product.owner;
+  const enCarrito = cartItems.find(item => item.id === product.id)?.quantity || 0;
+  const stockDisponible = product.quantity - enCarrito;
+
+  const handleAddToCart = () => {
+    if (product.status === 'paused') {
+      alert('Este producto está pausado y no puede ser añadido al carrito.');
+      return;
+    }
+
+    if (purchaseQty > stockDisponible) {
+      alert(`Solo puedes agregar hasta ${stockDisponible} unidades.`);
+      return;
+    }
+
+    addToCart(product, purchaseQty);
+    alert('Producto agregado al carrito.');
   };
 
   const handleAddToFavorites = async () => {
+    if (product.status === 'paused') {
+      alert('Este producto está pausado y no puede ser añadido a favoritos.');
+      return;
+    }
+
     if (!currentUser) return alert('Debes iniciar sesión.');
     setFavLoading(true);
     const { error } = await supabase.from('favorites').insert({
       product_id: parseInt(id),
       user_id: currentUser.id,
     });
-    if (error) alert('No se pudo agregar a favoritos.');
-    else setIsFavorite(true);
+    if (!error) setIsFavorite(true);
     setFavLoading(false);
+  };
+
+  const handleRemoveFavorite = async () => {
+    if (!currentUser) return alert('Debes iniciar sesión.');
+    const { error } = await supabase
+      .from('favorites')
+      .delete()
+      .eq('product_id', id)
+      .eq('user_id', currentUser.id);
+
+    if (!error) setIsFavorite(false);
+    else alert('Error al eliminar de favoritos');
   };
 
   const handleSubmitQuestion = async () => {
@@ -77,19 +118,21 @@ function ProductDetailPage() {
     }
 
     setMessageLoading(true);
-
     const { error } = await supabase.from('messages').insert({
       sender_id: currentUser.id,
       content: questionText.trim(),
       product_id: parseInt(id),
     });
 
-    if (error) {
-      console.error('❌ Supabase insert error:', error.message);
-      alert('Error al enviar la pregunta.');
-    } else {
+    if (!error) {
       setQuestionText('');
-      fetchMessages();
+      const refreshed = await supabase
+        .from('messages')
+        .select('id, content, sender_id, sent_at, product_id, receiver_id, users(nickname)')
+        .eq('product_id', parseInt(id))
+        .order('sent_at', { ascending: true });
+
+      setMessages(refreshed.data || []);
     }
 
     setMessageLoading(false);
@@ -103,25 +146,19 @@ function ProductDetailPage() {
       product_id: parseInt(id),
       receiver_id: respondingTo,
     });
-    if (error) alert('Error al responder.');
-    else {
+
+    if (!error) {
       setResponseText('');
       setRespondingTo(null);
-      fetchMessages();
+      const refreshed = await supabase
+        .from('messages')
+        .select('id, content, sender_id, sent_at, product_id, receiver_id, users(nickname)')
+        .eq('product_id', parseInt(id))
+        .order('sent_at', { ascending: true });
+
+      setMessages(refreshed.data || []);
     }
   };
-
-  useEffect(() => {
-    fetchProduct();
-    fetchMessages();
-    checkIfFavorite();
-    // eslint-disable-next-line
-  }, [id, currentUser]);
-
-  if (loading) return <p>Cargando producto...</p>;
-  if (!product) return <p>Producto no encontrado.</p>;
-
-  const isOwner = currentUser?.id === product.owner;
 
   const settings = {
     dots: true,
@@ -133,11 +170,7 @@ function ProductDetailPage() {
 
   const allPhotos = [
     ...(product.mainphoto ? [product.mainphoto] : []),
-    ...(
-      typeof product.photos === 'string'
-        ? JSON.parse(product.photos)
-        : (product.photos || [])
-    ),
+    ...(product.photos || []),
   ];
 
   return (
@@ -154,31 +187,38 @@ function ProductDetailPage() {
 
       <h3>Descripción</h3>
       <p>{product.description}</p>
-      <p>Precio: ${product.price}</p>
-      <p>Stock: {product.quantity}</p>
 
-      {!isOwner && (
-        <button onClick={handleAddToFavorites} disabled={isFavorite || favLoading}>
-          {isFavorite ? '✔ En favoritos' : 'Agregar a favoritos'}
-        </button>
-      )}
+      <h3>Información del producto</h3>
+      <p><strong>Precio:</strong> ${product.price}</p>
+      <p><strong>Stock disponible:</strong> {stockDisponible}</p>
+      <p><strong>Ciudad:</strong> {product.city}</p>
+      <p><strong>País:</strong> {product.country}</p>
+      <p><strong>Condición:</strong> {product.condition}</p>
 
-      {isOwner && <p style={{ color: 'gray' }}>Este es tu producto.</p>}
+      {product.status === 'paused' ? (
+        <p style={{ color: 'red' }}>Este producto está pausado y no se puede agregar al carrito ni a favoritos.</p>
+      ) : (
+        <>
+          {!isOwner && stockDisponible > 0 && (
+            <>
+              <h3>Cantidad a comprar</h3>
+              <input
+                type="number"
+                min="1"
+                max={stockDisponible}
+                value={purchaseQty}
+                onChange={(e) => setPurchaseQty(parseInt(e.target.value))}
+              />
+              <button onClick={handleAddToCart}>Agregar al carrito</button>
+            </>
+          )}
 
-      {!isOwner && (
-        <div style={{ marginTop: '20px' }}>
-          <h3>Cantidad</h3>
-          <input
-            type="number"
-            value={purchaseQty}
-            onChange={(e) => setPurchaseQty(parseInt(e.target.value))}
-            min="1"
-            max={product.quantity}
-          />
-          <button onClick={() => addToCart(product, purchaseQty)} style={{ marginLeft: '10px' }}>
-            Agregar al carrito
-          </button>
-        </div>
+          {!isOwner && (
+            <button onClick={handleAddToFavorites} disabled={isFavorite || favLoading}>
+              {isFavorite ? '✔ En favoritos' : 'Agregar a favoritos'}
+            </button>
+          )}
+        </>
       )}
 
       <div style={{ marginTop: 40 }}>
@@ -204,7 +244,6 @@ function ProductDetailPage() {
                           rows={2}
                           value={responseText}
                           onChange={(e) => setResponseText(e.target.value)}
-                          placeholder="Escribe tu respuesta..."
                         />
                         <br />
                         <button onClick={handleSubmitAnswer}>Responder</button>
@@ -219,26 +258,22 @@ function ProductDetailPage() {
             );
           })}
 
-        {currentUser ? (
-          !isOwner ? (
-            <div>
-              <textarea
-                rows={3}
-                value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-                placeholder="Haz una pregunta..."
-                style={{ width: '100%' }}
-              />
-              <button onClick={handleSubmitQuestion} disabled={messageLoading}>
-                {messageLoading ? 'Enviando...' : 'Enviar pregunta'}
-              </button>
-            </div>
-          ) : (
-            <p>Eres el vendedor de este producto.</p>
-          )
-        ) : (
-          <p>Inicia sesión para hacer preguntas.</p>
+        {currentUser && !isOwner && (
+          <div>
+            <textarea
+              rows={3}
+              value={questionText}
+              onChange={(e) => setQuestionText(e.target.value)}
+              placeholder="Haz una pregunta..."
+              style={{ width: '100%' }}
+            />
+            <button onClick={handleSubmitQuestion} disabled={messageLoading}>
+              {messageLoading ? 'Enviando...' : 'Enviar pregunta'}
+            </button>
+          </div>
         )}
+
+        {!currentUser && <p>Inicia sesión para hacer preguntas.</p>}
       </div>
     </div>
   );

@@ -6,12 +6,11 @@ import supabase from '../supabase';
 
 function Navbar() {
   const { currentUser } = useAuth();
-  const { cartItems } = useCarrito();
+  const { cartItems = [], setCartItems } = useCarrito(); // ✅ previene undefined
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      // ⚠️ Forzar recuperación de sesión antes de cerrar sesión
       await supabase.auth.getSession();
 
       const { error } = await supabase.auth.signOut();
@@ -20,6 +19,10 @@ function Navbar() {
         alert('Error al cerrar sesión.');
         return;
       }
+
+      // 🧹 Limpiar carrito y localStorage al cerrar sesión
+      setCartItems([]);
+      localStorage.removeItem('cart');
 
       navigate('/login');
     } catch (err) {

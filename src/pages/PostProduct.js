@@ -11,10 +11,31 @@ const PostProduct = () => {
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [categoryId, setCategoryId] = useState('');
+  const [city, setCity] = useState('');
+  const [country, setCountry] = useState('');
+  const [condition, setCondition] = useState('');
   const [photos, setPhotos] = useState([]);
   const [mainPhoto, setMainPhoto] = useState('');
   const [ownerId, setOwnerId] = useState(null);
   const [ownerEmail, setOwnerEmail] = useState('');
+
+  const countries = [
+    "Albania", "Antigua and Barbuda", "Argentina", "Australia", "Bahamas", "Bahrain", "Barbados",
+    "Belgium", "Belize", "Brazil", "Brunei", "Bulgaria", "Cambodia", "Canada", "Cape Verde",
+    "Chile", "China", "Colombia", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Denmark", "Dominica",
+    "Dominican Republic", "Ecuador", "Egypt", "Estonia", "Fiji", "Finland", "France", "Germany",
+    "Greece", "Grenada", "Guatemala", "Honduras", "India", "Indonesia", "Ireland", "Israel",
+    "Italy", "Jamaica", "Japan", "Kiribati", "Kuwait", "Latvia", "Libya", "Lithuania", "Madagascar",
+    "Malaysia", "Maldives", "Malta", "Marshall Islands", "Mauritius", "Mexico", "Micronesia",
+    "Monaco", "Montenegro", "Morocco", "Myanmar", "Netherlands", "New Zealand", "Nicaragua",
+    "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Saint Kitts and Nevis",
+    "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "Saudi Arabia", "Seychelles",
+    "Singapore", "Solomon Islands", "South Africa", "South Korea", "Spain", "Sweden", "Taiwan",
+    "Thailand", "Trinidad and Tobago", "Tunisia", "Turkey", "United Arab Emirates", "United Kingdom",
+    "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"
+  ];
+
+  const conditions = ["Nuevo", "Usado", "Remanufacturado"];
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -71,9 +92,10 @@ const PostProduct = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!categoryId) return alert('Por favor, selecciona una categoría.');
-    if (!ownerId || !ownerEmail) return alert('Usuario inválido.');
-    if (!mainPhoto) return alert('Por favor, sube una foto principal.');
+    if (!categoryId || !mainPhoto || !city || !country || !condition) {
+      alert('Por favor, completa todos los campos obligatorios.');
+      return;
+    }
 
     console.log("Fotos adicionales subidas:", photos);
 
@@ -90,6 +112,9 @@ const PostProduct = () => {
           owneremail: ownerEmail,
           photos: photos,
           mainphoto: mainPhoto,
+          city,
+          country,
+          condition,
         }])
         .select('*');
 
@@ -106,8 +131,10 @@ const PostProduct = () => {
         setCategoryId('');
         setPhotos([]);
         setMainPhoto('');
+        setCity('');
+        setCountry('');
+        setCondition('');
       } else {
-        console.error("No se devolvió ningún producto al guardar.");
         alert('Hubo un error desconocido al guardar el producto.');
       }
     } catch (error) {
@@ -121,44 +148,19 @@ const PostProduct = () => {
       <h1>Agregar Producto</h1>
       <form onSubmit={handleSubmit}>
         <label>Nombre del Producto:</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
 
         <label>Descripción:</label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
 
         <label>Precio:</label>
-        <input
-          type="number"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          required
-          min="0"
-        />
+        <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required min="0" />
 
         <label>Cantidad:</label>
-        <input
-          type="number"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          required
-          min="1"
-        />
+        <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} required min="1" />
 
         <label>Categoría:</label>
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          required
-        >
+        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
           <option value="">Seleccione una categoría</option>
           <option value="1">Deck</option>
           <option value="2">Engineering</option>
@@ -168,16 +170,30 @@ const PostProduct = () => {
           <option value="6">Others</option>
         </select>
 
+        <label>Ciudad:</label>
+        <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
+
+        <label>País:</label>
+        <select value={country} onChange={(e) => setCountry(e.target.value)} required>
+          <option value="">Seleccione un país</option>
+          {countries.map((pais, idx) => (
+            <option key={idx} value={pais}>{pais}</option>
+          ))}
+        </select>
+
+        <label>Condición:</label>
+        <select value={condition} onChange={(e) => setCondition(e.target.value)} required>
+          <option value="">Seleccione una condición</option>
+          {conditions.map((c, idx) => (
+            <option key={idx} value={c}>{c}</option>
+          ))}
+        </select>
+
         <label>Fotos adicionales:</label>
         <ImageUploader onUpload={(urls) => setPhotos(urls)} />
 
         <label>Foto principal:</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleMainPhotoUpload}
-          required
-        />
+        <input type="file" accept="image/*" onChange={handleMainPhotoUpload} required />
 
         <button type="submit" disabled={uploading}>
           {uploading ? 'Subiendo imágenes...' : 'Guardar Producto'}
