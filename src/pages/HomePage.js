@@ -1,5 +1,3 @@
-// src/pages/HomePage.js
-
 import React, { useEffect, useState, useCallback } from 'react';
 import ProductList from '../components/ProductList';
 import supabase from '../supabase';
@@ -103,70 +101,89 @@ function HomePage() {
     <div>
       <h1>Bienvenido al Marketplace</h1>
 
-      <select
-        value={selectedCategory}
-        onChange={(e) => setSelectedCategory(e.target.value)}
-      >
-        <option value="">Filtrar por categoría</option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.name}
-          </option>
-        ))}
-      </select>
+      <div className="filters-container">
+        <div className="filter-item">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Buscar productos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-      <select
-        value={selectedCountry}
-        onChange={(e) => setSelectedCountry(e.target.value)}
-      >
-        <option value="">Filtrar por país</option>
-        {countriesWithProducts.map((country) => (
-          <option key={country} value={country}>
-            {country}
-          </option>
-        ))}
-      </select>
+        <div className="filter-item">
+          <select
+            className="category-select"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+          >
+            <option value="">Filtrar por categoría</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <input
-        type="text"
-        placeholder="Filtrar por ciudad"
-        value={selectedCity}
-        onChange={(e) => setSelectedCity(e.target.value)}
-      />
+        <div className="filter-item">
+          <select
+            className="category-select"
+            value={selectedCountry}
+            onChange={(e) => setSelectedCountry(e.target.value)}
+          >
+            <option value="">Filtrar por país</option>
+            {countriesWithProducts.map((country) => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div>
-        <input
-          type="number"
-          placeholder="Precio mínimo"
-          value={priceRange.min}
-          onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Precio máximo"
-          value={priceRange.max}
-          onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-        />
+        <div className="filter-item">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Filtrar por ciudad"
+            value={selectedCity}
+            onChange={(e) => setSelectedCity(e.target.value)}
+          />
+        </div>
+
+        <div className="filter-item">
+          <input
+            type="number"
+            className="price-input"
+            placeholder="Precio mínimo"
+            value={priceRange.min}
+            onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+          />
+          <input
+            type="number"
+            className="price-input"
+            placeholder="Precio máximo"
+            value={priceRange.max}
+            onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+          />
+        </div>
+
+        <div className="filter-item">
+          <select
+            className="category-select"
+            value={selectedCondition}
+            onChange={(e) => setSelectedCondition(e.target.value)}
+          >
+            <option value="">Filtrar por condición</option>
+            {['Nuevo', 'Usado', 'Reacondicionado'].map((condition) => (
+              <option key={condition} value={condition}>
+                {condition}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
-
-      <select
-        value={selectedCondition}
-        onChange={(e) => setSelectedCondition(e.target.value)}
-      >
-        <option value="">Filtrar por condición</option>
-        {['Nuevo', 'Usado', 'Reacondicionado'].map((condition) => (
-          <option key={condition} value={condition}>
-            {condition}
-          </option>
-        ))}
-      </select>
-
-      <input
-        type="text"
-        placeholder="Buscar productos..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
 
       {loading ? (
         <p>Cargando productos...</p>

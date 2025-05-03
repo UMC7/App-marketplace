@@ -9,7 +9,15 @@ function ProductList({ products }) {
   }
 
   return (
-    <div className="products-grid">
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '20px',
+        marginTop: '20px',
+        padding: '0 20px',
+      }}
+    >
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

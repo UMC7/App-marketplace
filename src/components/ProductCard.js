@@ -3,6 +3,29 @@
 import React from 'react';
 
 function ProductCard({ product, onRemoveFavorite }) {
+  if (!product) {
+    return (
+      <div className="product-card">
+        <p style={{ color: 'red', fontWeight: 'bold' }}>Producto no disponible</p>
+        {onRemoveFavorite && (
+          <button
+            onClick={() => onRemoveFavorite(null)}
+            style={{
+              marginTop: '10px',
+              backgroundColor: '#ff4d4f',
+              color: 'white',
+              border: 'none',
+              padding: '5px 10px',
+              cursor: 'pointer'
+            }}
+          >
+            Quitar de favoritos
+          </button>
+        )}
+      </div>
+    );
+  }
+
   const isPaused = product.status === 'paused';
 
   const handleCardClick = (e) => {

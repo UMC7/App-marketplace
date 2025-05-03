@@ -21,7 +21,10 @@ function FavoritesPage() {
 
       if (error) {
         console.error('Error al cargar favoritos:', error.message);
-      } else if (favoriteRows.length > 0) {
+        return;
+      }
+
+      if (favoriteRows.length > 0) {
         const productIds = favoriteRows.map(f => f.product_id);
         const { data: productData, error: prodError } = await supabase
           .from('products')
@@ -30,9 +33,11 @@ function FavoritesPage() {
 
         if (prodError) {
           console.error('Error al cargar productos favoritos:', prodError.message);
-        } else {
-          setFavorites(productData);
+          return;
         }
+
+        const merged = productIds.map(id => productData.find(p => p?.id === id) || null);
+        setFavorites(merged);
       } else {
         setFavorites([]);
       }
@@ -55,7 +60,7 @@ function FavoritesPage() {
         console.error('Error al eliminar de favoritos:', error.message);
         alert('No se pudo quitar el producto de favoritos.');
       } else {
-        setFavorites((prev) => prev.filter((p) => p.id !== productId));
+        setFavorites((prev) => prev.filter((p) => p?.id !== productId));
       }
     } catch (err) {
       console.error('Error inesperado al eliminar favorito:', err.message);
@@ -75,9 +80,9 @@ function FavoritesPage() {
         <p>No has agregado productos a favoritos.</p>
       ) : (
         <div className="products-grid">
-          {favorites.map((product) => (
+          {favorites.map((product, idx) => (
             <ProductCard
-              key={product.id}
+              key={idx}
               product={product}
               onRemoveFavorite={handleRemoveFavorite}
             />
