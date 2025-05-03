@@ -1,15 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
+// src/pages/CartPage.js
+
+import React, { useState, useEffect } from 'react';
 import { useCarrito } from '../context/CarritoContext';
 import { useAuth } from '../context/AuthContext';
 import supabase from '../supabase';
 
 function CartPage() {
-  const { cartItems, setCartItems, updateQuantity, removeFromCart, clearCart } = useCarrito();
+  const { updateQuantity, removeFromCart, clearCart } = useCarrito();
   const { currentUser } = useAuth();
+  const [cartItems, setCartItems] = useState([]);
   const [processing, setProcessing] = useState(false);
 
-  const fetchCartItems = useCallback(async () => {
-    if (currentUser) {
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      if (!currentUser) return;
+
       const { data, error } = await supabase
         .from('cart')
         .select(`
@@ -23,7 +28,8 @@ function CartPage() {
             status
           )
         `)
-        .eq('user_id', currentUser.id);
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false }); // ⬅️ mantiene el orden por fecha de agregado
 
       if (!error && data) {
         const formattedCart = data.map((item) => ({
@@ -31,28 +37,46 @@ function CartPage() {
           quantity: item.quantity,
           price: item.products?.price,
           name: item.products?.name,
-          stock: item.products?.quantity, // ✅ Usamos quantity como stock
+          stock: item.products?.quantity,
           mainphoto: item.products?.mainphoto,
           status: item.products?.status,
+          created_at: item.created_at,
         }));
         setCartItems(formattedCart);
       } else {
         console.error('Error al cargar el carrito:', error?.message);
       }
-    }
-  }, [currentUser, setCartItems]);
+    };
 
-  useEffect(() => {
     fetchCartItems();
-  }, [fetchCartItems]);
+  }, [currentUser]);
 
-  const total = cartItems.reduce(
+  const activeItems = cartItems.filter(item => item.status !== 'paused');
+  const allItemsPaused = cartItems.length > 0 && activeItems.length === 0;
+  const total = activeItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
   );
 
+  const handleQuantityChange = (item, newQty) => {
+    if (!isNaN(newQty) && newQty <= item.stock) {
+      updateQuantity(item.id, newQty);
+      setCartItems(prev =>
+        prev.map(ci =>
+          ci.id === item.id ? { ...ci, quantity: newQty } : ci
+        )
+      );
+      supabase.from('cart')
+        .update({ quantity: newQty })
+        .eq('user_id', currentUser.id)
+        .eq('product_id', item.id);
+    } else {
+      alert(`No puedes seleccionar más de ${item.stock} unidades.`);
+    }
+  };
+
   const handleConfirmPurchase = async () => {
-    if (!currentUser || cartItems.length === 0) return;
+    if (!currentUser || cartItems.length === 0 || allItemsPaused) return;
 
     setProcessing(true);
 
@@ -69,7 +93,7 @@ function CartPage() {
 
       if (purchaseError) throw new Error(purchaseError.message);
 
-      const itemsToInsert = cartItems.map((item) => ({
+      const itemsToInsert = activeItems.map((item) => ({
         purchase_id: purchase.id,
         product_id: item.id,
         quantity: item.quantity,
@@ -83,7 +107,7 @@ function CartPage() {
 
       if (itemsError) throw new Error(itemsError.message);
 
-      for (const item of cartItems) {
+      for (const item of activeItems) {
         const { error: stockError } = await supabase
           .from('products')
           .update({
@@ -97,6 +121,7 @@ function CartPage() {
 
       alert('¡Compra realizada con éxito!');
       clearCart();
+      setCartItems([]);
     } catch (err) {
       console.error('Error en la compra:', err.message);
       alert('Ocurrió un error al procesar la compra.');
@@ -107,13 +132,6 @@ function CartPage() {
 
   const handleRemoveFromCart = async (productId) => {
     try {
-      const product = cartItems.find((item) => item.id === productId);
-
-      if (product.status === 'paused') {
-        alert('Este producto está pausado. Solo puedes eliminarlo de tu carrito.');
-        return;
-      }
-
       const { error } = await supabase
         .from('cart')
         .delete()
@@ -124,7 +142,7 @@ function CartPage() {
         console.error('Error al eliminar producto del carrito:', error.message);
         alert('No se pudo eliminar el producto del carrito.');
       } else {
-        removeFromCart(productId);
+        setCartItems(prev => prev.filter(p => p.id !== productId));
         alert('Producto eliminado del carrito.');
       }
     } catch (err) {
@@ -149,41 +167,34 @@ function CartPage() {
               />
               <h3>{item.name}</h3>
               <p>Precio unitario: ${item.price}</p>
-              <p>
-                Cantidad:
-                <input
-                  type="number"
-                  min="1"
-                  max={item.stock}
-                  value={item.quantity}
-                  onChange={(e) => {
-                    const newQty = parseInt(e.target.value);
-                    if (!isNaN(newQty) && newQty <= item.stock) {
-                      updateQuantity(item.id, newQty);
-                      supabase.from('cart')
-                        .update({ quantity: newQty })
-                        .eq('user_id', currentUser.id)
-                        .eq('product_id', item.id);
-                    } else {
-                      alert(`No puedes seleccionar más de ${item.stock} unidades.`);
-                    }
-                  }}
-                  style={{ width: '60px', marginLeft: '10px' }}
-                  disabled={item.status === 'paused'}
-                />
-              </p>
-              <p>Subtotal: ${item.price * item.quantity}</p>
+
               {item.status === 'paused' ? (
-                <p>Este producto está pausado. Solo puedes eliminarlo.</p>
+                <>
+                  <p style={{ color: 'red', fontWeight: 'bold' }}>Este producto está pausado.</p>
+                  <p>Cantidad: {item.quantity}</p>
+                </>
               ) : (
-                <button onClick={() => handleRemoveFromCart(item.id)}>Eliminar</button>
+                <p>
+                  Cantidad:
+                  <input
+                    type="number"
+                    min="1"
+                    max={item.stock}
+                    value={item.quantity}
+                    onChange={(e) => handleQuantityChange(item, parseInt(e.target.value))}
+                    style={{ width: '60px', marginLeft: '10px' }}
+                  />
+                </p>
               )}
+
+              <p>Subtotal: ${item.status === 'paused' ? 0 : item.price * item.quantity}</p>
+              <button onClick={() => handleRemoveFromCart(item.id)}>Eliminar</button>
             </div>
           ))}
 
           <h2>Total: ${total.toFixed(2)}</h2>
-          <button onClick={handleConfirmPurchase} disabled={processing}>
-            {processing ? 'Procesando...' : 'Confirmar Compra'}
+          <button onClick={handleConfirmPurchase} disabled={processing || allItemsPaused}>
+            {processing ? 'Procesando...' : allItemsPaused ? 'Todos los productos están pausados' : 'Confirmar Compra'}
           </button>
         </div>
       )}

@@ -13,20 +13,23 @@ function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
-  const [priceRange, setPriceRange] = useState({ min: '', max: '' }); // Se inicializa vacío
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [selectedCondition, setSelectedCondition] = useState('');
-
   const [countriesWithProducts, setCountriesWithProducts] = useState([]);
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase.from('products').select('*');
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('status', 'active');
+
       if (error) throw error;
+
       setProducts(data || []);
       setFilteredProducts(data || []);
       setLoading(false);
 
-      // Obtener los países con productos publicados
       const countries = [...new Set(data.map((product) => product.country))];
       setCountriesWithProducts(countries);
     } catch (error) {
@@ -48,26 +51,22 @@ function HomePage() {
   const filterProducts = useCallback(() => {
     let filtered = [...products];
 
-    // Filtrar por categoría
     if (selectedCategory) {
       filtered = filtered.filter(
         (product) => String(product.category_id) === String(selectedCategory)
       );
     }
 
-    // Filtrar por país
     if (selectedCountry) {
       filtered = filtered.filter((product) => product.country === selectedCountry);
     }
 
-    // Filtrar por ciudad (coincidencia parcial de caracteres)
     if (selectedCity) {
       filtered = filtered.filter((product) =>
         product.city.toLowerCase().includes(selectedCity.toLowerCase())
       );
     }
 
-    // Filtrar por precio (aplica solo si el valor no está vacío)
     if (priceRange.min !== '' || priceRange.max !== '') {
       filtered = filtered.filter((product) => {
         const price = product.price;
@@ -77,12 +76,10 @@ function HomePage() {
       });
     }
 
-    // Filtrar por condición
     if (selectedCondition) {
       filtered = filtered.filter((product) => product.condition === selectedCondition);
     }
 
-    // Filtrar por término de búsqueda
     if (searchTerm) {
       filtered = filtered.filter((product) =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -106,7 +103,6 @@ function HomePage() {
     <div>
       <h1>Bienvenido al Marketplace</h1>
 
-      {/* Filtro de categoría */}
       <select
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
@@ -119,7 +115,6 @@ function HomePage() {
         ))}
       </select>
 
-      {/* Filtro de país */}
       <select
         value={selectedCountry}
         onChange={(e) => setSelectedCountry(e.target.value)}
@@ -132,7 +127,6 @@ function HomePage() {
         ))}
       </select>
 
-      {/* Filtro de ciudad */}
       <input
         type="text"
         placeholder="Filtrar por ciudad"
@@ -140,7 +134,6 @@ function HomePage() {
         onChange={(e) => setSelectedCity(e.target.value)}
       />
 
-      {/* Filtro de rango de precio */}
       <div>
         <input
           type="number"
@@ -156,7 +149,6 @@ function HomePage() {
         />
       </div>
 
-      {/* Filtro de condición */}
       <select
         value={selectedCondition}
         onChange={(e) => setSelectedCondition(e.target.value)}
@@ -169,7 +161,6 @@ function HomePage() {
         ))}
       </select>
 
-      {/* Barra de búsqueda */}
       <input
         type="text"
         placeholder="Buscar productos..."
@@ -177,7 +168,6 @@ function HomePage() {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      {/* Lista de productos */}
       {loading ? (
         <p>Cargando productos...</p>
       ) : (

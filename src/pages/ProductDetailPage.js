@@ -1,3 +1,5 @@
+// src/pages/ProductDetailPage.js
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import supabase from '../supabase';
@@ -8,7 +10,7 @@ import Slider from 'react-slick';
 function ProductDetailPage() {
   const { id } = useParams();
   const { currentUser } = useAuth();
-  const { addToCart, cartItems = [] } = useCarrito(); // ✅ valor por defecto agregado
+  const { addToCart, cartItems = [] } = useCarrito();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -199,7 +201,7 @@ function ProductDetailPage() {
         <p style={{ color: 'red' }}>Este producto está pausado y no se puede agregar al carrito ni a favoritos.</p>
       ) : (
         <>
-          {!isOwner && stockDisponible > 0 && (
+          {!isOwner && currentUser && stockDisponible > 0 && (
             <>
               <h3>Cantidad a comprar</h3>
               <input
@@ -213,7 +215,7 @@ function ProductDetailPage() {
             </>
           )}
 
-          {!isOwner && (
+          {!isOwner && currentUser && (
             <button onClick={handleAddToFavorites} disabled={isFavorite || favLoading}>
               {isFavorite ? '✔ En favoritos' : 'Agregar a favoritos'}
             </button>
