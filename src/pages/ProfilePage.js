@@ -8,9 +8,8 @@ function ProfilePage() {
   const [products, setProducts] = useState([]);
   const [userDetails, setUserDetails] = useState({});
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('productos'); // pestaña activa
+  const [activeTab, setActiveTab] = useState('productos');
 
-  // Estados para la pestaña "Datos de Usuario"
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(true);
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
@@ -50,6 +49,7 @@ function ProfilePage() {
           .from('products')
           .select('*')
           .eq('owner', currentUser.id)
+          .not('status', 'eq', 'deleted') // 👈 excluye productos eliminados
           .order('created_at', { ascending: false });
 
         if (productError) throw productError;
@@ -85,21 +85,21 @@ function ProfilePage() {
   };
 
   const handleDelete = async (productId) => {
-    const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.');
+    const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este producto? Esta acción lo ocultará de todos los usuarios.');
     if (!confirmDelete) return;
 
     try {
-      await supabase.from('favorites').delete().eq('product_id', productId);
-
       const { error } = await supabase
         .from('products')
-        .delete()
+        .update({ status: 'deleted' }) // 👈 nuevo estado válido
         .eq('id', productId);
 
       if (error) throw error;
+
       setProducts((prev) => prev.filter((p) => p.id !== productId));
+      alert('Producto eliminado correctamente.');
     } catch (error) {
-      console.error('Error eliminando producto:', error.message);
+      console.error('Error al eliminar producto:', error.message);
       alert('No se pudo eliminar el producto.');
     }
   };

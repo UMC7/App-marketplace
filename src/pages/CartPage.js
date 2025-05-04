@@ -1,5 +1,3 @@
-// src/pages/CartPage.js
-
 import React, { useState, useEffect } from 'react';
 import { useCarrito } from '../context/CarritoContext';
 import { useAuth } from '../context/AuthContext';
@@ -29,7 +27,7 @@ function CartPage() {
           )
         `)
         .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false }); // ⬅️ mantiene el orden por fecha de agregado
+        .order('created_at', { ascending: false });
 
       if (!error && data) {
         const formattedCart = data.map((item) => ({
@@ -51,9 +49,8 @@ function CartPage() {
     fetchCartItems();
   }, [currentUser]);
 
-  const activeItems = cartItems.filter(item => item.status !== 'paused');
-  const allItemsPaused = cartItems.length > 0 && activeItems.length === 0;
-  const total = activeItems.reduce(
+  const availableItems = cartItems.filter(item => item.status !== 'paused' && item.status !== 'deleted');
+  const total = availableItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
   );
@@ -76,7 +73,7 @@ function CartPage() {
   };
 
   const handleConfirmPurchase = async () => {
-    if (!currentUser || cartItems.length === 0 || allItemsPaused) return;
+    if (!currentUser || availableItems.length === 0) return;
 
     setProcessing(true);
 
@@ -93,7 +90,7 @@ function CartPage() {
 
       if (purchaseError) throw new Error(purchaseError.message);
 
-      const itemsToInsert = activeItems.map((item) => ({
+      const itemsToInsert = availableItems.map((item) => ({
         purchase_id: purchase.id,
         product_id: item.id,
         quantity: item.quantity,
@@ -107,7 +104,7 @@ function CartPage() {
 
       if (itemsError) throw new Error(itemsError.message);
 
-      for (const item of activeItems) {
+      for (const item of availableItems) {
         const { error: stockError } = await supabase
           .from('products')
           .update({
@@ -165,36 +162,35 @@ function CartPage() {
                 alt={item.name}
                 style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
               />
-              <h3>{item.name}</h3>
-              <p>Precio unitario: ${item.price}</p>
-
-              {item.status === 'paused' ? (
-                <>
-                  <p style={{ color: 'red', fontWeight: 'bold' }}>Este producto está pausado.</p>
-                  <p>Cantidad: {item.quantity}</p>
-                </>
+              <h3>{item.name || 'Producto no disponible'}</h3>
+              {item.status === 'deleted' ? (
+                <p style={{ color: 'red', fontWeight: 'bold' }}>Producto no disponible.</p>
+              ) : item.status === 'paused' ? (
+                <p style={{ color: 'red', fontWeight: 'bold' }}>Este producto está pausado.</p>
               ) : (
-                <p>
-                  Cantidad:
-                  <input
-                    type="number"
-                    min="1"
-                    max={item.stock}
-                    value={item.quantity}
-                    onChange={(e) => handleQuantityChange(item, parseInt(e.target.value))}
-                    style={{ width: '60px', marginLeft: '10px' }}
-                  />
-                </p>
+                <>
+                  <p>Precio unitario: ${item.price}</p>
+                  <p>
+                    Cantidad:
+                    <input
+                      type="number"
+                      min="1"
+                      max={item.stock}
+                      value={item.quantity}
+                      onChange={(e) => handleQuantityChange(item, parseInt(e.target.value))}
+                      style={{ width: '60px', marginLeft: '10px' }}
+                    />
+                  </p>
+                </>
               )}
-
-              <p>Subtotal: ${item.status === 'paused' ? 0 : item.price * item.quantity}</p>
+              <p>Subtotal: ${item.status === 'deleted' ? 0 : item.price * item.quantity}</p>
               <button onClick={() => handleRemoveFromCart(item.id)}>Eliminar</button>
             </div>
           ))}
 
           <h2>Total: ${total.toFixed(2)}</h2>
-          <button onClick={handleConfirmPurchase} disabled={processing || allItemsPaused}>
-            {processing ? 'Procesando...' : allItemsPaused ? 'Todos los productos están pausados' : 'Confirmar Compra'}
+          <button onClick={handleConfirmPurchase} disabled={processing || availableItems.length === 0}>
+            {processing ? 'Procesando...' : 'Confirmar Compra'}
           </button>
         </div>
       )}
