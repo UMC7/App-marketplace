@@ -1,69 +1,83 @@
-// src/components/ProductCard.js
-
 import React from 'react';
 
 function ProductCard({ product, onRemoveFavorite }) {
-  if (!product) {
-    return (
-      <div className="product-card">
-        <p style={{ color: 'red', fontWeight: 'bold' }}>Producto no disponible</p>
-        {onRemoveFavorite && (
-          <button
-            onClick={() => onRemoveFavorite(null)}
-            style={{
-              marginTop: '10px',
-              backgroundColor: '#ff4d4f',
-              color: 'white',
-              border: 'none',
-              padding: '5px 10px',
-              cursor: 'pointer'
-            }}
-          >
-            Quitar de favoritos
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  const isPaused = product.status === 'paused';
+  const isDeleted = product?.status === 'deleted';
+  const isPaused = product?.status === 'paused';
 
   const handleCardClick = (e) => {
-    if (isPaused) {
+    if (isDeleted || isPaused) {
       e.preventDefault();
     }
   };
 
+  const id = product?.id ?? null;
+  const name = product?.name || '';
+  const price = product?.price ? `$${product.price}` : '-';
+  const country = product?.country || 'No especificado';
+  const mainphoto = product?.mainphoto || 'https://via.placeholder.com/200?text=Sin+imagen';
+
   return (
-    <div className="product-card">
+    <div
+      className="product-card"
+      style={{
+        position: 'relative',
+        opacity: 1,
+        border: '1px solid #ccc',
+      }}
+    >
+      {isDeleted && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%) rotate(-20deg)',
+            backgroundColor: 'rgba(255, 0, 0, 0.75)',
+            color: 'white',
+            padding: '5px 20px',
+            fontSize: '1.2rem',
+            fontWeight: 'bold',
+            zIndex: 2,
+            pointerEvents: 'none',
+          }}
+        >
+          Producto eliminado
+        </div>
+      )}
+
       <a
-        href={isPaused ? undefined : `/product/${product.id}`}
+        href={isDeleted ? undefined : `/product/${id}`}
         onClick={handleCardClick}
-        style={{ pointerEvents: isPaused ? 'none' : 'auto', textDecoration: 'none', color: 'inherit' }}
+        style={{
+          pointerEvents: isDeleted ? 'none' : 'auto',
+          textDecoration: 'none',
+          color: 'inherit',
+        }}
       >
         <img
-          src={product.mainphoto || 'https://via.placeholder.com/200'}
-          alt={product.name}
+          src={mainphoto}
+          alt={name}
           style={{ width: '200px', height: '200px', objectFit: 'cover' }}
         />
-        <h3>{product.name}</h3>
-        <p>Precio: ${product.price}</p>
-        <p>País: {product.country || 'No especificado'}</p>
+        <h3>{name}</h3>
+        <p>Precio: {price}</p>
+        <p>País: {country}</p>
+
         {isPaused && (
-          <p style={{ color: 'red', fontWeight: 'bold' }}>Producto Pausado</p>
+          <p style={{ color: 'orange', fontWeight: 'bold' }}>Producto Pausado</p>
         )}
       </a>
 
       {onRemoveFavorite && (
         <button
-          onClick={() => onRemoveFavorite(product.id)}
+          onClick={() => onRemoveFavorite(id)}
           style={{
             marginTop: '10px',
             backgroundColor: '#ff4d4f',
             color: 'white',
             border: 'none',
             padding: '5px 10px',
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           Quitar de favoritos

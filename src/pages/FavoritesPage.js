@@ -25,7 +25,8 @@ function FavoritesPage() {
       }
 
       if (favoriteRows.length > 0) {
-        const productIds = favoriteRows.map(f => f.product_id);
+        const productIds = favoriteRows.map((f) => f.product_id);
+
         const { data: productData, error: prodError } = await supabase
           .from('products')
           .select('*')
@@ -36,7 +37,24 @@ function FavoritesPage() {
           return;
         }
 
-        const merged = productIds.map(id => productData.find(p => p?.id === id) || null);
+        const merged = productIds.map((id) => {
+          const found = productData.find((p) => p?.id === id);
+          if (!found) {
+            return {
+              id,
+              product: {
+                id,
+                name: 'Producto eliminado',
+                price: null,
+                country: null,
+                mainphoto: null,
+                status: 'deleted',
+              },
+            };
+          }
+          return { id, product: found };
+        });
+
         setFavorites(merged);
       } else {
         setFavorites([]);
@@ -60,7 +78,7 @@ function FavoritesPage() {
         console.error('Error al eliminar de favoritos:', error.message);
         alert('No se pudo quitar el producto de favoritos.');
       } else {
-        setFavorites((prev) => prev.filter((p) => p?.id !== productId));
+        setFavorites((prev) => prev.filter((p) => p.id !== productId));
       }
     } catch (err) {
       console.error('Error inesperado al eliminar favorito:', err.message);
@@ -69,6 +87,7 @@ function FavoritesPage() {
 
   useEffect(() => {
     fetchFavorites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   return (
@@ -80,11 +99,11 @@ function FavoritesPage() {
         <p>No has agregado productos a favoritos.</p>
       ) : (
         <div className="products-grid">
-          {favorites.map((product, idx) => (
+          {favorites.map(({ product, id }, idx) => (
             <ProductCard
               key={idx}
               product={product}
-              onRemoveFavorite={handleRemoveFavorite}
+              onRemoveFavorite={() => handleRemoveFavorite(id)}
             />
           ))}
         </div>

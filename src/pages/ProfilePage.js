@@ -6,6 +6,7 @@ import supabase from '../supabase';
 function ProfilePage() {
   const { currentUser } = useAuth();
   const [products, setProducts] = useState([]);
+  const [deletedProducts, setDeletedProducts] = useState([]);
   const [userDetails, setUserDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('productos');
@@ -45,16 +46,22 @@ function ProfilePage() {
           altEmail: data.alt_email || '',
         }));
 
-        const { data: productData, error: productError } = await supabase
+        const { data: productData } = await supabase
           .from('products')
           .select('*')
           .eq('owner', currentUser.id)
-          .not('status', 'eq', 'deleted') // 👈 excluye productos eliminados
+          .not('status', 'eq', 'deleted')
           .order('created_at', { ascending: false });
 
-        if (productError) throw productError;
-        setProducts(productData);
+        const { data: deletedData } = await supabase
+          .from('products')
+          .select('*')
+          .eq('owner', currentUser.id)
+          .eq('status', 'deleted')
+          .order('deleted_at', { ascending: false });
 
+        setProducts(productData || []);
+        setDeletedProducts(deletedData || []);
       } catch (error) {
         console.error('Error al cargar los datos:', error.message);
       } finally {
@@ -91,12 +98,19 @@ function ProfilePage() {
     try {
       const { error } = await supabase
         .from('products')
-        .update({ status: 'deleted' }) // 👈 nuevo estado válido
+        .update({ status: 'deleted', deleted_at: new Date().toISOString() })
         .eq('id', productId);
 
       if (error) throw error;
 
       setProducts((prev) => prev.filter((p) => p.id !== productId));
+      const { data: updatedDeleted } = await supabase
+        .from('products')
+        .select('*')
+        .eq('owner', currentUser.id)
+        .eq('status', 'deleted')
+        .order('deleted_at', { ascending: false });
+      setDeletedProducts(updatedDeleted);
       alert('Producto eliminado correctamente.');
     } catch (error) {
       console.error('Error al eliminar producto:', error.message);
@@ -104,11 +118,38 @@ function ProfilePage() {
     }
   };
 
+  const handleRestore = async (productId) => {
+    const confirmRestore = window.confirm('¿Deseas restaurar este producto como pausado?');
+    if (!confirmRestore) return;
+
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ status: 'paused', deleted_at: null })
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      setDeletedProducts((prev) => prev.filter((p) => p.id !== productId));
+      const { data: updatedProducts } = await supabase
+        .from('products')
+        .select('*')
+        .eq('owner', currentUser.id)
+        .not('status', 'eq', 'deleted')
+        .order('created_at', { ascending: false });
+      setProducts(updatedProducts);
+      alert('Producto restaurado correctamente.');
+    } catch (error) {
+      console.error('Error al restaurar producto:', error.message);
+      alert('No se pudo restaurar el producto.');
+    }
+  };
+
   const handlePasswordVerification = async (e) => {
     e.preventDefault();
     setAuthError('');
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: currentUser.email,
         password: passwordInput,
       });
@@ -131,10 +172,11 @@ function ProfilePage() {
 
   const handleUserFormSubmit = async (e) => {
     e.preventDefault();
+    const confirm = window.confirm('¿Deseas actualizar tus datos de usuario?');
+    if (!confirm) return;
+
     setUpdateMessage('');
-
     const updates = {};
-
     if (userForm.email !== currentUser.email) updates.email = userForm.email;
     if (userForm.password) updates.password = userForm.password;
 
@@ -160,8 +202,6 @@ function ProfilePage() {
     }
   };
 
-  if (!currentUser) return <p>Debes iniciar sesión para ver tu perfil.</p>;
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'productos':
@@ -173,33 +213,37 @@ function ProfilePage() {
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {products.map((product) => (
-                  <div
-                    key={product.id}
-                    style={{
-                      border: '1px solid #ccc',
-                      borderRadius: '8px',
-                      padding: '10px',
-                      width: '250px',
-                      position: 'relative',
-                    }}
-                  >
-                    <img
-                      src={product.mainphoto || 'https://via.placeholder.com/250'}
-                      alt={product.name}
-                      style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '4px' }}
-                    />
+                  <div key={product.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '250px' }}>
+                    <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
                     <h3>{product.name}</h3>
                     <p><strong>Precio:</strong> ${product.price}</p>
-                    <p><strong>Estado:</strong> {product.status === 'paused' ? 'Pausado' : 'Activo'}</p>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
+                    <p><strong>Estado:</strong> {product.status}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <button onClick={() => navigate(`/editproduct/${product.id}`)}>Editar</button>
-                      <button onClick={() => handlePauseToggle(product.id, product.status)}>
-                        {product.status === 'paused' ? 'Reactivar' : 'Pausar'}
-                      </button>
-                      <button onClick={() => handleDelete(product.id)} style={{ color: 'red' }}>
-                        Eliminar
-                      </button>
+                      <button onClick={() => handlePauseToggle(product.id, product.status)}>{product.status === 'paused' ? 'Reactivar' : 'Pausar'}</button>
+                      <button onClick={() => handleDelete(product.id)} style={{ color: 'red' }}>Eliminar</button>
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        );
+      case 'eliminados':
+        return (
+          <>
+            <h2>Productos Eliminados</h2>
+            {deletedProducts.length === 0 ? (
+              <p>No tienes productos eliminados.</p>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                {deletedProducts.map((product) => (
+                  <div key={product.id} style={{ border: '1px dashed red', padding: '10px', borderRadius: '8px', width: '250px' }}>
+                    <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                    <h3>{product.name}</h3>
+                    <p><strong>Precio:</strong> ${product.price}</p>
+                    <p><strong>Eliminado el:</strong> {new Date(product.deleted_at).toLocaleDateString()}</p>
+                    <button onClick={() => handleRestore(product.id)}>Restaurar</button>
                   </div>
                 ))}
               </div>
@@ -218,80 +262,45 @@ function ProfilePage() {
             <h2>Datos del Usuario</h2>
             {showPasswordPrompt ? (
               <form onSubmit={handlePasswordVerification}>
-                <label>
-                  Ingresa tu contraseña para continuar:
-                  <input
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    required
-                  />
+                <label>Contraseña:
+                  <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} required />
                 </label>
                 <button type="submit">Verificar</button>
                 {authError && <p style={{ color: 'red' }}>{authError}</p>}
               </form>
             ) : (
               <form onSubmit={handleUserFormSubmit}>
+                <div><strong>Nombre:</strong> {userDetails.first_name || ''}</div>
+                <div><strong>Apellido:</strong> {userDetails.last_name || ''}</div>
+                <div><strong>Fecha de Nacimiento:</strong> {userDetails.birth_year || ''}</div>
                 <div>
-                  <label><strong>Nombre:</strong> {userDetails.first_name || ''}</label>
-                </div>
-                <div>
-                  <label><strong>Apellido:</strong> {userDetails.last_name || ''}</label>
-                </div>
-                <div>
-                  <label><strong>Fecha de Nacimiento:</strong> {userDetails.birth_year || ''}</label>
-                </div>
-                <div>
-                  <label><strong>Nickname:</strong> {userDetails.nickname || ''}</label>
-                </div>
-                <div>
-                  <label><strong>Teléfono principal:</strong>
-                    <input
-                      type="text"
-                      name="phone"
-                      value={userForm.phone}
-                      onChange={handleUserFormChange}
-                    />
+                  <label><strong>Nickname:</strong>
+                    <input name="nickname" value={userForm.nickname} onChange={handleUserFormChange} />
                   </label>
                 </div>
                 <div>
-                  <label><strong>Teléfono alternativo:</strong>
-                    <input
-                      type="text"
-                      name="altPhone"
-                      value={userForm.altPhone}
-                      onChange={handleUserFormChange}
-                    />
+                  <label><strong>Teléfono Principal:</strong>
+                    <input name="phone" value={userForm.phone} onChange={handleUserFormChange} />
                   </label>
                 </div>
                 <div>
-                  <label><strong>Correo principal:</strong>
-                    <input
-                      type="email"
-                      name="email"
-                      value={userForm.email}
-                      onChange={handleUserFormChange}
-                    />
+                  <label><strong>Teléfono Alternativo:</strong>
+                    <input name="altPhone" value={userForm.altPhone} onChange={handleUserFormChange} />
                   </label>
                 </div>
                 <div>
-                  <label><strong>Correo alternativo:</strong>
-                    <input
-                      type="text"
-                      name="altEmail"
-                      value={userForm.altEmail}
-                      onChange={handleUserFormChange}
-                    />
+                  <label><strong>Correo Principal:</strong>
+                    <input name="email" value={userForm.email} onChange={handleUserFormChange} />
                   </label>
                 </div>
                 <div>
-                  <label><strong>Nueva contraseña:</strong>
-                    <input
-                      type="password"
-                      name="password"
-                      value={userForm.password}
-                      onChange={handleUserFormChange}
-                    />
+                  <label><strong>Correo Alternativo:</strong>
+                    <input name="altEmail" value={userForm.altEmail} onChange={handleUserFormChange} />
+                  </label>
+                </div>
+                <div>
+                  <label><strong>Contraseña:</strong>
+                    <input type="password" name="password" value={userForm.password} onChange={handleUserFormChange} />
                   </label>
                 </div>
                 <button type="submit">Actualizar Información</button>
@@ -308,15 +317,14 @@ function ProfilePage() {
   return (
     <div style={{ padding: '20px' }}>
       <h1>Mi Perfil</h1>
-
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
         <button onClick={() => setActiveTab('productos')}>Mis Productos</button>
+        <button onClick={() => setActiveTab('eliminados')}>Productos Eliminados</button>
         <button onClick={() => setActiveTab('compras')}>Mis Compras</button>
         <button onClick={() => setActiveTab('ventas')}>Mis Ventas</button>
         <button onClick={() => setActiveTab('valoracion')}>Valoración</button>
         <button onClick={() => setActiveTab('usuario')}>Datos de Usuario</button>
       </div>
-
       {loading ? <p>Cargando datos...</p> : renderTabContent()}
     </div>
   );
