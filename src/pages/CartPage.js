@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+// src/pages/CartPage.js
+
+import React, { useEffect, useState } from 'react';
 import { useCarrito } from '../context/CarritoContext';
 import { useAuth } from '../context/AuthContext';
 import supabase from '../supabase';
@@ -8,6 +10,9 @@ function CartPage() {
   const { currentUser } = useAuth();
   const [cartItems, setCartItems] = useState([]);
   const [processing, setProcessing] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSellerModal, setShowSellerModal] = useState(false);
+  const [sellerInfo, setSellerInfo] = useState([]);
 
   useEffect(() => {
     const fetchCartItems = async () => {
@@ -23,7 +28,9 @@ function CartPage() {
             price,
             quantity,
             mainphoto,
-            status
+            status,
+            owner,
+            owneremail
           )
         `)
         .eq('user_id', currentUser.id)
@@ -38,6 +45,8 @@ function CartPage() {
           stock: item.products?.quantity,
           mainphoto: item.products?.mainphoto,
           status: item.products?.status,
+          owner: item.products?.owner,
+          owneremail: item.products?.owneremail,
           created_at: item.created_at,
         }));
         setCartItems(formattedCart);
@@ -50,10 +59,7 @@ function CartPage() {
   }, [currentUser]);
 
   const availableItems = cartItems.filter(item => item.status !== 'paused' && item.status !== 'deleted');
-  const total = availableItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
+  const total = availableItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   const handleQuantityChange = (item, newQty) => {
     if (!isNaN(newQty) && newQty <= item.stock) {
@@ -63,18 +69,17 @@ function CartPage() {
           ci.id === item.id ? { ...ci, quantity: newQty } : ci
         )
       );
-      supabase.from('cart')
-        .update({ quantity: newQty })
-        .eq('user_id', currentUser.id)
-        .eq('product_id', item.id);
     } else {
       alert(`No puedes seleccionar más de ${item.stock} unidades.`);
     }
   };
 
-  const handleConfirmPurchase = async () => {
-    if (!currentUser || availableItems.length === 0) return;
+  const handleConfirmPurchase = () => {
+    setShowConfirmModal(true);
+  };
 
+  const handleProceedPurchase = async () => {
+    setShowConfirmModal(false);
     setProcessing(true);
 
     try {
@@ -105,18 +110,26 @@ function CartPage() {
       if (itemsError) throw new Error(itemsError.message);
 
       for (const item of availableItems) {
-        const { error: stockError } = await supabase
+        const updatedStock = item.quantity > item.stock ? 0 : item.stock - item.quantity;
+        await supabase
           .from('products')
           .update({
-            quantity: item.quantity > item.stock
-              ? 0
-              : item.stock - item.quantity,
+            quantity: updatedStock,
+            status: updatedStock === 0 ? 'deleted' : undefined,
           })
           .eq('id', item.id);
-        if (stockError) console.warn('Error actualizando stock:', stockError.message);
       }
 
-      alert('¡Compra realizada con éxito!');
+      // Mostrar modal de vendedores
+      const sellerSet = {};
+      availableItems.forEach(item => {
+        if (!sellerSet[item.owner]) {
+          sellerSet[item.owner] = item.owneremail;
+        }
+      });
+
+      setSellerInfo(Object.entries(sellerSet).map(([id, email]) => ({ id, email })));
+      setShowSellerModal(true);
       clearCart();
       setCartItems([]);
     } catch (err) {
@@ -166,7 +179,7 @@ function CartPage() {
               {item.status === 'deleted' ? (
                 <p style={{ color: 'red', fontWeight: 'bold' }}>Producto no disponible.</p>
               ) : item.status === 'paused' ? (
-                <p style={{ color: 'red', fontWeight: 'bold' }}>Este producto está pausado.</p>
+                <p style={{ color: 'orange', fontWeight: 'bold' }}>Este producto está pausado.</p>
               ) : (
                 <>
                   <p>Precio unitario: ${item.price}</p>
@@ -192,6 +205,46 @@ function CartPage() {
           <button onClick={handleConfirmPurchase} disabled={processing || availableItems.length === 0}>
             {processing ? 'Procesando...' : 'Confirmar Compra'}
           </button>
+        </div>
+      )}
+
+      {showConfirmModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0,
+          width: '100%', height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white', padding: '30px', borderRadius: '8px',
+            textAlign: 'center', maxWidth: '400px'
+          }}>
+            <h3>¿Deseas confirmar tu compra?</h3>
+            <p>{availableItems.length} producto(s)</p>
+            <p>Total a pagar: <strong>${total.toFixed(2)}</strong></p>
+            <button onClick={handleProceedPurchase} style={{ marginRight: '10px' }}>Confirmar</button>
+            <button onClick={() => setShowConfirmModal(false)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {showSellerModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0,
+          width: '100%', height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white', padding: '30px', borderRadius: '8px',
+            textAlign: 'center', maxWidth: '400px'
+          }}>
+            <h3>Información de vendedores</h3>
+            {sellerInfo.map((seller, i) => (
+              <p key={i}><strong>Email:</strong> {seller.email}</p>
+            ))}
+            <button onClick={() => setShowSellerModal(false)}>Cerrar</button>
+          </div>
         </div>
       )}
     </div>

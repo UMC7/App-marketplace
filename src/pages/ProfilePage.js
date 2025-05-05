@@ -7,6 +7,8 @@ function ProfilePage() {
   const { currentUser } = useAuth();
   const [products, setProducts] = useState([]);
   const [deletedProducts, setDeletedProducts] = useState([]);
+  const [sales, setSales] = useState([]);
+  const [purchases, setPurchases] = useState([]);
   const [userDetails, setUserDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('productos');
@@ -60,8 +62,20 @@ function ProfilePage() {
           .eq('status', 'deleted')
           .order('deleted_at', { ascending: false });
 
+        const { data: soldItems } = await supabase
+          .from('purchase_items')
+          .select('*, purchases(*, users!purchases_user_id_fkey(first_name, last_name, email))')
+          .in('product_id', productData.map(p => p.id));
+
+        const { data: myPurchases } = await supabase
+          .from('purchase_items')
+          .select('*, product_id, purchases(*, created_at), products(name, owner, mainphoto), users(first_name, last_name, email)')
+          .eq('purchases.user_id', currentUser.id);
+
         setProducts(productData || []);
         setDeletedProducts(deletedData || []);
+        setSales(soldItems || []);
+        setPurchases(myPurchases || []);
       } catch (error) {
         console.error('Error al cargar los datos:', error.message);
       } finally {
@@ -249,12 +263,49 @@ function ProfilePage() {
             )}
           </>
         );
-      case 'compras':
-        return <p>Mis Compras (en desarrollo)</p>;
       case 'ventas':
-        return <p>Mis Ventas (en desarrollo)</p>;
-      case 'valoracion':
-        return <p>Valoración (en desarrollo)</p>;
+        return (
+          <>
+            <h2>Mis Ventas</h2>
+            {sales.length === 0 ? (
+              <p>No has realizado ventas aún.</p>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                {sales.map((item) => (
+                  <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
+                    <p><strong>Producto ID:</strong> {item.product_id}</p>
+                    <p><strong>Cantidad:</strong> {item.quantity}</p>
+                    <p><strong>Total:</strong> ${item.total_price}</p>
+                    <p><strong>Comprador:</strong> {item.purchases?.users?.first_name} {item.purchases?.users?.last_name}</p>
+                    <p><strong>Email:</strong> {item.purchases?.users?.email}</p>
+                    <p><strong>Fecha:</strong> {new Date(item.purchases?.created_at).toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        );
+      case 'compras':
+        return (
+          <>
+            <h2>Mis Compras</h2>
+            {purchases.length === 0 ? (
+              <p>No has realizado compras aún.</p>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                {purchases.map((item) => (
+                  <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
+                    <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
+                    <p><strong>Cantidad:</strong> {item.quantity}</p>
+                    <p><strong>Total:</strong> ${item.total_price}</p>
+                    <p><strong>Vendedor:</strong> {item.products?.owner || 'ID no disponible'}</p>
+                    <p><strong>Fecha:</strong> {new Date(item.purchases?.created_at).toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        );
       case 'usuario':
         return (
           <>
