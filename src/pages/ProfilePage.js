@@ -190,7 +190,6 @@ function ProfilePage() {
           phone: userForm.phone,
           alt_phone: userForm.altPhone,
           alt_email: userForm.altEmail,
-          nickname: userForm.nickname,
         })
         .eq('id', currentUser.id);
 
@@ -273,11 +272,7 @@ function ProfilePage() {
                 <div><strong>Nombre:</strong> {userDetails.first_name || ''}</div>
                 <div><strong>Apellido:</strong> {userDetails.last_name || ''}</div>
                 <div><strong>Fecha de Nacimiento:</strong> {userDetails.birth_year || ''}</div>
-                <div>
-                  <label><strong>Nickname:</strong>
-                    <input name="nickname" value={userForm.nickname} onChange={handleUserFormChange} />
-                  </label>
-                </div>
+                <div><strong>Nickname:</strong> {userDetails.nickname || ''}</div>
                 <div>
                   <label><strong>Teléfono Principal:</strong>
                     <input name="phone" value={userForm.phone} onChange={handleUserFormChange} />

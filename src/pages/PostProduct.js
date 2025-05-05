@@ -1,5 +1,3 @@
-// src/pages/PostProduct.js
-
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabase';
 import ImageUploader from '../components/ImageUploader';
@@ -35,7 +33,7 @@ const PostProduct = () => {
     "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"
   ];
 
-  const conditions = ["Nuevo", "Usado", "Remanufacturado"];
+  const conditions = ["Nuevo", "Usado", "Reacondicionado"];
 
   useEffect(() => {
     const fetchUser = async () => {
