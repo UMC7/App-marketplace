@@ -62,15 +62,60 @@ function ProfilePage() {
           .eq('status', 'deleted')
           .order('deleted_at', { ascending: false });
 
-        const { data: soldItems } = await supabase
-          .from('purchase_items')
-          .select('*, purchases(*, users!purchases_user_id_fkey(first_name, last_name, email))')
-          .in('product_id', productData.map(p => p.id));
-
-        const { data: myPurchases } = await supabase
-          .from('purchase_items')
-          .select('*, product_id, purchases(*, created_at), products(name, owner, mainphoto), users(first_name, last_name, email)')
-          .eq('purchases.user_id', currentUser.id);
+          // VENTAS
+const { data: soldItems } = await supabase
+.from('purchase_items')
+.select(`
+  id,
+  quantity,
+  total_price,
+  product_id,
+  products (
+    id,
+    name,
+    mainphoto,
+    owner
+  ),
+  purchases (
+    id,
+    created_at,
+    user_id,
+    users!purchases_user_id_fkey (
+      first_name,
+      last_name,
+      email
+    )
+  )
+`)
+.eq('products.owner', currentUser.id);    
+                 
+          // COMPRAS
+const { data: myPurchases } = await supabase
+.from('purchase_items')
+.select(`
+  id,
+  quantity,
+  total_price,
+  product_id,
+  products (
+    id,
+    name,
+    mainphoto,
+    owner
+  ),
+  purchases (
+    id,
+    created_at,
+    user_id,
+    users!purchases_user_id_fkey (
+      first_name,
+      last_name,
+      email
+    )
+  )
+`)
+.eq('purchases.user_id', currentUser.id);       
+                        
 
         setProducts(productData || []);
         setDeletedProducts(deletedData || []);
@@ -272,8 +317,13 @@ function ProfilePage() {
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {sales.map((item) => (
-                  <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
-                    <p><strong>Producto ID:</strong> {item.product_id}</p>
+  <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
+    <img
+      src={item.products?.mainphoto || 'https://via.placeholder.com/250'}
+      alt={item.products?.name || 'Producto'}
+      style={{ width: '100%', height: '150px', objectFit: 'cover' }}
+    />
+    <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
                     <p><strong>Cantidad:</strong> {item.quantity}</p>
                     <p><strong>Total:</strong> ${item.total_price}</p>
                     <p><strong>Comprador:</strong> {item.purchases?.users?.first_name} {item.purchases?.users?.last_name}</p>
@@ -281,6 +331,7 @@ function ProfilePage() {
                     <p><strong>Fecha:</strong> {new Date(item.purchases?.created_at).toLocaleString()}</p>
                   </div>
                 ))}
+
               </div>
             )}
           </>
@@ -294,14 +345,20 @@ function ProfilePage() {
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {purchases.map((item) => (
-                  <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
-                    <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
+  <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
+    <img
+      src={item.products?.mainphoto || 'https://via.placeholder.com/250'}
+      alt={item.products?.name || 'Producto'}
+      style={{ width: '100%', height: '150px', objectFit: 'cover' }}
+    />
+    <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
                     <p><strong>Cantidad:</strong> {item.quantity}</p>
                     <p><strong>Total:</strong> ${item.total_price}</p>
-                    <p><strong>Vendedor:</strong> {item.products?.owner || 'ID no disponible'}</p>
+                    <p><strong>Vendedor (ID):</strong> {item.products?.owner || 'No disponible'}</p>
                     <p><strong>Fecha:</strong> {new Date(item.purchases?.created_at).toLocaleString()}</p>
                   </div>
                 ))}
+
               </div>
             )}
           </>
