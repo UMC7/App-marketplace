@@ -1,3 +1,5 @@
+// src/pages/ProfilePage.js
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -31,6 +33,7 @@ function ProfilePage() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        console.log('🔍 currentUser.id:', currentUser.id);
         const { data, error } = await supabase
           .from('users')
           .select('first_name, last_name, birth_year, nickname, phone, alt_phone, alt_email')
@@ -55,81 +58,80 @@ function ProfilePage() {
           .not('status', 'eq', 'deleted')
           .order('created_at', { ascending: false });
 
-        const { data: deletedData } = await supabase
-          .from('products')
-          .select('*')
-          .eq('owner', currentUser.id)
-          .eq('status', 'deleted')
-          .order('deleted_at', { ascending: false });
+        const { data: soldItems, error: soldError } = await supabase
+          .from('purchase_items')
+          .select(`
+            id,
+            quantity,
+            total_price,
+            product_id,
+            products (
+              id,
+              name,
+              mainphoto,
+              owner
+            ),
+            purchases (
+              id,
+              created_at,
+              user_id
+            )
+          `);        
 
-          // VENTAS
-const { data: soldItems } = await supabase
-.from('purchase_items')
-.select(`
-  id,
-  quantity,
-  total_price,
-  product_id,
-  products (
+        const filteredSales = (soldItems || []).filter(item => item.products?.owner === currentUser.id);
+        console.log('💰 Mis Ventas:', soldItems);
+        if (soldError) console.error('❌ Error ventas:', soldError.message);
+
+        console.log('🧪 Mis Ventas - Owner IDs:', soldItems?.map(i => i.products?.owner));
+
+        console.log('🧪 Mis Ventas filtradas:', filteredSales);
+        setSales(filteredSales);
+
+        console.log('🧪 SOLD RAW:', JSON.stringify(soldItems, null, 2));
+
+        const { data: myPurchases, error: purchaseError } = await supabase
+  .from('purchase_items')
+  .select(`
     id,
-    name,
-    mainphoto,
-    owner
-  ),
-  purchases (
-    id,
-    created_at,
-    user_id,
-    users!purchases_user_id_fkey (
-      first_name,
-      last_name,
-      email
+    quantity,
+    total_price,
+    product_id,
+    products (
+      id,
+      name,
+      mainphoto,
+      owner
+    ),
+    purchases (
+      id,
+      created_at,
+      user_id
     )
-  )
-`)
-.eq('products.owner', currentUser.id);    
-                 
-          // COMPRAS
-const { data: myPurchases } = await supabase
-.from('purchase_items')
-.select(`
-  id,
-  quantity,
-  total_price,
-  product_id,
-  products (
-    id,
-    name,
-    mainphoto,
-    owner
-  ),
-  purchases (
-    id,
-    created_at,
-    user_id,
-    users!purchases_user_id_fkey (
-      first_name,
-      last_name,
-      email
-    )
-  )
-`)
-.eq('purchases.user_id', currentUser.id);       
-                        
+  `);      
+
+        console.log('🛒 Mis Compras:', myPurchases);
+        if (purchaseError) console.error('❌ Error compras:', purchaseError.message);
+
+        console.log('🧪 Mis Compras - Buyer IDs:', myPurchases?.map(i => i.purchases?.user_id));
+
+        const filteredPurchases = (myPurchases || []).filter(item => item.purchases?.user_id === currentUser.id);
+        console.log('🧪 Mis Compras filtradas:', filteredPurchases);
+        console.log('🧪 PURCHASE RAW:', JSON.stringify(myPurchases, null, 2));
+        setPurchases(filteredPurchases);
 
         setProducts(productData || []);
         setDeletedProducts(deletedData || []);
-        setSales(soldItems || []);
-        setPurchases(myPurchases || []);
+        setSales(Array.isArray(soldItems) ? soldItems : []);
+        setPurchases(Array.isArray(myPurchases) ? myPurchases : []);
       } catch (error) {
-        console.error('Error al cargar los datos:', error.message);
+        console.error('Error general al cargar datos:', error.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserData();
-  }, [currentUser]);
+    if (currentUser?.id) fetchUserData();
+}, [currentUser]);
 
   const handlePauseToggle = async (productId, currentStatus) => {
     try {
@@ -317,13 +319,9 @@ const { data: myPurchases } = await supabase
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {sales.map((item) => (
-  <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
-    <img
-      src={item.products?.mainphoto || 'https://via.placeholder.com/250'}
-      alt={item.products?.name || 'Producto'}
-      style={{ width: '100%', height: '150px', objectFit: 'cover' }}
-    />
-    <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
+                  <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
+                    <img src={item.products?.mainphoto || 'https://via.placeholder.com/250'} alt={item.products?.name || 'Producto'} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                    <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
                     <p><strong>Cantidad:</strong> {item.quantity}</p>
                     <p><strong>Total:</strong> ${item.total_price}</p>
                     <p><strong>Comprador:</strong> {item.purchases?.users?.first_name} {item.purchases?.users?.last_name}</p>
@@ -331,7 +329,6 @@ const { data: myPurchases } = await supabase
                     <p><strong>Fecha:</strong> {new Date(item.purchases?.created_at).toLocaleString()}</p>
                   </div>
                 ))}
-
               </div>
             )}
           </>
@@ -345,20 +342,15 @@ const { data: myPurchases } = await supabase
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {purchases.map((item) => (
-  <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
-    <img
-      src={item.products?.mainphoto || 'https://via.placeholder.com/250'}
-      alt={item.products?.name || 'Producto'}
-      style={{ width: '100%', height: '150px', objectFit: 'cover' }}
-    />
-    <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
+                  <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
+                    <img src={item.products?.mainphoto || 'https://via.placeholder.com/250'} alt={item.products?.name || 'Producto'} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                    <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
                     <p><strong>Cantidad:</strong> {item.quantity}</p>
                     <p><strong>Total:</strong> ${item.total_price}</p>
                     <p><strong>Vendedor (ID):</strong> {item.products?.owner || 'No disponible'}</p>
                     <p><strong>Fecha:</strong> {new Date(item.purchases?.created_at).toLocaleString()}</p>
                   </div>
                 ))}
-
               </div>
             )}
           </>
