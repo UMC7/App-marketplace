@@ -34,101 +34,107 @@ function ProfilePage() {
     const fetchUserData = async () => {
       try {
         console.log('🔍 currentUser.id:', currentUser.id);
-        const { data, error } = await supabase
-          .from('users')
-          .select('first_name, last_name, birth_year, nickname, phone, alt_phone, alt_email')
-          .eq('id', currentUser.id)
-          .single();
-
-        if (error) throw error;
-        setUserDetails(data);
+    
+        const [
+          { data: userData, error: userError },
+          { data: productData, error: productError },
+          { data: deletedData, error: deletedError },
+          { data: soldItems, error: soldError },
+          { data: myPurchases, error: purchaseError }
+        ] = await Promise.all([
+          supabase
+            .from('users')
+            .select('first_name, last_name, birth_year, nickname, phone, alt_phone, alt_email')
+            .eq('id', currentUser.id)
+            .single(),
+          supabase
+            .from('products')
+            .select('*')
+            .eq('owner', currentUser.id)
+            .not('status', 'eq', 'deleted')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('products')
+            .select('*')
+            .eq('owner', currentUser.id)
+            .eq('status', 'deleted')
+            .order('deleted_at', { ascending: false }),
+          supabase
+            .from('purchase_items')
+            .select(`
+              id,
+              quantity,
+              total_price,
+              product_id,
+              products (
+                id,
+                name,
+                mainphoto,
+                owner
+              ),
+              purchases (
+                id,
+                created_at,
+                user_id
+              )
+            `),
+          supabase
+            .from('purchase_items')
+            .select(`
+              id,
+              quantity,
+              total_price,
+              product_id,
+              products (
+                id,
+                name,
+                mainphoto,
+                owner
+              ),
+              purchases (
+                id,
+                created_at,
+                user_id
+              )
+            `)
+        ]);
+    
+        if (userError) throw userError;
+        setUserDetails(userData);
         setUserForm((prev) => ({
           ...prev,
           email: currentUser.email,
-          nickname: data.nickname || '',
-          phone: data.phone || '',
-          altPhone: data.alt_phone || '',
-          altEmail: data.alt_email || '',
+          nickname: userData.nickname || '',
+          phone: userData.phone || '',
+          altPhone: userData.alt_phone || '',
+          altEmail: userData.alt_email || '',
         }));
-
-        const { data: productData } = await supabase
-          .from('products')
-          .select('*')
-          .eq('owner', currentUser.id)
-          .not('status', 'eq', 'deleted')
-          .order('created_at', { ascending: false });
-
-        const { data: soldItems, error: soldError } = await supabase
-          .from('purchase_items')
-          .select(`
-            id,
-            quantity,
-            total_price,
-            product_id,
-            products (
-              id,
-              name,
-              mainphoto,
-              owner
-            ),
-            purchases (
-              id,
-              created_at,
-              user_id
-            )
-          `);        
-
+    
         const filteredSales = (soldItems || []).filter(item => item.products?.owner === currentUser.id);
-        console.log('💰 Mis Ventas:', soldItems);
-        if (soldError) console.error('❌ Error ventas:', soldError.message);
-
-        console.log('🧪 Mis Ventas - Owner IDs:', soldItems?.map(i => i.products?.owner));
-
-        console.log('🧪 Mis Ventas filtradas:', filteredSales);
-        setSales(filteredSales);
-
-        console.log('🧪 SOLD RAW:', JSON.stringify(soldItems, null, 2));
-
-        const { data: myPurchases, error: purchaseError } = await supabase
-  .from('purchase_items')
-  .select(`
-    id,
-    quantity,
-    total_price,
-    product_id,
-    products (
-      id,
-      name,
-      mainphoto,
-      owner
-    ),
-    purchases (
-      id,
-      created_at,
-      user_id
-    )
-  `);      
-
-        console.log('🛒 Mis Compras:', myPurchases);
-        if (purchaseError) console.error('❌ Error compras:', purchaseError.message);
-
-        console.log('🧪 Mis Compras - Buyer IDs:', myPurchases?.map(i => i.purchases?.user_id));
-
         const filteredPurchases = (myPurchases || []).filter(item => item.purchases?.user_id === currentUser.id);
+    
+        console.log('💰 Mis Ventas:', soldItems);
+        console.log('🧪 Mis Ventas - Owner IDs:', soldItems?.map(i => i.products?.owner));
+        console.log('🧪 Mis Ventas filtradas:', filteredSales);
+        console.log('🧪 SOLD RAW:', JSON.stringify(soldItems, null, 2));
+    
+        console.log('🛒 Mis Compras:', myPurchases);
+        console.log('🧪 Mis Compras - Buyer IDs:', myPurchases?.map(i => i.purchases?.user_id));
         console.log('🧪 Mis Compras filtradas:', filteredPurchases);
         console.log('🧪 PURCHASE RAW:', JSON.stringify(myPurchases, null, 2));
-        setPurchases(filteredPurchases);
-
+    
+        console.log('🗑️ Productos Eliminados:', deletedData);
+    
         setProducts(productData || []);
         setDeletedProducts(deletedData || []);
-        setSales(Array.isArray(soldItems) ? soldItems : []);
-        setPurchases(Array.isArray(myPurchases) ? myPurchases : []);
+        setSales(filteredSales);
+        setPurchases(filteredPurchases);
       } catch (error) {
         console.error('Error general al cargar datos:', error.message);
       } finally {
         setLoading(false);
       }
-    };
+    };    
 
     if (currentUser?.id) fetchUserData();
 }, [currentUser]);
