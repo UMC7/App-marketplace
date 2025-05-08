@@ -46,7 +46,7 @@ function RegisterPage() {
       }
 
       const userId = data.user.id;
-      console.log('✅ Usuario registrado en auth:', userId);
+      console.log('✅ Usuario registrado:', userId);
 
       const insertData = {
         id: userId,
@@ -57,19 +57,23 @@ function RegisterPage() {
         phone: form.phone,
         alt_phone: form.altPhone || null,
         alt_email: form.altEmail || null,
+        updated_at: new Date().toISOString(),
       };
 
-      console.log('📤 Insertando en tabla users:', insertData);
+      // 👇 actualizamos con UPSERT para evitar errores si el trigger ya creó la fila
+      const { error: upsertError, data: upsertResult } = await supabase
+        .from('users')
+        .upsert(insertData, { onConflict: 'id' });
 
-      const { error: insertError } = await supabase.from('users').insert([insertData]);
+      console.log('🧪 Resultado de upsert:', upsertResult);
 
-      if (insertError) {
-        console.error('❌ Error al insertar en tabla users:', insertError.message);
-        alert('Registro parcial: usuario creado pero error al guardar información adicional.');
+      if (upsertError) {
+        console.error('❌ Error al guardar datos del usuario:', upsertError.message);
+        alert('Registro incompleto: se creó el usuario pero no se guardaron todos los datos.');
         return;
       }
 
-      console.log('✅ Usuario insertado correctamente en tabla users.');
+      console.log('✅ Datos de usuario actualizados correctamente.');
       navigate('/profile');
     } catch (err) {
       console.error('❌ Error inesperado:', err.message);
