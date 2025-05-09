@@ -14,55 +14,72 @@ function CartPage() {
   const [showSellerModal, setShowSellerModal] = useState(false);
   const [sellerInfo, setSellerInfo] = useState([]);
 
-  useEffect(() => {
-    const fetchCartItems = async () => {
+      const fetchCartItems = async () => {
       if (!currentUser) return;
 
       const { data, error } = await supabase
-  .from('cart')
-  .select(`
-    *,
-    products (
-      id,
-      name,
-      price,
-      quantity,
-      mainphoto,
-      status,
-      owner,
-      users!products_owner_fkey (
-        id,
-        email,
-        first_name,
-        last_name,
-        phone
-      )
-    )
-  `)
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false });
+        .from('cart')
+        .select(`
+          *,
+          products (
+          id,
+          name,
+          price,
+          quantity,
+          mainphoto,
+          status,
+          owner,
+          users!products_owner_fkey (
+            id,
+            email,
+            first_name,
+            last_name,
+            phone
+          )
+        )
+      `)
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
 
-      if (!error && data) {
-        const formattedCart = data.map((item) => ({
-          id: item.product_id,
-          quantity: item.quantity,
-          price: item.products?.price,
-          name: item.products?.name,
-          stock: item.products?.quantity,
-          mainphoto: item.products?.mainphoto,
-          status: item.products?.status,
-          owner: item.products?.owner,
-          ownerInfo: item.products?.users,
-          created_at: item.created_at,
-        }));
+        if (!error && data) {
+          const formattedCart = data.map((item) => {
+            const adjustedQuantity = Math.min(item.quantity, item.products?.quantity || 0);
+            const recortado = item.quantity > adjustedQuantity;
+        
+            return {
+              id: item.product_id,
+              quantity: adjustedQuantity,
+              price: item.products?.price,
+              name: item.products?.name,
+              stock: item.products?.quantity,
+              mainphoto: item.products?.mainphoto,
+              status: item.products?.status,
+              owner: item.products?.owner,
+              ownerInfo: item.products?.users,
+              created_at: item.created_at,
+              recortado, // 🔶 campo extra
+            };
+          });
         setCartItems(formattedCart);
       } else {
         console.error('Error al cargar el carrito:', error?.message);
       }
     };
 
+    useEffect(() => {
     fetchCartItems();
   }, [currentUser]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchCartItems();
+      }
+    };
+  
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [currentUser]);  
 
   const availableItems = cartItems.filter(item => item.status !== 'paused' && item.status !== 'deleted');
   const total = availableItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -206,6 +223,13 @@ setCartItems([]);
                       style={{ width: '60px', marginLeft: '10px' }}
                     />
                   </p>
+
+                  {item.recortado && (
+                    <p style={{ color: 'orange', fontWeight: 'bold' }}>
+                      El stock disponible se redujo. Se ajustó tu cantidad a {item.quantity}.
+                    </p>
+                  )}
+
                 </>
               )}
               <p>Subtotal: ${item.status === 'deleted' ? 0 : item.price * item.quantity}</p>

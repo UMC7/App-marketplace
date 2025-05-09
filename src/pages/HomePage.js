@@ -14,6 +14,7 @@ function HomePage() {
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [selectedCondition, setSelectedCondition] = useState('');
   const [countriesWithProducts, setCountriesWithProducts] = useState([]);
+  const [sortOrder, setSortOrder] = useState('');
 
   const fetchProducts = async () => {
     try {
@@ -48,23 +49,23 @@ function HomePage() {
 
   const filterProducts = useCallback(() => {
     let filtered = [...products];
-
+  
     if (selectedCategory) {
       filtered = filtered.filter(
         (product) => String(product.category_id) === String(selectedCategory)
       );
     }
-
+  
     if (selectedCountry) {
       filtered = filtered.filter((product) => product.country === selectedCountry);
     }
-
+  
     if (selectedCity) {
       filtered = filtered.filter((product) =>
         product.city.toLowerCase().includes(selectedCity.toLowerCase())
       );
     }
-
+  
     if (priceRange.min !== '' || priceRange.max !== '') {
       filtered = filtered.filter((product) => {
         const price = product.price;
@@ -73,20 +74,27 @@ function HomePage() {
         return minPriceValid && maxPriceValid;
       });
     }
-
+  
     if (selectedCondition) {
       filtered = filtered.filter((product) => product.condition === selectedCondition);
     }
-
+  
     if (searchTerm) {
       filtered = filtered.filter((product) =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
-
+  
+    // 🔽 Lógica de ordenamiento por precio
+    if (sortOrder === 'asc') {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (sortOrder === 'desc') {
+      filtered.sort((a, b) => b.price - a.price);
+    }
+  
     setFilteredProducts(filtered);
-  }, [products, selectedCategory, selectedCountry, selectedCity, priceRange, selectedCondition, searchTerm]);
+  }, [products, selectedCategory, selectedCountry, selectedCity, priceRange, selectedCondition, searchTerm, sortOrder]);  
 
   useEffect(() => {
     fetchProducts();
@@ -100,7 +108,7 @@ function HomePage() {
   return (
     <div>
       <h1>Bienvenido al Marketplace</h1>
-
+  
       <div className="filters-container">
         <div className="filter-item">
           <input
@@ -111,7 +119,7 @@ function HomePage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-
+  
         <div className="filter-item">
           <select
             className="category-select"
@@ -126,7 +134,7 @@ function HomePage() {
             ))}
           </select>
         </div>
-
+  
         <div className="filter-item">
           <select
             className="category-select"
@@ -141,7 +149,7 @@ function HomePage() {
             ))}
           </select>
         </div>
-
+  
         <div className="filter-item">
           <input
             type="text"
@@ -151,7 +159,7 @@ function HomePage() {
             onChange={(e) => setSelectedCity(e.target.value)}
           />
         </div>
-
+  
         <div className="filter-item">
           <input
             type="number"
@@ -168,7 +176,7 @@ function HomePage() {
             onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
           />
         </div>
-
+  
         <div className="filter-item">
           <select
             className="category-select"
@@ -183,15 +191,28 @@ function HomePage() {
             ))}
           </select>
         </div>
+  
+        {/* ✅ Ordenar por precio - correctamente ubicado aquí */}
+        <div className="filter-item">
+          <select
+            className="category-select"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+          >
+            <option value="">Ordenar por precio</option>
+            <option value="asc">Precio: menor a mayor</option>
+            <option value="desc">Precio: mayor a menor</option>
+          </select>
+        </div>
       </div>
-
+  
       {loading ? (
         <p>Cargando productos...</p>
       ) : (
         <ProductList products={filteredProducts} />
       )}
     </div>
-  );
+  );  
 }
 
 export default HomePage;

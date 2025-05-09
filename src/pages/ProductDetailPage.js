@@ -67,7 +67,9 @@ function ProductDetailPage() {
 
   const isOwner = currentUser?.id === product.owner;
   const enCarrito = cartItems.find(item => item.id === product.id)?.quantity || 0;
-  const stockDisponible = product.quantity - enCarrito;
+  const rawDisponible = product.quantity - enCarrito;
+  const stockDisponible = Math.max(0, rawDisponible); // nunca negativo
+
 
   const handleAddToCart = () => {
     if (product.status === 'paused') {
