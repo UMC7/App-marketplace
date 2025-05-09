@@ -19,20 +19,26 @@ function CartPage() {
       if (!currentUser) return;
 
       const { data, error } = await supabase
-        .from('cart')
-        .select(`
-          *,
-          products (
-            id,
-            name,
-            price,
-            quantity,
-            mainphoto,
-            status,
-            owner,
-            owneremail
-          )
-        `)
+  .from('cart')
+  .select(`
+    *,
+    products (
+      id,
+      name,
+      price,
+      quantity,
+      mainphoto,
+      status,
+      owner,
+      users!products_owner_fkey (
+        id,
+        email,
+        first_name,
+        last_name,
+        phone
+      )
+    )
+  `)
         .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false });
 
@@ -46,7 +52,7 @@ function CartPage() {
           mainphoto: item.products?.mainphoto,
           status: item.products?.status,
           owner: item.products?.owner,
-          owneremail: item.products?.owneremail,
+          ownerInfo: item.products?.users,
           created_at: item.created_at,
         }));
         setCartItems(formattedCart);
@@ -121,17 +127,23 @@ function CartPage() {
       }
 
       // Mostrar modal de vendedores
-      const sellerSet = {};
-      availableItems.forEach(item => {
-        if (!sellerSet[item.owner]) {
-          sellerSet[item.owner] = item.owneremail;
-        }
-      });
+const sellerMap = {};
+availableItems.forEach(item => {
+  const id = item.ownerInfo?.id;
+  if (id && !sellerMap[id]) {
+    sellerMap[id] = {
+      email: item.ownerInfo?.email,
+      name: `${item.ownerInfo?.first_name} ${item.ownerInfo?.last_name}`,
+      phone: item.ownerInfo?.phone,
+    };
+  }
+});
 
-      setSellerInfo(Object.entries(sellerSet).map(([id, email]) => ({ id, email })));
-      setShowSellerModal(true);
-      clearCart();
-      setCartItems([]);
+setSellerInfo(Object.values(sellerMap));
+setShowSellerModal(true);
+clearCart();
+setCartItems([]);
+
     } catch (err) {
       console.error('Error en la compra:', err.message);
       alert('Ocurrió un error al procesar la compra.');
@@ -240,8 +252,13 @@ function CartPage() {
             textAlign: 'center', maxWidth: '400px'
           }}>
             <h3>Información de vendedores</h3>
-            {sellerInfo.map((seller, i) => (
-              <p key={i}><strong>Email:</strong> {seller.email}</p>
+
+          {sellerInfo.map((seller, i) => (
+            <div key={i} style={{ marginBottom: '10px' }}>
+              <p><strong>Nombre:</strong> {seller.name}</p>
+              <p><strong>Teléfono:</strong> {seller.phone || 'No disponible'}</p>
+              <p><strong>Email:</strong> {seller.email}</p>
+            </div>
             ))}
             <button onClick={() => setShowSellerModal(false)}>Cerrar</button>
           </div>

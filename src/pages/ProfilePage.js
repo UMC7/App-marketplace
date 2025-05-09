@@ -75,7 +75,13 @@ function ProfilePage() {
               purchases (
                 id,
                 created_at,
-                user_id
+                user_id,
+                buyer:users (
+                  first_name,
+                  last_name,
+                  phone,
+                  email
+                )
               )
             `),
           supabase
@@ -89,7 +95,14 @@ function ProfilePage() {
                 id,
                 name,
                 mainphoto,
-                owner
+                owner,
+                city,
+                users!products_owner_fkey (
+                  first_name,
+                  last_name,
+                  phone,
+                  email
+                )
               ),
               purchases (
                 id,
@@ -330,9 +343,14 @@ function ProfilePage() {
                     <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
                     <p><strong>Cantidad:</strong> {item.quantity}</p>
                     <p><strong>Total:</strong> ${item.total_price}</p>
-                    <p><strong>Comprador:</strong> {item.purchases?.users?.first_name} {item.purchases?.users?.last_name}</p>
-                    <p><strong>Email:</strong> {item.purchases?.users?.email}</p>
-                    <p><strong>Fecha:</strong> {new Date(item.purchases?.created_at).toLocaleString()}</p>
+                    <p><strong>Comprador:</strong> {item.purchases?.buyer?.first_name} {item.purchases?.buyer?.last_name}</p>
+                    <p><strong>Teléfono:</strong> {item.purchases?.buyer?.phone || 'No disponible'}</p>
+                    <p><strong>Email:</strong> {item.purchases?.buyer?.email || 'No disponible'}</p>
+                    <p><strong>Fecha de Compra:</strong> {new Date(item.purchases?.created_at).toLocaleDateString('es-ES', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
+                    })}</p>
                   </div>
                 ))}
               </div>
@@ -353,8 +371,15 @@ function ProfilePage() {
                     <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
                     <p><strong>Cantidad:</strong> {item.quantity}</p>
                     <p><strong>Total:</strong> ${item.total_price}</p>
-                    <p><strong>Vendedor (ID):</strong> {item.products?.owner || 'No disponible'}</p>
-                    <p><strong>Fecha:</strong> {new Date(item.purchases?.created_at).toLocaleString()}</p>
+                    <p><strong>Vendedor:</strong> {item.products?.users?.first_name} {item.products?.users?.last_name}</p>
+                    <p><strong>Teléfono:</strong> {item.products?.users?.phone || 'No disponible'}</p>
+                    <p><strong>Email:</strong> {item.products?.users?.email || 'No disponible'}</p>
+                    <p><strong>Ciudad:</strong> {item.products?.city || 'No disponible'}</p>
+                    <p><strong>Fecha de Compra:</strong> {new Date(item.purchases?.created_at).toLocaleDateString('es-ES', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
+                    })}</p>
                   </div>
                 ))}
               </div>
