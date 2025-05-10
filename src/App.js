@@ -9,6 +9,7 @@ import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
+import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -17,7 +18,11 @@ import PostProduct from './pages/PostProduct';
 import ProductDetailPage from './pages/ProductDetailPage';
 import FavoritesPage from './pages/FavoritesPage';
 import CartPage from './pages/CartPage';
-import EditProductPage from './pages/EditProductPage'; // ✅ NUEVO
+import EditProductPage from './pages/EditProductPage';
+import YachtServicesPage from './pages/YachtServicesPage';
+import EditServicePage from './pages/EditServicePage'; // ✅ Importación agregada
+
+import './App.css';
 
 function App() {
   const { currentUser, loading } = useAuth();
@@ -31,8 +36,8 @@ function App() {
       <Navbar />
 
       <Routes>
-        {/* Rutas públicas */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/marketplace" element={<HomePage />} />
         <Route
           path="/login"
           element={!currentUser ? <LoginPage /> : <Navigate to="/profile" replace />}
@@ -43,7 +48,6 @@ function App() {
         />
         <Route path="/product/:id" element={<ProductDetailPage />} />
 
-        {/* Rutas protegidas */}
         <Route
           path="/profile"
           element={
@@ -84,8 +88,18 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/editservice/:id"
+          element={
+            <ProtectedRoute>
+              <EditServicePage />
+            </ProtectedRoute>
+          }
+        />{/* ✅ Ruta agregada */}
 
-        {/* Fallback para rutas no encontradas */}
+        <Route path="/yacht-services" element={<YachtServicesPage />} />
+        <Route path="/yacht-services/post-product" element={<PostProduct />} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

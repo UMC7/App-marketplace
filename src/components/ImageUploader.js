@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import supabase from '../supabase';
 
-function ImageUploader({ onUpload, existingImages = [] }) {
+function ImageUploader({ onUpload, existingImages = [], bucket = 'products' }) {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [previewUrls, setPreviewUrls] = useState(existingImages);
@@ -27,7 +27,7 @@ function ImageUploader({ onUpload, existingImages = [] }) {
       const filePath = `additional/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('products')
+        .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false,
@@ -40,7 +40,7 @@ function ImageUploader({ onUpload, existingImages = [] }) {
       }
 
       const { data: publicUrlData } = supabase.storage
-        .from('products')
+        .from(bucket)
         .getPublicUrl(filePath);
 
       if (publicUrlData?.publicUrl) {
@@ -67,7 +67,13 @@ function ImageUploader({ onUpload, existingImages = [] }) {
             key={index}
             src={url}
             alt={`Vista previa ${index + 1}`}
-            style={{ width: '100px', height: '100px', objectFit: 'cover', marginRight: '10px', marginBottom: '10px' }}
+            style={{
+              width: '100px',
+              height: '100px',
+              objectFit: 'cover',
+              marginRight: '10px',
+              marginBottom: '10px',
+            }}
           />
         ))}
       </div>

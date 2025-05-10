@@ -36,27 +36,32 @@ function Navbar() {
   return (
     <nav style={styles.navbar}>
       <div style={styles.leftSection}>
-        <Link to="/" style={styles.logo}>Marketplace</Link>
+        <Link to="/" style={styles.logo}>YachtDayWork</Link>
       </div>
 
       <div style={styles.rightSection}>
-        {currentUser ? (
-          <>
-            <Link to="/profile" style={styles.navLink}>Perfil</Link>
-            <Link to="/post-product" style={styles.navLink}>Publicar Producto</Link>
-            <Link to="/favorites" style={styles.navLink}>Favoritos</Link>
-            <Link to="/cart" style={styles.navLink}>
-              Carrito {totalItems > 0 && <span style={styles.badge}>{totalItems}</span>}
-            </Link>
-            <button onClick={handleLogout} style={styles.logoutButton}>Cerrar sesión</button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" style={styles.navLink}>Iniciar sesión</Link>
-            <Link to="/register" style={styles.navLink}>Registrarse</Link>
-          </>
-        )}
-      </div>
+  {currentUser ? (
+    <>
+      <Link to="/profile" style={styles.navLink}>Perfil</Link>
+      <Link
+        to={window.location.pathname.includes('/yacht-services') ? '/yacht-services/post-product' : '/post-product'}
+        style={styles.navLink}
+      >
+        Publicar Producto
+      </Link>
+      <Link to="/favorites" style={styles.navLink}>Favoritos</Link>
+      <Link to="/cart" style={styles.navLink}>
+        Carrito {totalItems > 0 && <span style={styles.badge}>{totalItems}</span>}
+      </Link>
+      <button onClick={handleLogout} style={styles.logoutButton}>Cerrar sesión</button>
+    </>
+  ) : (
+    <>
+      <Link to="/login" style={styles.navLink}>Iniciar sesión</Link>
+      <Link to="/register" style={styles.navLink}>Registrarse</Link>
+    </>
+  )}
+</div>
     </nav>
   );
 }

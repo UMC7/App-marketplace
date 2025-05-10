@@ -11,6 +11,7 @@ function ProfilePage() {
   const [deletedProducts, setDeletedProducts] = useState([]);
   const [sales, setSales] = useState([]);
   const [purchases, setPurchases] = useState([]);
+  const [services, setServices] = useState([]); // ✅ Nuevo estado para servicios
   const [userDetails, setUserDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('productos');
@@ -40,7 +41,8 @@ function ProfilePage() {
           { data: productData, error: productError },
           { data: deletedData, error: deletedError },
           { data: soldItems, error: soldError },
-          { data: myPurchases, error: purchaseError }
+          { data: myPurchases, error: purchaseError },
+          { data: serviceData, error: serviceError } // Nueva consulta
         ] = await Promise.all([
           supabase
             .from('users')
@@ -109,7 +111,14 @@ function ProfilePage() {
                 created_at,
                 user_id
               )
-            `)
+            `),
+          supabase
+            .from('services') // Nueva consulta
+            .select('*')
+            .eq('owner', currentUser.id)
+            .not('status', 'eq', 'deleted')
+            .order('created_at', { ascending: false })
+    
         ]);
     
         if (userError) throw userError;
@@ -142,6 +151,7 @@ function ProfilePage() {
         setDeletedProducts(deletedData || []);
         setSales(filteredSales);
         setPurchases(filteredPurchases);
+        setServices(serviceData || []);
       } catch (error) {
         console.error('Error general al cargar datos:', error.message);
       } finally {
@@ -224,6 +234,46 @@ function ProfilePage() {
       alert('No se pudo restaurar el producto.');
     }
   };
+
+  const handlePauseToggleService = async (serviceId, currentStatus) => {
+  try {
+    const { error } = await supabase
+      .from('services')
+      .update({ status: currentStatus === 'active' ? 'paused' : 'active' })
+      .eq('id', serviceId);
+
+    if (error) throw error;
+
+    setServices((prev) =>
+      prev.map((s) =>
+        s.id === serviceId ? { ...s, status: currentStatus === 'active' ? 'paused' : 'active' } : s
+      )
+    );
+  } catch (error) {
+    console.error('Error actualizando estado del servicio:', error.message);
+    alert('No se pudo actualizar el estado del servicio.');
+  }
+};
+
+const handleDeleteService = async (serviceId) => {
+  const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este servicio? Esta acción lo ocultará de todos los usuarios.');
+  if (!confirmDelete) return;
+
+  try {
+    const { error } = await supabase
+      .from('services')
+      .update({ status: 'deleted', deleted_at: new Date().toISOString() })
+      .eq('id', serviceId);
+
+    if (error) throw error;
+
+    setServices((prev) => prev.filter((s) => s.id !== serviceId));
+    alert('Servicio eliminado correctamente.');
+  } catch (error) {
+    console.error('Error al eliminar servicio:', error.message);
+    alert('No se pudo eliminar el servicio.');
+  }
+};
 
   const handlePasswordVerification = async (e) => {
     e.preventDefault();
@@ -308,6 +358,35 @@ function ProfilePage() {
             )}
           </>
         );
+  case 'servicios':
+  return (
+    <>
+      <h2>Mis Servicios Publicados</h2>
+      {services.length === 0 ? (
+        <p>No has publicado ningún servicio.</p>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+          {services.map((service) => (
+            <div key={service.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '250px' }}>
+              <img src={service.mainphoto || 'https://via.placeholder.com/250'} alt={service.company_name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+              <h3>{service.company_name}</h3>
+              <p><strong>Ciudad:</strong> {service.city}</p>
+              <p><strong>País:</strong> {service.country}</p>
+              <p><strong>Categoría:</strong> {service.category_id}</p>
+              <p><strong>Estado:</strong> {service.status}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <button onClick={() => navigate(`/editservice/${service.id}`)}>Editar</button>
+                <button onClick={() => handlePauseToggleService(service.id, service.status)}>
+                {service.status === 'paused' ? 'Reactivar' : 'Pausar'}
+                </button>
+                <button onClick={() => handleDeleteService(service.id)} style={{ color: 'red' }}>Eliminar</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
       case 'eliminados':
         return (
           <>
@@ -445,6 +524,7 @@ function ProfilePage() {
       <h1>Mi Perfil</h1>
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
         <button onClick={() => setActiveTab('productos')}>Mis Productos</button>
+        <button onClick={() => setActiveTab('servicios')}>Mis Servicios</button>
         <button onClick={() => setActiveTab('eliminados')}>Productos Eliminados</button>
         <button onClick={() => setActiveTab('compras')}>Mis Compras</button>
         <button onClick={() => setActiveTab('ventas')}>Mis Ventas</button>
