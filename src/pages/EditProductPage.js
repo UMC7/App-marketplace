@@ -5,19 +5,19 @@ import { useAuth } from '../context/AuthContext';
 import ImageUploader from '../components/ImageUploader';
 
 const COUNTRIES = [
-  'Albania', 'Antigua and Barbuda', 'Argentina', 'Australia', 'Bahamas', 'Bahrain', 'Barbados',
-  'Belgium', 'Belize', 'Brazil', 'Brunei', 'Bulgaria', 'Cambodia', 'Canada', 'Cape Verde',
-  'Chile', 'China', 'Colombia', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Denmark', 'Dominica',
-  'Dominican Republic', 'Ecuador', 'Egypt', 'Estonia', 'Fiji', 'Finland', 'France', 'Germany',
-  'Greece', 'Grenada', 'Guatemala', 'Honduras', 'India', 'Indonesia', 'Ireland', 'Israel',
-  'Italy', 'Jamaica', 'Japan', 'Kiribati', 'Kuwait', 'Latvia', 'Libya', 'Lithuania', 'Madagascar',
-  'Malaysia', 'Maldives', 'Malta', 'Marshall Islands', 'Mauritius', 'Mexico', 'Micronesia',
-  'Monaco', 'Montenegro', 'Morocco', 'Myanmar', 'Netherlands', 'New Zealand', 'Nicaragua',
-  'Norway', 'Panama', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Saint Kitts and Nevis',
-  'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'Saudi Arabia', 'Seychelles',
-  'Singapore', 'Solomon Islands', 'South Africa', 'South Korea', 'Spain', 'Sweden', 'Taiwan',
-  'Thailand', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'United Arab Emirates', 'United Kingdom',
-  'United States', 'Uruguay', 'Vanuatu', 'Venezuela', 'Vietnam'
+    "Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "Aruba", "Australia", "Bahamas", "Bahrain", "Barbados",
+    "Belgium", "Belize", "Bonaire", "Brazil", "Brunei", "Bulgaria", "BVI, UK", "Cambodia", "Canada", "Cape Verde",
+    "Chile", "China", "Colombia", "Costa Rica", "Croatia", "Cuba", "Curacao", "Cyprus", "Denmark", "Dominica",
+    "Dominican Republic", "Ecuador", "Egypt", "Estonia", "Fiji", "Finland", "France", "Germany",
+    "Greece", "Grenada", "Guatemala", "Honduras", "India", "Indonesia", "Ireland", "Israel",
+    "Italy", "Jamaica", "Japan", "Kiribati", "Kuwait", "Latvia", "Libya", "Lithuania", "Madagascar",
+    "Malaysia", "Maldives", "Malta", "Marshall Islands", "Mauritius", "Mexico", "Micronesia",
+    "Monaco", "Montenegro", "Morocco", "Myanmar", "Netherlands", "New Zealand", "Nicaragua",
+    "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Saint Kitts and Nevis",
+    "Saint Lucia", "Saint Maarten", "Saint Vincent and the Grenadines", "Samoa", "Saudi Arabia", "Seychelles",
+    "Singapore", "Solomon Islands", "South Africa", "South Korea", "Spain", "Sweden", "Taiwan",
+    "Thailand", "Trinidad and Tobago", "Tunisia", "Turkey", "United Arab Emirates", "United Kingdom",
+    "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"
 ];
 
 const CONDITIONS = ['Nuevo', 'Usado', 'Reacondicionado'];

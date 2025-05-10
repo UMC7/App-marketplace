@@ -20,6 +20,7 @@ import FavoritesPage from './pages/FavoritesPage';
 import CartPage from './pages/CartPage';
 import EditProductPage from './pages/EditProductPage';
 import YachtServicesPage from './pages/YachtServicesPage';
+import YachtWorksPage from './pages/YachtWorksPage'; // ajusta el path si es necesario
 import EditServicePage from './pages/EditServicePage'; // ✅ Importación agregada
 
 import './App.css';
@@ -99,6 +100,7 @@ function App() {
 
         <Route path="/yacht-services" element={<YachtServicesPage />} />
         <Route path="/yacht-services/post-product" element={<PostProduct />} />
+        <Route path="/yacht-works" element={<YachtWorksPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
