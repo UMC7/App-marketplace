@@ -12,6 +12,8 @@ function ProfilePage() {
   const [sales, setSales] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [services, setServices] = useState([]); // ✅ Nuevo estado para servicios
+  const [jobOffers, setJobOffers] = useState([]);
+  const [deletedJobs, setDeletedJobs] = useState([]);
   const [userDetails, setUserDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('productos');
@@ -42,7 +44,9 @@ function ProfilePage() {
           { data: deletedData, error: deletedError },
           { data: soldItems, error: soldError },
           { data: myPurchases, error: purchaseError },
-          { data: serviceData, error: serviceError } // Nueva consulta
+          { data: serviceData, error: serviceError }, // Nueva consulta
+          { data: offersData, error: offersError },
+          { data: deletedJobData, error: deletedJobsError }
         ] = await Promise.all([
           supabase
             .from('users')
@@ -117,10 +121,27 @@ function ProfilePage() {
             .select('*')
             .eq('owner', currentUser.id)
             .not('status', 'eq', 'deleted')
-            .order('created_at', { ascending: false })
-    
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('yacht_work_offers')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .not('status', 'eq', 'deleted')
+            .order('created_at', { ascending: false }),
+            supabase
+            .from('yacht_work_offers')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .eq('status', 'deleted')
+            .order('updated_at', { ascending: false })                
         ]);
     
+        if (deletedJobsError) throw deletedJobsError;
+        setDeletedJobs(deletedJobData || []);
+
+        if (offersError) throw offersError;
+        setJobOffers(offersData || []);
+
         if (userError) throw userError;
         setUserDetails(userData);
         setUserForm((prev) => ({
@@ -275,6 +296,46 @@ const handleDeleteService = async (serviceId) => {
   }
 };
 
+  const handlePauseToggleJob = async (offerId, currentStatus) => {
+  try {
+    const { error } = await supabase
+      .from('yacht_work_offers')
+      .update({ status: currentStatus === 'active' ? 'paused' : 'active' })
+      .eq('id', offerId);
+
+    if (error) throw error;
+
+    setJobOffers((prev) =>
+      prev.map((o) =>
+        o.id === offerId ? { ...o, status: currentStatus === 'active' ? 'paused' : 'active' } : o
+      )
+    );
+  } catch (error) {
+    console.error('Error actualizando estado del empleo:', error.message);
+    alert('No se pudo actualizar el estado del empleo.');
+  }
+};
+
+const handleDeleteJob = async (offerId) => {
+  const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar esta oferta de empleo?');
+  if (!confirmDelete) return;
+
+  try {
+    const { error } = await supabase
+      .from('yacht_work_offers')
+      .update({ status: 'deleted', deleted_at: new Date().toISOString() })
+      .eq('id', offerId);
+
+    if (error) throw error;
+
+    setJobOffers((prev) => prev.filter((o) => o.id !== offerId));
+    alert('Empleo eliminado correctamente.');
+  } catch (error) {
+    console.error('Error al eliminar empleo:', error.message);
+    alert('No se pudo eliminar la oferta de empleo.');
+  }
+};
+
   const handlePasswordVerification = async (e) => {
     e.preventDefault();
     setAuthError('');
@@ -387,27 +448,88 @@ const handleDeleteService = async (serviceId) => {
       )}
     </>
   );
+      case 'empleos':
+  return (
+    <>
+      <h2>Mis Empleos Publicados</h2>
+      {jobOffers.length === 0 ? (
+        <p>No has publicado ofertas de empleo aún.</p>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+          {jobOffers.map((offer) => (
+            <div key={offer.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
+              <h3>{offer.title}</h3>
+              <p><strong>Tipo:</strong> {offer.type}</p>
+              <p><strong>Ubicación:</strong> {offer.city}, {offer.country}</p>
+              <p><strong>Inicio:</strong> {new Date(offer.start_date).toLocaleDateString()}</p>
+              {offer.end_date && <p><strong>Fin:</strong> {new Date(offer.end_date).toLocaleDateString()}</p>}
+              {offer.salary && !offer.is_doe && <p><strong>Salario:</strong> ${offer.salary}</p>}
+              {offer.is_doe && <p><strong>Salario:</strong> DOE</p>}
+              <p><strong>Estado:</strong> {offer.status}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <button onClick={() => handlePauseToggleJob(offer.id, offer.status)}>
+                  {offer.status === 'paused' ? 'Reactivar' : 'Pausar'}
+                </button>
+                <button onClick={() => handleDeleteJob(offer.id)} style={{ color: 'red' }}>Eliminar</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
       case 'eliminados':
-        return (
-          <>
-            <h2>Productos Eliminados</h2>
-            {deletedProducts.length === 0 ? (
-              <p>No tienes productos eliminados.</p>
-            ) : (
+  return (
+    <>
+      <h2>Publicaciones Eliminadas</h2>
+      {deletedProducts.length === 0 && deletedJobs.length === 0 ? (
+        <p>No tienes publicaciones eliminadas.</p>
+      ) : (
+        <>
+          {deletedProducts.length > 0 && (
+            <>
+              <h3>Productos Eliminados</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {deletedProducts.map((product) => (
                   <div key={product.id} style={{ border: '1px dashed red', padding: '10px', borderRadius: '8px', width: '250px' }}>
                     <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
-                    <h3>{product.name}</h3>
+                    <h4>{product.name}</h4>
                     <p><strong>Precio:</strong> ${product.price}</p>
                     <p><strong>Eliminado el:</strong> {new Date(product.deleted_at).toLocaleDateString()}</p>
                     <button onClick={() => handleRestore(product.id)}>Restaurar</button>
                   </div>
                 ))}
               </div>
-            )}
-          </>
-        );
+            </>
+          )}
+          {deletedJobs.length > 0 && (
+            <>
+              <h3>Empleos Eliminados</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                {deletedJobs.map((job) => (
+  <div key={job.id} style={{ border: '1px dashed red', padding: '10px', borderRadius: '8px', width: '280px' }}>
+    <h4>{job.title}</h4>
+    <p><strong>Ubicación:</strong> {job.city}, {job.country}</p>
+    <p><strong>Tipo:</strong> {job.type}</p>
+    <p><strong>Fecha de inicio:</strong> {new Date(job.start_date).toLocaleDateString()}</p>
+    {job.end_date && <p><strong>Fin:</strong> {new Date(job.end_date).toLocaleDateString()}</p>}
+    {job.is_doe ? (
+      <p><strong>Salario:</strong> DOE</p>
+    ) : (
+      job.salary && <p><strong>Salario:</strong> ${job.salary}</p>
+    )}
+    {job.deleted_at && (
+      <p><strong>Eliminado el:</strong> {new Date(job.deleted_at).toLocaleDateString()}</p>
+    )}
+  </div>
+))}
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </>
+  );
       case 'ventas':
         return (
           <>
@@ -525,9 +647,10 @@ const handleDeleteService = async (serviceId) => {
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
         <button onClick={() => setActiveTab('productos')}>Mis Productos</button>
         <button onClick={() => setActiveTab('servicios')}>Mis Servicios</button>
-        <button onClick={() => setActiveTab('eliminados')}>Productos Eliminados</button>
+        <button onClick={() => setActiveTab('empleos')}>Mis Empleos</button>
         <button onClick={() => setActiveTab('compras')}>Mis Compras</button>
         <button onClick={() => setActiveTab('ventas')}>Mis Ventas</button>
+        <button onClick={() => setActiveTab('eliminados')}>Productos Eliminados</button>
         <button onClick={() => setActiveTab('valoracion')}>Valoración</button>
         <button onClick={() => setActiveTab('usuario')}>Datos de Usuario</button>
       </div>

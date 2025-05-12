@@ -12,28 +12,39 @@ const initialState = {
   is_doe: false,
   years_in_rank: '',
   description: '',
+  contact_email: '',
+  contact_phone: '',
+  link_facebook: '',
+  link_instagram: '',
+  link_x: '',
+  team: 'No',
+  teammate_rank: '',
+  teammate_salary: '',
+  teammate_experience: '',
+  flag: '',
+  yacht_size: '',
+  yacht_type: '',
+  uses: '',
 };
 
-const titles = ['Deckhand', 'Engineer', 'Chef', 'Stewardess', 'Captain']; // ajusta según lista oficial
+const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain', 'Chief Officer', '2nd Officer', '3rd Officer', 'Bosun', 'Deck/Engineer', 'Mate', 'Lead Deckhand', 'Deckhand', 'Deck/Steward(ess)', 'Deck/Carpenter', 'Deck/Divemaster', 'Dayworker', 'Chief Engineer', '2nd Engineer', '3rd Engineer', 'Solo Engineer', 'Electrician', 'Head Chef', 'Sous Chef', 'Solo Chef', 'Cook/Crew Chef', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Stewardess', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Cook/Steward(ess)', 'Stew/Deck', 'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny', 'Videographer', 'Yoga/Pilates Instructor', 'Personal Trainer', 'Dive Instrutor', 'Water Sport Instrutor', 'Nurse', 'Other']; // ajusta según lista oficial
 
-const countries = [
-  "Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "Aruba", "Australia", "Bahamas", "Bahrain", "Barbados",
-  "Belgium", "Belize", "Bonaire", "Brazil", "Brunei", "Bulgaria", "BVI, UK", "Cambodia", "Canada", "Cape Verde",
-  "Chile", "China", "Colombia", "Costa Rica", "Croatia", "Cuba", "Curacao", "Cyprus", "Denmark", "Dominica",
-  "Dominican Republic", "Ecuador", "Egypt", "Estonia", "Fiji", "Finland", "France", "Germany",
-  "Greece", "Grenada", "Guatemala", "Honduras", "India", "Indonesia", "Ireland", "Israel",
-  "Italy", "Jamaica", "Japan", "Kiribati", "Kuwait", "Latvia", "Libya", "Lithuania", "Madagascar",
-  "Malaysia", "Maldives", "Malta", "Marshall Islands", "Mauritius", "Mexico", "Micronesia",
-  "Monaco", "Montenegro", "Morocco", "Myanmar", "Netherlands", "New Zealand", "Nicaragua",
-  "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Saint Kitts and Nevis",
-  "Saint Lucia", "Saint Maarten", "Saint Vincent and the Grenadines", "Samoa", "Saudi Arabia", "Seychelles",
-  "Singapore", "Solomon Islands", "South Africa", "South Korea", "Spain", "Sweden", "Taiwan",
-  "Thailand", "Trinidad and Tobago", "Tunisia", "Turkey", "United Arab Emirates", "United Kingdom",
-  "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"
-];
+const countries = ["Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "Aruba", "Australia", "Bahamas", "Bahrain", "Barbados",
+    "Belgium", "Belize", "Bonaire", "Brazil", "Brunei", "Bulgaria", "BVI, UK", "Cambodia", "Canada", "Cape Verde",
+    "Chile", "China", "Colombia", "Costa Rica", "Croatia", "Cuba", "Curacao", "Cyprus", "Denmark", "Dominica",
+    "Dominican Republic", "Ecuador", "Egypt", "Estonia", "Fiji", "Finland", "France", "Germany",
+    "Greece", "Grenada", "Guatemala", "Honduras", "India", "Indonesia", "Ireland", "Israel",
+    "Italy", "Jamaica", "Japan", "Kiribati", "Kuwait", "Latvia", "Libya", "Lithuania", "Madagascar",
+    "Malaysia", "Maldives", "Malta", "Marshall Islands", "Mauritius", "Mexico", "Micronesia",
+    "Monaco", "Montenegro", "Morocco", "Myanmar", "Netherlands", "New Zealand", "Nicaragua",
+    "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Saint Kitts and Nevis",
+    "Saint Lucia", "Saint Maarten", "Saint Vincent and the Grenadines", "Samoa", "Saudi Arabia", "Seychelles",
+    "Singapore", "Solomon Islands", "South Africa", "South Korea", "Spain", "Sweden", "Taiwan",
+    "Thailand", "Trinidad and Tobago", "Tunisia", "Turkey", "United Arab Emirates", "United Kingdom",
+    "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"];
 
-const types = ['Permanent', 'Temporary', 'Relief', 'Delivery', 'Day Work'];
-const yearsOptions = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6];
+const types = ['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Cruising', 'DayWork'];
+const yearsOptions = ['Green', 1, 2, 2.5, 3, 5];
 
 function YachtOfferForm({ user, onOfferPosted }) {
   const [formData, setFormData] = useState(initialState);
@@ -60,13 +71,31 @@ function YachtOfferForm({ user, onOfferPosted }) {
 
     setLoading(true);
 
-    const { error } = await supabase.from('yacht_work_offers').insert([
-      {
-        user_id: user.id,
-        ...formData,
-        salary: formData.is_doe ? null : formData.salary,
-      },
-    ]);
+    const { error } = await supabase.from('yacht_work_offers').insert([{
+      user_id: user.id,
+      title: formData.title,
+      city: formData.city,
+      country: formData.country,
+      type: formData.type,
+      start_date: formData.start_date || null,
+      end_date: formData.type === 'Permanent' ? null : (formData.end_date || null),
+      is_doe: formData.is_doe,
+      salary: formData.is_doe ? null : formData.salary,
+      years_in_rank: formData.years_in_rank || null,
+      description: formData.description || null,
+      contact_email: formData.contact_email || null,
+      contact_phone: formData.contact_phone || null,
+      team: formData.team === 'Yes',
+      teammate_rank: formData.team === 'Yes' ? formData.teammate_rank || null : null,
+      teammate_salary: formData.team === 'Yes' ? formData.teammate_salary || null : null,
+      teammate_experience: formData.team === 'Yes' ? formData.teammate_experience || null : null,
+      flag: formData.flag || null,
+      yacht_size: formData.yacht_size || null,
+      yacht_type: formData.yacht_type || null,
+      uses: formData.uses || null,
+
+    }]);
+
 
     setLoading(false);
 
@@ -81,59 +110,145 @@ function YachtOfferForm({ user, onOfferPosted }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: '30px' }}>
-      <label>Título del puesto:</label>
-      <select name="title" value={formData.title} onChange={handleChange} required>
-        <option value="">Selecciona...</option>
-        {titles.map((t) => <option key={t} value={t}>{t}</option>)}
-      </select>
+  <form onSubmit={handleSubmit} style={{ marginBottom: '30px' }}>
+    {/* 1. Team */}
+    <label>Team</label>
+    <select name="team" value={formData.team} onChange={handleChange}>
+      <option value="No">No</option>
+      <option value="Yes">Yes</option>
+    </select>
 
-      <label>Ciudad:</label>
-      <input name="city" value={formData.city} onChange={handleChange} required />
+    {/* 2. Título del puesto */}
+    <label>Rank:</label>
+    <select name="title" value={formData.title} onChange={handleChange} required>
+      <option value="">Selecciona...</option>
+      {titles.map((t) => <option key={t} value={t}>{t}</option>)}
+    </select>
 
-      <label>País:</label>
-      <select name="country" value={formData.country} onChange={handleChange} required>
-        <option value="">Selecciona...</option>
-        {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-      </select>
+    {/* 3. Años en el cargo */}
+    <label>Time in Rank:</label>
+    <select name="years_in_rank" value={formData.years_in_rank} onChange={handleChange}>
+      <option value="">Selecciona...</option>
+      {yearsOptions.map((y) => (
+        <option key={y} value={y}>{y === 'Green' ? 'Green' : `>${y}`}</option>
+      ))}
+    </select>
 
-      <label>Tipo:</label>
-      <select name="type" value={formData.type} onChange={handleChange} required>
-        <option value="">Selecciona...</option>
-        {types.map((t) => <option key={t} value={t}>{t}</option>)}
-      </select>
+    {/* 4. DOE */}
+    <label>
+      <input type="checkbox" name="is_doe" checked={formData.is_doe} onChange={handleChange} />
+      DOE (Salary)
+    </label>
 
-      <label>Fecha de inicio:</label>
-      <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} required />
+    {/* 5. Salario */}
+    {!formData.is_doe && (
+      <>
+        <label>Salary:</label>
+        <input type="number" name="salary" value={formData.salary} onChange={handleChange} />
+      </>
+    )}
 
-      <label>Fecha de finalización (opcional):</label>
-      <input type="date" name="end_date" value={formData.end_date} onChange={handleChange} />
+    {/* 6-8. Campos si Team === 'Yes' */}
+    {formData.team === 'Yes' && (
+      <>
+        <label>Teammate Rank:</label>
+        <select name="teammate_rank" value={formData.teammate_rank} onChange={handleChange}>
+          <option value="">Selecciona...</option>
+          {titles.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
 
-      <label>Años en el cargo (opcional):</label>
-      <select name="years_in_rank" value={formData.years_in_rank} onChange={handleChange}>
-        <option value="">Selecciona...</option>
-        {yearsOptions.map((y) => <option key={y} value={y}>{y === 6 ? '>5' : y}</option>)}
-      </select>
+        <label>Teammate Experience:</label>
+        <select name="teammate_experience" value={formData.teammate_experience} onChange={handleChange}>
+          <option value="">Selecciona...</option>
+          {yearsOptions.map((y) => (
+            <option key={y} value={y}>{y === 'Green' ? 'Green' : `>${y}`}</option>
+          ))}
+        </select>
 
-      <label>
-        <input type="checkbox" name="is_doe" checked={formData.is_doe} onChange={handleChange} />
-        DOE (Depende de la experiencia)
-      </label>
+        <label>Teammate Salary:</label>
+        <input type="number" name="teammate_salary" value={formData.teammate_salary} onChange={handleChange} />
+      </>
+    )}
 
-      {!formData.is_doe && (
-        <>
-          <label>Salario:</label>
-          <input type="number" name="salary" value={formData.salary} onChange={handleChange} />
-        </>
-      )}
+    {/* 9. Tipo */}
+    <label>Terms:</label>
+    <select name="type" value={formData.type} onChange={handleChange} required>
+      <option value="">Selecciona...</option>
+      {types.map((t) => <option key={t} value={t}>{t}</option>)}
+    </select>
 
-      <label>Descripción (opcional):</label>
-      <textarea name="description" value={formData.description} onChange={handleChange} />
+    {/* 10. Tipo de Yate */}
+    <label>Yacht Type:</label>
+    <select name="yacht_type" value={formData.yacht_type} onChange={handleChange}>
+      <option value="">Selecciona...</option>
+      <option value="Motor Yacht">Motor Yacht</option>
+      <option value="Sailing Yacht">Sailing Yacht</option>
+      <option value="Chase Boat">Chase Boat</option>
+      <option value="Catamaran">Catamaran</option>
+    </select>
 
-      <button type="submit" disabled={loading}>
-        {loading ? 'Publicando...' : 'Publicar Oferta'}
-      </button>
-    </form>
+    {/* 11. Tamaño del Yate */}
+    <label>Yacht Size:</label>
+    <select name="yacht_size" value={formData.yacht_size} onChange={handleChange}>
+      <option value="">Selecciona...</option>
+      <option value="0 - 30m">0 - 30m</option>
+      <option value="31 - 40m">31 - 40m</option>
+      <option value="41 - 50m">41 - 50m</option>
+      <option value="51 - 70m">51 - 70m</option>
+      <option value="> 70m">{'> 70m'}</option>
+    </select>
+
+    {/* 12. Flag */}
+    <label>Flag:</label>
+    <select name="flag" value={formData.flag} onChange={handleChange}>
+      <option value="">Selecciona...</option>
+      {['USA', 'Cayman Islands', 'Bermuda', 'UK', 'BVI', 'Jamaica', 'Marshall Islands', 'Malta', 'Panama', 'Holland', 'Germany', 'Poland', 'Spain', 'Portugal', 'Greece', 'Italy', 'France', 'Australia', 'China'].map((f) => (
+        <option key={f} value={f}>{f}</option>
+      ))}
+    </select>
+
+    {/* 13. Fecha de Inicio */}
+    <label>Start Date:</label>
+    <input type="date" name="start_date" value={formData.start_date} onChange={handleChange} required />
+
+    {/* 14. Fecha de Finalización */}
+    <label>End Date:</label>
+    <input
+      type="date"
+      name="end_date"
+      value={formData.end_date}
+      onChange={handleChange}
+      disabled={formData.type === 'Permanent'}
+    />
+
+    {/* 15. Ciudad */}
+    <label>City:</label>
+    <input name="city" value={formData.city} onChange={handleChange} required />
+
+    {/* 16. País */}
+    <label>Country:</label>
+    <select name="country" value={formData.country} onChange={handleChange} required>
+      <option value="">Selecciona...</option>
+      {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+    </select>
+
+    {/* 17. Email de contacto */}
+    <label>Contact Email:</label>
+    <input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange} />
+
+    {/* 18. Teléfono de contacto */}
+    <label>Contact Phone:</label>
+    <input type="tel" name="contact_phone" value={formData.contact_phone} onChange={handleChange} />
+
+    {/* 19. Descripción */}
+    <label>Remarks:</label>
+    <textarea name="description" value={formData.description} onChange={handleChange} />
+
+    {/* Submit */}
+    <button type="submit" disabled={loading}>
+      {loading ? 'Publicando...' : 'Publicar Oferta'}
+    </button>
+  </form>
   );
 }
 
