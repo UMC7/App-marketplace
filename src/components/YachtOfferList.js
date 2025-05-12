@@ -1,9 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import supabase from '../supabase';
+import Modal from './Modal';
+import ChatPage from './ChatPage';
 
 function YachtOfferList({ offers, currentUser }) {
   const [authors, setAuthors] = useState({});
   const [expandedOfferId, setExpandedOfferId] = useState(null);
+  const [activeChat, setActiveChat] = useState(null);
+
+  const handleStartChat = (offerId, employerId) => {
+  setActiveChat({ offerId, receiverId: employerId });
+  };
 
   useEffect(() => {
     const fetchAuthors = async () => {
@@ -155,6 +162,14 @@ function YachtOfferList({ offers, currentUser }) {
         ))}
       </div>
     ))}
+    {activeChat && (
+      <Modal onClose={() => setActiveChat(null)}>
+        <ChatPage
+          offerId={activeChat.offerId}
+          receiverId={activeChat.receiverId}
+        />
+      </Modal>
+    )}
   </div>
 );
 }
@@ -177,10 +192,6 @@ const offerBoxStyle = {
   borderRadius: '8px',
   marginBottom: '20px',
   backgroundColor: '#f9f9f9',
-};
-
-const handleStartChat = (offerId, employerId) => {
-  alert(`Chat privado con el empleador aún no implementado (oferta ${offerId})`);
 };
 
 export default YachtOfferList;
