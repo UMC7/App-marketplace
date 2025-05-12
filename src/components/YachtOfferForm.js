@@ -69,33 +69,47 @@ function YachtOfferForm({ user, onOfferPosted }) {
       return;
     }
 
+const sanitizedData = {
+  ...formData,
+  years_in_rank:
+    formData.years_in_rank === 'Green'
+      ? 0
+      : formData.years_in_rank
+      ? Number(formData.years_in_rank)
+      : null,
+  teammate_experience:
+    formData.teammate_experience === 'Green'
+      ? 0
+      : formData.teammate_experience
+      ? Number(formData.teammate_experience)
+      : null,
+};
+
     setLoading(true);
 
     const { error } = await supabase.from('yacht_work_offers').insert([{
-      user_id: user.id,
-      title: formData.title,
-      city: formData.city,
-      country: formData.country,
-      type: formData.type,
-      start_date: formData.start_date || null,
-      end_date: formData.type === 'Permanent' ? null : (formData.end_date || null),
-      is_doe: formData.is_doe,
-      salary: formData.is_doe ? null : formData.salary,
-      years_in_rank: formData.years_in_rank || null,
-      description: formData.description || null,
-      contact_email: formData.contact_email || null,
-      contact_phone: formData.contact_phone || null,
-      team: formData.team === 'Yes',
-      teammate_rank: formData.team === 'Yes' ? formData.teammate_rank || null : null,
-      teammate_salary: formData.team === 'Yes' ? formData.teammate_salary || null : null,
-      teammate_experience: formData.team === 'Yes' ? formData.teammate_experience || null : null,
-      flag: formData.flag || null,
-      yacht_size: formData.yacht_size || null,
-      yacht_type: formData.yacht_type || null,
-      uses: formData.uses || null,
-
-    }]);
-
+  user_id: user.id,
+  title: sanitizedData.title,
+  city: sanitizedData.city,
+  country: sanitizedData.country,
+  type: sanitizedData.type,
+  start_date: sanitizedData.start_date || null,
+  end_date: sanitizedData.type === 'Permanent' ? null : (sanitizedData.end_date || null),
+  is_doe: sanitizedData.is_doe,
+  salary: sanitizedData.is_doe ? null : sanitizedData.salary,
+  years_in_rank: sanitizedData.years_in_rank,
+  description: sanitizedData.description || null,
+  contact_email: sanitizedData.contact_email || null,
+  contact_phone: sanitizedData.contact_phone || null,
+  team: sanitizedData.team === 'Yes',
+  teammate_rank: sanitizedData.team === 'Yes' ? sanitizedData.teammate_rank || null : null,
+  teammate_salary: sanitizedData.team === 'Yes' ? sanitizedData.teammate_salary || null : null,
+  teammate_experience: sanitizedData.team === 'Yes' ? sanitizedData.teammate_experience || null : null,
+  flag: sanitizedData.flag || null,
+  yacht_size: sanitizedData.yacht_size || null,
+  yacht_type: sanitizedData.yacht_type || null,
+  uses: sanitizedData.uses || null,
+}]);
 
     setLoading(false);
 
@@ -149,26 +163,35 @@ function YachtOfferForm({ user, onOfferPosted }) {
     )}
 
     {/* 6-8. Campos si Team === 'Yes' */}
-    {formData.team === 'Yes' && (
+   {formData.team === 'Yes' && (
+  <>
+    <label>Teammate Rank:</label>
+    <select name="teammate_rank" value={formData.teammate_rank} onChange={handleChange}>
+      <option value="">Selecciona...</option>
+      {titles.map((t) => <option key={t} value={t}>{t}</option>)}
+    </select>
+
+    <label>Teammate Experience:</label>
+    <select name="teammate_experience" value={formData.teammate_experience} onChange={handleChange}>
+      <option value="">Selecciona...</option>
+      {yearsOptions.map((y) => (
+        <option key={y} value={y}>{y === 'Green' ? 'Green' : `>${y}`}</option>
+      ))}
+    </select>
+
+    {!formData.is_doe && (
       <>
-        <label>Teammate Rank:</label>
-        <select name="teammate_rank" value={formData.teammate_rank} onChange={handleChange}>
-          <option value="">Selecciona...</option>
-          {titles.map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
-
-        <label>Teammate Experience:</label>
-        <select name="teammate_experience" value={formData.teammate_experience} onChange={handleChange}>
-          <option value="">Selecciona...</option>
-          {yearsOptions.map((y) => (
-            <option key={y} value={y}>{y === 'Green' ? 'Green' : `>${y}`}</option>
-          ))}
-        </select>
-
         <label>Teammate Salary:</label>
-        <input type="number" name="teammate_salary" value={formData.teammate_salary} onChange={handleChange} />
+        <input
+          type="number"
+          name="teammate_salary"
+          value={formData.teammate_salary}
+          onChange={handleChange}
+        />
       </>
     )}
+  </>
+)}
 
     {/* 9. Tipo */}
     <label>Terms:</label>
