@@ -17,14 +17,8 @@ function ProductCard({ product, onRemoveFavorite }) {
   const mainphoto = product?.mainphoto || 'https://via.placeholder.com/200?text=Sin+imagen';
 
   return (
-    <div
-      className="product-card"
-      style={{
-        position: 'relative',
-        opacity: 1,
-        border: '1px solid #ccc',
-      }}
-    >
+    <div className="product-card">
+
       {isDeleted && (
         <div
           style={{

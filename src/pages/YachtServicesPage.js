@@ -42,26 +42,14 @@ function YachtServicesPage() {
       <h1>Servicios Náuticos</h1>
       <p>Bienvenido a la sección de servicios náuticos. Aquí los proveedores pueden publicar y mostrar los servicios que ofrecen.</p>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '20px',
-          marginTop: '20px',
-        }}
-      >
+      <div className="responsive-grid">
+
         {services.map((service) => (
           <div
-            key={service.id}
-            style={{
-              border: '1px solid #ccc',
-              borderRadius: '8px',
-              padding: '10px',
-              cursor: 'pointer',
-              backgroundColor: expandedServiceId === service.id ? '#f9f9f9' : 'white',
-            }}
-            onClick={() => toggleExpand(service.id)}
-          >
+  key={service.id}
+  className={`yacht-card ${expandedServiceId === service.id ? 'expanded' : ''}`}
+  onClick={() => toggleExpand(service.id)}
+>
             <img
               src={service.mainphoto || 'https://via.placeholder.com/250'}
               alt={service.company_name}

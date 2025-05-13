@@ -76,27 +76,15 @@ function EventsPage() {
       <h1>Eventos</h1>
       <p>Bienvenido a la sección de eventos. Aquí podrás ver todos los eventos publicados por la comunidad.</p>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '20px',
-          marginTop: '20px',
-        }}
-      >
+      <div className="responsive-grid">
+
         {events.map((event) => (
   <div
-    key={event.id}
-    style={{
-      position: 'relative',
-      border: '1px solid #ccc',
-      borderRadius: '8px',
-      padding: '10px',
-      cursor: 'pointer',
-      backgroundColor: expandedEventId === event.id ? '#f9f9f9' : 'white',
-    }}
-    onClick={() => toggleExpand(event.id)}
-  >
+  key={event.id}
+  className={`event-card ${expandedEventId === event.id ? 'expanded' : ''}`}
+  onClick={() => toggleExpand(event.id)}
+>
+
     {event.status !== 'active' && (
       <div style={{
         position: 'absolute',

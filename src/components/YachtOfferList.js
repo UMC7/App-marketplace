@@ -87,11 +87,8 @@ function YachtOfferList({ offers, currentUser }) {
                 <div
                   key={offer.id}
                   onClick={() => toggleExpanded(offer.id)}
-                  style={{
-                    ...offerBoxStyle,
-                    cursor: 'pointer',
-                    backgroundColor: isExpanded ? '#eef5ff' : '#f9f9f9'
-                  }}
+                  className={`offer-box ${isExpanded ? 'expanded' : ''}`}
+
                 >
                   {isExpanded ? (
                     <>
