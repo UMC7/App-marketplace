@@ -5,7 +5,6 @@ const PostEventForm = () => {
   const [uploading, setUploading] = useState(false);
   const [eventName, setEventName] = useState('');
   const [description, setDescription] = useState('');
-  const [categoryId, setCategoryId] = useState('');
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
   const [mainPhoto, setMainPhoto] = useState('');
@@ -17,8 +16,17 @@ const PostEventForm = () => {
   const [website, setWebsite] = useState('');
   const [facebook, setFacebook] = useState('');
   const [instagram, setInstagram] = useState('');
-  const [linkedin, setLinkedin] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [isSingleDay, setIsSingleDay] = useState(false);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [cost, setCost] = useState('');
+  const [currency, setCurrency] = useState('USD');
+  const [isFree, setIsFree] = useState(false);
+  const [locationDetails, setLocationDetails] = useState('');
+
 
   const countries = [
     "Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "Aruba", "Australia", "Bahamas", "Bahrain", "Barbados",
@@ -88,7 +96,7 @@ const PostEventForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!eventName || !categoryId || !mainPhoto || !city || !country) {
+    if (!eventName || !mainPhoto || !city || !country) {
       alert('Por favor, completa todos los campos obligatorios.');
       return;
     }
@@ -99,7 +107,6 @@ const PostEventForm = () => {
         .insert([{
           event_name: eventName,
           description,
-          category_id: parseInt(categoryId, 10),
           owner: ownerId,
           contact_email: contactEmail,
           contact_phone: phone,
@@ -107,10 +114,18 @@ const PostEventForm = () => {
           mainphoto: mainPhoto,
           city,
           country,
+          start_date: startDate,
+          end_date: isSingleDay ? null : endDate,
+          is_single_day: isSingleDay,
+          start_time: startTime || null,
+          end_time: endTime || null,
+          cost: isFree ? null : cost,
+          is_free: isFree,
+          currency: isFree ? null : currency,
+          location_details: locationDetails || null,
           website,
           facebook_url: facebook,
           instagram_url: instagram,
-          linkedin_url: linkedin,
           whatsapp_number: whatsapp,
           status: 'active'
         }])
@@ -122,13 +137,20 @@ const PostEventForm = () => {
         alert('Evento guardado correctamente');
         setEventName('');
         setDescription('');
-        setCategoryId('');
         setMainPhoto('');
         setCity('');
         setCountry('');
         setPhone('');
         setAltPhone('');
         setContactEmail('');
+        setStartDate('');
+        setEndDate('');
+        setIsSingleDay(false);
+        setStartTime('');
+        setEndTime('');
+        setCost('');
+        setIsFree(false);
+        setLocationDetails('');
       }
     } catch (error) {
       alert('Hubo un error inesperado al guardar el evento.');
@@ -144,16 +166,6 @@ const PostEventForm = () => {
 
         <label>Descripción:</label>
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
-
-        <label>Categoría:</label>
-        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
-          <option value="">Seleccione una categoría</option>
-          <option value="1">Conferencia</option>
-          <option value="2">Reunión</option>
-          <option value="3">Feria</option>
-          <option value="4">Festival</option>
-          <option value="5">Otro</option>
-        </select>
 
         <label>Ciudad:</label>
         <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
@@ -179,6 +191,82 @@ const PostEventForm = () => {
         <input type="file" accept="image/*" onChange={handleMainPhotoUpload} required />
         {mainPhoto && <img src={mainPhoto} alt="Main" style={{ width: '150px', marginTop: '10px' }} />}
 
+        <label>Fecha del evento:</label>
+<div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+  <input
+    type="date"
+    value={startDate}
+    onChange={(e) => setStartDate(e.target.value)}
+    required
+  />
+  {!isSingleDay && (
+    <input
+      type="date"
+      value={endDate}
+      onChange={(e) => setEndDate(e.target.value)}
+    />
+  )}
+  <label>
+    <input
+      type="checkbox"
+      checked={isSingleDay}
+      onChange={() => setIsSingleDay(!isSingleDay)}
+    />{' '}
+    Evento de un solo día
+  </label>
+</div>
+
+<label>Horario del evento:</label>
+<div style={{ display: 'flex', gap: '10px' }}>
+  <input
+    type="time"
+    value={startTime}
+    onChange={(e) => setStartTime(e.target.value)}
+  />
+  <input
+    type="time"
+    value={endTime}
+    onChange={(e) => setEndTime(e.target.value)}
+    disabled={startTime === ''}
+  />
+</div>
+
+<label>Ubicación exacta:</label>
+<input
+  type="text"
+  value={locationDetails}
+  onChange={(e) => setLocationDetails(e.target.value)}
+/>
+
+<label>Costo de participación:</label>
+<div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+  <select
+    value={currency}
+    onChange={(e) => setCurrency(e.target.value)}
+    disabled={isFree}
+  >
+    <option value="USD">USD</option>
+    <option value="EUR">EUR</option>
+    <option value="AUD">AUD</option>
+    <option value="GBP">GBP</option>
+  </select>
+  <input
+    type="text"
+    value={cost}
+    onChange={(e) => setCost(e.target.value)}
+    disabled={isFree}
+    placeholder="Monto"
+  />
+  <label>
+    <input
+      type="checkbox"
+      checked={isFree}
+      onChange={() => setIsFree(!isFree)}
+    />{' '}
+    Evento gratuito
+  </label>
+</div>
+
         <label>Sitio Web:</label>
         <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} />
 
@@ -187,9 +275,6 @@ const PostEventForm = () => {
 
         <label>Instagram:</label>
         <input type="url" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
-
-        <label>LinkedIn:</label>
-        <input type="url" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} />
 
         <label>WhatsApp:</label>
         <input type="text" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />

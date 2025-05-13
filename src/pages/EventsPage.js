@@ -1,6 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabase';
 
+const formatDate = (dateStr) => {
+  const options = { day: '2-digit', month: 'short', year: 'numeric' };
+  return new Date(dateStr).toLocaleDateString('es-ES', options);
+};
+
+const formatDateRange = (start, end, isSingleDay) => {
+  if (isSingleDay || !end) return formatDate(start);
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  const sameYear = startDate.getFullYear() === endDate.getFullYear();
+  const sameMonth = sameYear && startDate.getMonth() === endDate.getMonth();
+
+  const day = (date) => date.toLocaleDateString('es-ES', { day: '2-digit' });
+  const month = (date) => date.toLocaleDateString('es-ES', { month: 'short' });
+  const year = (date) => date.getFullYear();
+
+  if (sameMonth) {
+    return `${day(startDate)} - ${day(endDate)} ${month(startDate)} ${year(startDate)}`;
+  }
+
+  if (sameYear) {
+    return `${day(startDate)} ${month(startDate)} - ${day(endDate)} ${month(endDate)} ${year(startDate)}`;
+  }
+
+  return `${formatDate(start)} - ${formatDate(end)}`;
+};
+
+const formatTime = (timeStr) => {
+  const [hour, minute] = timeStr.split(':');
+  return `${hour}:${minute}`;
+};
+
 function EventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,76 +85,93 @@ function EventsPage() {
         }}
       >
         {events.map((event) => (
-          <div
-            key={event.id}
-            style={{
-              position: 'relative',
-              border: '1px solid #ccc',
-              borderRadius: '8px',
-              padding: '10px',
-              cursor: 'pointer',
-              backgroundColor: expandedEventId === event.id ? '#f9f9f9' : 'white',
-            }}
-            onClick={() => toggleExpand(event.id)}
-          >
-            {event.status !== 'active' && (
-  <div style={{
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%) rotate(-45deg)',
-    backgroundColor: 'rgba(255,0,0,0.7)',
-    color: 'white',
-    padding: '10px 50px',
-    fontSize: '1.2em',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    pointerEvents: 'none',
-    zIndex: 2,
-  }}>
-    {event.status === 'cancelled' ? 'CANCELLED' : 'POSTPONED'}
-  </div>
+  <div
+    key={event.id}
+    style={{
+      position: 'relative',
+      border: '1px solid #ccc',
+      borderRadius: '8px',
+      padding: '10px',
+      cursor: 'pointer',
+      backgroundColor: expandedEventId === event.id ? '#f9f9f9' : 'white',
+    }}
+    onClick={() => toggleExpand(event.id)}
+  >
+    {event.status !== 'active' && (
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%) rotate(-45deg)',
+        backgroundColor: 'rgba(255,0,0,0.7)',
+        color: 'white',
+        padding: '10px 50px',
+        fontSize: '1.2em',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        pointerEvents: 'none',
+        zIndex: 2,
+      }}>
+        {event.status === 'cancelled' ? 'CANCELLED' : 'POSTPONED'}
+      </div>
+    )}
+
+    <img
+      src={event.mainphoto || 'https://via.placeholder.com/250'}
+      alt={event.event_name}
+      style={{ width: '100%', height: '150px', objectFit: 'cover' }}
+    />
+
+    <h3>{event.event_name}</h3>
+
+{event.city && <p><strong>Ciudad:</strong> {event.city}</p>}
+{event.country && <p><strong>País:</strong> {event.country}</p>}
+{event.start_date && (
+  <p>
+    <strong>Fecha:</strong>{' '}
+    {formatDateRange(event.start_date, event.end_date, event.is_single_day)}
+  </p>
 )}
 
+{expandedEventId === event.id && (
+  <div style={{ marginTop: '10px', fontSize: '0.9em' }}>
+    {event.description && <p><strong>Descripción:</strong> {event.description}</p>}
 
-<img
-  src={event.mainphoto || 'https://via.placeholder.com/250'}
-  alt={event.event_name}
-  style={{ width: '100%', height: '150px', objectFit: 'cover' }}
-/>
-<h3>{event.event_name}</h3>
-<p><strong>Ciudad:</strong> {event.city}</p>
-<p><strong>País:</strong> {event.country}</p>
-<p><strong>Categoría:</strong> {event.category_id}</p>
+    {event.start_time && <p><strong>Hora de inicio:</strong> {formatTime(event.start_time)}</p>}
+    {event.end_time && <p><strong>Hora de fin:</strong> {formatTime(event.end_time)}</p>}
 
-            {expandedEventId === event.id && (
-              <div style={{ marginTop: '10px', fontSize: '0.9em' }}>
-                <p><strong>Descripción:</strong> {event.description}</p>
-                <p><strong>Correo de contacto:</strong> {event.contact_email}</p>
-                <p><strong>Teléfono:</strong> {event.contact_phone}</p>
-                <p><strong>Tel. alternativo:</strong> {event.alt_phone}</p>
-                {event.website && (
-                  <p><strong>Web:</strong> <a href={event.website} target="_blank" rel="noopener noreferrer">{event.website}</a></p>
-                )}
-                {event.facebook_url && (
-                  <p><strong>Facebook:</strong> <a href={event.facebook_url} target="_blank" rel="noopener noreferrer">{event.facebook_url}</a></p>
-                )}
-                {event.instagram_url && (
-                  <p><strong>Instagram:</strong> <a href={event.instagram_url} target="_blank" rel="noopener noreferrer">{event.instagram_url}</a></p>
-                )}
-                {event.linkedin_url && (
-                  <p><strong>LinkedIn:</strong> <a href={event.linkedin_url} target="_blank" rel="noopener noreferrer">{event.linkedin_url}</a></p>
-                )}
-                {event.whatsapp_number && (
-                  <p><strong>WhatsApp:</strong> <a href={`https://wa.me/${event.whatsapp_number}`} target="_blank" rel="noopener noreferrer">{event.whatsapp_number}</a></p>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    {event.location_details && (
+      <p><strong>Ubicación:</strong> {event.location_details}</p>
+    )}
+
+    {event.is_free
+      ? <p><strong>Participación:</strong> Gratuita</p>
+      : event.cost && <p><strong>Costo de participación:</strong> {event.cost} {event.currency}</p>
+    }
+
+    {event.contact_email && <p><strong>Correo de contacto:</strong> {event.contact_email}</p>}
+    {event.contact_phone && <p><strong>Teléfono:</strong> {event.contact_phone}</p>}
+    {event.alt_phone && <p><strong>Tel. alternativo:</strong> {event.alt_phone}</p>}
+
+    {event.website && (
+      <p><strong>Web:</strong> <a href={event.website} target="_blank" rel="noopener noreferrer">{event.website}</a></p>
+    )}
+    {event.facebook_url && (
+      <p><strong>Facebook:</strong> <a href={event.facebook_url} target="_blank" rel="noopener noreferrer">{event.facebook_url}</a></p>
+    )}
+    {event.instagram_url && (
+      <p><strong>Instagram:</strong> <a href={event.instagram_url} target="_blank" rel="noopener noreferrer">{event.instagram_url}</a></p>
+    )}
+    {event.whatsapp_number && (
+      <p><strong>WhatsApp:</strong> <a href={`https://wa.me/${event.whatsapp_number}`} target="_blank" rel="noopener noreferrer">{event.whatsapp_number}</a></p>
+    )}
+  </div>
+)}
+  </div>
+))}
+</div>
+</div>
+ );
 }
 
 export default EventsPage;
