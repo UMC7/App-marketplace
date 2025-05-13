@@ -14,6 +14,8 @@ function ProfilePage() {
   const [services, setServices] = useState([]); // ✅ Nuevo estado para servicios
   const [jobOffers, setJobOffers] = useState([]);
   const [deletedJobs, setDeletedJobs] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [deletedEvents, setDeletedEvents] = useState([]);
   const [userDetails, setUserDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('productos');
@@ -46,7 +48,9 @@ function ProfilePage() {
           { data: myPurchases, error: purchaseError },
           { data: serviceData, error: serviceError }, // Nueva consulta
           { data: offersData, error: offersError },
-          { data: deletedJobData, error: deletedJobsError }
+          { data: deletedJobData, error: deletedJobsError },
+          { data: eventData, error: eventError },
+          { data: deletedEventData, error: deletedEventError }
         ] = await Promise.all([
           supabase
             .from('users')
@@ -128,12 +132,24 @@ function ProfilePage() {
             .eq('user_id', currentUser.id)
             .not('status', 'eq', 'deleted')
             .order('created_at', { ascending: false }),
-            supabase
+          supabase
             .from('yacht_work_offers')
             .select('*')
             .eq('user_id', currentUser.id)
             .eq('status', 'deleted')
-            .order('updated_at', { ascending: false })                
+            .order('updated_at', { ascending: false }),
+          supabase
+            .from('events')
+            .select('*')
+            .eq('owner', currentUser.id)
+            .not('status', 'eq', 'deleted')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('events')
+            .select('*')
+            .eq('owner', currentUser.id)
+            .eq('status', 'deleted')
+            .order('deleted_at', { ascending: false }),               
         ]);
     
         if (deletedJobsError) throw deletedJobsError;
@@ -153,6 +169,20 @@ function ProfilePage() {
           altEmail: userData.alt_email || '',
         }));
     
+        if (eventError) {
+  console.error('Error cargando eventos:', eventError.message);
+  setEvents([]);
+} else {
+  setEvents(eventData || []);
+}
+
+        if (deletedEventError) {
+  console.error('Error cargando eventos eliminados:', deletedEventError.message);
+  setDeletedEvents([]);
+} else {
+  setDeletedEvents(deletedEventData || []);
+}
+
         const filteredSales = (soldItems || []).filter(item => item.products?.owner === currentUser.id);
         const filteredPurchases = (myPurchases || []).filter(item => item.purchases?.user_id === currentUser.id);
     
@@ -336,6 +366,51 @@ const handleDeleteJob = async (offerId) => {
   }
 };
 
+const updateEventStatus = async (eventId, newStatus) => {
+  try {
+    const { error } = await supabase
+      .from('events')
+      .update({ status: newStatus })
+      .eq('id', eventId);
+
+    if (error) throw error;
+
+    setEvents((prev) =>
+      prev.map((e) =>
+        e.id === eventId ? { ...e, status: newStatus } : e
+      )
+    );
+  } catch (error) {
+    alert(`Error al actualizar estado: ${error.message}`);
+  }
+};
+
+const deleteEvent = async (eventId) => {
+  const confirmDelete = window.confirm('¿Seguro que deseas eliminar este evento?');
+  if (!confirmDelete) return;
+
+  try {
+    const { error } = await supabase
+      .from('events')
+      .update({ status: 'deleted', deleted_at: new Date().toISOString() })
+      .eq('id', eventId);
+
+    if (error) throw error;
+
+    setEvents((prev) => prev.filter((e) => e.id !== eventId));
+    const { data: updatedDeleted } = await supabase
+      .from('events')
+      .select('*')
+      .eq('owner', currentUser.id)
+      .eq('status', 'deleted')
+      .order('deleted_at', { ascending: false });
+    setDeletedEvents(updatedDeleted);
+    alert('Evento eliminado correctamente.');
+  } catch (error) {
+    alert('No se pudo eliminar el evento.');
+  }
+};
+
   const handlePasswordVerification = async (e) => {
     e.preventDefault();
     setAuthError('');
@@ -448,7 +523,7 @@ const handleDeleteJob = async (offerId) => {
       )}
     </>
   );
-      case 'empleos':
+  case 'empleos':
   return (
     <>
       <h2>Mis Empleos Publicados</h2>
@@ -478,7 +553,34 @@ const handleDeleteJob = async (offerId) => {
       )}
     </>
   );
-      case 'eliminados':
+  case 'eventos':
+  return (
+    <>
+      <h2>Mis Eventos Publicados</h2>
+      {events.length === 0 ? (
+        <p>No has publicado ningún evento.</p>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+          {events.map((event) => (
+            <div key={event.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '250px' }}>
+              <img src={event.mainphoto || 'https://via.placeholder.com/250'} alt={event.event_name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+              <h3>{event.event_name}</h3>
+              <p><strong>Ciudad:</strong> {event.city}</p>
+              <p><strong>País:</strong> {event.country}</p>
+              <p><strong>Categoría:</strong> {event.category_id}</p>
+              <p><strong>Estado:</strong> {event.status}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'column', gap: '5px' }}>
+                <button onClick={() => updateEventStatus(event.id, 'cancelled')}>Cancelar</button>
+                <button onClick={() => updateEventStatus(event.id, 'postponed')}>Posponer</button>
+                <button onClick={() => deleteEvent(event.id)} style={{ color: 'red' }}>Eliminar</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+  case 'eliminados':
   return (
     <>
       <h2>Publicaciones Eliminadas</h2>
@@ -648,6 +750,7 @@ const handleDeleteJob = async (offerId) => {
         <button onClick={() => setActiveTab('productos')}>Mis Productos</button>
         <button onClick={() => setActiveTab('servicios')}>Mis Servicios</button>
         <button onClick={() => setActiveTab('empleos')}>Mis Empleos</button>
+        <button onClick={() => setActiveTab('eventos')}>Mis Eventos</button>
         <button onClick={() => setActiveTab('compras')}>Mis Compras</button>
         <button onClick={() => setActiveTab('ventas')}>Mis Ventas</button>
         <button onClick={() => setActiveTab('eliminados')}>Productos Eliminados</button>

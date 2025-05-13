@@ -6,6 +6,7 @@ import supabase from '../supabase';
 import YachtOfferForm from './YachtOfferForm';
 import PostProductForm from './PostProductForm';
 import PostServiceForm from './PostServiceForm';
+import PostEventForm from './PostEventForm';
 import ChatList from './ChatList';
 import Modal from './Modal'; // Usa el mismo modal del chat
 import ChatPage from './ChatPage';
@@ -18,6 +19,7 @@ function Navbar() {
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
+  const [showEventModal, setShowEventModal] = useState(false);
   const menuRef = useRef();
   const [showChatList, setShowChatList] = useState(false);
   const [activeChat, setActiveChat] = useState(null);
@@ -149,7 +151,15 @@ function Navbar() {
                   Publicar Empleo
                 </button>
 
-                <Link to="/events" style={styles.dropdownItem}>Publicar Evento</Link>
+                <button
+                style={styles.dropdownItem}
+                onClick={() => {
+                  setShowEventModal(true);
+                  setShowMenu(false);
+                }}
+              >
+                Publicar Evento
+              </button>
               </div>
             )}
           </div>
@@ -193,6 +203,14 @@ function Navbar() {
           </div>
         </div>
       )}
+      {showEventModal && (
+  <div style={modalStyles.overlay}>
+    <div style={modalStyles.content}>
+      <button style={modalStyles.closeBtn} onClick={() => setShowEventModal(false)}>X</button>
+      <PostEventForm />
+    </div>
+  </div>
+)}
       {showChatList && (
   <div style={modalStyles.overlay}>
     <div style={modalStyles.content}>
