@@ -1,10 +1,63 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import supabase from '../supabase';
 import YachtOfferList from '../components/YachtOfferList';
+
+const countriesByRegion = {
+  'North America': ['Canada', 'United States', 'Mexico'],
+  'Central America': ['Belize', 'Costa Rica', 'El Salvador', 'Guatemala', 'Honduras', 'Nicaragua', 'Panama'],
+  'South America': ['Argentina', 'Brazil', 'Chile', 'Colombia', 'Ecuador', 'Paraguay', 'Peru', 'Uruguay', 'Venezuela'],
+  'Caribbean': [
+    'Anguilla', 'Antigua and Barbuda', 'Aruba', 'Bahamas', 'Barbados', 'Bonaire', 'Cuba', 'Curacao',
+    'Dominica', 'Dominican Republic', 'Grenada', 'Jamaica', 'Saint Kitts and Nevis', 'Saint Lucia',
+    'Saint Maarten', 'Saint Vincent and the Grenadines', 'Trinidad and Tobago'
+  ],
+  'North Sea and Baltic Sea': [
+    'Belgium', 'Denmark', 'Estonia', 'Finland', 'Germany', 'Latvia', 'Lithuania',
+    'Netherlands', 'Norway', 'Poland', 'Sweden', 'United Kingdom'
+  ],
+  'Western Europe': ['France', 'Ireland', 'Italy', 'Malta', 'Monaco', 'Portugal', 'Spain'],
+  'Eastern Europe': ['Bulgaria', 'Croatia', 'Cyprus', 'Greece', 'Montenegro', 'Turkey'],
+  'Asia': [
+    'Brunei', 'China', 'India', 'Indonesia', 'Israel', 'Japan', 'Malaysia',
+    'Maldives', 'Myanmar', 'Philippines', 'Singapore', 'South Korea',
+    'Taiwan', 'Thailand', 'Vietnam'
+  ],
+  'Persian Gulf': ['Kuwait', 'Saudi Arabia', 'United Arab Emirates', 'Qatar'],
+  'Oceania': [
+    'Australia', 'Fiji', 'Kiribati', 'Marshall Islands', 'Micronesia',
+    'New Zealand', 'Samoa', 'Solomon Islands', 'Vanuatu'
+  ]
+};
+
+const regionOrder = [
+  'Western Europe',
+  'Eastern Europe',
+  'North Sea and Baltic Sea',
+  'Caribbean',
+  'North America',
+  'Central America',
+  'South America',
+  'Persian Gulf',
+  'Asia',
+  'Oceania'
+];
 
 function YachtWorksPage() {
   const [offers, setOffers] = useState([]);
   const [user, setUser] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    rank: '',
+    city: '',
+    country: '',
+    minSalary: '',
+    team: '',
+    languages: [],
+    terms: [],
+    yachtType: '',
+    yachtSize: '',
+    use: '',
+  });
 
   useEffect(() => {
     const getUser = async () => {
@@ -30,13 +83,239 @@ function YachtWorksPage() {
     fetchOffers();
   }, []);
 
+  const filteredOffers = useMemo(() => {
+    return offers.filter((offer) => {
+      if (
+        filters.rank &&
+        !(
+        offer.title?.toLowerCase().includes(filters.rank.toLowerCase()) ||
+        offer.teammate_rank?.toLowerCase().includes(filters.rank.toLowerCase())
+        )
+      ) return false;
+      if (filters.city && !offer.city?.toLowerCase().includes(filters.city.toLowerCase())) return false;
+      if (
+        filters.country.length &&
+        !filters.country.some((c) => offer.country?.toLowerCase() === c.toLowerCase())
+        ) return false;
+      if (filters.minSalary && (!offer.salary || offer.salary < parseFloat(filters.minSalary))) return false;
+      if (filters.team && ((filters.team === 'Yes' && !offer.team) || (filters.team === 'No' && offer.team))) return false;
+      if (filters.languages.length && !filters.languages.every(lang => [offer.language_1, offer.language_2].includes(lang))) return false;
+      if (filters.terms.length && !filters.terms.includes(offer.type)) return false;
+      if (filters.yachtType && offer.yacht_type !== filters.yachtType) return false;
+      if (filters.yachtSize && offer.yacht_size !== filters.yachtSize) return false;
+      if (filters.use && offer.uses !== filters.use) return false;
+      return true;
+    });
+  }, [offers, filters]);
+
+  const toggleMultiSelect = (key, value) => {
+    setFilters((prev) => {
+      const current = prev[key];
+      return {
+        ...prev,
+        [key]: current.includes(value)
+          ? current.filter((v) => v !== value)
+          : [...current, value],
+      };
+    });
+  };
+
+  const toggleRegionCountries = (region) => {
+  const countries = countriesByRegion[region];
+  const allSelected = countries.every((c) => filters.country.includes(c));
+  setFilters((prev) => ({
+    ...prev,
+    country: allSelected
+      ? prev.country.filter((c) => !countries.includes(c))
+      : [...new Set([...prev.country, ...countries])]
+  }));
+};
+
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>YACHT WORKS</h1>
-      <h2>Ofertas disponibles</h2>
-      <YachtOfferList offers={offers} currentUser={user} />
-    </div>
+  <div style={{ padding: '20px' }}>
+    <h1>YACHT WORKS</h1>
+    <h2>Ofertas disponibles</h2>
+
+    <button
+      onClick={() => setShowFilters(!showFilters)}
+      style={{
+        marginBottom: '10px',
+        padding: '10px 20px',
+        fontSize: '16px',
+        cursor: 'pointer',
+      }}
+    >
+      {showFilters ? 'Retract Filters' : 'Show Filters'}
+    </button>
+
+    {showFilters && (
+      <div className="filters-panel" style={{ marginBottom: '20px' }}>
+        <h3>Filtrar ofertas</h3>
+
+        <label>
+          Rank:
+          <input
+            type="text"
+            value={filters.rank}
+            onChange={(e) => setFilters({ ...filters, rank: e.target.value })}
+          />
+        </label>
+
+        <label>
+          Ciudad:
+          <input
+            type="text"
+            value={filters.city}
+            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+          />
+        </label>
+
+        <details style={{ marginBottom: '16px' }}>
+  <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>País</summary>
+  <div style={{ marginTop: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+    {regionOrder.map((region) => {
+  const countryList = countriesByRegion[region];
+  const allSelected = countryList.every((c) => filters.country.includes(c));
+  return (
+    <details key={region} style={{ marginBottom: '12px' }}>
+      <summary
+  style={{
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    cursor: 'pointer'
+  }}
+>
+  {region}
+  <input
+    type="checkbox"
+    checked={allSelected}
+    onClick={(e) => e.stopPropagation()}
+    onChange={() => toggleRegionCountries(region)}
+  />
+</summary>
+      <div style={{ marginLeft: '20px', marginTop: '8px' }}>
+        {countryList.map((country) => (
+          <label key={country} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+            {country}
+            <input
+              type="checkbox"
+              checked={filters.country.includes(country)}
+              onChange={() => toggleMultiSelect('country', country)}
+              style={{ marginLeft: '8px' }}
+            />
+          </label>
+        ))}
+      </div>
+    </details>
   );
+})}
+  </div>
+</details>
+
+        <label>
+          Salario mínimo:
+          <input
+            type="number"
+            value={filters.minSalary}
+            onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
+          />
+        </label>
+
+        <label>
+          Team:
+          <select
+            value={filters.team}
+            onChange={(e) => setFilters({ ...filters, team: e.target.value })}
+          >
+            <option value="">Todos</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </label>
+
+        <details style={{ marginBottom: '16px' }}>
+  <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Languages</summary>
+  <div style={{ marginTop: '8px' }}>
+    {['English', 'Spanish', 'Italian', 'French', 'German', 'Portuguese', 'Greek', 'Russian', 'Dutch'].map((lang) => (
+  <label key={lang} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+    {lang}
+    <input
+      type="checkbox"
+      checked={filters.languages.includes(lang)}
+      onChange={() => toggleMultiSelect('languages', lang)}
+      style={{ marginLeft: '8px' }}
+    />
+  </label>
+))}
+  </div>
+</details>
+
+        <details style={{ marginBottom: '16px' }}>
+  <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Terms</summary>
+  <div style={{ marginTop: '8px' }}>
+    {['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Cruising', 'DayWork'].map((term) => (
+  <label key={term} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+    {term}
+    <input
+      type="checkbox"
+      checked={filters.terms.includes(term)}
+      onChange={() => toggleMultiSelect('terms', term)}
+      style={{ marginLeft: '8px' }}
+    />
+  </label>
+))}
+  </div>
+</details>
+
+        <label>
+          Yacht Type:
+          <select
+            value={filters.yachtType}
+            onChange={(e) => setFilters({ ...filters, yachtType: e.target.value })}
+          >
+            <option value="">Todos</option>
+            <option value="Motor Yacht">Motor Yacht</option>
+            <option value="Sailing Yacht">Sailing Yacht</option>
+            <option value="Chase Boat">Chase Boat</option>
+            <option value="Catamaran">Catamaran</option>
+          </select>
+        </label>
+
+        <label>
+          Yacht Size:
+          <select
+            value={filters.yachtSize}
+            onChange={(e) => setFilters({ ...filters, yachtSize: e.target.value })}
+          >
+            <option value="">Todos</option>
+            <option value="0 - 30m">0 - 30m</option>
+            <option value="31 - 40m">31 - 40m</option>
+            <option value="41 - 50m">41 - 50m</option>
+            <option value="51 - 70m">51 - 70m</option>
+            <option value="> 70m">{'> 70m'}</option>
+          </select>
+        </label>
+
+        <label>
+          Use:
+          <select
+            value={filters.use}
+            onChange={(e) => setFilters({ ...filters, use: e.target.value })}
+          >
+            <option value="">Todos</option>
+            <option value="Private">Private</option>
+            <option value="Charter">Charter</option>
+            <option value="Private/Charter">Private/Charter</option>
+          </select>
+        </label>
+      </div>
+    )}
+
+    <YachtOfferList offers={filteredOffers} currentUser={user} />
+  </div>
+);
 }
 
 export default YachtWorksPage;
