@@ -32,7 +32,7 @@ function YachtWorksPage() {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>Yacht Work</h1>
+      <h1>YACHT WORKS</h1>
       <h2>Ofertas disponibles</h2>
       <YachtOfferList offers={offers} currentUser={user} />
     </div>

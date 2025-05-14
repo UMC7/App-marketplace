@@ -73,7 +73,7 @@ function EventsPage() {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>Eventos</h1>
+      <h1>EVENTS</h1>
       <p>Bienvenido a la sección de eventos. Aquí podrás ver todos los eventos publicados por la comunidad.</p>
 
       <div className="responsive-grid">
