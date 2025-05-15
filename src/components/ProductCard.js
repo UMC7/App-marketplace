@@ -12,7 +12,7 @@ function ProductCard({ product, onRemoveFavorite }) {
 
   const id = product?.id ?? null;
   const name = product?.name || '';
-  const price = product?.price ? `$${product.price}` : '-';
+  const price = product?.price ? `${product.currency || ''} ${product.price}` : '-';
   const country = product?.country || 'No especificado';
   const mainphoto = product?.mainphoto || 'https://via.placeholder.com/200?text=Sin+imagen';
 

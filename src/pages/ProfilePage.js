@@ -481,7 +481,7 @@ const deleteEvent = async (eventId) => {
                   <div key={product.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '250px' }}>
                     <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
                     <h3>{product.name}</h3>
-                    <p><strong>Precio:</strong> ${product.price}</p>
+                    <p><strong>Precio:</strong> {product.currency || ''} {product.price}</p>
                     <p><strong>Estado:</strong> {product.status}</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <button onClick={() => navigate(`/editproduct/${product.id}`)}>Editar</button>
@@ -596,7 +596,7 @@ const deleteEvent = async (eventId) => {
                   <div key={product.id} style={{ border: '1px dashed red', padding: '10px', borderRadius: '8px', width: '250px' }}>
                     <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
                     <h4>{product.name}</h4>
-                    <p><strong>Precio:</strong> ${product.price}</p>
+                    <p><strong>Precio:</strong> {product.currency || ''} {product.price}</p>
                     <p><strong>Eliminado el:</strong> {new Date(product.deleted_at).toLocaleDateString()}</p>
                     <button onClick={() => handleRestore(product.id)}>Restaurar</button>
                   </div>

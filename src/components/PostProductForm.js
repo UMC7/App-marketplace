@@ -6,6 +6,7 @@ const PostProductForm = () => {
   const [uploading, setUploading] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [currency, setCurrency] = useState('');
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [categoryId, setCategoryId] = useState('');
@@ -104,6 +105,7 @@ const PostProductForm = () => {
           name,
           description,
           price: parseFloat(price),
+          currency,
           quantity: parseInt(quantity, 10),
           category_id: parseInt(categoryId, 10),
           owner: ownerId,
@@ -150,6 +152,15 @@ const PostProductForm = () => {
 
         <label>Descripción:</label>
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
+
+        <label>Moneda:</label>
+        <select value={currency} onChange={(e) => setCurrency(e.target.value)} required>
+        <option value="">Seleccione una moneda</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="AUD">AUD</option>
+        <option value="GBP">GBP</option>
+        </select>
 
         <label>Precio:</label>
         <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required min="0" />

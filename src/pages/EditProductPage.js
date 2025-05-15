@@ -32,6 +32,7 @@ function EditProductPage() {
     name: '',
     description: '',
     price: '',
+    currency: '',
     quantity: '',
     city: '',
     country: '',
@@ -67,6 +68,7 @@ function EditProductPage() {
         name: data.name || '',
         description: data.description || '',
         price: data.price || '',
+        currency: data.currency || 'USD',
         quantity: data.quantity || '',
         city: data.city || '',
         country: data.country || '',
@@ -142,6 +144,7 @@ function EditProductPage() {
         city: formData.city,
         country: formData.country,
         condition: formData.condition,
+        currency: formData.currency,
         mainphoto: finalMainPhoto,
         photos: formData.photos,
       })
@@ -183,6 +186,21 @@ function EditProductPage() {
             onChange={handleChange}
             required
           />
+        </div>
+
+        <div>
+          <label>Moneda:</label>
+          <select
+            name="currency"
+            value={formData.currency}
+            onChange={handleChange}
+            required
+          >
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="AUD">AUD</option>
+          </select>
         </div>
 
         <div>

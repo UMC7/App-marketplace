@@ -193,7 +193,7 @@ function ProductDetailPage() {
       <p>{product.description}</p>
 
       <h3>Información del producto</h3>
-      <p><strong>Precio:</strong> ${product.price}</p>
+      <p><strong>Precio:</strong> {product.currency || ''} {product.price}</p>
       <p><strong>Stock disponible:</strong> {stockDisponible}</p>
       <p><strong>Ciudad:</strong> {product.city}</p>
       <p><strong>País:</strong> {product.country}</p>

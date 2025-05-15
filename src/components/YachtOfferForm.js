@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
 import supabase from '../supabase'; // ✅ Ruta corregida según tu estructura
 
+const defaultYachtSizes = [
+  "0 - 30m", "31 - 40m", "41 - 50m", "51 - 70m", "> 70m"
+];
+
+const chaseBoatSizes = [
+  "< 10m", "10 - 15m", "15 - 20m", "> 20m"
+];
+
 const initialState = {
+  work_environment: '',
   title: '',
   city: '',
   country: '',
@@ -61,6 +70,44 @@ function YachtOfferForm({ user, onOfferPosted }) {
   const [formData, setFormData] = useState(initialState);
   const [loading, setLoading] = useState(false);
 
+  const isOnboard = formData.work_environment === 'Onboard';
+const isShoreBased = formData.work_environment === 'Shore-based';
+
+const formReady = (() => {
+  if (!formData.work_environment) return false;
+
+  if (isOnboard) {
+    if (
+      !formData.title ||
+      (!formData.salary_currency && !formData.is_doe) ||
+      (!formData.salary && !formData.is_doe) ||
+      !formData.type ||
+      !formData.yacht_type ||
+      !formData.yacht_size ||
+      (!formData.start_date && !formData.is_asap) ||
+      !formData.city ||
+      !formData.country ||
+      (formData.team === 'Yes' && (!formData.teammate_rank || (!formData.teammate_salary && !formData.is_doe)))
+    ) return false;
+  }
+
+  if (isShoreBased) {
+    if (
+      !formData.title ||
+      (!formData.salary_currency && !formData.is_doe) ||
+      (!formData.salary && !formData.is_doe) ||
+      (!formData.start_date && !formData.is_asap) ||
+      !formData.work_location ||
+      (formData.work_location === 'On - site' && (!formData.city || !formData.country))
+    ) return false;
+  }
+
+  return true;
+})();
+
+  const yachtSizeOptions =
+  formData.title === 'Chase Boat Captain' ? chaseBoatSizes : defaultYachtSizes;
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -78,14 +125,45 @@ function YachtOfferForm({ user, onOfferPosted }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.city || !formData.country || !formData.type || (!formData.start_date && !formData.is_asap)) {
-  alert('Por favor completa los campos obligatorios.');
+    const isOnboard = formData.work_environment === 'Onboard';
+const isShoreBased = formData.work_environment === 'Shore-based';
+
+if (!formData.work_environment) {
+  alert('Selecciona un entorno de trabajo.');
   return;
 }
-    if (!formData.is_doe && !formData.salary) {
-      alert('Ingresa un salario o selecciona la opción DOE.');
-      return;
-    }
+
+if (isOnboard) {
+  if (
+    !formData.title ||
+    !formData.salary_currency && !formData.is_doe ||
+    !formData.salary && !formData.is_doe ||
+    !formData.type ||
+    !formData.yacht_type ||
+    !formData.yacht_size ||
+    (!formData.start_date && !formData.is_asap) ||
+    !formData.city ||
+    !formData.country ||
+    (formData.team === 'Yes' && (!formData.teammate_rank || (!formData.teammate_salary && !formData.is_doe)))
+  ) {
+    alert('Completa todos los campos requeridos marcados con *.');
+    return;
+  }
+}
+
+if (isShoreBased) {
+  if (
+    !formData.title ||
+    !formData.salary_currency && !formData.is_doe ||
+    !formData.salary && !formData.is_doe ||
+    (!formData.start_date && !formData.is_asap) ||
+    !formData.work_location ||
+    (formData.work_location === 'On - site' && (!formData.city || !formData.country))
+  ) {
+    alert('Completa todos los campos requeridos marcados con *.');
+    return;
+  }
+}
 
 const sanitizedData = {
   ...formData,
@@ -107,10 +185,12 @@ const sanitizedData = {
 
     const { error } = await supabase.from('yacht_work_offers').insert([{
   user_id: user.id,
+  work_environment: sanitizedData.work_environment,
+  work_location: sanitizedData.work_location || null,
   title: sanitizedData.title,
   city: sanitizedData.city,
   country: sanitizedData.country,
-  type: sanitizedData.type,
+  type: isOnboard ? sanitizedData.type : null,
   start_date: sanitizedData.is_asap
   ? new Date().toISOString().split('T')[0]  // fecha actual
   : sanitizedData.start_date || null,
@@ -156,6 +236,30 @@ const sanitizedData = {
 
   return (
   <form onSubmit={handleSubmit} style={{ marginBottom: '30px' }}>
+
+    {/* 0. Work Environment */}
+  <label>Work Environment:</label>
+  <select
+    name="work_environment"
+    value={formData.work_environment}
+    onChange={handleChange}
+    required
+  >
+    <option value="">Selecciona...</option>
+    <option value="Onboard">Onboard</option>
+    <option value="Shore-based">Shore-based</option>
+  </select>
+
+    {/* Mostrar solo si ya se seleccionó un entorno */}
+    {formData.work_environment === '' && (
+      <p style={{ marginTop: '1em', fontStyle: 'italic' }}>
+        Selecciona un entorno de trabajo para continuar...
+      </p>
+    )}
+
+    {formData.work_environment === 'Onboard' && (
+      <>
+
     {/* 1. Team */}
     <label>Team</label>
     <select name="team" value={formData.team} onChange={handleChange}>
@@ -164,7 +268,7 @@ const sanitizedData = {
     </select>
 
     {/* 2. Título del puesto */}
-    <label>Rank:</label>
+    <label>Rank: *</label>
     <select name="title" value={formData.title} onChange={handleChange} required>
       <option value="">Selecciona...</option>
       {titles.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -182,7 +286,7 @@ const sanitizedData = {
 {/* 6. Salary */}
 {!formData.is_doe && (
   <>
-    <label>Salary Currency:</label>
+    <label>Salary Currency: *</label>
     <select
       name="salary_currency"
       value={formData.salary_currency}
@@ -196,7 +300,7 @@ const sanitizedData = {
       <option value="GBP">GBP</option>
     </select>
 
-    <label>Salary:</label>
+    <label>Salary: *</label>
     <input type="number" name="salary" value={formData.salary || ''} onChange={handleChange} />
   </>
 )}
@@ -210,7 +314,7 @@ const sanitizedData = {
 {/* 6-8. Campos si Team === 'Yes' */}
 {formData.team === 'Yes' && (
   <>
-    <label>Teammate Rank:</label>
+    <label>Teammate Rank: *</label>
     <select name="teammate_rank" value={formData.teammate_rank} onChange={handleChange}>
       <option value="">Selecciona...</option>
       {titles.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -226,7 +330,7 @@ const sanitizedData = {
 
     {!formData.is_doe && (
       <>
-        <label>Teammate Salary:</label>
+        <label>Teammate Salary: *</label>
 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
   <span>{formData.teammate_salary_currency}</span>
   <input
@@ -287,7 +391,7 @@ const sanitizedData = {
 </div>
 
     {/* 9. Tipo */}
-    <label>Terms:</label>
+    <label>Terms: *</label>
     <select name="type" value={formData.type} onChange={handleChange} required>
       <option value="">Selecciona...</option>
       {types.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -302,6 +406,15 @@ const sanitizedData = {
       <option value="Share Cabin">Share Cabin</option>
     </select>
 
+    {/* Use */}
+    <label>Use:</label>
+    <select name="uses" value={formData.uses} onChange={handleChange}>
+      <option value="">Selecciona...</option>
+      <option value="Private">Private</option>
+      <option value="Charter">Charter</option>
+      <option value="Private/Charter">Private/Charter</option>
+    </select>
+
     {/* Season Type */}
     <label>Season Type:</label>
     <select name="season_type" value={formData.season_type} onChange={handleChange}>
@@ -311,7 +424,7 @@ const sanitizedData = {
     </select>
 
     {/* 10. Tipo de Yate */}
-    <label>Yacht Type:</label>
+    <label>Yacht Type: *</label>
     <select name="yacht_type" value={formData.yacht_type} onChange={handleChange}>
       <option value="">Selecciona...</option>
       <option value="Motor Yacht">Motor Yacht</option>
@@ -321,15 +434,13 @@ const sanitizedData = {
     </select>
 
     {/* 11. Tamaño del Yate */}
-    <label>Yacht Size:</label>
-    <select name="yacht_size" value={formData.yacht_size} onChange={handleChange}>
-      <option value="">Selecciona...</option>
-      <option value="0 - 30m">0 - 30m</option>
-      <option value="31 - 40m">31 - 40m</option>
-      <option value="41 - 50m">41 - 50m</option>
-      <option value="51 - 70m">51 - 70m</option>
-      <option value="> 70m">{'> 70m'}</option>
-    </select>
+<label>Yacht Size: *</label>
+<select name="yacht_size" value={formData.yacht_size} onChange={handleChange}>
+  <option value="">Selecciona...</option>
+  {yachtSizeOptions.map((size) => (
+    <option key={size} value={size}>{size}</option>
+  ))}
+</select>
 
     {/* Homeport */}
     <label>Homeport:</label>
@@ -351,7 +462,7 @@ const sanitizedData = {
 
     {/* 13. Fecha de Inicio */}
    {/* Start Date */}
-<label>Start Date:</label>
+<label>Start Date: *</label>
 <input
   type="date"
   name="start_date"
@@ -393,11 +504,11 @@ const sanitizedData = {
     />
 
     {/* 15. Ciudad */}
-    <label>City:</label>
+    <label>City: *</label>
     <input name="city" value={formData.city} onChange={handleChange} required />
 
     {/* 16. País */}
-    <label>Country:</label>
+    <label>Country: *</label>
     <select name="country" value={formData.country} onChange={handleChange} required>
       <option value="">Selecciona...</option>
       {countries.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -415,8 +526,186 @@ const sanitizedData = {
     <label>Remarks:</label>
     <textarea name="description" value={formData.description} onChange={handleChange} />
 
+          </>
+    )}
+
+    {formData.work_environment === 'Shore-based' && (
+  <>
+    {/* Position */}
+    <label>Position: *</label>
+    <input
+      name="title"
+      value={formData.title}
+      onChange={handleChange}
+      required
+    />
+
+    {/* Salary */}
+    {!formData.is_doe && (
+      <>
+        <label>Salary Currency: *</label>
+        <select
+          name="salary_currency"
+          value={formData.salary_currency}
+          onChange={handleChange}
+          required
+        >
+          <option value="">Select currency...</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="AUD">AUD</option>
+          <option value="GBP">GBP</option>
+        </select>
+
+        <label>Salary: *</label>
+        <input
+          type="number"
+          name="salary"
+          value={formData.salary || ''}
+          onChange={handleChange}
+        />
+      </>
+    )}
+
+    {/* DOE */}
+    <label>
+      <input
+        type="checkbox"
+        name="is_doe"
+        checked={formData.is_doe}
+        onChange={handleChange}
+      />
+      DOE (Salary)
+    </label>
+
+    {/* Languages */}
+    <label>Languages:</label>
+    <div>
+      <select name="language_1" value={formData.language_1} onChange={handleChange}>
+        <option value="">Idioma 1...</option>
+        <option value="English">English</option>
+        <option value="Spanish">Spanish</option>
+        <option value="Italian">Italian</option>
+        <option value="French">French</option>
+        <option value="Portuguese">Portuguese</option>
+        <option value="Greek">Greek</option>
+        <option value="Russian">Russian</option>
+        <option value="Dutch">Dutch</option>
+      </select>
+
+      <select name="language_1_fluency" value={formData.language_1_fluency} onChange={handleChange}>
+        <option value="">Fluidez...</option>
+        <option value="Native">Native</option>
+        <option value="Fluent">Fluent</option>
+        <option value="Conversational">Conversational</option>
+      </select>
+    </div>
+
+    <div>
+      <select name="language_2" value={formData.language_2} onChange={handleChange}>
+        <option value="">Idioma 2...</option>
+        <option value="English">English</option>
+        <option value="Spanish">Spanish</option>
+        <option value="Italian">Italian</option>
+        <option value="French">French</option>
+        <option value="Portuguese">Portuguese</option>
+        <option value="Greek">Greek</option>
+        <option value="Russian">Russian</option>
+        <option value="Dutch">Dutch</option>
+      </select>
+
+      <select name="language_2_fluency" value={formData.language_2_fluency} onChange={handleChange}>
+        <option value="">Fluidez...</option>
+        <option value="Native">Native</option>
+        <option value="Fluent">Fluent</option>
+        <option value="Conversational">Conversational</option>
+      </select>
+    </div>
+
+    {/* Start Date */}
+    <label>Start Date: *</label>
+    <input
+      type="date"
+      name="start_date"
+      value={formData.start_date}
+      onChange={handleChange}
+      required={!formData.is_asap}
+      disabled={formData.is_asap}
+    />
+
+    {/* ASAP */}
+    <label>
+      <input
+        type="checkbox"
+        name="is_asap"
+        checked={formData.is_asap}
+        onChange={handleChange}
+      />
+      ASAP
+    </label>
+
+    {/* End Date */}
+    <label>End Date:</label>
+    <input
+      type="date"
+      name="end_date"
+      value={formData.end_date}
+      onChange={handleChange}
+    />
+
+    {/* Work Location */}
+    <label>Work Location: *</label>
+    <select name="work_location" value={formData.work_location} onChange={handleChange}>
+      <option value="">Selecciona...</option>
+      <option value="Remote">Remote</option>
+      <option value="On - site">On - site</option>
+    </select>
+
+    {/* City & Country if On - site */}
+    {formData.work_location === 'On - site' && (
+      <>
+        <label>City: *</label>
+        <input name="city" value={formData.city} onChange={handleChange} required />
+
+        <label>Country: *</label>
+        <select name="country" value={formData.country} onChange={handleChange} required>
+          <option value="">Selecciona...</option>
+          {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </>
+    )}
+
+    {/* Contact Email */}
+    <label>Contact Email:</label>
+    <input
+      type="email"
+      name="contact_email"
+      value={formData.contact_email}
+      onChange={handleChange}
+    />
+
+    {/* Contact Phone */}
+    <label>Contact Phone:</label>
+    <input
+      type="tel"
+      name="contact_phone"
+      value={formData.contact_phone}
+      onChange={handleChange}
+    />
+
+    {/* Remarks */}
+<label>Remarks:</label>
+<textarea
+  name="description"
+  value={formData.description}
+  onChange={handleChange}
+/>
+  </>
+)}
+
     {/* Submit */}
-    <button type="submit" disabled={loading}>
+    <p style={{ fontStyle: 'italic', marginTop: '1.5em' }}>* Required</p>
+    <button type="submit" disabled={loading || !formReady}>
       {loading ? 'Publicando...' : 'Publicar Oferta'}
     </button>
   </form>

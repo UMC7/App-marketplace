@@ -173,9 +173,25 @@ function YachtOfferList({ offers, currentUser }) {
                             {offer.teammate_salary && (
                             <p><strong>Teammate Salary:</strong> {offer.teammate_salary_currency || ''} {offer.teammate_salary}</p>
                             )}
+                            {offer.language_1 && (
+                            <p>
+                            <strong>Idioma 1:</strong> {offer.language_1}
+                              {offer.language_1_fluency && ` (${offer.language_1_fluency})`}
+                            </p>
+                            )}
+                              {offer.language_2 && (
+                            <p>
+                            <strong>Idioma 2:</strong> {offer.language_2}
+                              {offer.language_2_fluency && ` (${offer.language_2_fluency})`}
+                            </p>
+                            )}
                             {offer.city && <p><strong>Ciudad:</strong> {offer.city}</p>}
                             {offer.country && <p><strong>País:</strong> {offer.country}</p>}
                             {offer.type && <p><strong>Tipo:</strong> {offer.type}</p>}
+                            {offer.liveaboard && <p><strong>Liveaboard:</strong> {offer.liveaboard}</p>}
+                            {offer.uses !== null && offer.uses !== '' && (
+                            <p><strong>Use:</strong> {offer.uses}</p>
+                            )}
                             {offer.yacht_type && <p><strong>Yacht Type:</strong> {offer.yacht_type}</p>}
                             {offer.yacht_size && <p><strong>Yacht Size:</strong> {offer.yacht_size}</p>}
                             {offer.flag && <p><strong>Flag:</strong> {offer.flag}</p>}

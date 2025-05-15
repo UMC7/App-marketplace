@@ -25,6 +25,7 @@ function CartPage() {
           id,
           name,
           price,
+          currency,
           quantity,
           mainphoto,
           status,
@@ -50,6 +51,7 @@ function CartPage() {
               id: item.product_id,
               quantity: adjustedQuantity,
               price: item.products?.price,
+              currency: item.products?.currency || 'USD', // ✅ nueva propiedad
               name: item.products?.name,
               stock: item.products?.quantity,
               mainphoto: item.products?.mainphoto,
@@ -83,6 +85,16 @@ function CartPage() {
 
   const availableItems = cartItems.filter(item => item.status !== 'paused' && item.status !== 'deleted');
   const total = availableItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+  const subtotalesPorMoneda = availableItems.reduce((acc, item) => {
+  const moneda = item.currency || 'USD';
+  const subtotal = item.price * item.quantity;
+
+  if (!acc[moneda]) acc[moneda] = 0;
+  acc[moneda] += subtotal;
+
+  return acc;
+}, {});
 
   const handleQuantityChange = (item, newQty) => {
     if (!isNaN(newQty) && newQty <= item.stock) {
@@ -211,7 +223,7 @@ setCartItems([]);
                 <p style={{ color: 'orange', fontWeight: 'bold' }}>Este producto está pausado.</p>
               ) : (
                 <>
-                  <p>Precio unitario: ${item.price}</p>
+                  <p>Precio unitario: {item.currency} {item.price}</p>
                   <p>
                     Cantidad:
                     <input
@@ -232,12 +244,19 @@ setCartItems([]);
 
                 </>
               )}
-              <p>Subtotal: ${item.status === 'deleted' ? 0 : item.price * item.quantity}</p>
+              <p>Subtotal: {item.currency} {item.status === 'deleted' ? 0 : (item.price * item.quantity).toFixed(2)}</p>
               <button onClick={() => handleRemoveFromCart(item.id)}>Eliminar</button>
             </div>
           ))}
 
-          <h2>Total: ${total.toFixed(2)}</h2>
+          <h2>Subtotal por moneda:</h2>
+          <ul>
+          {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
+          <li key={moneda}>
+          <strong>{moneda}:</strong> {subtotal.toFixed(2)}
+        </li>
+      ))}
+    </ul>
           <button onClick={handleConfirmPurchase} disabled={processing || availableItems.length === 0}>
             {processing ? 'Procesando...' : 'Confirmar Compra'}
           </button>
@@ -257,7 +276,14 @@ setCartItems([]);
           }}>
             <h3>¿Deseas confirmar tu compra?</h3>
             <p>{availableItems.length} producto(s)</p>
-            <p>Total a pagar: <strong>${total.toFixed(2)}</strong></p>
+            <p><strong>Totales por moneda:</strong></p>
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
+                <li key={moneda}>
+                  {moneda}: {subtotal.toFixed(2)}
+                </li>
+              ))}
+            </ul>
             <button onClick={handleProceedPurchase} style={{ marginRight: '10px' }}>Confirmar</button>
             <button onClick={() => setShowConfirmModal(false)}>Cancelar</button>
           </div>
