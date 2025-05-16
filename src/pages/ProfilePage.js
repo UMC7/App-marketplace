@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
-import { hasReviewedBefore, submitUserReview } from '../lib/reviewUtils';
+import { submitUserReview } from '../lib/reviewUtils';
 import {
   confirmPurchase,
   reportProblem,
@@ -165,9 +165,21 @@ function ProfilePage() {
             .order('deleted_at', { ascending: false }),              
         ]);
 
-        const { data: reviewsData, error: reviewsError } = await supabase
+  const { data: reviewsData, error: reviewsError } = await supabase
   .from('user_reviews')
-  .select('*')
+  .select(`
+    *,
+    purchases (
+      id,
+      purchase_items (
+        product_id,
+        products (
+          mainphoto,
+          name
+        )
+      )
+    )
+  `)
   .eq('reviewed_user_id', currentUser.id)
   .order('created_at', { ascending: false });
 
@@ -691,24 +703,41 @@ const deleteEvent = async (eventId) => {
         <div style={{ marginTop: '20px' }}>
           <h3>Comentarios Recibidos:</h3>
           <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
-            {receivedReviews.map((review) => (
-              <li
-                key={review.id}
-                style={{
-                  marginBottom: '15px',
-                  borderBottom: '1px solid #ccc',
-                  paddingBottom: '10px',
-                }}
-              >
-                <p><strong>⭐ Calificación:</strong> {review.rating} / 5</p>
-                {review.comment && (
-                  <p><strong>📝 Comentario:</strong> {review.comment}</p>
-                )}
-                <p style={{ fontSize: '0.9em', color: '#666' }}>
-                  Fecha: {new Date(review.created_at).toLocaleDateString()}
-                </p>
-              </li>
-            ))}
+            {receivedReviews.map((review) => {
+  const productPhoto = review.purchases?.purchase_items?.[0]?.products?.mainphoto;
+  const productName = review.purchases?.purchase_items?.[0]?.products?.name;
+
+  return (
+    <li
+      key={review.id}
+      style={{
+        marginBottom: '15px',
+        borderBottom: '1px solid #ccc',
+        paddingBottom: '10px',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '15px',
+      }}
+    >
+      {productPhoto && (
+        <img
+          src={productPhoto}
+          alt={productName || 'Producto'}
+          style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }}
+        />
+      )}
+      <div>
+        <p><strong>⭐ Calificación:</strong> {review.rating} / 5</p>
+        {review.comment && (
+          <p><strong>📝 Comentario:</strong> {review.comment}</p>
+        )}
+        <p style={{ fontSize: '0.9em', color: '#666' }}>
+          Fecha: {new Date(review.created_at).toLocaleDateString()}
+        </p>
+      </div>
+    </li>
+  );
+})}
           </ul>
         </div>
       )}
@@ -793,7 +822,7 @@ const deleteEvent = async (eventId) => {
 
 {/* Mostrar formulario de valoración solo si no se ha hecho */}
 {['completed', 'cancelled', 'problem_reported'].includes(item.purchases?.status) &&
- !sentReviews.filter(r => r.purchase_id !== null).some(r => r.purchase_id === item.purchases?.id)
+ !sentReviews.some(r => r.purchase_id === item.purchases?.id)
   && (
   <div style={{ marginTop: '10px' }}>
     <form onSubmit={(e) => handleReviewSubmit(e, item)}>
@@ -960,12 +989,6 @@ const handleReviewSubmit = async (e, item) => {
 
   const reviewerId = currentUser.id;
   const reviewedUserId = item.products?.owner;
-
-  const alreadyReviewed = await hasReviewedBefore(reviewerId, reviewedUserId);
-  if (alreadyReviewed) {
-    alert('Ya dejaste una valoración para este vendedor.');
-    return;
-  }
 
 console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
 

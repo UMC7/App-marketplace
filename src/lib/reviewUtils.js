@@ -29,23 +29,12 @@ export async function submitUserReview({
     return { success: false, error };
   }
 
-  return { success: true, data };
+  if (purchaseId) {
+  await supabase
+    .from('purchases')
+    .update({ buyer_confirmed: true })
+    .eq('id', purchaseId);
 }
 
-/**
- * Verifica si un usuario ya ha dejado una valoración a otro.
- */
-export async function hasReviewedBefore(reviewerId, reviewedUserId) {
-  const { data, error } = await supabase
-    .from('user_reviews')
-    .select('id')
-    .eq('reviewer_id', reviewerId)
-    .eq('reviewed_user_id', reviewedUserId);
-
-  if (error) {
-    console.error('Error checking previous review:', error.message);
-    return false;
-  }
-
-  return data.length > 0;
+return { success: true, data };
 }
