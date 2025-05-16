@@ -83,6 +83,31 @@ function RegisterPage() {
 
   const birthYears = Array.from({ length: 80 }, (_, i) => 2025 - i);
 
+  const isFormComplete = () => {
+  const {
+    firstName,
+    lastName,
+    birthYear,
+    nickname,
+    phone,
+    email,
+    password,
+    confirmPassword
+  } = form;
+
+  return (
+    firstName.trim() &&
+    lastName.trim() &&
+    birthYear &&
+    nickname.trim() &&
+    phone.trim() &&
+    email.trim() &&
+    password &&
+    confirmPassword &&
+    password === confirmPassword
+  );
+};
+
   return (
     <div>
       <h2>Registrar nuevo usuario</h2>
@@ -106,7 +131,9 @@ function RegisterPage() {
       <input type="password" name="password" placeholder="Contraseña" onChange={handleChange} required />
       <input type="password" name="confirmPassword" placeholder="Confirmar contraseña" onChange={handleChange} required />
 
-      <button onClick={handleRegister}>Registrarse</button>
+      <button onClick={handleRegister} disabled={!isFormComplete()}>
+  Registrarse
+</button>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
