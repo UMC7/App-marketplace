@@ -72,7 +72,7 @@ function EventsPage() {
   }
 
   return (
-    <div style={{ padding: '20px' }}>
+  <div className="container">
       <h1>EVENTS</h1>
       <p>Bienvenido a la sección de eventos. Aquí podrás ver todos los eventos publicados por la comunidad.</p>
 
@@ -122,7 +122,7 @@ function EventsPage() {
 )}
 
 {expandedEventId === event.id && (
-  <div style={{ marginTop: '10px', fontSize: '0.9em' }}>
+  <div className="event-details">
     {event.description && <p><strong>Descripción:</strong> {event.description}</p>}
 
     {event.start_time && <p><strong>Hora de inicio:</strong> {formatTime(event.start_time)}</p>}

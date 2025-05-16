@@ -14,6 +14,7 @@ const modalOverlay = {
 };
 
 const modalContent = {
+  position: 'relative',
   backgroundColor: '#fff',
   padding: '20px',
   borderRadius: '10px',
@@ -28,7 +29,7 @@ function Modal({ onClose, children }) {
   return (
     <div style={modalOverlay} onClick={onClose}>
       <div style={modalContent} onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} style={{ float: 'right' }}>✖</button>
+        <button className="close-button" onClick={onClose}>✖</button>
         {children}
       </div>
     </div>

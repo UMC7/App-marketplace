@@ -132,7 +132,7 @@ function YachtWorksPage() {
 };
 
   return (
-  <div style={{ padding: '20px' }}>
+  <div className="container">
     <h1>YACHT WORKS</h1>
     <h2>Ofertas disponibles</h2>
 

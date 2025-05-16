@@ -38,7 +38,7 @@ function YachtServicesPage() {
   }
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="container">
       <h1>Servicios Náuticos</h1>
       <p>Bienvenido a la sección de servicios náuticos. Aquí los proveedores pueden publicar y mostrar los servicios que ofrecen.</p>
 

@@ -144,7 +144,8 @@ const PostProductForm = () => {
   };
 
   return (
-    <div>
+  <div className="container">
+    <div className="login-form">
       <h1>Agregar Producto</h1>
       <form onSubmit={handleSubmit}>
         <label>Nombre del Producto:</label>
@@ -204,11 +205,16 @@ const PostProductForm = () => {
         <label>Foto principal:</label>
         <input type="file" accept="image/*" onChange={handleMainPhotoUpload} required />
 
-        <button type="submit" disabled={uploading}>
-          {uploading ? 'Subiendo imágenes...' : 'Guardar Producto'}
-        </button>
+        <button
+  type="submit"
+  className="landing-button"
+  disabled={uploading}
+>
+  {uploading ? 'Subiendo imágenes...' : 'Guardar Producto'}
+</button>
       </form>
     </div>
+  </div>
   );
 };
 

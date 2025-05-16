@@ -109,7 +109,8 @@ function RegisterPage() {
 };
 
   return (
-    <div>
+    <div className="container">
+    <div className="login-form">
       <h2>Registrar nuevo usuario</h2>
 
       <input name="firstName" placeholder="Nombre" onChange={handleChange} required />
@@ -137,6 +138,7 @@ function RegisterPage() {
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
+  </div>
   );
 }
 

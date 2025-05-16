@@ -178,7 +178,7 @@ function ProductDetailPage() {
   ];
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="container">
       <h1>{product.name}</h1>
 
       <Slider {...settings}>
@@ -213,12 +213,12 @@ function ProductDetailPage() {
                 value={purchaseQty}
                 onChange={(e) => setPurchaseQty(parseInt(e.target.value))}
               />
-              <button onClick={handleAddToCart}>Agregar al carrito</button>
+              <button className="landing-button" onClick={handleAddToCart}>Agregar al carrito</button>
             </>
           )}
 
           {!isOwner && currentUser && (
-            <button onClick={handleAddToFavorites} disabled={isFavorite || favLoading}>
+            <button className="landing-button" onClick={handleAddToFavorites} disabled={isFavorite || favLoading}>
               {isFavorite ? '✔ En favoritos' : 'Agregar a favoritos'}
             </button>
           )}
@@ -250,8 +250,8 @@ function ProductDetailPage() {
                           onChange={(e) => setResponseText(e.target.value)}
                         />
                         <br />
-                        <button onClick={handleSubmitAnswer}>Responder</button>
-                        <button onClick={() => setRespondingTo(null)}>Cancelar</button>
+                        <button className="landing-button" onClick={handleSubmitAnswer}>Responder</button>
+                        <button className="landing-button" onClick={() => setRespondingTo(null)}>Cancelar</button>
                       </div>
                     ) : (
                       <button onClick={() => setRespondingTo(msg.id)}>Responder</button>
@@ -271,7 +271,7 @@ function ProductDetailPage() {
               placeholder="Haz una pregunta..."
               style={{ width: '100%' }}
             />
-            <button onClick={handleSubmitQuestion} disabled={messageLoading}>
+            <button className="landing-button" onClick={handleSubmitQuestion} disabled={messageLoading}>
               {messageLoading ? 'Enviando...' : 'Enviar pregunta'}
             </button>
           </div>

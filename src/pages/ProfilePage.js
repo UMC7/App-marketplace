@@ -533,8 +533,8 @@ const deleteEvent = async (eventId) => {
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {products.map((product) => (
-                  <div key={product.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '250px' }}>
-                    <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                  <div key={product.id} className="profile-card">
+                    <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} />
                     <h3>{product.name}</h3>
                     <p><strong>Precio:</strong> {product.currency || ''} {product.price}</p>
                     <p><strong>Estado:</strong> {product.status}</p>
@@ -558,8 +558,8 @@ const deleteEvent = async (eventId) => {
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
           {services.map((service) => (
-            <div key={service.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '250px' }}>
-              <img src={service.mainphoto || 'https://via.placeholder.com/250'} alt={service.company_name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+           <div key={service.id} className="profile-card">
+              <img src={service.mainphoto || 'https://via.placeholder.com/250'} alt={service.company_name} />
               <h3>{service.company_name}</h3>
               <p><strong>Ciudad:</strong> {service.city}</p>
               <p><strong>País:</strong> {service.country}</p>
@@ -587,7 +587,7 @@ const deleteEvent = async (eventId) => {
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
           {jobOffers.map((offer) => (
-            <div key={offer.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
+            <div key={offer.id} className="profile-card">
               <h3>{offer.title}</h3>
               <p><strong>Tipo:</strong> {offer.type}</p>
               <p><strong>Ubicación:</strong> {offer.city}, {offer.country}</p>
@@ -617,8 +617,8 @@ const deleteEvent = async (eventId) => {
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
           {events.map((event) => (
-            <div key={event.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '250px' }}>
-              <img src={event.mainphoto || 'https://via.placeholder.com/250'} alt={event.event_name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+            <div key={event.id} className="profile-card">
+              <img src={event.mainphoto || 'https://via.placeholder.com/250'} alt={event.event_name} />
               <h3>{event.event_name}</h3>
               <p><strong>Ciudad:</strong> {event.city}</p>
               <p><strong>País:</strong> {event.country}</p>
@@ -648,8 +648,8 @@ const deleteEvent = async (eventId) => {
               <h3>Productos Eliminados</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {deletedProducts.map((product) => (
-                  <div key={product.id} style={{ border: '1px dashed red', padding: '10px', borderRadius: '8px', width: '250px' }}>
-                    <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                  <div key={product.id} className="profile-card" style={{ border: '1px dashed red' }}>
+                    <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} />
                     <h4>{product.name}</h4>
                     <p><strong>Precio:</strong> {product.currency || ''} {product.price}</p>
                     <p><strong>Eliminado el:</strong> {new Date(product.deleted_at).toLocaleDateString()}</p>
@@ -1023,7 +1023,7 @@ console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
 }
 };
   return (
-    <div style={{ padding: '20px' }}>
+     <div className="container">
       <h1>Mi Perfil</h1>
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
         <button onClick={() => setActiveTab('productos')}>Mis Productos</button>

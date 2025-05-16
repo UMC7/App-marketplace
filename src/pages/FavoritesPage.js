@@ -91,25 +91,27 @@ function FavoritesPage() {
   }, [currentUser]);
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Mis productos favoritos</h1>
-      {loading ? (
-        <p>Cargando favoritos...</p>
-      ) : favorites.length === 0 ? (
-        <p>No has agregado productos a favoritos.</p>
-      ) : (
-        <div className="products-grid">
-          {favorites.map(({ product, id }, idx) => (
-            <ProductCard
-              key={idx}
-              product={product}
-              onRemoveFavorite={() => handleRemoveFavorite(id)}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  <div className="container">
+    <h1>Mis productos favoritos</h1>
+    {loading ? (
+      <p className="loading">Cargando favoritos...</p>
+    ) : favorites.length === 0 ? (
+      <p className="no-products">No has agregado productos a favoritos.</p>
+    ) : (
+      <div className="products-grid-wrapper">
+  <div className="products-grid">
+    {favorites.map(({ product, id }, idx) => (
+      <ProductCard
+        key={idx}
+        product={product}
+        onRemoveFavorite={() => handleRemoveFavorite(id)}
+      />
+    ))}
+  </div>
+</div>
+    )}
+  </div>
+);
 }
 
 export default FavoritesPage;

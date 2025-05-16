@@ -235,7 +235,9 @@ const sanitizedData = {
   };
 
   return (
-  <form onSubmit={handleSubmit} style={{ marginBottom: '30px' }}>
+  <div className="container">
+    <div className="login-form">
+      <form onSubmit={handleSubmit}>
 
     {/* 0. Work Environment */}
   <label>Work Environment:</label>
@@ -331,7 +333,7 @@ const sanitizedData = {
     {!formData.is_doe && (
       <>
         <label>Teammate Salary: *</label>
-<div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+<div className="form-inline-group">
   <span>{formData.teammate_salary_currency}</span>
   <input
     type="number"
@@ -348,7 +350,7 @@ const sanitizedData = {
 {/* Languages */}
 <label>Languages:</label>
 
-<div>
+<div className="form-inline-group">
   <select name="language_1" value={formData.language_1} onChange={handleChange}>
     <option value="">Idioma 1...</option>
     <option value="English">English</option>
@@ -369,7 +371,7 @@ const sanitizedData = {
   </select>
 </div>
 
-<div>
+<div className="form-inline-group">
   <select name="language_2" value={formData.language_2} onChange={handleChange}>
     <option value="">Idioma 2...</option>
     <option value="English">English</option>
@@ -580,7 +582,7 @@ const sanitizedData = {
 
     {/* Languages */}
     <label>Languages:</label>
-    <div>
+    <div className="form-inline-group">
       <select name="language_1" value={formData.language_1} onChange={handleChange}>
         <option value="">Idioma 1...</option>
         <option value="English">English</option>
@@ -601,7 +603,8 @@ const sanitizedData = {
       </select>
     </div>
 
-    <div>
+    
+      <div className="form-inline-group">
       <select name="language_2" value={formData.language_2} onChange={handleChange}>
         <option value="">Idioma 2...</option>
         <option value="English">English</option>
@@ -705,10 +708,16 @@ const sanitizedData = {
 
     {/* Submit */}
     <p style={{ fontStyle: 'italic', marginTop: '1.5em' }}>* Required</p>
-    <button type="submit" disabled={loading || !formReady}>
-      {loading ? 'Publicando...' : 'Publicar Oferta'}
-    </button>
+    <button
+  type="submit"
+  className="landing-button"
+  disabled={loading || !formReady}
+>
+  {loading ? 'Publicando...' : 'Publicar Oferta'}
+</button>
   </form>
+  </div>
+  </div>
   );
 }
 

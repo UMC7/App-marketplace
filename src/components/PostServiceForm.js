@@ -151,7 +151,8 @@ const PostServiceForm = () => {
   };
 
   return (
-    <div>
+  <div className="container">
+    <div className="login-form">
       <h1>Agregar Servicio</h1>
       <form onSubmit={handleSubmit}>
         <label>Nombre de la Compañía:</label>
@@ -212,11 +213,12 @@ const PostServiceForm = () => {
         <input type="text" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
 
 
-        <button type="submit" disabled={uploading}>
+        <button className="landing-button" type="submit" disabled={uploading}>
           {uploading ? 'Subiendo imágenes...' : 'Guardar Servicio'}
         </button>
       </form>
     </div>
+  </div>
   );
 };
 

@@ -1,3 +1,27 @@
+:root {
+  --primary-color: #081a3b;      /* Azul profundo del logo */
+  --accent-color: #68ada8;       /* Turquesa elegante */
+  --neutral-color: #bca987;      /* Beige sofisticado */
+  --white-color: #ffffff;
+  --text-dark: #1c1c1c;
+
+  --font-header: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: #1c1c1c;
+  background-color: #f4f6f8;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3 {
+  font-family: 'Playfair Display', serif;
+  color: #081a3b; /* azul profundo de tu logo */
+}
+
 /* Estilos generales de la App */
 .App {
   text-align: center;
@@ -84,7 +108,7 @@ h1 {
   font-size: 2rem;
   margin-bottom: 20px;
   font-weight: bold;
-  color: #333;
+  color: var(--primary-color);
 }
 
 /* Estilos para la sección de carga */
@@ -109,6 +133,12 @@ h1 {
   gap: 20px;
   margin-top: 20px;
   padding: 0 20px;
+}
+
+.products-grid-wrapper {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 /* Estilos para cada tarjeta de producto */
@@ -261,4 +291,211 @@ body {
     padding: 12px;
     font-size: 18px;
   }
+}
+
+button, .landing-button {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  font-family: var(--font-body);
+  text-decoration: none;
+}
+
+button:hover, .landing-button:hover {
+  background-color: var(--accent-color);
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.login-form {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: var(--box-shadow, 0 4px 12px rgba(0, 0, 0, 0.08));
+}
+
+.login-form input,
+.login-form select,
+.login-form textarea {
+  border: 1px solid var(--neutral-color);
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: 12px;
+  background-color: white;
+}
+
+.login-form input:focus,
+.login-form select:focus,
+.login-form textarea:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(104, 173, 168, 0.2);
+}
+
+.login-form h2 {
+  font-family: var(--font-header);
+  font-size: 1.8rem;
+  color: var(--primary-color);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.login-form label {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 12px 0 4px;
+  display: block;
+  color: var(--primary-color);
+}
+
+.login-form button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.login-form button:hover {
+  background-color: var(--accent-color);
+}
+
+.login-form p {
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.profile-card {
+  border: 1px solid #ccc;
+  padding: 16px;
+  border-radius: 10px;
+  background-color: var(--white-color);
+  width: 100%;
+  max-width: 280px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-card:hover {
+  transform: translateY(-4px);
+}
+
+.profile-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.profile-card h3 {
+  font-size: 1.2rem;
+  color: var(--primary-color);
+  margin: 8px 0 4px;
+  font-family: var(--font-header);
+}
+
+.profile-card p {
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  margin: 4px 0;
+}
+
+.profile-card button {
+  font-size: 0.9rem;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-card button:hover {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.close-button:hover {
+  background-color: var(--accent-color);
+}
+
+.landing-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.landing-button {
+  flex: 1 1 auto;
+  min-width: 160px;
+  text-align: center;
+}
+
+.form-inline-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.form-inline-group > * {
+  flex: 1;
+  min-width: 140px;
 }

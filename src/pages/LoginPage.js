@@ -31,7 +31,7 @@ function LoginPage() {
   };
 
   return (
-    <div>
+    <div className="container login-form">
       <h2>Iniciar sesión</h2>
       <input
         type="email"

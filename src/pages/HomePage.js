@@ -106,8 +106,8 @@ function HomePage() {
   }, [filterProducts]);
 
   return (
-    <div>
-      <h1>Bienvenido al Marketplace</h1>
+    <div className="container">
+      <h1>SeaMarket</h1>
   
       <div className="filters-container">
         <div className="filter-item">

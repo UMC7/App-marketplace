@@ -64,18 +64,12 @@ function ProductCard({ product, onRemoveFavorite }) {
 
       {onRemoveFavorite && (
         <button
-          onClick={() => onRemoveFavorite(id)}
-          style={{
-            marginTop: '10px',
-            backgroundColor: '#ff4d4f',
-            color: 'white',
-            border: 'none',
-            padding: '5px 10px',
-            cursor: 'pointer',
-          }}
-        >
-          Quitar de favoritos
-        </button>
+  className="landing-button"
+  onClick={() => onRemoveFavorite(id)}
+  style={{ marginTop: '10px' }}
+>
+  Quitar de favoritos
+</button>
       )}
     </div>
   );
