@@ -4,6 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
+import { hasReviewedBefore, submitUserReview } from '../lib/reviewUtils';
+import {
+  confirmPurchase,
+  reportProblem,
+  cancelPurchase,
+} from '../lib/purchaseStatus';
 
 function ProfilePage() {
   const { currentUser } = useAuth();
@@ -11,6 +17,7 @@ function ProfilePage() {
   const [deletedProducts, setDeletedProducts] = useState([]);
   const [sales, setSales] = useState([]);
   const [purchases, setPurchases] = useState([]);
+  const [updatedPurchaseStatuses, setUpdatedPurchaseStatuses] = useState({});
   const [services, setServices] = useState([]); // ✅ Nuevo estado para servicios
   const [jobOffers, setJobOffers] = useState([]);
   const [deletedJobs, setDeletedJobs] = useState([]);
@@ -19,6 +26,10 @@ function ProfilePage() {
   const [userDetails, setUserDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('productos');
+  const [receivedReviews, setReceivedReviews] = useState([]);
+  const [sentReviews, setSentReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(null);
+
 
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(true);
   const [passwordInput, setPasswordInput] = useState('');
@@ -116,6 +127,8 @@ function ProfilePage() {
               ),
               purchases (
                 id,
+                status,
+                buyer_confirmed,
                 created_at,
                 user_id
               )
@@ -149,8 +162,37 @@ function ProfilePage() {
             .select('*')
             .eq('owner', currentUser.id)
             .eq('status', 'deleted')
-            .order('deleted_at', { ascending: false }),               
+            .order('deleted_at', { ascending: false }),              
         ]);
+
+        const { data: reviewsData, error: reviewsError } = await supabase
+  .from('user_reviews')
+  .select('*')
+  .eq('reviewed_user_id', currentUser.id)
+  .order('created_at', { ascending: false });
+
+const { data: myReviewsData, error: myReviewsError } = await supabase
+  .from('user_reviews')
+  .select('*')
+  .eq('reviewer_id', currentUser.id);
+
+if (myReviewsError) {
+  console.error('Error cargando valoraciones enviadas:', myReviewsError.message);
+} else {
+  setSentReviews(myReviewsData || []);
+}
+
+if (reviewsError) {
+  console.error('Error cargando valoraciones recibidas:', reviewsError.message);
+}
+setReceivedReviews(reviewsData || []);
+
+const totalRatings = (reviewsData || []).reduce((sum, r) => sum + r.rating, 0);
+const avgRating = reviewsData && reviewsData.length > 0
+  ? (totalRatings / reviewsData.length).toFixed(1)
+  : null;
+
+setAverageRating(avgRating);
     
         if (deletedJobsError) throw deletedJobsError;
         setDeletedJobs(deletedJobData || []);
@@ -203,6 +245,7 @@ function ProfilePage() {
         setSales(filteredSales);
         setPurchases(filteredPurchases);
         setServices(serviceData || []);
+        setReceivedReviews(reviewsData || []);
       } catch (error) {
         console.error('Error general al cargar datos:', error.message);
       } finally {
@@ -632,6 +675,46 @@ const deleteEvent = async (eventId) => {
       )}
     </>
   );
+
+  case 'valoracion':
+  return (
+    <>
+      <h2>Valoraciones Recibidas</h2>
+
+      {averageRating ? (
+        <p><strong>⭐ Promedio general:</strong> {averageRating} / 5</p>
+      ) : (
+        <p>No has recibido valoraciones aún.</p>
+      )}
+
+      {receivedReviews.length > 0 && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>Comentarios Recibidos:</h3>
+          <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
+            {receivedReviews.map((review) => (
+              <li
+                key={review.id}
+                style={{
+                  marginBottom: '15px',
+                  borderBottom: '1px solid #ccc',
+                  paddingBottom: '10px',
+                }}
+              >
+                <p><strong>⭐ Calificación:</strong> {review.rating} / 5</p>
+                {review.comment && (
+                  <p><strong>📝 Comentario:</strong> {review.comment}</p>
+                )}
+                <p style={{ fontSize: '0.9em', color: '#666' }}>
+                  Fecha: {new Date(review.created_at).toLocaleDateString()}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
+  );
+
       case 'ventas':
         return (
           <>
@@ -683,6 +766,133 @@ const deleteEvent = async (eventId) => {
                       month: 'long',
                       year: 'numeric'
                     })}</p>
+                    {/* Mostrar el estado de la acción tomada */}
+{['completed', 'cancelled', 'problem_reported'].includes(
+  updatedPurchaseStatuses[item.purchases?.id] || item.purchases?.status
+) && (() => {
+  const status = updatedPurchaseStatuses[item.purchases?.id] || item.purchases.status;
+  const color =
+    status === 'completed'
+      ? 'green'
+      : status === 'cancelled'
+      ? 'orange'
+      : 'red';
+  const label =
+    status === 'completed'
+      ? 'Compra confirmada'
+      : status === 'cancelled'
+      ? 'Compra cancelada'
+      : 'Problema reportado';
+
+  return (
+    <div style={{ marginTop: '10px', color }}>
+      <strong>✅ Acción registrada:</strong> {label}
+    </div>
+  );
+})()}
+
+{/* Mostrar formulario de valoración solo si no se ha hecho */}
+{['completed', 'cancelled', 'problem_reported'].includes(item.purchases?.status) &&
+ !sentReviews.filter(r => r.purchase_id !== null).some(r => r.purchase_id === item.purchases?.id)
+  && (
+  <div style={{ marginTop: '10px' }}>
+    <form onSubmit={(e) => handleReviewSubmit(e, item)}>
+      <p><strong>Deja tu valoración para el vendedor:</strong></p>
+      <label>
+        Puntuación (1–5): 
+        <input type="number" name="rating" min="1" max="5" required />
+      </label>
+      <br />
+      <label>
+        Comentario:
+        <textarea name="comment" rows="3" style={{ width: '100%' }} />
+      </label>
+      <br />
+      <button type="submit">Enviar valoración</button>
+    </form>
+  </div>
+)}
+
+{/* Mostrar botones de acción solo si no se ha hecho nada aún */}
+{!['completed', 'cancelled', 'problem_reported'].includes(
+  updatedPurchaseStatuses[item.purchases?.id] || item.purchases?.status
+) && (
+  <div style={{ marginTop: '10px' }}>
+    <p><strong>¿Cómo finalizó esta transacción?</strong></p>
+
+    <button onClick={async () => {
+      await confirmPurchase(item.purchases.id);
+      alert('Compra confirmada.');
+
+      setPurchases(prev =>
+        prev.map(p =>
+          p.purchases.id === item.purchases.id
+            ? {
+                ...p,
+                purchases: {
+                  ...p.purchases,
+                  status: 'completed',
+                  buyer_confirmed: true
+                }
+              }
+            : p
+        )
+      );
+
+    setUpdatedPurchaseStatuses(prev => ({
+  ...prev,
+  [item.purchases.id]: 'completed'
+}));
+    }}>Recibido correctamente</button>
+
+    <button onClick={async () => {
+      await reportProblem(item.purchases.id);
+      alert('Problema reportado.');
+      setPurchases(prev =>
+        prev.map(p =>
+          p.purchases.id === item.purchases.id
+            ? {
+                ...p,
+                purchases: {
+                  ...p.purchases,
+                  status: 'problem_reported'
+                }
+              }
+            : p
+        )
+      );
+
+    setUpdatedPurchaseStatuses(prev => ({
+  ...prev,
+  [item.purchases.id]: 'problem_reported'
+}));
+    }}>Hubo un problema</button>
+
+    <button onClick={async () => {
+      await cancelPurchase(item.purchases.id);
+      alert('Compra cancelada.');
+      setPurchases(prev =>
+        prev.map(p =>
+          p.purchases.id === item.purchases.id
+            ? {
+                ...p,
+                purchases: {
+                  ...p.purchases,
+                  status: 'cancelled'
+                }
+              }
+            : p
+        )
+      );
+
+    setUpdatedPurchaseStatuses(prev => ({
+  ...prev,
+  [item.purchases.id]: 'cancelled'
+}));
+    }}>Cancelar compra</button>
+  </div>
+)}
+
                   </div>
                 ))}
               </div>
@@ -742,7 +952,53 @@ const deleteEvent = async (eventId) => {
         return null;
     }
   };
+const handleReviewSubmit = async (e, item) => {
+  e.preventDefault();
+  const form = e.target;
+  const rating = parseInt(form.rating.value, 10);
+  const comment = form.comment.value;
 
+  const reviewerId = currentUser.id;
+  const reviewedUserId = item.products?.owner;
+
+  const alreadyReviewed = await hasReviewedBefore(reviewerId, reviewedUserId);
+  if (alreadyReviewed) {
+    alert('Ya dejaste una valoración para este vendedor.');
+    return;
+  }
+
+console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
+
+  const { success } = await submitUserReview({
+    reviewerId,
+    reviewedUserId,
+    rating,
+    comment,
+    role: 'buyer',
+    purchaseId: item.purchases?.id,
+  });
+
+  if (success) {
+  alert('Valoración enviada con éxito.');
+  form.reset();
+  setPurchases(prev =>
+    prev.map(p =>
+      p.purchases.id === item.purchases.id
+        ? {
+            ...p,
+            purchases: {
+              ...p.purchases,
+              buyer_confirmed: true,
+              status: 'completed'
+            }
+          }
+        : p
+    )
+  );
+} else {
+  alert('Ocurrió un error al enviar la valoración.');
+}
+};
   return (
     <div style={{ padding: '20px' }}>
       <h1>Mi Perfil</h1>
