@@ -146,7 +146,7 @@ const PostProductForm = () => {
   return (
   <div className="container">
     <div className="login-form">
-      <h1>Agregar Producto</h1>
+      <h2>Agregar Producto</h2>
       <form onSubmit={handleSubmit}>
         <label>Nombre del Producto:</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />

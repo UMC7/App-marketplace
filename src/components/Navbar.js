@@ -22,7 +22,9 @@ function Navbar() {
   const [showEventModal, setShowEventModal] = useState(false);
   const menuRef = useRef();
   const [showChatList, setShowChatList] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeChat, setActiveChat] = useState(null);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -94,126 +96,122 @@ function Navbar() {
   return (
   <nav style={styles.navbar}>
     <div style={styles.leftSection}>
-      <Link to="/" style={styles.logo}>YachtDayWork</Link>
-    </div>
-
-    <div style={styles.rightSection}>
-      {currentUser ? (
-        <>
-          <Link to="/profile" style={styles.navLink}>Perfil</Link>
-
-          <div
-  onClick={() => setShowChatList(true)}
-  style={{ ...styles.chatButton }}
->
-  💬 Chats
-  {unreadCount > 0 && (
-    <span style={styles.badge}>{unreadCount}</span>
-  )}
+  <Link to="/" style={styles.logo}>YachtDayWork</Link>
+  <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+    ☰
+  </button>
 </div>
 
-          <div style={{ position: 'relative' }} ref={menuRef}>
-            <button
-              style={{ ...styles.navLink, background: 'none', border: 'none', cursor: 'pointer' }}
-              onClick={() => setShowMenu(!showMenu)}
-            >
-              Publicar
-            </button>
-            {showMenu && (
-              <div style={styles.dropdownMenu}>
-                <button
-                  style={styles.dropdownItem}
-                  onClick={() => {
-                    setShowProductModal(true);
-                    setShowMenu(false);
-                  }}
-                >
-                  Publicar Producto
-                </button>
+    <div style={styles.rightSection}>
+  <div className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
+    {currentUser ? (
+  <>
+  <button onClick={() => navigate('/profile')} className="navLink">Perfil</button>
 
-                <button
-                  style={styles.dropdownItem}
-                  onClick={() => {
-                    setShowServiceModal(true);
-                    setShowMenu(false);
-                  }}
-                >
-                  Publicar Servicio
-                </button>
+  <div ref={menuRef} style={{ position: 'relative', width: '100%' }}>
+  <button className="navLink" onClick={() => setShowMenu(!showMenu)}>
+    Publicar
+  </button>
+  {showMenu && (
+    <div style={styles.dropdownMenu}>
+        <button
+  className="navLink"
+  onClick={() => {
+    setShowProductModal(true);
+    setShowMenu(false);
+  }}
+>
+  Publicar Producto
+</button>
 
-                <button
-                  style={styles.dropdownItem}
-                  onClick={() => {
-                    setShowOfferModal(true);
-                    setShowMenu(false);
-                  }}
-                >
-                  Publicar Empleo
-                </button>
+      <button
+  className="navLink"
+  onClick={() => {
+    setShowProductModal(true);
+    setShowMenu(false);
+  }}
+>
+  Publicar Servicios
+</button>
 
-                <button
-                style={styles.dropdownItem}
-                onClick={() => {
-                  setShowEventModal(true);
-                  setShowMenu(false);
-                }}
-              >
-                Publicar Evento
-              </button>
-              </div>
-            )}
-          </div>
+      <button
+  className="navLink"
+  onClick={() => {
+    setShowProductModal(true);
+    setShowMenu(false);
+  }}
+>
+  Publicar Empleos
+</button>
 
-          <Link to="/favorites" style={styles.navLink}>Favoritos</Link>
-          <Link to="/cart" style={styles.navLink}>
-            Carrito {totalItems > 0 && <span style={styles.badge}>{totalItems}</span>}
-          </Link>
-          <button onClick={handleLogout} style={styles.logoutButton}>Cerrar sesión</button>
-        </>
-      ) : (
-          <>
-            <Link to="/login" style={styles.navLink}>Iniciar sesión</Link>
-            <Link to="/register" style={styles.navLink}>Registrarse</Link>
-          </>
-        )}
-      </div>
+      <button
+  className="navLink"
+  onClick={() => {
+    setShowProductModal(true);
+    setShowMenu(false);
+  }}
+>
+  Publicar Eventos
+</button>
+
+    </div>
+  )}
+</div>
+        <button onClick={() => setShowChatList(true)} className="navLink">
+  💬 Chats
+  {unreadCount > 0 && (
+    <span className="badge">{unreadCount}</span>
+  )}
+</button>
+        <button onClick={() => navigate('/favorites')} className="navLink">Favoritos</button>
+        <button onClick={() => navigate('/cart')} className="navLink">Carrito</button>
+        <button onClick={handleLogout} className="navLink">Logout</button>
+      </>
+    ) : (
+      <>
+        <Link to="/login" className="navLink">Iniciar sesión</Link>
+        <Link to="/register" className="navLink">Registrarse</Link>
+      </>
+    )}
+  </div>
+</div>
 
       {/* Modales */}
-      {showOfferModal && (
-        <div style={modalStyles.overlay}>
-          <div style={modalStyles.content}>
-            <button style={modalStyles.closeBtn} onClick={() => setShowOfferModal(false)}>X</button>
-            <YachtOfferForm user={currentUser} onOfferPosted={handleOfferPosted} />
-          </div>
-        </div>
-      )}
-      {showProductModal && (
-        <div style={modalStyles.overlay}>
-          <div style={modalStyles.content}>
-            <button style={modalStyles.closeBtn} onClick={() => setShowProductModal(false)}>X</button>
-            <PostProductForm onPosted={handleProductPosted} />
-          </div>
-        </div>
-      )}
-      {showServiceModal && (
-        <div style={modalStyles.overlay}>
-          <div style={modalStyles.content}>
-            <button style={modalStyles.closeBtn} onClick={() => setShowServiceModal(false)}>X</button>
-            <PostServiceForm onPosted={handleServicePosted} />
-          </div>
-        </div>
-      )}
-      {showEventModal && (
-  <div style={modalStyles.overlay}>
-    <div style={modalStyles.content}>
+{showOfferModal && (
+  <div style={modalStyles.overlay} onClick={() => setShowOfferModal(false)}>
+    <div style={modalStyles.content} onClick={(e) => e.stopPropagation()}>
+      <button style={modalStyles.closeBtn} onClick={() => setShowOfferModal(false)}>X</button>
+      <YachtOfferForm user={currentUser} onOfferPosted={handleOfferPosted} />
+    </div>
+  </div>
+)}
+{showProductModal && (
+  <div style={modalStyles.overlay} onClick={() => setShowProductModal(false)}>
+    <div style={modalStyles.content} onClick={(e) => e.stopPropagation()}>
+      <button style={modalStyles.closeBtn} onClick={() => setShowProductModal(false)}>X</button>
+      <PostProductForm onPosted={handleProductPosted} />
+    </div>
+  </div>
+)}
+{showServiceModal && (
+  <div style={modalStyles.overlay} onClick={() => setShowServiceModal(false)}>
+    <div style={modalStyles.content} onClick={(e) => e.stopPropagation()}>
+      <button style={modalStyles.closeBtn} onClick={() => setShowServiceModal(false)}>X</button>
+      <PostServiceForm onPosted={handleServicePosted} />
+    </div>
+  </div>
+)}
+{showEventModal && (
+  <div style={modalStyles.overlay} onClick={() => setShowEventModal(false)}>
+    <div style={modalStyles.content} onClick={(e) => e.stopPropagation()}>
       <button style={modalStyles.closeBtn} onClick={() => setShowEventModal(false)}>X</button>
       <PostEventForm />
     </div>
   </div>
 )}
-      {showChatList && (
-  <div style={modalStyles.overlay}>
-    <div style={modalStyles.content}>
+{showChatList && (
+  <div style={modalStyles.overlay} onClick={() => setShowChatList(false)}>
+    <div style={modalStyles.content} onClick={(e) => e.stopPropagation()}>
       <button style={modalStyles.closeBtn} onClick={() => setShowChatList(false)}>X</button>
       {!activeChat ? (
         <ChatList
@@ -224,36 +222,41 @@ function Navbar() {
         />
       ) : (
         <ChatPage
-  offerId={activeChat.offerId}
-  receiverId={activeChat.receiverId}
-  onBack={() => setActiveChat(null)}
-/>
+          offerId={activeChat.offerId}
+          receiverId={activeChat.receiverId}
+          onBack={() => setActiveChat(null)}
+        />
       )}
     </div>
   </div>
 )}
-    </nav>
-  );
+</nav>
+);
 }
 
 const styles = {
   navbar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '10px 20px',
-    backgroundColor: '#0077cc',
-    color: 'white',
-  },
+  display: 'flex',
+  flexWrap: 'wrap',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '10px 20px',
+  backgroundColor: '#0077cc',
+  color: 'white',
+},
   leftSection: {
     display: 'flex',
     alignItems: 'center',
   },
   rightSection: {
-    display: 'flex',
-    gap: '15px',
-    alignItems: 'center',
-  },
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '10px',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  width: '100%',
+  marginTop: '10px',
+},
   logo: {
     fontSize: '24px',
     fontWeight: 'bold',
@@ -261,19 +264,17 @@ const styles = {
     textDecoration: 'none',
   },
   navLink: {
-    color: 'white',
-    textDecoration: 'none',
-    fontSize: '16px',
-    position: 'relative',
-  },
-  logoutButton: {
-    backgroundColor: 'transparent',
-    color: 'white',
-    border: '1px solid white',
-    padding: '5px 10px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
+  color: 'white',
+  textDecoration: 'none',
+  fontSize: '16px',
+  padding: '10px 15px',
+  display: 'block',
+  width: '100%',
+  textAlign: 'left',
+  backgroundColor: 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+},
   chatButton: {
   display: 'flex',
   alignItems: 'center',
@@ -315,7 +316,44 @@ const styles = {
     color: 'white',
     cursor: 'pointer',
     borderBottom: '1px solid rgba(255,255,255,0.2)',
+  },
+  linkGroup: {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '10px',
+  alignItems: 'center',
+  },
+  '@media (max-width: 600px)': {
+  rightSection: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  hamburger: {
+  display: 'none',
+  fontSize: '24px',
+  background: 'none',
+  border: 'none',
+  color: 'white',
+  cursor: 'pointer',
+},
+mobileMenu: {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+  paddingTop: '10px',
+},
+'@media (max-width: 600px)': {
+  hamburger: {
+    display: 'block',
+  },
+  linkGroup: {
+    display: 'none',
+  },
+  mobileMenu: {
+    display: 'flex',
   }
+}
+}
 };
 
 const modalStyles = {
@@ -332,15 +370,16 @@ const modalStyles = {
     zIndex: 2000,
   },
   content: {
-    backgroundColor: '#fff',
-    color: '#000',
-    padding: '30px',
-    borderRadius: '8px',
-    maxWidth: '700px',
-    width: '100%',
-    position: 'relative',
-    maxHeight: '90vh',
-    overflowY: 'auto',
+  backgroundColor: '#fff',
+  color: '#000',
+  padding: '20px',
+  borderRadius: '8px',
+  width: '90%',
+  maxWidth: '600px',
+  position: 'relative',
+  maxHeight: '90vh',
+  overflowY: 'auto',
+  boxSizing: 'border-box',
   },
   closeBtn: {
     position: 'absolute',

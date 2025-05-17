@@ -153,7 +153,7 @@ const PostServiceForm = () => {
   return (
   <div className="container">
     <div className="login-form">
-      <h1>Agregar Servicio</h1>
+      <h2>Agregar Servicio</h2>
       <form onSubmit={handleSubmit}>
         <label>Nombre de la Compañía:</label>
         <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />

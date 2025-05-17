@@ -158,9 +158,10 @@ const PostEventForm = () => {
   };
 
   return (
-    <div>
-      <h1>Agregar Evento</h1>
-      <form onSubmit={handleSubmit}>
+    <div className="container">
+    <div className="login-form">
+      <h2>Agregar Evento</h2>
+      <form onSubmit={handleSubmit} className="login-form">
         <label>Nombre del Evento:</label>
         <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} required />
 
@@ -189,10 +190,23 @@ const PostEventForm = () => {
 
         <label>Foto principal:</label>
         <input type="file" accept="image/*" onChange={handleMainPhotoUpload} required />
-        {mainPhoto && <img src={mainPhoto} alt="Main" style={{ width: '150px', marginTop: '10px' }} />}
+        {mainPhoto && (
+  <div style={{ marginTop: '12px', textAlign: 'center' }}>
+    <img
+      src={mainPhoto}
+      alt="Main"
+      style={{
+        width: '100%',
+        maxWidth: '300px',
+        borderRadius: '8px',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+      }}
+    />
+  </div>
+)}
 
         <label>Fecha del evento:</label>
-<div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+<div className="form-inline-group">
   <input
     type="date"
     value={startDate}
@@ -239,7 +253,7 @@ const PostEventForm = () => {
 />
 
 <label>Costo de participación:</label>
-<div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+<div className="form-inline-group">
   <select
     value={currency}
     onChange={(e) => setCurrency(e.target.value)}
@@ -279,11 +293,12 @@ const PostEventForm = () => {
         <label>WhatsApp:</label>
         <input type="text" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
 
-        <button type="submit" disabled={uploading}>
-          {uploading ? 'Subiendo imagen...' : 'Guardar Evento'}
+        <button type="submit" disabled={uploading} className="landing-button">
+        {uploading ? 'Subiendo imagen...' : 'Guardar Evento'}
         </button>
       </form>
     </div>
+  </div>
   );
 };
 

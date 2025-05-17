@@ -202,64 +202,83 @@ setCartItems([]);
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Carrito de Compras</h1>
+    <div className="container">
+  <div className="login-form">
+      <h2>Your Cart</h2>
 
       {cartItems.length === 0 ? (
         <p>No hay productos en tu carrito.</p>
       ) : (
         <div>
-          {cartItems.map((item) => (
-            <div key={item.id} style={{ marginBottom: '15px', borderBottom: '1px solid #ccc', paddingBottom: '10px' }}>
-              <img
-                src={item.mainphoto || 'https://via.placeholder.com/100'}
-                alt={item.name}
-                style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
-              />
-              <h3>{item.name || 'Producto no disponible'}</h3>
-              {item.status === 'deleted' ? (
-                <p style={{ color: 'red', fontWeight: 'bold' }}>Producto no disponible.</p>
-              ) : item.status === 'paused' ? (
-                <p style={{ color: 'orange', fontWeight: 'bold' }}>Este producto está pausado.</p>
-              ) : (
-                <>
-                  <p>Precio unitario: {item.currency} {item.price}</p>
-                  <p>
-                    Cantidad:
-                    <input
-                      type="number"
-                      min="1"
-                      max={item.stock}
-                      value={item.quantity}
-                      onChange={(e) => handleQuantityChange(item, parseInt(e.target.value))}
-                      style={{ width: '60px', marginLeft: '10px' }}
-                    />
-                  </p>
+         {cartItems.map((item) => (
+  <div
+    key={item.id}
+    className="product-card"
+    style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}
+  >
+    <img
+      src={item.mainphoto || 'https://via.placeholder.com/100'}
+      alt={item.name}
+      style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+    />
+    <div style={{ flex: 1 }}>
+      <h3>{item.name || 'Producto no disponible'}</h3>
 
-                  {item.recortado && (
-                    <p style={{ color: 'orange', fontWeight: 'bold' }}>
-                      El stock disponible se redujo. Se ajustó tu cantidad a {item.quantity}.
-                    </p>
-                  )}
+      {item.status === 'deleted' ? (
+        <p style={{ color: 'red', fontWeight: 'bold' }}>Producto no disponible.</p>
+      ) : item.status === 'paused' ? (
+        <p style={{ color: 'orange', fontWeight: 'bold' }}>Este producto está pausado.</p>
+      ) : (
+        <>
+          <p>Precio unitario: {item.currency} {item.price}</p>
+          <p>
+            Cantidad:
+            <input
+              type="number"
+              min="1"
+              max={item.stock}
+              value={item.quantity}
+              onChange={(e) => handleQuantityChange(item, parseInt(e.target.value))}
+              style={{ width: '60px', marginLeft: '10px' }}
+            />
+          </p>
 
-                </>
-              )}
-              <p>Subtotal: {item.currency} {item.status === 'deleted' ? 0 : (item.price * item.quantity).toFixed(2)}</p>
-              <button onClick={() => handleRemoveFromCart(item.id)}>Eliminar</button>
-            </div>
-          ))}
+          {item.recortado && (
+            <p style={{ color: 'orange', fontWeight: 'bold' }}>
+              El stock disponible se redujo. Se ajustó tu cantidad a {item.quantity}.
+            </p>
+          )}
+        </>
+      )}
 
-          <h2>Subtotal por moneda:</h2>
-          <ul>
-          {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
-          <li key={moneda}>
-          <strong>{moneda}:</strong> {subtotal.toFixed(2)}
-        </li>
-      ))}
-    </ul>
-          <button onClick={handleConfirmPurchase} disabled={processing || availableItems.length === 0}>
-            {processing ? 'Procesando...' : 'Confirmar Compra'}
-          </button>
+      <p>Subtotal: {item.currency} {item.status === 'deleted' ? 0 : (item.price * item.quantity).toFixed(2)}</p>
+      <button className="landing-button" onClick={() => handleRemoveFromCart(item.id)}>
+        Eliminar
+      </button>
+    </div>
+  </div>
+))}
+
+          <div style={{ marginTop: '30px' }}>
+  <h2>Subtotal por moneda:</h2>
+  <ul style={{ paddingLeft: '20px', marginBottom: '20px' }}>
+    {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
+      <li key={moneda}>
+        <strong>{moneda}:</strong> {subtotal.toFixed(2)}
+      </li>
+    ))}
+  </ul>
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+    <button
+      className="landing-button"
+      onClick={handleConfirmPurchase}
+      disabled={processing || availableItems.length === 0}
+      style={{ flex: '1 1 180px' }}
+    >
+      {processing ? 'Procesando...' : 'Confirmar Compra'}
+    </button>
+  </div>
+</div>
         </div>
       )}
 
@@ -271,21 +290,34 @@ setCartItems([]);
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
         }}>
           <div style={{
-            backgroundColor: 'white', padding: '30px', borderRadius: '8px',
-            textAlign: 'center', maxWidth: '400px'
-          }}>
+  backgroundColor: 'white',
+  padding: '20px',
+  borderRadius: '8px',
+  textAlign: 'center',
+  width: '90%',
+  maxWidth: '400px',
+  boxSizing: 'border-box'
+}}>
             <h3>¿Deseas confirmar tu compra?</h3>
             <p>{availableItems.length} producto(s)</p>
             <p><strong>Totales por moneda:</strong></p>
-            <ul style={{ listStyle: 'none', padding: 0 }}>
+            <ul style={{ listStyle: 'none', padding: 0, marginBottom: '20px' }}>
               {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
                 <li key={moneda}>
                   {moneda}: {subtotal.toFixed(2)}
                 </li>
               ))}
             </ul>
-            <button onClick={handleProceedPurchase} style={{ marginRight: '10px' }}>Confirmar</button>
-            <button onClick={() => setShowConfirmModal(false)}>Cancelar</button>
+          <button
+            className="landing-button"
+            onClick={handleProceedPurchase}
+            style={{ marginRight: '10px' }}
+          >
+          Confirmar
+          </button>
+            <button className="landing-button" onClick={() => setShowConfirmModal(false)}>
+            Cancelar
+          </button>
           </div>
         </div>
       )}
@@ -298,9 +330,14 @@ setCartItems([]);
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
         }}>
           <div style={{
-            backgroundColor: 'white', padding: '30px', borderRadius: '8px',
-            textAlign: 'center', maxWidth: '400px'
-          }}>
+  backgroundColor: 'white',
+  padding: '20px',
+  borderRadius: '8px',
+  textAlign: 'center',
+  width: '90%',
+  maxWidth: '400px',
+  boxSizing: 'border-box'
+}}>
             <h3>Información de vendedores</h3>
 
           {sellerInfo.map((seller, i) => (
@@ -310,11 +347,20 @@ setCartItems([]);
               <p><strong>Email:</strong> {seller.email}</p>
             </div>
             ))}
-            <button onClick={() => setShowSellerModal(false)}>Cerrar</button>
+            <div style={{ marginTop: '20px' }}>
+        <button
+          className="landing-button"
+          onClick={() => setShowSellerModal(false)}
+          style={{ width: '100%' }}
+        >
+          Cerrar
+          </button>
+          </div>
           </div>
         </div>
       )}
     </div>
+  </div>
   );
 }
 
