@@ -106,7 +106,7 @@ function Navbar() {
   <div className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
     {currentUser ? (
   <>
-  <button onClick={() => navigate('/profile')} className="navLink">Perfil</button>
+  <button onClick={() => { navigate('/profile'); setIsMenuOpen(false); }} className="navLink">Perfil</button>
 
   <div ref={menuRef} style={{ position: 'relative', width: '100%' }}>
   <button className="navLink" onClick={() => setShowMenu(!showMenu)}>
@@ -157,15 +157,15 @@ function Navbar() {
     </div>
   )}
 </div>
-        <button onClick={() => setShowChatList(true)} className="navLink">
+  <button onClick={() => { setShowChatList(true); setIsMenuOpen(false); }} className="navLink">
   💬 Chats
   {unreadCount > 0 && (
     <span className="badge">{unreadCount}</span>
   )}
 </button>
-        <button onClick={() => navigate('/favorites')} className="navLink">Favoritos</button>
-        <button onClick={() => navigate('/cart')} className="navLink">Carrito</button>
-        <button onClick={handleLogout} className="navLink">Logout</button>
+        <button onClick={() => { navigate('/favorites'); setIsMenuOpen(false); }} className="navLink">Favoritos</button>
+        <button onClick={() => { navigate('/cart'); setIsMenuOpen(false); }} className="navLink">Carrito</button>
+        <button onClick={() => { setIsMenuOpen(false); handleLogout(); }} className="navLink">Logout</button>
       </>
     ) : (
       <>

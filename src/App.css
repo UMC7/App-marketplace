@@ -552,8 +552,9 @@ button:hover, .landing-button:hover {
     top: 60px;
     left: 0;
     z-index: 999;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
-  .navbar-links {
+.navbar-links {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -588,4 +589,112 @@ button:hover, .landing-button:hover {
   cursor: pointer;
   box-sizing: border-box;
 }
+  .navbar-links.active {
+    display: flex;
+  }
+
+  .navbar-links .navLink,
+  .navbar-links a.navLink,
+  .navbar-links button.navLink,
+  .navbar-links div.navLink {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    font-size: 16px;
+    background-color: transparent;
+    color: var(--white-color);
+    border: none;
+    border-radius: 4px;
+    font-family: var(--font-body);
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+
+  .navbar-links .navLink:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .navbar-links .navLink:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+.tabs-container {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.hamburger-toggle {
+  display: none;
+}
+
+.tab-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+@media (max-width: 768px) {
+  .hamburger-toggle {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .tab-buttons {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .tab-buttons.active {
+    display: flex;
+    background-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .tab-buttons .landing-button {
+    width: 100%;
+    text-align: left;
+    border-radius: 4px;
+  }
+
+  .tab-buttons .landing-button:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  }
+}
+.tabs-container .navbar-toggle {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  border: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tabs-container .navbar-toggle::before {
+  content: '☰';
+  font-size: 20px;
+  display: inline-block;
+}
+.tabs-container .navbar-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .tabs-container .navbar-toggle {
+    display: block;
+  }
 }

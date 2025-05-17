@@ -29,6 +29,7 @@ function ProfilePage() {
   const [receivedReviews, setReceivedReviews] = useState([]);
   const [sentReviews, setSentReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // 🔧 Para menú hamburguesa
 
 
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(true);
@@ -1023,22 +1024,28 @@ console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
 }
 };
   return (
-     <div className="container">
-      <h1>Mi Perfil</h1>
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
-        <button onClick={() => setActiveTab('productos')}>Mis Productos</button>
-        <button onClick={() => setActiveTab('servicios')}>Mis Servicios</button>
-        <button onClick={() => setActiveTab('empleos')}>Mis Empleos</button>
-        <button onClick={() => setActiveTab('eventos')}>Mis Eventos</button>
-        <button onClick={() => setActiveTab('compras')}>Mis Compras</button>
-        <button onClick={() => setActiveTab('ventas')}>Mis Ventas</button>
-        <button onClick={() => setActiveTab('eliminados')}>Productos Eliminados</button>
-        <button onClick={() => setActiveTab('valoracion')}>Valoración</button>
-        <button onClick={() => setActiveTab('usuario')}>Datos de Usuario</button>
-      </div>
-      {loading ? <p>Cargando datos...</p> : renderTabContent()}
-    </div>
-  );
-}
+  <div className="container">
+    <h1>Mi Perfil</h1>
 
+    <div className="tabs-container">
+  <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+  Menú
+</button>
+  <div className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
+    <button className="navLink" onClick={() => { setActiveTab('productos'); setIsMenuOpen(false); }}>Mis Productos</button>
+    <button className="navLink" onClick={() => { setActiveTab('servicios'); setIsMenuOpen(false); }}>Mis Servicios</button>
+    <button className="navLink" onClick={() => { setActiveTab('empleos'); setIsMenuOpen(false); }}>Mis Empleos</button>
+    <button className="navLink" onClick={() => { setActiveTab('eventos'); setIsMenuOpen(false); }}>Mis Eventos</button>
+    <button className="navLink" onClick={() => { setActiveTab('compras'); setIsMenuOpen(false); }}>Mis Compras</button>
+    <button className="navLink" onClick={() => { setActiveTab('ventas'); setIsMenuOpen(false); }}>Mis Ventas</button>
+    <button className="navLink" onClick={() => { setActiveTab('eliminados'); setIsMenuOpen(false); }}>Eliminados</button>
+    <button className="navLink" onClick={() => { setActiveTab('valoracion'); setIsMenuOpen(false); }}>Valoración</button>
+    <button className="navLink" onClick={() => { setActiveTab('usuario'); setIsMenuOpen(false); }}>Datos de Usuario</button>
+  </div>
+</div>
+
+    {loading ? <p>Cargando datos...</p> : renderTabContent()}
+  </div>
+);
+}
 export default ProfilePage;
