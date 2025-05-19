@@ -15,6 +15,7 @@ function HomePage() {
   const [selectedCondition, setSelectedCondition] = useState('');
   const [countriesWithProducts, setCountriesWithProducts] = useState([]);
   const [sortOrder, setSortOrder] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchProducts = async () => {
     try {
@@ -108,103 +109,115 @@ function HomePage() {
   return (
     <div className="container">
       <h1>SeaMarket</h1>
+      <h2>Explora productos disponibles</h2>
+
+      <button
+        className="navbar-toggle"
+        onClick={() => setShowFilters((prev) => !prev)}
+        style={{
+        marginBottom: '10px',
+        padding: '10px 20px',
+        fontSize: '16px',
+        cursor: 'pointer',
+      }}
+      >
+        ☰ Filtros
+      </button>
   
-      <div className="filters-container">
-        <div className="filter-item">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Buscar productos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-  
-        <div className="filter-item">
-          <select
-            className="category-select"
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          >
-            <option value="">Filtrar por categoría</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-  
-        <div className="filter-item">
-          <select
-            className="category-select"
-            value={selectedCountry}
-            onChange={(e) => setSelectedCountry(e.target.value)}
-          >
-            <option value="">Filtrar por país</option>
-            {countriesWithProducts.map((country) => (
-              <option key={country} value={country}>
-                {country}
-              </option>
-            ))}
-          </select>
-        </div>
-  
-        <div className="filter-item">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Filtrar por ciudad"
-            value={selectedCity}
-            onChange={(e) => setSelectedCity(e.target.value)}
-          />
-        </div>
-  
-        <div className="filter-item">
-          <input
-            type="number"
-            className="price-input"
-            placeholder="Precio mínimo"
-            value={priceRange.min}
-            onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
-          />
-          <input
-            type="number"
-            className="price-input"
-            placeholder="Precio máximo"
-            value={priceRange.max}
-            onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-          />
-        </div>
-  
-        <div className="filter-item">
-          <select
-            className="category-select"
-            value={selectedCondition}
-            onChange={(e) => setSelectedCondition(e.target.value)}
-          >
-            <option value="">Filtrar por condición</option>
-            {['Nuevo', 'Usado', 'Reacondicionado'].map((condition) => (
-              <option key={condition} value={condition}>
-                {condition}
-              </option>
-            ))}
-          </select>
-        </div>
-  
-        {/* ✅ Ordenar por precio - correctamente ubicado aquí */}
-        <div className="filter-item">
-          <select
-            className="category-select"
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-          >
-            <option value="">Ordenar por precio</option>
-            <option value="asc">Precio: menor a mayor</option>
-            <option value="desc">Precio: mayor a menor</option>
-          </select>
-        </div>
-      </div>
+     <div className={`filters-container filters-panel ${showFilters ? 'show' : ''}`}>
+  {/* 🔍 Búsqueda */}
+  <input
+    type="text"
+    className="search-input"
+    placeholder="Buscar productos..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+  />
+
+  {/* 🧾 Categoría + Condición */}
+  <div className="form-inline-group">
+    <select
+      className="category-select"
+      value={selectedCategory}
+      onChange={(e) => setSelectedCategory(e.target.value)}
+    >
+      <option value="">Filtrar por categoría</option>
+      {categories.map((category) => (
+        <option key={category.id} value={category.id}>
+          {category.name}
+        </option>
+      ))}
+    </select>
+
+    <select
+      className="category-select"
+      value={selectedCondition}
+      onChange={(e) => setSelectedCondition(e.target.value)}
+    >
+      <option value="">Filtrar por condición</option>
+      {['Nuevo', 'Usado', 'Reacondicionado'].map((condition) => (
+        <option key={condition} value={condition}>
+          {condition}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* 🗺 Ubicación: País + Ciudad */}
+  <div className="form-inline-group">
+    <select
+      className="category-select"
+      value={selectedCountry}
+      onChange={(e) => setSelectedCountry(e.target.value)}
+    >
+      <option value="">Filtrar por país</option>
+      {countriesWithProducts.map((country) => (
+        <option key={country} value={country}>
+          {country}
+        </option>
+      ))}
+    </select>
+
+    <input
+      type="text"
+      className="search-input"
+      placeholder="Filtrar por ciudad"
+      value={selectedCity}
+      onChange={(e) => setSelectedCity(e.target.value)}
+    />
+  </div>
+
+  {/* 💰 Precio: mínimo + máximo */}
+  <div className="form-inline-group">
+    <input
+      type="number"
+      className="price-input"
+      placeholder="Precio mínimo"
+      value={priceRange.min}
+      onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+    />
+    <input
+      type="number"
+      className="price-input"
+      placeholder="Precio máximo"
+      value={priceRange.max}
+      onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+    />
+  </div>
+
+  {/* 📊 Ordenar */}
+  <select
+    className="category-select"
+    value={sortOrder}
+    onChange={(e) => setSortOrder(e.target.value)}
+  >
+    <option value="">Ordenar por precio</option>
+    <option value="asc">Precio: menor a mayor</option>
+    <option value="desc">Precio: mayor a menor</option>
+  </select>
+</div>
+
+
   
       {loading ? (
         <p>Cargando productos...</p>

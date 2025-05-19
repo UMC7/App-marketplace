@@ -64,12 +64,12 @@ h1, h2, h3 {
 
 /* Estilos para los filtros de la página de inicio (Home) */
 .filters-container {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
-  justify-content: space-between;
   margin: 20px 0;
   padding: 0 20px;
+  align-items: start;
 }
 
 /* Estilos para los elementos de los filtros */
@@ -536,7 +536,23 @@ button:hover, .landing-button:hover {
   align-items: center;
 }
 
-/* Responsive */
+/* Responsive: Navbar y Menús Hamburguesa */
+.navbar-toggle {
+  display: none; /* Oculto por defecto */
+  width: 100%;
+  padding: 12px 16px;
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  border: none;
+  font-size: 16px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  text-align: left;
+  font-family: var(--font-body);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   .navbar-toggle {
     display: block;
@@ -554,41 +570,7 @@ button:hover, .landing-button:hover {
     z-index: 999;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
-.navbar-links {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
 
-.navbar-links .navLink:not(:last-child) {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.navbar-links .navLink:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-.navbar-links .navLink {
-  margin-bottom: 6px;
-}
-  .navbar-links.active {
-    display: flex;
-  }
-.navbar-links .navLink,
-.navbar-links a.navLink,
-.navbar-links button.navLink,
-.navbar-links div.navLink {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 10px 15px;
-  font-size: 16px;
-  background-color: transparent;
-  color: var(--white-color);
-  border: none;
-  border-radius: 4px;
-  font-family: var(--font-body);
-  transition: background-color 0.2s ease-in-out;
-  cursor: pointer;
-  box-sizing: border-box;
-}
   .navbar-links.active {
     display: flex;
   }
@@ -610,6 +592,7 @@ button:hover, .landing-button:hover {
     transition: background-color 0.2s ease-in-out;
     cursor: pointer;
     box-sizing: border-box;
+    margin-bottom: 6px;
   }
 
   .navbar-links .navLink:not(:last-child) {
@@ -620,27 +603,39 @@ button:hover, .landing-button:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
 }
+
+/* Tabs de ProfilePage */
 .tabs-container {
   margin-bottom: 20px;
   position: relative;
 }
 
-.hamburger-toggle {
+.tabs-container .navbar-toggle {
   display: none;
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  border: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  align-items: center;
+  gap: 10px;
 }
 
-.tab-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
+.tabs-container .navbar-toggle::before {
+  content: '☰';
+  font-size: 20px;
+  display: inline-block;
 }
 
 @media (max-width: 768px) {
-  .hamburger-toggle {
+  .tabs-container .navbar-toggle {
     display: block;
-    width: 100%;
-    margin-bottom: 10px;
   }
 
   .tab-buttons {
@@ -667,34 +662,28 @@ button:hover, .landing-button:hover {
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   }
 }
-.tabs-container .navbar-toggle {
-  background-color: var(--primary-color);
-  color: var(--white-color);
-  border: none;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-family: var(--font-body);
-  font-size: 16px;
-  width: 100%;
-  text-align: left;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
-.tabs-container .navbar-toggle::before {
-  content: '☰';
-  font-size: 20px;
-  display: inline-block;
-}
-.tabs-container .navbar-toggle {
-  display: none;
-}
-
+/* Filtros */
 @media (max-width: 768px) {
-  .tabs-container .navbar-toggle {
-    display: block;
+  .filters-container {
+    display: none;
+  }
+
+  .filters-container.show {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--primary-color);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    color: white; /* ✅ texto general en blanco */
+  }
+
+  .filters-container.show h3,
+  .filters-container.show summary,
+  .filters-container.show label {
+    color: white; /* ✅ textos específicos legibles */
   }
 }
+
