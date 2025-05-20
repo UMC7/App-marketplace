@@ -686,4 +686,44 @@ button:hover, .landing-button:hover {
     color: white; /* ✅ textos específicos legibles */
   }
 }
+.region-dropdown {
+  background-color: var(--white-color);
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  font-family: var(--font-body);
+}
+
+.region-dropdown summary {
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  color: var(--primary-color);
+  list-style: none;
+  padding: 8px 0;
+}
+
+.region-dropdown details[open] > summary {
+  margin-bottom: 10px;
+}
+
+.region-subgroup summary {
+  font-weight: 500;
+  color: var(--primary-color);
+  font-size: 0.95rem;
+}
+
+.region-subgroup input[type="checkbox"] {
+  margin-left: 10px;
+}
+
+.region-subgroup label {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+}
 

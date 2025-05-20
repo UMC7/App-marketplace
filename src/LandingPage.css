@@ -1,0 +1,29 @@
+.logo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  margin-top: 30px;
+}
+
+.module-logo {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.module-logo:hover {
+  transform: scale(1.08);
+}
+
+@media (max-width: 600px) {
+  .module-logo {
+    width: 140px;
+    height: 140px;
+  }
+}

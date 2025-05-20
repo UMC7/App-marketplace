@@ -96,7 +96,13 @@ function Navbar() {
   return (
   <nav style={styles.navbar}>
     <div style={styles.leftSection}>
-  <Link to="/" style={styles.logo}>YachtDayWork</Link>
+  <Link to="/" style={styles.logo}>
+  <img
+    src="/logos/yachtdaywork.png"
+    alt="YachtDayWork logo"
+    style={{ height: '100px', display: 'block', margin: 'auto 0' }}
+  />
+</Link>
   <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
     ☰
   </button>
@@ -241,7 +247,7 @@ const styles = {
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: '10px 20px',
-  backgroundColor: '#0077cc',
+  backgroundColor: '#8c8c8c',
   color: 'white',
 },
   leftSection: {
