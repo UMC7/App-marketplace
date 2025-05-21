@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import supabase from '../supabase';
 import YachtOfferList from '../components/YachtOfferList';
+import '../yachtworkspage.css';
 
 const countriesByRegion = {
   'North America': ['Canada', 'United States', 'Mexico'],

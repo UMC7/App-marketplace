@@ -1,0 +1,114 @@
+.navLink {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  border: none;
+  padding: 10px 20px;
+  margin: 4px 8px;
+  font-size: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-decoration: none;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  min-width: 130px;
+  box-sizing: border-box;
+}
+.navLink:hover {
+  background-color: var(--accent-color);
+  color: var(--primary-color);
+  transform: translateY(-1px);
+}
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #8c8c8c;
+  color: var(--white-color);
+  flex-wrap: wrap;
+  min-height: 100px;
+}
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.navbar-logo {
+  height: 95px;
+  object-fit: contain;
+}
+/* Submenú desplegable */
+.post-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #8c8c8c;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  border-radius: 8px;
+  padding: 8px 0;
+  min-width: 180px;
+}
+.post-dropdown .navLink {
+  background-color: #dddddd;
+  color: var(--primary-color);
+  border-radius: 6px;
+  margin: 4px 8px;
+  padding: 10px 16px;
+  font-weight: 500;
+  display: block;
+  width: calc(100% - 16px);
+  transition: background-color 0.2s ease-in-out;
+}
+.post-dropdown .navLink:hover {
+  background-color: var(--accent-color);
+  color: var(--primary-color);
+}
+/* Responsivo para pantallas pequeñas */
+@media (max-width: 768px) {
+  .post-dropdown {
+    position: relative;
+    top: 0;
+    left: 0;
+    background-color: #dddddd;
+    border-radius: 8px;
+    padding: 8px 0;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .post-dropdown .navLink {
+  background-color: #dddddd;
+  color: var(--primary-color) !important;
+  border: none;
+  border-bottom: 1px solid var(--primary-color) !important;
+  border-radius: 0;
+  margin: 0;
+  padding: 12px 16px;
+  font-weight: 500;
+  display: block;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+  transition: background-color 0.2s ease-in-out;
+}
+  .post-dropdown .navLink:hover {
+    background-color: var(--accent-color);
+    color: var(--primary-color);
+  }
+  
+}
+@media (max-width: 768px) {
+  .navbar-links {
+    width: 92%;
+    max-width: 340px;
+    margin: 10px auto 0 auto;
+    border-radius: 16px;
+    padding: 16px;
+    background-color: var(--primary-color);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+  }
+}
