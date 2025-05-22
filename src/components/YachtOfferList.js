@@ -25,19 +25,43 @@ const getRoleImage = (title) => {
   ].some(role => lowerTitle.includes(role))) return 'galleydepartment';
 
   if (lowerTitle.includes('shore') || lowerTitle.includes('shore-based') || lowerTitle.includes('shorebased')) return 'shorebased';
+
   if (lowerTitle.includes('nanny')) return 'nanny';
   if (lowerTitle.includes('nurse')) return 'nurse';
   if (lowerTitle.includes('dayworker')) return 'dayworker';
 
-return 'others';
+  // Categoría Others explícita
+  if ([
+    'videographer',
+    'yoga/pilates instructor',
+    'personal trainer',
+    'dive instructor',
+    'water sport instructor',
+    'other'
+  ].some(role => lowerTitle.includes(role))) return 'others';
+
+  return 'others';
 };
 
-function YachtOfferList({ offers, currentUser }) {
+function YachtOfferList({
+  offers,
+  currentUser,
+  filters,
+  setFilters,
+  toggleMultiSelect,
+  toggleRegionCountries,
+  regionOrder,
+  countriesByRegion,
+  showFilters
+}) {
+
   const [authors, setAuthors] = useState({});
   const [expandedOfferId, setExpandedOfferId] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
   const [expandedWeeks, setExpandedWeeks] = useState({});
   const [expandedDays, setExpandedDays] = useState({});
+  const [showDesktopFilters, setShowDesktopFilters] = useState(false);
+  const isMobile = window.innerWidth <= 768;
 
   const handleStartChat = (offerId, employerId) => {
     setActiveChat({ offerId, receiverId: employerId });
@@ -81,20 +105,20 @@ function YachtOfferList({ offers, currentUser }) {
     if (offers.length) fetchAuthors();
   }, [offers]);
 
+  const getMonday = (date) => {
+  const d = new Date(date);
+  const day = d.getDay(); // 0 (domingo) a 6 (sábado)
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // si es domingo, ir al lunes anterior
+  return new Date(d.setDate(diff));
+};
+
   const getWeekGroup = (dateStr) => {
-  const msPerDay = 1000 * 60 * 60 * 24;
-  const now = new Date();
-  const createdAt = new Date(dateStr);
-
-  const diffInDays = Math.floor(
-    (Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) -
-     Date.UTC(createdAt.getFullYear(), createdAt.getMonth(), createdAt.getDate())) / msPerDay
-  );
-
-  if (diffInDays <= 6) return 'Esta semana';
-  if (diffInDays <= 13) return 'Semana pasada';
-  if (diffInDays <= 20) return 'Hace 2 semanas';
-  return 'Más antiguas';
+  const monday = getMonday(new Date(dateStr));
+  return monday.toLocaleDateString('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 };
 
 
@@ -103,8 +127,20 @@ function YachtOfferList({ offers, currentUser }) {
     .filter((offer) => offer.status === 'active')
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .reduce((weeks, offer) => {
-      const weekGroup = getWeekGroup(offer.created_at);
-      const dateKey = new Date(offer.created_at).toLocaleDateString('es-ES', {
+      const weekMonday = getMonday(new Date(offer.created_at)).toDateString();
+const thisMonday = getMonday(new Date()).toDateString();
+const lastMonday = getMonday(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).toDateString();
+
+const weekGroup = weekMonday === thisMonday
+  ? 'This week'
+  : weekMonday === lastMonday
+  ? 'Last week'
+  : new Date(weekMonday).toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+      const dateKey = new Date(offer.created_at).toLocaleDateString('en-US', {
         weekday: 'long',
         day: '2-digit',
         month: 'short',
@@ -156,7 +192,171 @@ function YachtOfferList({ offers, currentUser }) {
   };
 
   return (
-    <div>
+  <div>
+    {!isMobile && (
+  <h3
+    className="filter-toggle"
+    onClick={() => setShowDesktopFilters(prev => !prev)}
+    style={{ cursor: 'pointer' }}
+  >
+    {showDesktopFilters ? '▼ Filters' : '► Filters'}
+  </h3>
+)}
+
+   {((isMobile && showFilters) || (!isMobile && showDesktopFilters)) && (
+  <div className={`filter-body ${isMobile ? '' : showDesktopFilters ? 'expanded' : 'collapsed'}`}> 
+
+        <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
+          <h3 style={{ gridColumn: '1 / -1' }}>Filtrar ofertas</h3>
+
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Rank"
+            value={filters.rank}
+            onChange={(e) => setFilters({ ...filters, rank: e.target.value })}
+          />
+
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Ciudad"
+            value={filters.city}
+            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+          />
+
+          <input
+            type="number"
+            className="search-input"
+            placeholder="Salario mínimo"
+            value={filters.minSalary}
+            onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
+          />
+
+          <select
+            className="category-select"
+            value={filters.team}
+            onChange={(e) => setFilters({ ...filters, team: e.target.value })}
+          >
+            <option value="">¿En equipo?</option>
+            <option value="Yes">Sí</option>
+            <option value="No">No</option>
+          </select>
+
+          <select
+            className="category-select"
+            value={filters.yachtType}
+            onChange={(e) => setFilters({ ...filters, yachtType: e.target.value })}
+          >
+            <option value="">Tipo de Yate</option>
+            <option value="Motor Yacht">Motor Yacht</option>
+            <option value="Sailing Yacht">Sailing Yacht</option>
+            <option value="Chase Boat">Chase Boat</option>
+            <option value="Catamaran">Catamaran</option>
+          </select>
+
+          <select
+            className="category-select"
+            value={filters.yachtSize}
+            onChange={(e) => setFilters({ ...filters, yachtSize: e.target.value })}
+          >
+            <option value="">Tamaño</option>
+            <option value="0 - 30m">0 - 30m</option>
+            <option value="31 - 40m">31 - 40m</option>
+            <option value="41 - 50m">41 - 50m</option>
+            <option value="51 - 70m">51 - 70m</option>
+            <option value="> 70m">{'> 70m'}</option>
+          </select>
+
+          <select
+            className="category-select"
+            value={filters.use}
+            onChange={(e) => setFilters({ ...filters, use: e.target.value })}
+          >
+            <option value="">Uso</option>
+            <option value="Private">Private</option>
+            <option value="Charter">Charter</option>
+            <option value="Private/Charter">Private/Charter</option>
+          </select>
+
+          <details style={{ gridColumn: '1 / -1' }}>
+            <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>País</summary>
+            <div style={{ marginTop: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+              {regionOrder.map((region) => {
+                const countryList = countriesByRegion[region];
+                const allSelected = countryList.every((c) => filters.country.includes(c));
+                return (
+                  <details key={region} style={{ marginBottom: '12px' }}>
+                    <summary
+                      style={{
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {region}
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={() => toggleRegionCountries(region)}
+                      />
+                    </summary>
+                    <div style={{ marginLeft: '20px', marginTop: '8px' }}>
+                      {countryList.map((country) => (
+                        <label key={country} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          {country}
+                          <input
+                            type="checkbox"
+                            checked={filters.country.includes(country)}
+                            onChange={() => toggleMultiSelect('country', country)}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </details>
+                );
+              })}
+            </div>
+          </details>
+
+          <details style={{ gridColumn: '1 / -1' }}>
+            <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Languages</summary>
+            <div style={{ marginTop: '8px' }}>
+              {['English', 'Spanish', 'Italian', 'French', 'German', 'Portuguese', 'Greek', 'Russian', 'Dutch'].map((lang) => (
+                <label key={lang} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  {lang}
+                  <input
+                    type="checkbox"
+                    checked={filters.languages.includes(lang)}
+                    onChange={() => toggleMultiSelect('languages', lang)}
+                  />
+                </label>
+              ))}
+            </div>
+          </details>
+
+          <details style={{ gridColumn: '1 / -1' }}>
+            <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Terms</summary>
+            <div style={{ marginTop: '8px' }}>
+              {['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Cruising', 'DayWork'].map((term) => (
+                <label key={term} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  {term}
+                  <input
+                    type="checkbox"
+                    checked={filters.terms.includes(term)}
+                    onChange={() => toggleMultiSelect('terms', term)}
+                  />
+                </label>
+              ))}
+            </div>
+          </details>
+        </div>
+      </div>
+    )}
+
       {Object.entries(groupedOffers).map(([weekGroup, dates]) => (
         <div key={weekGroup} style={{ marginBottom: '30px' }}>
           <h3 style={{ cursor: 'pointer' }} onClick={() => toggleWeek(weekGroup)}>
@@ -279,11 +479,11 @@ function YachtOfferList({ offers, currentUser }) {
 
 const formatDate = (dateStr) => {
   const options = { day: '2-digit', month: 'short', year: '2-digit' };
-  return new Date(dateStr).toLocaleDateString('es-ES', options);
+  return new Date(dateStr).toLocaleDateString('en-US', options);
 };
 
 const formatTime = (timestamp) => {
-  return new Date(timestamp).toLocaleTimeString('es-ES', {
+  return new Date(timestamp).toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit'
   });

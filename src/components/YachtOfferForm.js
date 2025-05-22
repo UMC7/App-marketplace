@@ -69,6 +69,7 @@ const yearsOptions = ['Green', 1, 2, 2.5, 3, 5];
 function YachtOfferForm({ user, onOfferPosted }) {
   const [formData, setFormData] = useState(initialState);
   const [loading, setLoading] = useState(false);
+  const isDayworker = formData.title === 'Dayworker';
 
   const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
@@ -121,6 +122,13 @@ const formReady = (() => {
         teammate_salary_currency: value,
       }));  
     }
+
+      if (name === 'title' && value === 'Dayworker') {
+    setFormData((prev) => ({
+      ...prev,
+      type: 'DayWork',
+    }));
+  }
   };
 
   const handleSubmit = async (e) => {
@@ -394,14 +402,25 @@ const sanitizedData = {
 
     {/* 9. Tipo */}
     <label>Terms: *</label>
-    <select name="type" value={formData.type} onChange={handleChange} required>
-      <option value="">Selecciona...</option>
-      {types.map((t) => <option key={t} value={t}>{t}</option>)}
-    </select>
+<select
+  name="type"
+  value={isDayworker ? 'DayWork' : formData.type}
+  onChange={handleChange}
+  required
+  disabled={isDayworker}
+>
+  <option value="">Selecciona...</option>
+  {types.map((t) => <option key={t} value={t}>{t}</option>)}
+</select>
 
     {/* Liveaboard */}
     <label>Liveaboard:</label>
-    <select name="liveaboard" value={formData.liveaboard} onChange={handleChange}>
+<select
+  name="liveaboard"
+  value={formData.liveaboard}
+  onChange={handleChange}
+  disabled={isDayworker}
+>
       <option value="">Selecciona...</option>
       <option value="No">No</option>
       <option value="Own Cabin">Own Cabin</option>
@@ -410,7 +429,12 @@ const sanitizedData = {
 
     {/* Use */}
     <label>Use:</label>
-    <select name="uses" value={formData.uses} onChange={handleChange}>
+<select
+  name="uses"
+  value={formData.uses}
+  onChange={handleChange}
+  disabled={isDayworker}
+>
       <option value="">Selecciona...</option>
       <option value="Private">Private</option>
       <option value="Charter">Charter</option>
@@ -419,7 +443,12 @@ const sanitizedData = {
 
     {/* Season Type */}
     <label>Season Type:</label>
-    <select name="season_type" value={formData.season_type} onChange={handleChange}>
+<select
+  name="season_type"
+  value={formData.season_type}
+  onChange={handleChange}
+  disabled={isDayworker}
+>
       <option value="">Selecciona...</option>
       <option value="Single Season">Single Season</option>
       <option value="Dual Season">Dual Season</option>
@@ -503,6 +532,7 @@ const sanitizedData = {
       name="holidays"
       value={formData.holidays || ''}
       onChange={handleChange}
+      disabled={isDayworker}
     />
 
     {/* 15. Ciudad */}

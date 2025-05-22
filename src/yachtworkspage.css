@@ -85,3 +85,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Filtros colapsables en pantallas grandes */
+.filter-toggle {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .filter-toggle {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .filter-body.collapsed {
+    display: none;
+  }
+
+  .filter-body.expanded {
+    display: block;
+  }
+}
