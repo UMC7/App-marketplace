@@ -353,6 +353,23 @@ const weekGroup = weekMonday === thisMonday
               ))}
             </div>
           </details>
+          <button
+  style={{ gridColumn: '1 / -1', marginBottom: '10px' }}
+  onClick={() => setFilters({
+    rank: '',
+    city: '',
+    minSalary: '',
+    team: '',
+    yachtType: '',
+    yachtSize: '',
+    use: '',
+    country: [],
+    languages: [],
+    terms: [],
+  })}
+>
+  Clear All Filters
+</button>
         </div>
       </div>
     )}
