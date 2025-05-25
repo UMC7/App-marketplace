@@ -463,15 +463,7 @@ const weekGroup = weekMonday === thisMonday
   </div>
 ) : (
   <div className="collapsed-offer">
-  <div
-    className="tick-marker"
-    onClick={(e) => {
-      e.stopPropagation();
-      toggleMark(offer.id);
-    }}
-  >
-    {markedOffers.includes(offer.id) ? '✔' : ''}
-  </div>
+  
 
   <div className="collapsed-images">
     <img
@@ -548,10 +540,20 @@ const weekGroup = weekMonday === thisMonday
   <div className="collapsed-footer">
 
     {isTodayLocal(offer.created_at) && (
-      <div style={{ textAlign: 'right', width: '100%' }}>
-        <strong>Posted:</strong> {formatTime(offer.created_at)}
-      </div>
-    )}
+  <div className="posted-timestamp-collapsed"> {/* <-- CAMBIO AQUÍ */}
+    <strong>Posted:</strong> {formatTime(offer.created_at)}
+  </div>
+  )}
+    <div
+    className="tick-marker"
+    onClick={(e) => {
+      e.stopPropagation();
+      toggleMark(offer.id);
+    }}
+  >
+    {markedOffers.includes(offer.id) ? '✔' : ''}
+  </div>
+  
   </div>
   </div>
 

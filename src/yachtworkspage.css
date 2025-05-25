@@ -1,186 +1,218 @@
 .offer-card {
-  display: flex;
-  flex-direction: column; /* temporalmente volvemos a vertical para evitar roturas */
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid var(--neutral-color);
-  border-radius: 12px;
-  background-color: var(--white-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  margin: 0 auto 20px; /* centrado horizontal y separación inferior */
-  transition: box-shadow 0.2s ease-in-out;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  width: 95%;         /* uniforme y algo más corta */
-  max-width: 870px;   /* asegura que no se estire demasiado en pantallas grandes */
-  box-sizing: border-box;
-  position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin: 0 auto 20px;
+    transition: box-shadow 0.2s ease-in-out;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    width: 95%;
+    max-width: 870px;
+    box-sizing: border-box;
+    position: relative;
 }
 
 .offer-card:hover {
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
 }
+
 .offer-card.expanded {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
 }
 
 .offer-card.expanded p {
-  flex: 1 1 45%;
-  max-width: 45%;
-  margin: 4px 0;
-  box-sizing: border-box;
+    flex: 1 1 45%;
+    max-width: 45%;
+    margin: 4px 0;
+    box-sizing: border-box;
 }
+
 .offer-content {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  width: 100%;
-  box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .left-column,
 .right-column {
-  flex: 1;
-  min-width: 280px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
+
 .collapsed-offer {
-  display: flex;
-  align-items: center;
-  height: 110px;
-  position: relative;
+    display: flex;
+    align-items: center;
+    height: 110px;
+    width: 100%;
 }
+
 .collapsed-images {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    flex-shrink: 0;
 }
+
 .collapsed-images img:first-child {
-  border-top-left-radius: 8px;
-  border-bottom-left-radius: 8px;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
 }
+
 .role-icon {
-  width: 110px;
-  height: 110px;
-  flex-shrink: 0;
-  object-fit: contain;
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+    object-fit: contain;
 }
+
 .collapsed-info {
-  margin-left: 15px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  flex: 1;
-  overflow: hidden;
-  flex-wrap: wrap;
-  gap: 2px;
-  width: 100%;
+    margin-left: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    overflow: hidden;
+    flex-wrap: wrap;
+    gap: 2px;
+    width: 100%;
 }
+
 .collapsed-info p {
-  margin: 2px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    margin: 2px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-/* Filtros colapsables en pantallas grandes */
+
 .filter-toggle {
-  display: none;
-}
-@media (min-width: 1024px) {
-  .filter-toggle {
-    display: block;
-    margin-bottom: 10px;
-  }
-
-  .filter-body.collapsed {
     display: none;
-  }
-
-  .filter-body.expanded {
-    display: block;
-  }
 }
+
+@media (min-width: 1024px) {
+    .filter-toggle {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .filter-body.collapsed {
+        display: none;
+    }
+
+    .filter-body.expanded {
+        display: block;
+    }
+}
+
 .collapsed-fixed-row {
-  width: 100%;
-  font-size: 0.95em;
+    width: 100%;
+    font-size: 0.95em;
 }
 
 .rank-fixed {
-  display: inline-block;
-  font-size: 1.1em;
-  font-weight: bold;
-  vertical-align: middle;
-  padding-right: 20px;
+    display: inline-block;
+    font-size: 1.1em;
+    font-weight: bold;
+    vertical-align: middle;
+    padding-right: 20px;
 }
+
 .salary-fixed {
-  display: inline-block;
-  width: 160px; /* espaciado uniforme */
-  text-align: right;
-  vertical-align: middle;
+    display: inline-block;
+    width: 160px;
+    text-align: right;
+    vertical-align: middle;
 }
+
 .collapsed-info-row {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  flex: 1;
-  gap: 20px;
-  padding-left: 15px;
-  padding-right: 10px;
-  box-sizing: border-box;
-  align-items: flex-start;
-  flex-wrap: nowrap;
-  width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    flex: 1;
+    gap: 20px;
+    padding-left: 15px;
+    padding-right: 10px;
+    box-sizing: border-box;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+    width: 100%;
 }
+
 .collapsed-column {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.9em;
-  min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.9em;
+    min-width: 120px;
 }
+
 .collapsed-primary {
-  flex: 0 1 auto; /* No crece automáticamente */
-  min-width: 200px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    flex: 0 1 auto;
+    min-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
 .collapsed-secondary {
-  flex: 0 1 auto; /* Tampoco crece automáticamente */
-  max-width: 50%;
-  text-align: left;
+    flex: 0 1 auto;
+    max-width: 50%;
+    text-align: left;
 }
+
 .collapsed-footer {
-  margin-left: auto;
-  text-align: right;
-  font-size: 0.85em;
-  align-self: center;
-  white-space: nowrap;
-  flex-shrink: 0; /* 🔧 evita que se contraiga */
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    /* Eliminar text-align y width para este contexto si solo maneja el tick */
+    /* text-align: right; */
+    /* width: 100%; */
+    font-size: 0.85em;
+    white-space: nowrap;
+    flex: 1; /* Permite que el footer ocupe el espacio disponible */
 }
+
 .salary-line {
-  white-space: nowrap;
+    white-space: nowrap;
 }
+
 .tick-marker {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 18px;
-  background-color: #d1ffd1;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  user-select: none;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 16px;
+    background-color: #d1ffd1;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.posted-timestamp-collapsed { /* Nueva clase para el "Posted" en la vista colapsada */
+    position: absolute;
+    bottom: 16px; /* Misma distancia desde abajo que el tick */
+    right: 16px; /* Misma distancia desde la derecha que el tick */
+    font-size: 0.85em;
+    white-space: nowrap;
+    z-index: 5;
 }
