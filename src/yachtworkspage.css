@@ -23,10 +23,13 @@
 }
 
 .offer-card.expanded {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .offer-card.expanded p {
@@ -37,11 +40,11 @@
 }
 
 .offer-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    width: 100%;
-    box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 16px;
+  box-sizing: border-box;
 }
 
 .left-column,
@@ -207,7 +210,6 @@
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
     z-index: 10;
 }
-
 .posted-timestamp-collapsed { /* Nueva clase para el "Posted" en la vista colapsada */
     position: absolute;
     bottom: 16px; /* Misma distancia desde abajo que el tick */
@@ -215,4 +217,85 @@
     font-size: 0.85em;
     white-space: nowrap;
     z-index: 5;
+}
+.offer-card.marked {
+    box-shadow: 
+        0 0 0 6px rgba(104, 173, 168, 0.7), /* Un borde más ancho y semitransparente */
+        0 0 0 9px rgba(104, 173, 168, 0.4), /* Una sombra más externa y más transparente */
+        0 4px 12px rgba(0, 0, 0, 0.05); /* La sombra original de la tarjeta */
+}
+.offer-card.marked:hover {
+    box-shadow: 
+        0 0 0 6px rgba(104, 173, 168, 0.7), /* Mantener el borde de marcado */
+        0 0 0 9px rgba(104, 173, 168, 0.4),
+        0 8px 24px rgba(0, 0, 0, 0.15); /* Una sombra de hover más pronunciada */
+}
+.top-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 2px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.expanded-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.92em;
+  box-sizing: border-box;
+}
+.block1,
+.block2,
+.block3,
+.block4,
+.block5 {
+  flex: 1 1 0;
+  min-width: 150px;
+  max-width: 100%;
+}
+
+.block1 p {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.block6 {
+  width: 100%;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+}
+
+.block7 {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+}
+.block6 p {
+  margin: 0;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+.field-label {
+  font-weight: bold;
+  font-size: 0.88em;
+  margin-bottom: 2px;
+  color: #444;
+}
+
+.field-value {
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.field-value.email {
+  white-space: nowrap;
+  overflow-x: auto;
+  text-overflow: unset;
+  max-width: 100%;
 }
