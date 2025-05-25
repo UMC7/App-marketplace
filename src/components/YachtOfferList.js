@@ -61,6 +61,19 @@ function YachtOfferList({
   const [expandedWeeks, setExpandedWeeks] = useState({});
   const [expandedDays, setExpandedDays] = useState({});
   const [showDesktopFilters, setShowDesktopFilters] = useState(false);
+  const [markedOffers, setMarkedOffers] = useState(() => {
+  return JSON.parse(localStorage.getItem('markedOffers') || '[]');
+});
+
+const toggleMark = (offerId) => {
+  const updated = markedOffers.includes(offerId)
+    ? markedOffers.filter(id => id !== offerId)
+    : [...markedOffers, offerId];
+
+  setMarkedOffers(updated);
+  localStorage.setItem('markedOffers', JSON.stringify(updated));
+};
+
   const isMobile = window.innerWidth <= 768;
 
   const handleStartChat = (offerId, employerId) => {
@@ -433,7 +446,9 @@ const weekGroup = weekMonday === thisMonday
       {offer.link_x && (
         <p><strong>X:</strong> <a href={offer.link_x} target="_blank" rel="noopener noreferrer">{offer.link_x}</a></p>
       )}
+      {isTodayLocal(offer.created_at) && (
       <p><strong>Posted:</strong> {formatTime(offer.created_at)}</p>
+      )}
       {!isOwner && currentUser && (
         <button
           onClick={(e) => {
@@ -448,6 +463,16 @@ const weekGroup = weekMonday === thisMonday
   </div>
 ) : (
   <div className="collapsed-offer">
+  <div
+    className="tick-marker"
+    onClick={(e) => {
+      e.stopPropagation();
+      toggleMark(offer.id);
+    }}
+  >
+    {markedOffers.includes(offer.id) ? '✔' : ''}
+  </div>
+
   <div className="collapsed-images">
     <img
       src={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
@@ -462,26 +487,83 @@ const weekGroup = weekMonday === thisMonday
       />
     )}
   </div>
-  <div className="collapsed-info">
-    {offer.team && <p><strong>Team:</strong> Yes</p>}
-    {offer.title && <p><strong>Rank:</strong> {offer.title}</p>}
-    {(offer.is_doe || offer.salary) && (
-      <p><strong>Salary:</strong> {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${offer.salary}`}</p>
+  <div className="collapsed-info-row">
+
+    <div className="collapsed-column collapsed-primary">
+      <span className="rank-fixed">{offer.title}</span>
+      {offer.team && offer.teammate_rank && (
+    <div className="rank-fixed">{offer.teammate_rank}</div>
     )}
-    {offer.city && <p><strong>City:</strong> {offer.city}</p>}
-    {offer.country && <p><strong>Country:</strong> {offer.country}</p>}
-    <p><strong>Posted:</strong> {formatTime(offer.created_at)}</p>
-  </div>
+      <div>{offer.yacht_type}</div>
+<div>{offer.city}</div>
+</div>
+<div className="collapsed-column collapsed-secondary">
+  {offer.team ? (
+    <>
+      {/* Línea 1: Salary */}
+      <div className="salary-line">
+        <strong>Salary:</strong> {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${offer.salary}`}
+      </div>
+
+      {/* Línea 2: Teammate Salary o espacio en blanco */}
+      <div className="salary-line">
+        {offer.teammate_salary ? (
+          <>
+            <strong>Salary:</strong> {`${offer.salary_currency || ''} ${offer.teammate_salary}`}
+          </>
+        ) : (
+          '\u00A0'
+        )}
+      </div>
+
+      {/* Línea 3: Size */}
+      <div className="salary-line">
+        <strong>Size:</strong> {offer.yacht_size}
+      </div>
+
+      <div className="salary-line">
+  <strong>Country:</strong> {offer.country}
 </div>
 
-)}
-                      </div>
-                    );
-                  })}
-              </div>
-            ))}
-        </div>
-      ))}
+    </>
+  ) : (
+    <>
+      {/* Línea 1: Salary */}
+      <div className="salary-line">
+        <strong>Salary:</strong> {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${offer.salary}`}
+      </div>
+
+      {/* Línea 2: Size */}
+      <div className="salary-line">
+        <strong>Size:</strong> {offer.yacht_size}
+      </div>
+
+      <div className="salary-line">
+  <strong>Country:</strong> {offer.country}
+</div>
+
+    </>
+  )}
+  </div>
+  <div className="collapsed-footer">
+
+    {isTodayLocal(offer.created_at) && (
+      <div style={{ textAlign: 'right', width: '100%' }}>
+        <strong>Posted:</strong> {formatTime(offer.created_at)}
+      </div>
+    )}
+  </div>
+  </div>
+
+  </div>
+  )}
+  </div>
+  );
+  })}
+  </div>
+  ))}
+  </div>
+))}
       {activeChat && (
         <Modal onClose={() => setActiveChat(null)}>
           <ChatPage
@@ -504,6 +586,16 @@ const formatTime = (timestamp) => {
     hour: '2-digit',
     minute: '2-digit'
   });
+};
+const isTodayLocal = (timestamp) => {
+  const offerDate = new Date(timestamp);
+  const now = new Date();
+
+  return (
+    offerDate.getDate() === now.getDate() &&
+    offerDate.getMonth() === now.getMonth() &&
+    offerDate.getFullYear() === now.getFullYear()
+  );
 };
 
 export default YachtOfferList;

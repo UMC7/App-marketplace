@@ -81,13 +81,18 @@ function Navbar() {
 
           {currentUser ? (
             <>
-              <button onClick={() => { navigate('/profile'); setIsMenuOpen(false); }} className="navLink">Profile</button>
+              <button onClick={() => { navigate('/profile'); setIsMenuOpen(false); }} className="profile-icon-text">
+              <span className="material-icons">account_circle</span>
+              <small>Profile</small>
+              </button>
 
               <div ref={menuRef} style={{ position: 'relative', width: '100%' }}>
-                <button className="navLink" onClick={() => setShowMenu(!showMenu)}>Post</button>
+                <button className="post-icon-text" onClick={() => setShowMenu(!showMenu)}>
+                <span className="material-icons">add_circle_outline</span>
+                <small>Post</small>
+                </button>
                 {showMenu && (
                   <div className="post-dropdown">
-
                     <button className="navLink" onClick={() => { setShowProductModal(true); setShowMenu(false); }}>Post Product</button>
                     <button className="navLink" onClick={() => { setShowServiceModal(true); setShowMenu(false); }}>Post Service</button>
                     <button className="navLink" onClick={() => { setShowOfferModal(true); setShowMenu(false); }}>Post Job</button>
@@ -95,29 +100,35 @@ function Navbar() {
                   </div>
                 )}
               </div>
-
-              <button onClick={() => { setShowChatList(true); setIsMenuOpen(false); }} className="navLink">
-                💬 Chats
-                {unreadCount > 0 && (
-                  <span style={{
-                    backgroundColor: 'red',
-                    color: 'white',
-                    borderRadius: '50%',
-                    padding: '2px 8px',
-                    fontSize: '12px',
-                    marginLeft: '5px'
-                  }}>{unreadCount}</span>
-                )}
+              <button onClick={() => { setShowChatList(true); setIsMenuOpen(false); }} className="chats-icon-text">
+              {unreadCount > 0 && <span className="chat-badge">{unreadCount}</span>}
+              <span className="material-icons">chat_bubble_outline</span>
+              <small>Chats</small>
               </button>
-
-              <button onClick={() => { navigate('/favorites'); setIsMenuOpen(false); }} className="navLink">Favorites</button>
-              <button onClick={() => { navigate('/cart'); setIsMenuOpen(false); }} className="navLink">Carrito ({totalItems})</button>
-              <button onClick={() => { setIsMenuOpen(false); handleLogout(); }} className="navLink">Logout</button>
+              <button onClick={() => { navigate('/favorites'); setIsMenuOpen(false); }} className="favorites-icon-text">
+              <span className="material-icons">favorite_border</span>
+              <small>Favorites</small>
+              </button>
+              <button onClick={() => { navigate('/cart'); setIsMenuOpen(false); }} className="cart-icon-text">
+              {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+              <span className="material-icons">shopping_cart</span>
+              <small>Cart</small>
+              </button>
+              <button onClick={() => { setIsMenuOpen(false); handleLogout(); }} className="logout-icon-text">
+              <span className="material-icons">logout</span>
+              <small>Logout</small>
+              </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="navLink">Iniciar sesión</Link>
-              <Link to="/register" className="navLink">Registrarse</Link>
+              <Link to="/login" className="login-icon-text">
+                <span className="material-icons">person_outline</span>
+                <small>Login</small>
+              </Link>
+              <Link to="/register" className="register-icon-text">
+                <span className="material-icons">person_add</span>
+                <small>Register</small>
+              </Link>
             </>
           )}
         </div>
