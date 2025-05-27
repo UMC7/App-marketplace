@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import supabase from '../supabase';
 import Modal from './Modal';
 import ChatPage from './ChatPage';
+import ScrollToTopButton from '../components/ScrollToTopButton';
 
 const getRoleImage = (title) => {
   if (!title) return 'others';
@@ -368,36 +369,33 @@ function YachtOfferList({
                   const allSelected = countryList.every((c) => filters.country.includes(c));
                   return (
                     <details key={region} style={{ marginBottom: '12px' }}>
-                      <summary
-                        style={{
-                          fontWeight: 'bold',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {region}
-                        <input
-                          type="checkbox"
-                          checked={allSelected}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={() => toggleRegionCountries(region)}
-                        />
-                      </summary>
-                      <div style={{ marginLeft: '20px', marginTop: '8px' }}>
-                        {countryList.map((country) => (
-                          <label key={country} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                            {country}
-                            <input
-                              type="checkbox"
-                              checked={filters.country.includes(country)}
-                              onChange={() => toggleMultiSelect('country', country)}
-                            />
-                          </label>
-                        ))}
-                      </div>
-                    </details>
+  <summary style={{ cursor: 'pointer', fontWeight: 'bold', userSelect: 'none' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+      <input
+        type="checkbox"
+        checked={allSelected}
+        onClick={(e) => e.stopPropagation()}
+        onChange={() => toggleRegionCountries(region)}
+        style={{ verticalAlign: 'middle', marginBottom: '1px' }}
+      />
+      {region}
+    </span>
+  </summary>
+
+  <div style={{ marginLeft: '20px', marginTop: '8px' }}>
+    {countryList.map((country) => (
+      <label key={country} className="filter-checkbox-label">
+        <input
+          type="checkbox"
+          checked={filters.country.includes(country)}
+          onChange={() => toggleMultiSelect('country', country)}
+        />
+        {country}
+      </label>
+    ))}
+  </div>
+</details>
+
                   );
                 })}
               </div>
@@ -407,13 +405,13 @@ function YachtOfferList({
               <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Languages</summary>
               <div style={{ marginTop: '8px' }}>
                 {['English', 'Spanish', 'Italian', 'French', 'German', 'Portuguese', 'Greek', 'Russian', 'Dutch'].map((lang) => (
-                  <label key={lang} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    {lang}
+                 <label key={lang} className="filter-checkbox-label">
                     <input
                       type="checkbox"
                       checked={filters.languages.includes(lang)}
                       onChange={() => toggleMultiSelect('languages', lang)}
                     />
+                    {lang}
                   </label>
                 ))}
               </div>
@@ -423,37 +421,30 @@ function YachtOfferList({
               <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Terms</summary>
               <div style={{ marginTop: '8px' }}>
                 {['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Cruising', 'DayWork'].map((term) => (
-                  <label key={term} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    {term}
+                 <label key={term} className="filter-checkbox-label">
                     <input
                       type="checkbox"
                       checked={filters.terms.includes(term)}
                       onChange={() => toggleMultiSelect('terms', term)}
                     />
+                    {term}
                   </label>
                 ))}
               </div>
             </details>
             <label
   htmlFor="selectedOnly"
-  style={{
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gridColumn: '1 / -1',
-    marginBottom: '10px',
-    cursor: 'pointer'
-  }}
+  className="filter-checkbox-label"
+  style={{ gridColumn: '1 / -1', marginBottom: '10px' }}
 >
-  <span style={{ whiteSpace: 'nowrap' }}><strong>Only Selected</strong></span>
   <input
     id="selectedOnly"
     type="checkbox"
     checked={filters.selectedOnly}
     onChange={() => setFilters({ ...filters, selectedOnly: !filters.selectedOnly })}
   />
+  <span><strong>Only Selected</strong></span>
 </label>
-
             <button
               style={{ gridColumn: '1 / -1', marginBottom: '10px' }}
               onClick={() => setFilters({
@@ -774,14 +765,18 @@ function YachtOfferList({
     <>
       {/* Línea 1: Salary */}
       <div className="salary-line">
-        <strong>Salary:</strong> {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
+        <strong>Salary:</strong>{' '}
+        {offer.is_doe
+          ? 'DOE'
+          : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
       </div>
 
       {/* Línea 2: Teammate Salary o espacio vacío */}
       <div className="salary-line">
         {offer.teammate_salary ? (
           <>
-            <strong>Salary:</strong> {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+            <strong>Salary:</strong>{' '}
+            {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
           </>
         ) : (
           '\u00A0'
@@ -799,16 +794,21 @@ function YachtOfferList({
         )}
       </div>
 
-      {/* Línea 4: Country */}
-      <div className="salary-line">
-        <strong>Country:</strong> {offer.country}
-      </div>
+      {/* Línea 4: Country (ocultar si shore-based && remote) */}
+      {!(offer.work_environment === 'Shore-based' && !offer.city) && (
+        <div className="salary-line">
+          <strong>Country:</strong> {offer.country}
+        </div>
+      )}
     </>
   ) : (
     <>
       {/* Línea 1: Salary */}
       <div className="salary-line">
-        <strong>Salary:</strong> {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${offer.salary}`}
+        <strong>Salary:</strong>{' '}
+        {offer.is_doe
+          ? 'DOE'
+          : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
       </div>
 
       {/* Línea 2: Size (reservada si shore-based) */}
@@ -822,10 +822,12 @@ function YachtOfferList({
         )}
       </div>
 
-      {/* Línea 3: Country */}
-      <div className="salary-line">
-        <strong>Country:</strong> {offer.country}
-      </div>
+      {/* Línea 3: Country (ocultar si shore-based && remote) */}
+      {!(offer.work_environment === 'Shore-based' && !offer.city) && (
+        <div className="salary-line">
+          <strong>Country:</strong> {offer.country}
+        </div>
+      )}
     </>
   )}
 </div>
@@ -855,6 +857,13 @@ function YachtOfferList({
             ))}
         </div>
       ))}
+
+      {Object.keys(groupedOffers).length === 0 && (
+  <p style={{ marginTop: '20px', fontStyle: 'italic' }}>
+    No matching offers found.
+  </p>
+)}
+
       {activeChat && (
         <Modal onClose={() => setActiveChat(null)}>
           <ChatPage
@@ -863,6 +872,7 @@ function YachtOfferList({
           />
         </Modal>
       )}
+       <ScrollToTopButton />
     </div>
   );
 }
