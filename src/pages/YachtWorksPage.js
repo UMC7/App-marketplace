@@ -59,6 +59,7 @@ function YachtWorksPage() {
     yachtType: '',
     yachtSize: '',
     use: '',
+    selectedOnly: false,
   });
 
   useEffect(() => {
@@ -105,29 +106,38 @@ function YachtWorksPage() {
 }, []);
 
   const filteredOffers = useMemo(() => {
-    return offers.filter((offer) => {
-      if (
-        filters.rank &&
-        !(
+  return offers.filter((offer) => {
+    // ✅ Si el filtro 'selectedOnly' está activo, solo mostrar marcadas
+    if (filters.selectedOnly) {
+      const key = `markedOffers_user_${user?.id}`;
+      const stored = localStorage.getItem(key);
+      const parsed = stored ? JSON.parse(stored) : [];
+      if (!parsed.includes(offer.id)) return false;
+    }
+
+    // Las demás condiciones existentes:
+    if (
+      filters.rank &&
+      !(
         offer.title?.toLowerCase().includes(filters.rank.toLowerCase()) ||
         offer.teammate_rank?.toLowerCase().includes(filters.rank.toLowerCase())
-        )
-      ) return false;
-      if (filters.city && !offer.city?.toLowerCase().includes(filters.city.toLowerCase())) return false;
-      if (
-        filters.country.length &&
-        !filters.country.some((c) => offer.country?.toLowerCase() === c.toLowerCase())
-        ) return false;
-      if (filters.minSalary && (!offer.salary || offer.salary < parseFloat(filters.minSalary))) return false;
-      if (filters.team && ((filters.team === 'Yes' && !offer.team) || (filters.team === 'No' && offer.team))) return false;
-      if (filters.languages.length && !filters.languages.every(lang => [offer.language_1, offer.language_2].includes(lang))) return false;
-      if (filters.terms.length && !filters.terms.includes(offer.type)) return false;
-      if (filters.yachtType && offer.yacht_type !== filters.yachtType) return false;
-      if (filters.yachtSize && offer.yacht_size !== filters.yachtSize) return false;
-      if (filters.use && offer.uses !== filters.use) return false;
-      return true;
-    });
-  }, [offers, filters]);
+      )
+    ) return false;
+    if (filters.city && !offer.city?.toLowerCase().includes(filters.city.toLowerCase())) return false;
+    if (
+      filters.country.length &&
+      !filters.country.some((c) => offer.country?.toLowerCase() === c.toLowerCase())
+    ) return false;
+    if (filters.minSalary && (!offer.salary || offer.salary < parseFloat(filters.minSalary))) return false;
+    if (filters.team && ((filters.team === 'Yes' && !offer.team) || (filters.team === 'No' && offer.team))) return false;
+    if (filters.languages.length && !filters.languages.every(lang => [offer.language_1, offer.language_2].includes(lang))) return false;
+    if (filters.terms.length && !filters.terms.includes(offer.type)) return false;
+    if (filters.yachtType && offer.yacht_type !== filters.yachtType) return false;
+    if (filters.yachtSize && offer.yacht_size !== filters.yachtSize) return false;
+    if (filters.use && offer.uses !== filters.use) return false;
+    return true;
+  });
+}, [offers, filters, user]);
 
   const toggleMultiSelect = (key, value) => {
     setFilters((prev) => {
@@ -154,8 +164,8 @@ function YachtWorksPage() {
 
   return (
   <div className="container">
-    <h1>YACHT WORKS</h1>
-    <h2>Ofertas disponibles</h2>
+    <h1>SeaJobs</h1>
+    <h2>Available Offers</h2>
 
     <button
   className="navbar-toggle"

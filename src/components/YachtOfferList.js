@@ -303,7 +303,7 @@ function YachtOfferList({
               className="search-input"
               placeholder="Ciudad"
               value={filters.city}
-              onChange={(e) => setFilters({ ...filters.city, city: e.target.value })} // Corregido: city no debería ser un objeto
+              onChange={(e) => setFilters({ ...filters, city: e.target.value })}
             />
 
             <input
@@ -434,6 +434,26 @@ function YachtOfferList({
                 ))}
               </div>
             </details>
+            <label
+  htmlFor="selectedOnly"
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gridColumn: '1 / -1',
+    marginBottom: '10px',
+    cursor: 'pointer'
+  }}
+>
+  <span style={{ whiteSpace: 'nowrap' }}><strong>Only Selected</strong></span>
+  <input
+    id="selectedOnly"
+    type="checkbox"
+    checked={filters.selectedOnly}
+    onChange={() => setFilters({ ...filters, selectedOnly: !filters.selectedOnly })}
+  />
+</label>
+
             <button
               style={{ gridColumn: '1 / -1', marginBottom: '10px' }}
               onClick={() => setFilters({
@@ -447,6 +467,7 @@ function YachtOfferList({
                 country: [],
                 languages: [],
                 terms: [],
+                selectedOnly: false,
               })}
             >
               Clear All Filters
@@ -489,113 +510,143 @@ function YachtOfferList({
       <div className="expanded-block block1">
   {offer.title && (
     <div>
-      <div className="field-label">Position 1</div>
+      <div className="field-label">Position</div>
       <div className="field-value">{offer.title}</div>
     </div>
   )}
   {(offer.is_doe || offer.salary) && (
     <div>
-      <div className="field-label">Salary 1</div>
-      <div className="field-value">{offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${offer.salary}`}</div>
+      <div className="field-label">Salary</div>
+      <div className="field-value">
+  {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
+</div>
     </div>
   )}
+  {offer.work_environment === 'Shore-based' && (
+  <div>
+    <div className="field-label">Work Location</div>
+    <div className="field-value">
+      {offer.city ? 'On-Site' : 'Remote'}
+    </div>
+  </div>
+)}
+  {!offer.team && offer.type && (
+  <div>
+    <div className="field-label">Terms</div>
+    <div className="field-value">{offer.type}</div>
+  </div>
+)}
   {offer.teammate_rank && (
     <div>
-      <div className="field-label">Position 2</div>
+      <div className="field-label">Position (2)</div>
       <div className="field-value">{offer.teammate_rank}</div>
     </div>
   )}
   {offer.teammate_salary && (
     <div>
-      <div className="field-label">Salary 2</div>
-      <div className="field-value">{`${offer.salary_currency || ''} ${offer.teammate_salary}`}</div>
+      <div className="field-label">Salary (2)</div>
+      <div className="field-value">
+  {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+</div>
     </div>
   )}
+  {offer.team && offer.type && (
+  <div>
+    <div className="field-label">Terms</div>
+    <div className="field-value">{offer.type}</div>
+  </div>
+)}
 </div>
+      {(offer.yacht_type ||
+  (offer.yacht_size && offer.work_environment !== 'Shore-based') ||
+  offer.flag ||
+  offer.homeport ||
+  offer.uses ||
+  offer.season_type) && (
+  <div className="expanded-block block2">
+    {offer.yacht_type && (
+      <div>
+        <div className="field-label">Yacht Type</div>
+        <div className="field-value">{offer.yacht_type}</div>
+      </div>
+    )}
+    {offer.yacht_size && offer.work_environment !== 'Shore-based' && (
+      <div>
+        <div className="field-label">Size</div>
+        <div className="field-value">{offer.yacht_size}</div>
+      </div>
+    )}
+    {offer.flag && (
+      <div>
+        <div className="field-label">Flag</div>
+        <div className="field-value">{offer.flag}</div>
+      </div>
+    )}
+    {offer.homeport && (
+      <div>
+        <div className="field-label">Homeport</div>
+        <div className="field-value">{offer.homeport}</div>
+      </div>
+    )}
+    {offer.uses && (
+      <div>
+        <div className="field-label">Use</div>
+        <div className="field-value">{offer.uses}</div>
+      </div>
+    )}
+    {offer.season_type && (
+      <div>
+        <div className="field-label">Season Type</div>
+        <div className="field-value">{offer.season_type}</div>
+      </div>
+    )}
+  </div>
+)}
 
-      <div className="expanded-block block2">
-  {offer.yacht_type && (
-    <div>
-      <div className="field-label">Yacht Type</div>
-      <div className="field-value">{offer.yacht_type}</div>
-    </div>
-  )}
-  {offer.yacht_size && (
-    <div>
-      <div className="field-label">Yacht Size</div>
-      <div className="field-value">{offer.yacht_size}</div>
-    </div>
-  )}
-  {offer.flag && (
-    <div>
-      <div className="field-label">Flag</div>
-      <div className="field-value">{offer.flag}</div>
-    </div>
-  )}
-  {offer.homeport && (
-    <div>
-      <div className="field-label">Homeport</div>
-      <div className="field-value">{offer.homeport}</div>
-    </div>
-  )}
-  {offer.use && (
-    <div>
-      <div className="field-label">Use</div>
-      <div className="field-value">{offer.use}</div>
-    </div>
-  )}
-  {offer.season_type && (
-    <div>
-      <div className="field-label">Season Type</div>
-      <div className="field-value">{offer.season_type}</div>
-    </div>
-  )}
-</div>
 
-      <div className="expanded-block block3">
-  {offer.language_1 && (
-    <div>
-      <div className="field-label">Language 1</div>
-      <div className="field-value">{offer.language_1}</div>
-    </div>
-  )}
-  {offer.language_1_fluency && (
-    <div>
-      <div className="field-label">Fluency</div>
-      <div className="field-value">{offer.language_1_fluency}</div>
-    </div>
-  )}
-  {offer.language_2 && (
-    <div>
-      <div className="field-label">Language 2</div>
-      <div className="field-value">{offer.language_2}</div>
-    </div>
-  )}
-  {offer.language_2_fluency && (
-    <div>
-      <div className="field-label">Fluency</div>
-      <div className="field-value">{offer.language_2_fluency}</div>
-    </div>
-  )}
-</div>
+      {(offer.language_1 || offer.language_1_fluency || offer.language_2 || offer.language_2_fluency) && (
+  <div className="expanded-block block3">
+    {offer.language_1 && (
+      <div>
+        <div className="field-label">Language</div>
+        <div className="field-value">{offer.language_1}</div>
+      </div>
+    )}
+    {offer.language_1_fluency && (
+      <div>
+        <div className="field-label">Fluency</div>
+        <div className="field-value">{offer.language_1_fluency}</div>
+      </div>
+    )}
+    {offer.language_2 && (
+      <div>
+        <div className="field-label">2nd Language</div>
+        <div className="field-value">{offer.language_2}</div>
+      </div>
+    )}
+    {offer.language_2_fluency && (
+      <div>
+        <div className="field-label">Fluency</div>
+        <div className="field-value">{offer.language_2_fluency}</div>
+      </div>
+    )}
+  </div>
+)}
 
       <div className="expanded-block block4">
-  {offer.start_date && (
-    <div>
-      <div className="field-label">Start Date</div>
-      <div className="field-value">{formatDate(offer.start_date)}</div>
+  {(offer.is_asap || offer.start_date) && (
+  <div>
+    <div className="field-label">Start Date</div>
+    <div className="field-value">
+      {offer.is_asap ? 'ASAP' : formatDate(offer.start_date)}
     </div>
-  )}
+  </div>
+)}
+
   {offer.end_date && (
     <div>
       <div className="field-label">End Date</div>
       <div className="field-value">{formatDate(offer.end_date)}</div>
-    </div>
-  )}
-  {offer.terms && (
-    <div>
-      <div className="field-label">Terms</div>
-      <div className="field-value">{offer.terms}</div>
     </div>
   )}
   {offer.liveaboard && (
@@ -626,11 +677,31 @@ function YachtOfferList({
     </div>
   )}
   {offer.contact_email && (
-    <div>
-      <div className="field-label">Email</div>
-      <div className="field-value email">{offer.contact_email}</div>
+  <div>
+    <div className="field-label">Email</div>
+    <div className="field-value email" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <span>{offer.contact_email}</span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation(); // evita que colapse la tarjeta
+          navigator.clipboard.writeText(offer.contact_email);
+        }}
+        title="Copy email"
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '1em',
+          color: '#007BFF',
+          padding: 0,
+        }}
+      >
+        📋
+      </button>
     </div>
-  )}
+  </div>
+)}
+
   {offer.contact_phone && (
     <div>
       <div className="field-label">Phone</div>
@@ -640,9 +711,12 @@ function YachtOfferList({
 </div>
     </div>
 
-    <div className="expanded-block block6">
-      {offer.remarks && <p><strong>Remarks:</strong> {offer.remarks}</p>}
-    </div>
+    {offer.description && (
+  <div className="expanded-block block6">
+    <div className="field-label">Remarks</div>
+    <div className="field-value remarks-content">{offer.description}</div>
+  </div>
+)}
 
     <div className="expanded-block block7">
       {!isOwner && currentUser && (
@@ -679,77 +753,102 @@ function YachtOfferList({
                                 {offer.team && offer.teammate_rank && (
                                   <div className="rank-fixed">{offer.teammate_rank}</div>
                                 )}
-                                <div>{offer.yacht_type}</div>
-                                <div>{offer.city}</div>
-                              </div>
-                              <div className="collapsed-column collapsed-secondary">
-                                {offer.team ? (
-                                  <>
-                                    {/* Línea 1: Salary */}
-                                    <div className="salary-line">
-                                      <strong>Salary:</strong> {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${offer.salary}`}
-                                    </div>
-
-                                    {/* Línea 2: Teammate Salary o espacio en blanco */}
-                                    <div className="salary-line">
-                                      {offer.teammate_salary ? (
-                                        <>
-                                          <strong>Salary:</strong> {`${offer.salary_currency || ''} ${offer.teammate_salary}`}
-                                        </>
-                                      ) : (
-                                        '\u00A0'
-                                      )}
-                                    </div>
-
-                                    {/* Línea 3: Size */}
-                                    <div className="salary-line">
-                                      <strong>Size:</strong> {offer.yacht_size}
-                                    </div>
-
-                                    <div className="salary-line">
-                                      <strong>Country:</strong> {offer.country}
-                                    </div>
-
-                                  </>
-                                ) : (
-                                  <>
-                                    {/* Línea 1: Salary */}
-                                    <div className="salary-line">
-                                      <strong>Salary:</strong> {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${offer.salary}`}
-                                    </div>
-
-                                    {/* Línea 2: Size */}
-                                    <div className="salary-line">
-                                      <strong>Size:</strong> {offer.yacht_size}
-                                    </div>
-
-                                    <div className="salary-line">
-                                      <strong>Country:</strong> {offer.country}
-                                    </div>
-
-                                  </>
+                                {offer.work_environment === 'Shore-based' && (
+                                <div className="salary-line">
+                                  <strong>Work Location:</strong> {offer.city ? 'On-Site' : 'Remote'}
+                                </div>
                                 )}
-                              </div>
-                              <div className="collapsed-footer">
-                                {isTodayLocal(offer.created_at) && (
-                                  <div className="posted-timestamp-collapsed">
-                                    <strong>Posted:</strong> {formatTime(offer.created_at)}
+                                 {offer.yacht_type && (
+                                  <div className="salary-line">
+                                    <strong>Yacht Type:</strong> {offer.yacht_type}
                                   </div>
                                 )}
-                                <div
-                                  className="tick-marker"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleMark(offer.id);
-                                  }}
-                                >
-                                  {markedOffers.includes(offer.id) ? '✔' : ''}
-                                </div>
+                                {offer.city && (
+                                  <div className="salary-line">
+                                    <strong>City:</strong> {offer.city}
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                              <div className="collapsed-column collapsed-secondary">
+  {offer.team ? (
+    <>
+      {/* Línea 1: Salary */}
+      <div className="salary-line">
+        <strong>Salary:</strong> {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
+      </div>
+
+      {/* Línea 2: Teammate Salary o espacio vacío */}
+      <div className="salary-line">
+        {offer.teammate_salary ? (
+          <>
+            <strong>Salary:</strong> {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+          </>
+        ) : (
+          '\u00A0'
+        )}
+      </div>
+
+      {/* Línea 3: Size (reservada si shore-based) */}
+      <div className="salary-line">
+        {offer.work_environment !== 'Shore-based' && offer.yacht_size ? (
+          <>
+            <strong>Size:</strong> {offer.yacht_size}
+          </>
+        ) : (
+          '\u00A0'
+        )}
+      </div>
+
+      {/* Línea 4: Country */}
+      <div className="salary-line">
+        <strong>Country:</strong> {offer.country}
+      </div>
+    </>
+  ) : (
+    <>
+      {/* Línea 1: Salary */}
+      <div className="salary-line">
+        <strong>Salary:</strong> {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${offer.salary}`}
+      </div>
+
+      {/* Línea 2: Size (reservada si shore-based) */}
+      <div className="salary-line">
+        {offer.work_environment !== 'Shore-based' && offer.yacht_size ? (
+          <>
+            <strong>Size:</strong> {offer.yacht_size}
+          </>
+        ) : (
+          '\u00A0'
+        )}
+      </div>
+
+      {/* Línea 3: Country */}
+      <div className="salary-line">
+        <strong>Country:</strong> {offer.country}
+      </div>
+    </>
+  )}
+</div>
+<div className="collapsed-footer">
+  {isTodayLocal(offer.created_at) && (
+    <div className="posted-timestamp-collapsed">
+      <strong>Posted:</strong> {formatTime(offer.created_at)}
+    </div>
+  )}
+  <div
+    className="tick-marker"
+    onClick={(e) => {
+      e.stopPropagation();
+      toggleMark(offer.id);
+    }}
+  >
+    {markedOffers.includes(offer.id) ? '✔' : ''}
+  </div>
+</div>
+</div>
+</div>
+)}
+</div>
                     );
                   })}
               </div>
