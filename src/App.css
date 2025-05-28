@@ -1,7 +1,7 @@
 :root {
-  --primary-color: #081a3b;      /* Azul profundo del logo */
-  --accent-color: #68ada8;       /* Turquesa elegante */
-  --neutral-color: #bca987;      /* Beige sofisticado */
+  --primary-color: #081a3b; /* Azul profundo del logo */
+  --accent-color: #68ada8; /* Turquesa elegante */
+  --neutral-color: #bca987; /* Beige sofisticado */
   --white-color: #ffffff;
   --text-dark: #1c1c1c;
 
@@ -377,12 +377,14 @@ button:hover, .landing-button:hover {
   font-size: 1rem;
   box-sizing: border-box;
 }
-
 .login-form label {
   font-size: 1rem;
   font-weight: 500;
   margin: 12px 0 4px;
-  display: block;
+  /* Originalmente 'display: inline-flex !important;' aquí.
+     Lo quitamos de la regla general de label y lo movemos a la más específica del checkbox.
+     Esto previene que otros labels que no sean checkboxes se comporten como flexbox
+     si no es necesario y facilita la depuración. */
   color: var(--primary-color);
 }
 
@@ -471,28 +473,28 @@ button:hover, .landing-button:hover {
   background-color: var(--accent-color);
   color: white;
 }
-
 .close-button {
   position: absolute;
-  top: 12px;
-  right: 16px;
-  background-color: var(--primary-color);
-  color: white;
+  top: 10px;
+  right: 15px;
+  background-color: var(--primary-color); /* Usar el color primario para el fondo */
+  color: var(--white-color); /* Color blanco para el ícono */
   border: none;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  width: 32px;
-  height: 32px;
+  font-size: 24px; /* Un poco más grande para visibilidad */
+  cursor: pointer;
+  width: 36px; /* Ajusta el tamaño del botón */
+  height: 36px; /* Ajusta el tamaño del botón */
+  border-radius: 50%; /* Para hacerlo redondo */
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  z-index: 1000;
-  transition: background-color 0.2s ease-in-out;
+  z-index: 10000; /* Asegúrate de que esté por encima de otros elementos */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sutil sombra para destacarlo */
+  transition: background-color 0.2s ease-in-out; /* Transición suave al pasar el ratón */
 }
 
 .close-button:hover {
-  background-color: var(--accent-color);
+  background-color: var(--accent-color); /* Cambiar a color de acento al pasar el ratón */
 }
 
 .landing-button-group {
@@ -508,7 +510,6 @@ button:hover, .landing-button:hover {
   min-width: 160px;
   text-align: center;
 }
-
 .form-inline-group {
   display: flex;
   gap: 12px;
@@ -755,3 +756,58 @@ button:hover, .landing-button:hover {
   background-color: var(--accent-color);
 }
 
+/* --- INICIO DE CORRECCIONES PARA DOE (SALARY) --- */
+
+/* Contenedor del checkbox: Asegura que sea un flex container para alinear el label */
+.login-form .form-group {
+  display: flex;
+  align-items: center; /* Alinea verticalmente la etiqueta */
+  margin-bottom: 16px;
+  padding-left: 10px;
+  /* Eliminar !important si la importación y la estructura son correctas */
+}
+
+/* Etiqueta del checkbox (contiene el input y el span): Asegura que sea un flex container para sus hijos */
+.login-form .form-checkbox-label {
+  display: flex; /* Cambiado de inline-flex a flex para un control más robusto dentro de un flex parent */
+  align-items: center; /* Alinea verticalmente el input y el span */
+  gap: 8px; /* Espacio entre el checkbox y el texto */
+  margin: 0; /* Elimina márgenes extra que puedan causar saltos de línea */
+  cursor: pointer;
+  line-height: 1.2;
+  font-size: 1rem; /* Asegura el tamaño de fuente */
+  flex-shrink: 0; /* Previene que la etiqueta se encoja */
+  width: auto; /* Permite que la etiqueta ocupe solo el espacio necesario */
+  /* Eliminar !important si la importación y la estructura son correctas */
+}
+.login-form .form-checkbox-label input[type="checkbox"] {
+  margin: 0; /* Elimina márgenes por defecto del input */
+  transform: translateY(1px); /* Ajuste fino para alineación visual */
+  width: 16px; /* Tamaño explícito para asegurar visibilidad */
+  height: 16px; /* Tamaño explícito para asegurar visibilidad */
+  min-width: 16px; /* Evita que se achique */
+  min-height: 16px; /* Evita que se achique */
+}
+.form-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  margin-bottom: 12px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+.form-checkbox-label input[type="checkbox"] {
+  margin: 0;
+  transform: translateY(1px); /* 🔧 Ajuste fino para alinearlo con el texto */
+}
+.form-group {
+  margin-bottom: 16px;
+  display: block;
+}
+.login-form label {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 12px 0 4px;
+  color: var(--primary-color);
+}

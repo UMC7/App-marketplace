@@ -404,7 +404,7 @@ function YachtOfferList({
             <details style={{ gridColumn: '1 / -1' }}>
               <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Languages</summary>
               <div style={{ marginTop: '8px' }}>
-                {['English', 'Spanish', 'Italian', 'French', 'German', 'Portuguese', 'Greek', 'Russian', 'Dutch'].map((lang) => (
+                {['Arabic', 'Dutch', 'English', 'French', 'German', 'Greek', 'Italian', 'Mandarin', 'Portuguese', 'Russian', 'Spanish', 'Turkish', 'Ukrainian'].map((lang) => (
                  <label key={lang} className="filter-checkbox-label">
                     <input
                       type="checkbox"
@@ -499,54 +499,65 @@ function YachtOfferList({
   <div className="offer-content">
     <div className="top-row">
       <div className="expanded-block block1">
-  {offer.title && (
-    <div>
-      <div className="field-label">Position</div>
-      <div className="field-value">{offer.title}</div>
-    </div>
-  )}
-  {(offer.is_doe || offer.salary) && (
-    <div>
-      <div className="field-label">Salary</div>
-      <div className="field-value">
-  {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
-</div>
-    </div>
-  )}
-  {offer.work_environment === 'Shore-based' && (
-  <div>
-    <div className="field-label">Work Location</div>
-    <div className="field-value">
-      {offer.city ? 'On-Site' : 'Remote'}
-    </div>
+  <div className="field-pair">
+    {offer.title && (
+      <div className="field-group">
+        <div className="field-label">Position</div>
+        <div className="field-value">{offer.title}</div>
+      </div>
+    )}
+
+    {(offer.is_doe || offer.salary) && (
+      <div className="field-group">
+        <div className="field-label">Salary</div>
+        <div className="field-value">
+          {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
+        </div>
+      </div>
+    )}
+
+    {offer.teammate_rank && (
+      <div className="field-group">
+        <div className="field-label">Position (2)</div>
+        <div className="field-value">{offer.teammate_rank}</div>
+      </div>
+    )}
+
+    {offer.teammate_salary && (
+      <div className="field-group">
+        <div className="field-label">Salary (2)</div>
+        <div className="field-value">
+          {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+        </div>
+      </div>
+    )}
+
+    {/* Work Location en su propia línea si aplica */}
+    {offer.work_environment === 'Shore-based' && (
+      <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+        <div className="field-label">Work Location</div>
+        <div className="field-value">
+          {offer.city ? 'On-Site' : 'Remote'}
+        </div>
+      </div>
+    )}
+
+    {/* Terms para equipo no acompañado */}
+    {!offer.team && offer.type && (
+      <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+        <div className="field-label">Terms</div>
+        <div className="field-value">{offer.type}</div>
+      </div>
+    )}
+
+    {/* Terms para equipo acompañado */}
+    {offer.team && offer.type && (
+      <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+        <div className="field-label">Terms</div>
+        <div className="field-value">{offer.type}</div>
+      </div>
+    )}
   </div>
-)}
-  {!offer.team && offer.type && (
-  <div>
-    <div className="field-label">Terms</div>
-    <div className="field-value">{offer.type}</div>
-  </div>
-)}
-  {offer.teammate_rank && (
-    <div>
-      <div className="field-label">Position (2)</div>
-      <div className="field-value">{offer.teammate_rank}</div>
-    </div>
-  )}
-  {offer.teammate_salary && (
-    <div>
-      <div className="field-label">Salary (2)</div>
-      <div className="field-value">
-  {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
-</div>
-    </div>
-  )}
-  {offer.team && offer.type && (
-  <div>
-    <div className="field-label">Terms</div>
-    <div className="field-value">{offer.type}</div>
-  </div>
-)}
 </div>
       {(offer.yacht_type ||
   (offer.yacht_size && offer.work_environment !== 'Shore-based') ||
@@ -554,158 +565,190 @@ function YachtOfferList({
   offer.homeport ||
   offer.uses ||
   offer.season_type) && (
+
   <div className="expanded-block block2">
+  <div className="field-pair">
     {offer.yacht_type && (
-      <div>
+      <div className="field-group">
         <div className="field-label">Yacht Type</div>
         <div className="field-value">{offer.yacht_type}</div>
       </div>
     )}
+
     {offer.yacht_size && offer.work_environment !== 'Shore-based' && (
-      <div>
+      <div className="field-group">
         <div className="field-label">Size</div>
         <div className="field-value">{offer.yacht_size}</div>
       </div>
     )}
+
     {offer.flag && (
-      <div>
+      <div className="field-group">
         <div className="field-label">Flag</div>
         <div className="field-value">{offer.flag}</div>
       </div>
     )}
+
     {offer.homeport && (
-      <div>
+      <div className="field-group">
         <div className="field-label">Homeport</div>
         <div className="field-value">{offer.homeport}</div>
       </div>
     )}
+
     {offer.uses && (
-      <div>
+      <div className="field-group">
         <div className="field-label">Use</div>
         <div className="field-value">{offer.uses}</div>
       </div>
     )}
+
     {offer.season_type && (
-      <div>
+      <div className="field-group">
         <div className="field-label">Season Type</div>
         <div className="field-value">{offer.season_type}</div>
       </div>
     )}
   </div>
+</div>
 )}
-
 
       {(offer.language_1 || offer.language_1_fluency || offer.language_2 || offer.language_2_fluency) && (
   <div className="expanded-block block3">
-    {offer.language_1 && (
-      <div>
-        <div className="field-label">Language</div>
-        <div className="field-value">{offer.language_1}</div>
-      </div>
-    )}
-    {offer.language_1_fluency && (
-      <div>
-        <div className="field-label">Fluency</div>
-        <div className="field-value">{offer.language_1_fluency}</div>
-      </div>
-    )}
-    {offer.language_2 && (
-      <div>
-        <div className="field-label">2nd Language</div>
-        <div className="field-value">{offer.language_2}</div>
-      </div>
-    )}
-    {offer.language_2_fluency && (
-      <div>
-        <div className="field-label">Fluency</div>
-        <div className="field-value">{offer.language_2_fluency}</div>
-      </div>
-    )}
+    <div className="field-pair">
+      {offer.language_1 && (
+        <div className="field-group">
+          <div className="field-label">Language</div>
+          <div className="field-value">{offer.language_1}</div>
+        </div>
+      )}
+
+      {offer.language_1_fluency && (
+        <div className="field-group">
+          <div className="field-label">Fluency</div>
+          <div className="field-value">{offer.language_1_fluency}</div>
+        </div>
+      )}
+
+      {offer.language_2 && (
+        <div className="field-group">
+          <div className="field-label">2nd Language</div>
+          <div className="field-value">{offer.language_2}</div>
+        </div>
+      )}
+
+      {offer.language_2_fluency && (
+        <div className="field-group">
+          <div className="field-label">Fluency</div>
+          <div className="field-value">{offer.language_2_fluency}</div>
+        </div>
+      )}
+    </div>
   </div>
 )}
 
       <div className="expanded-block block4">
-  {(offer.is_asap || offer.start_date) && (
-  <div>
-    <div className="field-label">Start Date</div>
-    <div className="field-value">
-      {offer.is_asap ? 'ASAP' : formatDate(offer.start_date)}
-    </div>
-  </div>
-)}
+  <div className="field-pair">
+    {(offer.is_asap || offer.start_date) && (
+      <div className="field-group">
+        <div className="field-label">Start Date</div>
+        <div className="field-value">
+          {offer.is_asap ? 'ASAP' : formatDate(offer.start_date)}
+        </div>
+      </div>
+    )}
 
-  {offer.end_date && (
-    <div>
-      <div className="field-label">End Date</div>
-      <div className="field-value">{formatDate(offer.end_date)}</div>
-    </div>
-  )}
-  {offer.liveaboard && (
-    <div>
-      <div className="field-label">Liveaboard</div>
-      <div className="field-value">{offer.liveaboard}</div>
-    </div>
-  )}
-  {offer.holidays && (
-    <div>
-      <div className="field-label">Holidays</div>
-      <div className="field-value">{offer.holidays}</div>
-    </div>
-  )}
+    {offer.end_date && (
+      <div className="field-group">
+        <div className="field-label">End Date</div>
+        <div className="field-value">{formatDate(offer.end_date)}</div>
+      </div>
+    )}
+
+    {offer.liveaboard && (
+      <div className="field-group">
+        <div className="field-label">Liveaboard</div>
+        <div className="field-value">{offer.liveaboard}</div>
+      </div>
+    )}
+
+    {offer.holidays && (
+      <div className="field-group">
+        <div className="field-label">Holidays</div>
+        <div className="field-value">{offer.holidays}</div>
+      </div>
+    )}
+  </div>
 </div>
 
       <div className="expanded-block block5">
-  {offer.city && (
-    <div>
-      <div className="field-label">City</div>
-      <div className="field-value">{offer.city}</div>
-    </div>
-  )}
-  {offer.country && (
-    <div>
-      <div className="field-label">Country</div>
-      <div className="field-value">{offer.country}</div>
-    </div>
-  )}
-  {offer.contact_email && (
-  <div>
-    <div className="field-label">Email</div>
-    <div className="field-value email" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <span>{offer.contact_email}</span>
-      <button
-        onClick={(e) => {
-          e.stopPropagation(); // evita que colapse la tarjeta
-          navigator.clipboard.writeText(offer.contact_email);
-        }}
-        title="Copy email"
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: '1em',
-          color: '#007BFF',
-          padding: 0,
-        }}
-      >
-        📋
-      </button>
-    </div>
-  </div>
-)}
+  <div className="field-pair">
+    {offer.city && (
+      <div className="field-group">
+        <div className="field-label">City</div>
+        <div className="field-value">{offer.city}</div>
+      </div>
+    )}
 
-  {offer.contact_phone && (
-    <div>
-      <div className="field-label">Phone</div>
-      <div className="field-value">{offer.contact_phone}</div>
-    </div>
-  )}
+    {offer.country && (
+      <div className="field-group">
+        <div className="field-label">Country</div>
+        <div className="field-value">{offer.country}</div>
+      </div>
+    )}
+
+    {offer.contact_email && (
+      <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+        <div className="field-label">Email</div>
+        <div className="field-value email" style={{
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  overflowX: 'auto',
+  whiteSpace: 'nowrap',
+}}>
+  <span style={{ whiteSpace: 'nowrap' }}>
+  {offer.contact_email}
+</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigator.clipboard.writeText(offer.contact_email);
+            }}
+            title="Copy email"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '1em',
+              color: '#007BFF',
+              padding: 0,
+            }}
+          >
+            📋
+          </button>
+        </div>
+      </div>
+    )}
+
+    {offer.contact_phone && (
+      <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+        <div className="field-label">Phone</div>
+        <div className="field-value">{offer.contact_phone}</div>
+      </div>
+    )}
+  </div>
 </div>
     </div>
 
     {offer.description && (
   <div className="expanded-block block6">
     <div className="field-label">Remarks</div>
-    <div className="field-value remarks-content">{offer.description}</div>
+   <div className="field-value remarks-content">
+  {offer.description.split('\n').map((line, index) => (
+    <p key={index} style={{ margin: '0 0 8px 0' }}>{line}</p>
+  ))}
+</div>
   </div>
 )}
 

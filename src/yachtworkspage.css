@@ -117,6 +117,13 @@
     .filter-body.expanded {
         display: block;
     }
+    .field-pair {
+    display: block !important;
+  }
+
+  .field-group {
+    margin-bottom: 12px;
+  }
 }
 
 .collapsed-fixed-row {
@@ -338,3 +345,102 @@
 .filters-panel input[type='checkbox'] {
   width: auto !important;
 }
+@media (max-width: 768px) {
+  .collapsed-offer {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+  }
+
+  .collapsed-images {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .role-icon {
+    width: 60px; /* <-- tomamos la versión más compacta */
+    height: 60px;
+  }
+
+  .collapsed-info-row {
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .collapsed-column {
+    min-width: 100%;
+    font-size: 0.85em; /* fusionado aquí */
+  }
+
+  .salary-line {
+    font-size: 0.85em;
+  }
+
+  .rank-fixed {
+    font-size: 1em;
+  }
+  .collapsed-footer {
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 10px;
+  }
+  .offer-card.expanded {
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .expanded-block,
+  .block1,
+  .block2,
+  .block3,
+  .block4,
+  .block5,
+  .block6,
+  .block7 {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .top-row {
+    flex-wrap: wrap !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
+
+  .field-value,
+  .remarks-content {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+  .expanded-block:not(.block6) {
+    border-top: 1px solid #bca987;
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+  .remarks-content {
+    text-align: justify;
+  }
+}
+.field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+  align-items: start;
+  width: 100%;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+}
+

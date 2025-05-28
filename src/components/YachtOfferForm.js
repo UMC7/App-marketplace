@@ -245,7 +245,10 @@ const sanitizedData = {
   return (
   <div className="container">
     <div className="login-form">
-      <form onSubmit={handleSubmit}>
+  <h2 style={{ textAlign: 'center', color: 'var(--primary-color)', marginBottom: '20px' }}>
+    Job Offer Form
+  </h2>
+  <form onSubmit={handleSubmit}>
 
     {/* 0. Work Environment */}
   <label>Work Environment:</label>
@@ -316,10 +319,17 @@ const sanitizedData = {
 )}
 
 {/* 5. DOE */}
-<label>
-  <input type="checkbox" name="is_doe" checked={formData.is_doe} onChange={handleChange} />
-  DOE (Salary)
-</label>
+<div className="form-group"> 
+  <label className="form-checkbox-label"> 
+    <input
+      type="checkbox"
+      name="is_doe"
+      checked={formData.is_doe}
+      onChange={handleChange}
+    />
+    <span>DOE (Salary)</span>
+  </label>
+</div>
 
 {/* 6-8. Campos si Team === 'Yes' */}
 {formData.team === 'Yes' && (
@@ -360,15 +370,20 @@ const sanitizedData = {
 
 <div className="form-inline-group">
   <select name="language_1" value={formData.language_1} onChange={handleChange}>
-    <option value="">Idioma 1...</option>
-    <option value="English">English</option>
-    <option value="Spanish">Spanish</option>
-    <option value="Italian">Italian</option>
-    <option value="French">French</option>
-    <option value="Portuguese">Portuguese</option>
-    <option value="Greek">Greek</option>
-    <option value="Russian">Russian</option>
+    <option value="">Language 1...</option>
+    <option value="Arabic">Arabic</option>
     <option value="Dutch">Dutch</option>
+    <option value="English">English</option>
+    <option value="French">French</option>
+    <option value="German">German</option>
+    <option value="Greek">Greek</option>
+    <option value="Italian">Italian</option>
+    <option value="Mandarin">Mandarin</option>
+    <option value="Portuguese">Portuguese</option>
+    <option value="Russian">Russian</option>
+    <option value="Spanish">Spanish</option>
+    <option value="Turkish">Turkish</option>
+    <option value="Ukrainian">Ukrainian</option>
   </select>
 
   <select name="language_1_fluency" value={formData.language_1_fluency} onChange={handleChange}>
@@ -381,15 +396,20 @@ const sanitizedData = {
 
 <div className="form-inline-group">
   <select name="language_2" value={formData.language_2} onChange={handleChange}>
-    <option value="">Idioma 2...</option>
-    <option value="English">English</option>
-    <option value="Spanish">Spanish</option>
-    <option value="Italian">Italian</option>
-    <option value="French">French</option>
-    <option value="Portuguese">Portuguese</option>
-    <option value="Greek">Greek</option>
-    <option value="Russian">Russian</option>
+    <option value="">Language 2...</option>
+    <option value="Arabic">Arabic</option>
     <option value="Dutch">Dutch</option>
+    <option value="English">English</option>
+    <option value="French">French</option>
+    <option value="German">German</option>
+    <option value="Greek">Greek</option>
+    <option value="Italian">Italian</option>
+    <option value="Mandarin">Mandarin</option>
+    <option value="Portuguese">Portuguese</option>
+    <option value="Russian">Russian</option>
+    <option value="Spanish">Spanish</option>
+    <option value="Turkish">Turkish</option>
+    <option value="Ukrainian">Ukrainian</option>
   </select>
 
   <select name="language_2_fluency" value={formData.language_2_fluency} onChange={handleChange}>
@@ -452,6 +472,7 @@ const sanitizedData = {
       <option value="">Selecciona...</option>
       <option value="Single Season">Single Season</option>
       <option value="Dual Season">Dual Season</option>
+      <option value="Year-round">Year-round</option>
     </select>
 
     {/* 10. Tipo de Yate */}
@@ -486,7 +507,7 @@ const sanitizedData = {
     <label>Flag:</label>
     <select name="flag" value={formData.flag} onChange={handleChange}>
       <option value="">Selecciona...</option>
-      {['USA', 'Cayman Islands', 'Bermuda', 'UK', 'BVI', 'Jamaica', 'Marshall Islands', 'Malta', 'Panama', 'Holland', 'Germany', 'Poland', 'Spain', 'Portugal', 'Greece', 'Italy', 'France', 'Australia', 'China'].map((f) => (
+      {['Cayman Islands', 'Marshall Islands', 'Malta', 'Panama', 'Bermuda', 'BVI', 'UK', 'USA', 'France', 'Italy', 'Spain', 'Holland', 'Greece', 'Germany', 'Portugal', 'Cyprus', 'Isle of Man', 'Gibraltar', 'Jersey', 'Guernsey', 'Belgium', 'Australia', 'Poland', 'Delaware', 'Cook Islands', 'Langkawi', 'Jamaica', 'San Marino', 'Hong Kong', 'Singapore'].map((f) => (
         <option key={f} value={f}>{f}</option>
       ))}
     </select>
@@ -504,15 +525,17 @@ const sanitizedData = {
 />
 
 {/* ASAP Option */}
-<label>
-  <input
-    type="checkbox"
-    name="is_asap"
-    checked={formData.is_asap}
-    onChange={handleChange}
-  />
-  ASAP
-</label>
+<div className="form-group">
+  <label className="form-checkbox-label">
+    <input
+      type="checkbox"
+      name="is_asap"
+      checked={formData.is_asap}
+      onChange={handleChange}
+    />
+    <span>ASAP</span>
+  </label>
+</div>
 
     {/* 14. Fecha de Finalización */}
     <label>End Date:</label>
@@ -600,29 +623,36 @@ const sanitizedData = {
     )}
 
     {/* DOE */}
-    <label>
-      <input
-        type="checkbox"
-        name="is_doe"
-        checked={formData.is_doe}
-        onChange={handleChange}
-      />
-      DOE (Salary)
-    </label>
+    <div className="form-group"> 
+  <label className="form-checkbox-label"> 
+    <input
+      type="checkbox"
+      name="is_doe"
+      checked={formData.is_doe}
+      onChange={handleChange}
+    />
+    <span>DOE (Salary)</span>
+  </label>
+</div>
 
     {/* Languages */}
     <label>Languages:</label>
     <div className="form-inline-group">
       <select name="language_1" value={formData.language_1} onChange={handleChange}>
-        <option value="">Idioma 1...</option>
-        <option value="English">English</option>
-        <option value="Spanish">Spanish</option>
-        <option value="Italian">Italian</option>
-        <option value="French">French</option>
-        <option value="Portuguese">Portuguese</option>
-        <option value="Greek">Greek</option>
-        <option value="Russian">Russian</option>
+        <option value="">Language 1...</option>
+        <option value="Arabic">Arabic</option>
         <option value="Dutch">Dutch</option>
+        <option value="English">English</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+        <option value="Greek">Greek</option>
+        <option value="Italian">Italian</option>
+        <option value="Mandarin">Mandarin</option>
+        <option value="Portuguese">Portuguese</option>
+        <option value="Russian">Russian</option>
+        <option value="Spanish">Spanish</option>
+        <option value="Turkish">Turkish</option>
+        <option value="Ukrainian">Ukrainian</option>
       </select>
 
       <select name="language_1_fluency" value={formData.language_1_fluency} onChange={handleChange}>
@@ -636,15 +666,20 @@ const sanitizedData = {
     
       <div className="form-inline-group">
       <select name="language_2" value={formData.language_2} onChange={handleChange}>
-        <option value="">Idioma 2...</option>
-        <option value="English">English</option>
-        <option value="Spanish">Spanish</option>
-        <option value="Italian">Italian</option>
-        <option value="French">French</option>
-        <option value="Portuguese">Portuguese</option>
-        <option value="Greek">Greek</option>
-        <option value="Russian">Russian</option>
+        <option value="">Language 2...</option>
+        <option value="Arabic">Arabic</option>
         <option value="Dutch">Dutch</option>
+        <option value="English">English</option>
+        <option value="French">French</option>
+        <option value="German">German</option>
+        <option value="Greek">Greek</option>
+        <option value="Italian">Italian</option>
+        <option value="Mandarin">Mandarin</option>
+        <option value="Portuguese">Portuguese</option>
+        <option value="Russian">Russian</option>
+        <option value="Spanish">Spanish</option>
+        <option value="Turkish">Turkish</option>
+        <option value="Ukrainian">Ukrainian</option>
       </select>
 
       <select name="language_2_fluency" value={formData.language_2_fluency} onChange={handleChange}>
@@ -667,15 +702,17 @@ const sanitizedData = {
     />
 
     {/* ASAP */}
-    <label>
-      <input
-        type="checkbox"
-        name="is_asap"
-        checked={formData.is_asap}
-        onChange={handleChange}
-      />
-      ASAP
-    </label>
+    <div className="form-group">
+  <label className="form-checkbox-label">
+    <input
+      type="checkbox"
+      name="is_asap"
+      checked={formData.is_asap}
+      onChange={handleChange}
+    />
+    <span>ASAP</span>
+  </label>
+</div>
 
     {/* End Date */}
     <label>End Date:</label>
