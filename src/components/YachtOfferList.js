@@ -289,12 +289,12 @@ function YachtOfferList({
         <div className={`filter-body ${isMobile ? '' : showDesktopFilters ? 'expanded' : 'collapsed'}`}>
 
           <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
-            <h3 style={{ gridColumn: '1 / -1' }}>Filtrar ofertas</h3>
+            <h3 style={{ gridColumn: '1 / -1' }}>Job Filters</h3>
 
             <input
               type="text"
               className="search-input"
-              placeholder="Rank"
+              placeholder="Position"
               value={filters.rank}
               onChange={(e) => setFilters({ ...filters, rank: e.target.value })}
             />
@@ -302,7 +302,7 @@ function YachtOfferList({
             <input
               type="text"
               className="search-input"
-              placeholder="Ciudad"
+              placeholder="City"
               value={filters.city}
               onChange={(e) => setFilters({ ...filters, city: e.target.value })}
             />
@@ -310,7 +310,7 @@ function YachtOfferList({
             <input
               type="number"
               className="search-input"
-              placeholder="Salario mínimo"
+              placeholder="Salary From"
               value={filters.minSalary}
               onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
             />
@@ -320,7 +320,7 @@ function YachtOfferList({
               value={filters.team}
               onChange={(e) => setFilters({ ...filters, team: e.target.value })}
             >
-              <option value="">¿En equipo?</option>
+              <option value="">¿Team?</option>
               <option value="Yes">Sí</option>
               <option value="No">No</option>
             </select>
@@ -330,7 +330,7 @@ function YachtOfferList({
               value={filters.yachtType}
               onChange={(e) => setFilters({ ...filters, yachtType: e.target.value })}
             >
-              <option value="">Tipo de Yate</option>
+              <option value="">Yacht Type</option>
               <option value="Motor Yacht">Motor Yacht</option>
               <option value="Sailing Yacht">Sailing Yacht</option>
               <option value="Chase Boat">Chase Boat</option>
@@ -342,7 +342,7 @@ function YachtOfferList({
               value={filters.yachtSize}
               onChange={(e) => setFilters({ ...filters, yachtSize: e.target.value })}
             >
-              <option value="">Tamaño</option>
+              <option value="">Size</option>
               <option value="0 - 30m">0 - 30m</option>
               <option value="31 - 40m">31 - 40m</option>
               <option value="41 - 50m">41 - 50m</option>
@@ -355,14 +355,14 @@ function YachtOfferList({
               value={filters.use}
               onChange={(e) => setFilters({ ...filters, use: e.target.value })}
             >
-              <option value="">Uso</option>
+              <option value="">Use</option>
               <option value="Private">Private</option>
               <option value="Charter">Charter</option>
               <option value="Private/Charter">Private/Charter</option>
             </select>
 
             <details style={{ gridColumn: '1 / -1' }}>
-              <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>País</summary>
+              <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Country</summary>
               <div style={{ marginTop: '8px', maxHeight: '300px', overflowY: 'auto' }}>
                 {regionOrder.map((region) => {
                   const countryList = countriesByRegion[region];
@@ -475,7 +475,15 @@ function YachtOfferList({
 
           {expandedWeeks[weekGroup] &&
             Object.entries(dates).map(([dayGroup, offers]) => (
-              <div key={dayGroup} style={{ marginLeft: '20px', marginBottom: '15px' }}>
+              <div
+  key={dayGroup}
+  style={{
+    margin: '0 auto 15px',
+    padding: '0 10px',
+    maxWidth: '100%',
+    boxSizing: 'border-box'
+  }}
+>
                 <h4
                   style={{ textTransform: 'capitalize', cursor: 'pointer' }}
                   onClick={() => toggleDay(dayGroup)}
@@ -798,15 +806,14 @@ function YachtOfferList({
 
     {/* Rank 2 */}
     {offer.team && offer.teammate_rank && (
-      <div className="salary-line">
-        <strong>Rank 2:</strong> {offer.teammate_rank}
-      </div>
+      <div className="rank-fixed">{offer.teammate_rank}</div>
     )}
+
 
     {/* Salary 2 */}
     {offer.team && offer.teammate_salary && (
       <div className="salary-line">
-        <strong>Salary 2:</strong>{' '}
+        <strong>Salary:</strong>{' '}
         {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
       </div>
     )}

@@ -81,12 +81,15 @@ h1, h2, h3 {
 }
 
 /* Estilos para el filtro de búsqueda */
-.search-input, .category-select, .price-input {
-  padding: 10px;
+.search-input {
+  width: 100%;
+  padding: 10px 12px;
   font-size: 16px;
   border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 100%;
+  border-radius: 6px;
+  background-color: #fff;
+  box-sizing: border-box;
+  margin-bottom: 12px;
 }
 
 .price-input {
@@ -558,7 +561,6 @@ button:hover, .landing-button:hover {
   .navbar-toggle {
     display: block;
   }
-
   .navbar-links {
     display: none;
     flex-direction: column;
@@ -571,11 +573,9 @@ button:hover, .landing-button:hover {
     z-index: 999;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
-
   .navbar-links.active {
     display: flex;
   }
-
   .navbar-links .navLink,
   .navbar-links a.navLink,
   .navbar-links button.navLink,
@@ -662,6 +662,20 @@ button:hover, .landing-button:hover {
   .tab-buttons .landing-button:not(:last-child) {
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   }
+  .filters-container.show {
+    margin-top: 8px;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .navbar-toggle {
+    width: 100%;
+    box-sizing: border-box;
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 /* Filtros */
@@ -685,6 +699,13 @@ button:hover, .landing-button:hover {
   .filters-container.show summary,
   .filters-container.show label {
     color: white; /* ✅ textos específicos legibles */
+  }
+  .collapsed-offer {
+    margin: 0 auto;
+    max-width: 95%;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    background-color: #ffffff;
   }
 }
 .region-dropdown {
@@ -810,4 +831,59 @@ button:hover, .landing-button:hover {
   font-weight: 500;
   margin: 12px 0 4px;
   color: var(--primary-color);
+}
+
+@media only screen and (max-width: 820px) and (orientation: landscape) {
+  .offer-card.expanded .top-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  /* Distribuir bloques 1 a 5 en una fila responsiva */
+  .offer-card.expanded .expanded-block.block1,
+  .offer-card.expanded .expanded-block.block2,
+  .offer-card.expanded .expanded-block.block3,
+  .offer-card.expanded .expanded-block.block4,
+  .offer-card.expanded .expanded-block.block5 {
+    flex: 1 1 calc(33.333% - 16px); /* ocupa 3 columnas exactas con gap */
+    min-width: 180px;               /* permite que entren 3 bloques en 600-800px reales */
+    max-width: 33.333%;
+    box-sizing: border-box;
+  }
+
+  /* Bloques 6 y 7 debajo, ocupan todo el ancho */
+  .offer-card.expanded .expanded-block.block6,
+  .offer-card.expanded .expanded-block.block7 {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 10px;
+  }
+
+  .offer-card.expanded .field-group {
+    margin-bottom: 8px;
+  }
+
+  .offer-card.expanded .field-label {
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
+
+  .offer-card.expanded .field-value {
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+
+  .offer-card.expanded .remarks-content p {
+    margin-bottom: 6px;
+    line-height: 1.5;
+    font-size: 0.9rem;
+  }
+
+  .offer-card.expanded .field-value.email {
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
 }
