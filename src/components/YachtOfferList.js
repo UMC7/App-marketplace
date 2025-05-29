@@ -782,98 +782,177 @@ function YachtOfferList({
                               )}
                             </div>
                             <div className="collapsed-info-row">
-                              <div className="collapsed-column collapsed-primary">
-                                <span className="rank-fixed">{offer.title}</span>
-                                {offer.team && offer.teammate_rank && (
-                                  <div className="rank-fixed">{offer.teammate_rank}</div>
-                                )}
-                                {offer.work_environment === 'Shore-based' && (
-                                <div className="salary-line">
-                                  <strong>Work Location:</strong> {offer.city ? 'On-Site' : 'Remote'}
-                                </div>
-                                )}
-                                 {offer.yacht_type && (
-                                  <div className="salary-line">
-                                    <strong>Yacht Type:</strong> {offer.yacht_type}
-                                  </div>
-                                )}
-                                {offer.city && (
-                                  <div className="salary-line">
-                                    <strong>City:</strong> {offer.city}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="collapsed-column collapsed-secondary">
-  {offer.team ? (
-    <>
-      {/* Línea 1: Salary */}
-      <div className="salary-line">
-        <strong>Salary:</strong>{' '}
-        {offer.is_doe
-          ? 'DOE'
-          : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
-      </div>
+                              {isMobile ? (
+  // 🔸 VERSIÓN PARA PANTALLAS PEQUEÑAS
+  <div className="collapsed-column collapsed-primary">
+    {/* Rank */}
+    <span className="rank-fixed">{offer.title}</span>
 
-      {/* Línea 2: Teammate Salary o espacio vacío */}
-      <div className="salary-line">
-        {offer.teammate_salary ? (
-          <>
-            <strong>Salary:</strong>{' '}
-            {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
-          </>
-        ) : (
-          '\u00A0'
-        )}
-      </div>
+    {/* Salary */}
+    <div className="salary-line">
+      <strong>Salary:</strong>{' '}
+      {offer.is_doe
+        ? 'DOE'
+        : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
+    </div>
 
-      {/* Línea 3: Size (reservada si shore-based) */}
+    {/* Rank 2 */}
+    {offer.team && offer.teammate_rank && (
       <div className="salary-line">
-        {offer.work_environment !== 'Shore-based' && offer.yacht_size ? (
-          <>
-            <strong>Size:</strong> {offer.yacht_size}
-          </>
-        ) : (
-          '\u00A0'
-        )}
+        <strong>Rank 2:</strong> {offer.teammate_rank}
       </div>
+    )}
 
-      {/* Línea 4: Country (ocultar si shore-based && remote) */}
-      {!(offer.work_environment === 'Shore-based' && !offer.city) && (
+    {/* Salary 2 */}
+    {offer.team && offer.teammate_salary && (
+      <div className="salary-line">
+        <strong>Salary 2:</strong>{' '}
+        {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+      </div>
+    )}
+
+    {/* SHORE-BASED */}
+    {offer.work_environment === 'Shore-based' ? (
+      <>
         <div className="salary-line">
-          <strong>Country:</strong> {offer.country}
+          <strong>Work Location:</strong> {offer.city ? 'On-Site' : 'Remote'}
         </div>
-      )}
-    </>
-  ) : (
-    <>
-      {/* Línea 1: Salary */}
-      <div className="salary-line">
-        <strong>Salary:</strong>{' '}
-        {offer.is_doe
-          ? 'DOE'
-          : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
-      </div>
-
-      {/* Línea 2: Size (reservada si shore-based) */}
-      <div className="salary-line">
-        {offer.work_environment !== 'Shore-based' && offer.yacht_size ? (
-          <>
-            <strong>Size:</strong> {offer.yacht_size}
-          </>
-        ) : (
-          '\u00A0'
+        {offer.city && (
+          <div className="salary-line">
+            <strong>City:</strong> {offer.city}
+          </div>
         )}
+        {offer.city && offer.country && (
+          <div className="salary-line">
+            <strong>Country:</strong> {offer.country}
+          </div>
+        )}
+      </>
+    ) : (
+      <>
+        {/* NO Shore-based */}
+        {offer.yacht_type && (
+          <div className="salary-line">
+            <strong>Yacht Type:</strong> {offer.yacht_type}
+          </div>
+        )}
+        {offer.yacht_size && (
+          <div className="salary-line">
+            <strong>Size:</strong> {offer.yacht_size}
+          </div>
+        )}
+        {offer.city && (
+          <div className="salary-line">
+            <strong>City:</strong> {offer.city}
+          </div>
+        )}
+        {offer.country && (
+          <div className="salary-line">
+            <strong>Country:</strong> {offer.country}
+          </div>
+        )}
+      </>
+    )}
+  </div>
+) : (
+  // 🔸 VERSIÓN PARA PANTALLAS GRANDES — SIN CAMBIOS
+  <div className="collapsed-column collapsed-primary">
+    <span className="rank-fixed">{offer.title}</span>
+    {offer.team && offer.teammate_rank && (
+      <div className="rank-fixed">{offer.teammate_rank}</div>
+    )}
+    {offer.work_environment === 'Shore-based' && (
+      <div className="salary-line">
+        <strong>Work Location:</strong> {offer.city ? 'On-Site' : 'Remote'}
       </div>
+    )}
+    {offer.yacht_type && (
+      <div className="salary-line">
+        <strong>Yacht Type:</strong> {offer.yacht_type}
+      </div>
+    )}
+    {offer.city && (
+      <div className="salary-line">
+        <strong>City:</strong> {offer.city}
+      </div>
+    )}
+  </div>
+)}
 
-      {/* Línea 3: Country (ocultar si shore-based && remote) */}
-      {!(offer.work_environment === 'Shore-based' && !offer.city) && (
+  {!isMobile && (
+  <div className="collapsed-column collapsed-secondary">
+    {offer.team ? (
+      <>
+        {/* Línea 1: Salary */}
         <div className="salary-line">
-          <strong>Country:</strong> {offer.country}
+          <strong>Salary:</strong>{' '}
+          {offer.is_doe
+            ? 'DOE'
+            : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
         </div>
-      )}
-    </>
-  )}
-</div>
+
+        {/* Línea 2: Teammate Salary o espacio vacío */}
+        <div className="salary-line">
+          {offer.teammate_salary ? (
+            <>
+              <strong>Salary:</strong>{' '}
+              {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+            </>
+          ) : (
+            '\u00A0'
+          )}
+        </div>
+
+        {/* Línea 3: Size (reservada si shore-based) */}
+        <div className="salary-line">
+          {offer.work_environment !== 'Shore-based' && offer.yacht_size ? (
+            <>
+              <strong>Size:</strong> {offer.yacht_size}
+            </>
+          ) : (
+            '\u00A0'
+          )}
+        </div>
+
+        {/* Línea 4: Country (ocultar si shore-based && remote) */}
+        {!(offer.work_environment === 'Shore-based' && !offer.city) && (
+          <div className="salary-line">
+            <strong>Country:</strong> {offer.country}
+          </div>
+        )}
+      </>
+    ) : (
+      <>
+        {/* Línea 1: Salary */}
+        <div className="salary-line">
+          <strong>Salary:</strong>{' '}
+          {offer.is_doe
+            ? 'DOE'
+            : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
+        </div>
+
+        {/* Línea 2: Size (reservada si shore-based) */}
+        <div className="salary-line">
+          {offer.work_environment !== 'Shore-based' && offer.yacht_size ? (
+            <>
+              <strong>Size:</strong> {offer.yacht_size}
+            </>
+          ) : (
+            '\u00A0'
+          )}
+        </div>
+
+        {/* Línea 3: Country (ocultar si shore-based && remote) */}
+        {!(offer.work_environment === 'Shore-based' && !offer.city) && (
+          <div className="salary-line">
+            <strong>Country:</strong> {offer.country}
+          </div>
+        )}
+      </>
+    )}
+  </div>
+)}
+
 <div className="collapsed-footer">
   {isTodayLocal(offer.created_at) && (
     <div className="posted-timestamp-collapsed">
