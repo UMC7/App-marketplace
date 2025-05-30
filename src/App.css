@@ -842,17 +842,23 @@ button:hover, .landing-button:hover {
     margin-bottom: 20px;
   }
 
-  /* Distribuir bloques 1 a 5 en una fila responsiva */
-  .offer-card.expanded .expanded-block.block1,
-  .offer-card.expanded .expanded-block.block2,
-  .offer-card.expanded .expanded-block.block3,
-  .offer-card.expanded .expanded-block.block4,
-  .offer-card.expanded .expanded-block.block5 {
-    flex: 1 1 calc(33.333% - 16px); /* ocupa 3 columnas exactas con gap */
-    min-width: 180px;               /* permite que entren 3 bloques en 600-800px reales */
-    max-width: 33.333%;
-    box-sizing: border-box;
-  }
+.offer-card.expanded .expanded-block.block1,
+.offer-card.expanded .expanded-block.block2,
+.offer-card.expanded .expanded-block.block3,
+.offer-card.expanded .expanded-block.block4 {
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 0;
+}
+
+.offer-card.expanded .expanded-block.block5 {
+  flex: 0 0 auto;
+  margin-left: auto;
+  box-sizing: border-box;
+  min-width: max-content;
+  padding: 0;
+}
 
   /* Bloques 6 y 7 debajo, ocupan todo el ancho */
   .offer-card.expanded .expanded-block.block6,
@@ -868,22 +874,80 @@ button:hover, .landing-button:hover {
 
   .offer-card.expanded .field-label {
     font-weight: bold;
-    font-size: 0.9rem;
+    font-size: 0.70rem;
   }
 
   .offer-card.expanded .field-value {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     word-break: break-word;
   }
 
   .offer-card.expanded .remarks-content p {
     margin-bottom: 6px;
     line-height: 1.5;
-    font-size: 0.9rem;
+    font-size: 0.825rem;
   }
 
   .offer-card.expanded .field-value.email {
     white-space: normal;
     overflow-wrap: break-word;
+  }
+  .offer-card.expanded .top-row.no-wrap-mobile {
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+}
+.offer-card.expanded .field-pair {
+  display: block;
+}
+}
+/* Distribución horizontal para pantallas grandes (desktop) */
+@media (min-width: 821px) {
+  .offer-card.expanded .top-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .offer-card.expanded .expanded-block.block1,
+  .offer-card.expanded .expanded-block.block2,
+  .offer-card.expanded .expanded-block.block3,
+  .offer-card.expanded .expanded-block.block4 {
+    flex: 1 1 auto;
+    box-sizing: border-box;
+    min-width: 0;
+    padding: 0;
+  }
+
+  .offer-card.expanded .expanded-block.block5 {
+    flex: 0 0 auto;
+    margin-left: auto;
+    box-sizing: border-box;
+    min-width: max-content;
+    padding: 0;
+  }
+
+  .offer-card.expanded .field-value.email {
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+}
+@media only screen and (max-width: 480px) and (orientation: portrait) {
+  .offer-card.expanded .field-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .offer-card.expanded .field-label button {
+    all: unset;
+    font-size: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
   }
 }

@@ -62,10 +62,15 @@ function YachtOfferList({
   const [expandedWeeks, setExpandedWeeks] = useState({});
   const [expandedDays, setExpandedDays] = useState({});
   const [showDesktopFilters, setShowDesktopFilters] = useState(false);
+  const [copiedField, setCopiedField] = useState(null);
 
-  // Inicialización de markedOffers:
-  // Si hay un usuario logueado (currentUser?.id), carga desde localStorage con clave específica del usuario.
-  // Si no hay usuario logueado, inicializa vacío, lo que significa que las marcas solo serán en memoria.
+const handleCopy = (text, field) => {
+  navigator.clipboard.writeText(text);
+  setCopiedField(field);
+  setTimeout(() => setCopiedField(null), 1500);
+};
+
+ 
   const [markedOffers, setMarkedOffers] = useState(() => {
     if (currentUser?.id) {
       const key = `markedOffers_user_${currentUser.id}`;
@@ -706,45 +711,110 @@ function YachtOfferList({
     )}
 
     {offer.contact_email && (
-      <div className="field-group" style={{ gridColumn: '1 / -1' }}>
-        <div className="field-label">Email</div>
-        <div className="field-value email" style={{
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
-  overflowX: 'auto',
-  whiteSpace: 'nowrap',
-}}>
-  <span style={{ whiteSpace: 'nowrap' }}>
-  {offer.contact_email}
-</span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigator.clipboard.writeText(offer.contact_email);
-            }}
-            title="Copy email"
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '1em',
-              color: '#007BFF',
-              padding: 0,
-            }}
-          >
-            📋
-          </button>
-        </div>
-      </div>
-    )}
+  <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+    <div
+      className="field-label"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        whiteSpace: 'nowrap',
+        position: 'relative',
+      }}
+    >
+      <span>Email</span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleCopy(offer.contact_email, 'email');
+        }}
+        title="Copy email"
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '1em',
+          color: '#007BFF',
+          padding: 0,
+          marginLeft: '4px',
+          lineHeight: 1,
+          display: 'inline-block',
+        }}
+      >
+        📋
+      </button>
+      {copiedField === 'email' && (
+        <span
+          style={{
+            position: 'absolute',
+            top: '-1.5em',
+            left: '0',
+            fontSize: '0.75rem',
+            color: 'green',
+          }}
+        >
+          Copied!
+        </span>
+      )}
+    </div>
+    <div className="field-value email" style={{ overflowWrap: 'break-word' }}>
+      {offer.contact_email}
+    </div>
+  </div>
+)}
 
     {offer.contact_phone && (
-      <div className="field-group" style={{ gridColumn: '1 / -1' }}>
-        <div className="field-label">Phone</div>
-        <div className="field-value">{offer.contact_phone}</div>
-      </div>
-    )}
+  <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+    <div
+      className="field-label"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        whiteSpace: 'nowrap',
+        position: 'relative',
+      }}
+    >
+      <span>Phone</span>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleCopy(offer.contact_phone, 'phone');
+        }}
+        title="Copy phone"
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '1em',
+          color: '#007BFF',
+          padding: 0,
+          marginLeft: '4px',
+          lineHeight: 1,
+          display: 'inline-block',
+        }}
+      >
+        📋
+      </button>
+      {copiedField === 'phone' && (
+        <span
+          style={{
+            position: 'absolute',
+            top: '-1.5em',
+            left: '0',
+            fontSize: '0.75rem',
+            color: 'green',
+          }}
+        >
+          Copied!
+        </span>
+      )}
+    </div>
+    <div className="field-value email" style={{ overflowWrap: 'break-word' }}>
+      {offer.contact_phone}
+    </div>
+  </div>
+)}
   </div>
 </div>
     </div>
