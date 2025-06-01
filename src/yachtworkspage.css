@@ -480,3 +480,122 @@
   flex-direction: column;
 }
 
+@media only screen and (max-width: 768px) and (orientation: portrait) {
+  /* CASE 1: team = true, is_doe = false, years_in_rank = true */
+  .block1.case1 .position {
+    grid-column: 1 / -1;
+    order: 1;
+  }
+  .block1.case1 .time-in-rank {
+    grid-column: 1 / 2;
+    order: 2;
+  }
+  .block1.case1 .salary {
+    grid-column: 2 / 3;
+    order: 2;
+  }
+  .block1.case1 .position2 {
+    grid-column: 1 / 2;
+    order: 3;
+  }
+  .block1.case1 .time-in-rank2 {
+    grid-column: 1 / 2;
+    order: 4;
+  }
+  .block1.case1 .salary2 {
+    grid-column: 2 / 3;
+    order: 4;
+  }
+  .block1.case1 .position2 + .salary2 {
+    grid-column: 2 / 3 !important;
+    order: 3 !important;
+  }
+  .block1.case1 .terms {
+    grid-column: 1 / -1;
+    order: 5;
+  }
+
+  /* CASE 2: team = true, is_doe = false, years_in_rank = null */
+  .block1.case2 .position {
+    grid-column: 1 / 2;
+    order: 1;
+  }
+  .block1.case2 .salary {
+    grid-column: 2 / 3;
+    order: 1;
+  }
+  .block1.case2 .position2 {
+    grid-column: 1 / 2;
+    order: 2;
+  }
+  .block1.case2 .salary2 {
+    grid-column: 2 / 3;
+    order: 2;
+  }
+  .block1.case2 .position2 + .salary2 {
+    grid-column: 2 / 3 !important;
+    order: 2 !important;
+  }
+  .block1.case2 .terms {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+
+  /* CASE 3: team = true, is_doe = true, years_in_rank = true */
+  .block1.case3 .position {
+    grid-column: 1 / 2;
+    order: 1;
+  }
+  .block1.case3 .time-in-rank {
+    grid-column: 2 / 3;
+    order: 1;
+  }
+  .block1.case3 .position2 {
+    grid-column: 1 / 2;
+    order: 2;
+  }
+  .block1.case3 .time-in-rank2 {
+    grid-column: 2 / 3;
+    order: 2;
+  }
+  .block1.case3 .salary {
+    grid-column: 1 / 2;
+    order: 3;
+  }
+  .block1.case3 .terms {
+    grid-column: 2 / 3;
+    order: 3;
+  }
+
+  /* CASE 4: team = true, is_doe = true, years_in_rank = null */
+  .block1.case4 .position {
+    grid-column: 1 / -1;
+    order: 1;
+  }
+  .block1.case4 .position2 {
+    grid-column: 1 / -1;
+    order: 2;
+  }
+  .block1.case4 .salary {
+    grid-column: 1 / 2;
+    order: 3;
+  }
+  .block1.case4 .terms {
+    grid-column: 2 / 3;
+    order: 3;
+  }
+
+  /* ✅ NEW CASE 5: team = false && years_in_rank = null */
+  .block1.case5 .position {
+    grid-column: 1 / -1;
+    order: 1;
+  }
+  .block1.case5 .salary {
+    grid-column: 1 / 2;
+    order: 2;
+  }
+  .block1.case5 .terms {
+    grid-column: 2 / 3;
+    order: 2;
+  }
+}

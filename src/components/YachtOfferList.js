@@ -511,17 +511,36 @@ const handleCopy = (text, field) => {
                         {isExpanded ? (
   <div className="offer-content">
     <div className="top-row">
-      <div className="expanded-block block1">
+      <div className={`expanded-block block1 ${
+  offer.team
+    ? offer.is_doe
+      ? offer.years_in_rank !== null && offer.years_in_rank !== undefined
+        ? 'case3'
+        : 'case4'
+      : offer.years_in_rank !== null && offer.years_in_rank !== undefined
+        ? 'case1'
+        : 'case2'
+    : (offer.years_in_rank === null || offer.years_in_rank === undefined ? 'case5' : '')
+} ${offer.teammate_rank && (offer.teammate_experience === null || offer.teammate_experience === undefined) ? 'no-rank2' : ''}`}>
   <div className="field-pair">
     {offer.title && (
-      <div className="field-group">
+      <div className="field-group position">
         <div className="field-label">Position</div>
         <div className="field-value">{offer.title}</div>
       </div>
     )}
 
+    {(offer.years_in_rank !== null && offer.years_in_rank !== undefined) && (
+      <div className="field-group time-in-rank">
+        <div className="field-label">Time in Rank</div>
+        <div className="field-value">
+          {offer.years_in_rank === 0 ? 'Green' : `> ${offer.years_in_rank}`}
+        </div>
+      </div>
+    )}
+
     {(offer.is_doe || offer.salary) && (
-      <div className="field-group">
+      <div className="field-group salary">
         <div className="field-label">Salary</div>
         <div className="field-value">
           {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
@@ -530,48 +549,49 @@ const handleCopy = (text, field) => {
     )}
 
     {offer.teammate_rank && (
-      <div className="field-group">
-        <div className="field-label">Position (2)</div>
-        <div className="field-value">{offer.teammate_rank}</div>
-      </div>
-    )}
+  <div className="field-group position2">
+    <div className="field-label">Position (2)</div>
+    <div className="field-value">{offer.teammate_rank}</div>
+  </div>
+)}
 
-    {offer.teammate_salary && (
-      <div className="field-group">
-        <div className="field-label">Salary (2)</div>
-        <div className="field-value">
-          {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
-        </div>
-      </div>
-    )}
+{(offer.teammate_experience === null || offer.teammate_experience === undefined) && offer.teammate_salary && (
+  <div className="field-group salary2">
+    <div className="field-label">Salary (2)</div>
+    <div className="field-value">
+      {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+    </div>
+  </div>
+)}
 
-    {/* Work Location en su propia línea si aplica */}
-    {offer.work_environment === 'Shore-based' && (
-      <div className="field-group" style={{ gridColumn: '1 / -1' }}>
-        <div className="field-label">Work Location</div>
-        <div className="field-value">
-          {offer.city ? 'On-Site' : 'Remote'}
-        </div>
-      </div>
-    )}
+{(offer.teammate_experience !== null && offer.teammate_experience !== undefined) && (
+  <div className="field-group time-in-rank2">
+    <div className="field-label">Time in Rank</div>
+    <div className="field-value">
+      {offer.teammate_experience === 0 ? 'Green' : `> ${offer.teammate_experience}`}
+    </div>
+  </div>
+)}
 
-    {/* Terms para equipo no acompañado */}
-    {!offer.team && offer.type && (
-      <div className="field-group" style={{ gridColumn: '1 / -1' }}>
-        <div className="field-label">Terms</div>
-        <div className="field-value">{offer.type}</div>
-      </div>
-    )}
+{(offer.teammate_experience !== null && offer.teammate_experience !== undefined) && offer.teammate_salary && (
+  <div className="field-group salary2">
+    <div className="field-label">Salary (2)</div>
+    <div className="field-value">
+      {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+    </div>
+  </div>
+)}
 
-    {/* Terms para equipo acompañado */}
-    {offer.team && offer.type && (
-      <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+    {offer.type && (
+      <div className="field-group terms">
         <div className="field-label">Terms</div>
         <div className="field-value">{offer.type}</div>
       </div>
     )}
   </div>
 </div>
+
+
       {(offer.yacht_type ||
   (offer.yacht_size && offer.work_environment !== 'Shore-based') ||
   offer.flag ||

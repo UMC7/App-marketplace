@@ -524,21 +524,6 @@ button:hover, .landing-button:hover {
   flex: 1;
   min-width: 140px;
 }
-.navbar-toggle {
-  display: none;
-  font-size: 24px;
-  background: none;
-  border: none;
-  color: var(--white-color);
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.navbar-links {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
 
 /* Responsive: Navbar y Menús Hamburguesa */
 .navbar-toggle {
@@ -560,48 +545,6 @@ button:hover, .landing-button:hover {
 @media (max-width: 768px) {
   .navbar-toggle {
     display: block;
-  }
-  .navbar-links {
-    display: none;
-    flex-direction: column;
-    background-color: var(--primary-color);
-    width: 100%;
-    padding: 20px 10px;
-    position: absolute;
-    top: 60px;
-    left: 0;
-    z-index: 999;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  }
-  .navbar-links.active {
-    display: flex;
-  }
-  .navbar-links .navLink,
-  .navbar-links a.navLink,
-  .navbar-links button.navLink,
-  .navbar-links div.navLink {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding: 10px 15px;
-    font-size: 16px;
-    background-color: transparent;
-    color: var(--white-color);
-    border: none;
-    border-radius: 4px;
-    font-family: var(--font-body);
-    transition: background-color 0.2s ease-in-out;
-    cursor: pointer;
-    box-sizing: border-box;
-    margin-bottom: 6px;
-  }
-
-  .navbar-links .navLink:not(:last-child) {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  }
-
-  .navbar-links .navLink:hover {
-    background-color: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -949,5 +892,26 @@ button:hover, .landing-button:hover {
     padding: 0;
     margin: 0;
     line-height: 1;
+  }
+}
+@media only screen and (max-width: 768px) and (orientation: portrait) {
+  .scroll-to-top-button {
+    bottom: 16px !important;
+    right: 12px !important;
+    width: 48px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    font-size: 20px !important;
+    border-radius: 50% !important;
+    z-index: 2000 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scroll-to-top-button.visible {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
   }
 }
