@@ -49,6 +49,7 @@ function YachtOfferList({
   currentUser,
   filters,
   setFilters,
+  setShowFilters,
   toggleMultiSelect,
   toggleRegionCountries,
   regionOrder,
@@ -61,8 +62,8 @@ function YachtOfferList({
   const [activeChat, setActiveChat] = useState(null);
   const [expandedWeeks, setExpandedWeeks] = useState({});
   const [expandedDays, setExpandedDays] = useState({});
-  const [showDesktopFilters, setShowDesktopFilters] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
+  const setFiltersVisible = setShowFilters; // alias interno para claridad
 
 const handleCopy = (text, field) => {
   navigator.clipboard.writeText(text);
@@ -281,17 +282,17 @@ const handleCopy = (text, field) => {
   return (
     <div>
       {!isMobile && (
-        <h3
-          className="filter-toggle"
-          onClick={() => setShowDesktopFilters(prev => !prev)}
-          style={{ cursor: 'pointer' }}
-        >
-          {showDesktopFilters ? '▼ Filters' : '► Filters'}
-        </h3>
-      )}
+  <h3
+    className="filter-toggle"
+    onClick={() => setFiltersVisible(prev => !prev)}
+    style={{ cursor: 'pointer' }}
+  >
+    {showFilters ? '▼ Filters' : '► Filters'}
+  </h3>
+)}
 
-      {((isMobile && showFilters) || (!isMobile && showDesktopFilters)) && (
-        <div className={`filter-body ${isMobile ? '' : showDesktopFilters ? 'expanded' : 'collapsed'}`}>
+      {showFilters && (
+        <div className={`filter-body expanded`}>
 
           <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
             <h3 style={{ gridColumn: '1 / -1' }}>Job Filters</h3>
@@ -520,7 +521,7 @@ const handleCopy = (text, field) => {
       : offer.years_in_rank !== null && offer.years_in_rank !== undefined
         ? 'case1'
         : 'case2'
-    : (offer.years_in_rank === null || offer.years_in_rank === undefined ? 'case5' : '')
+    : ''
 } ${offer.teammate_rank && (offer.teammate_experience === null || offer.teammate_experience === undefined) ? 'no-rank2' : ''}`}>
   <div className="field-pair">
     {offer.title && (

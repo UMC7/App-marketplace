@@ -47,7 +47,7 @@ function YachtWorksPage() {
   const [offers, setOffers] = useState([]);
   const [user, setUser] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 820);
   const [filters, setFilters] = useState({
     rank: '',
     city: '',
@@ -88,13 +88,9 @@ function YachtWorksPage() {
 
   useEffect(() => {
   const handleResize = () => {
-    const nowMobile = window.innerWidth <= 768;
+    const nowMobile = window.innerWidth <= 820;
     setIsMobile(nowMobile);
 
-    // Si pasamos a escritorio, forzamos filtros visibles
-    if (!nowMobile) {
-      setShowFilters(true);
-    }
   };
 
   window.addEventListener('resize', handleResize);
@@ -167,12 +163,24 @@ function YachtWorksPage() {
     <h1>SeaJobs</h1>
     <h2>Available Offers</h2>
 
-    <button
-  className="navbar-toggle"
-  onClick={() => setShowFilters((prev) => !prev)}
->
-  ☰ Filtros
-</button>
+    {!isMobile && (
+      <h3
+        className="filter-toggle"
+        onClick={() => setShowFilters(prev => !prev)}
+        style={{ cursor: 'pointer' }}
+      >
+        {showFilters ? '▼ Filters' : '► Filters'}
+      </h3>
+    )}
+
+    {isMobile && (
+  <button
+    className="navbar-toggle"
+    onClick={() => setShowFilters((prev) => !prev)}
+  >
+    ☰ Filtros
+  </button>
+)}
 
     
 
@@ -181,6 +189,7 @@ function YachtWorksPage() {
   currentUser={user}
   filters={filters}
   setFilters={setFilters}
+  setShowFilters={setShowFilters}
   toggleMultiSelect={toggleMultiSelect}
   toggleRegionCountries={toggleRegionCountries}
   regionOrder={regionOrder}

@@ -542,7 +542,7 @@ button:hover, .landing-button:hover {
   cursor: pointer;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 820px) {
   .navbar-toggle {
     display: block;
   }
@@ -622,9 +622,9 @@ button:hover, .landing-button:hover {
 }
 
 /* Filtros */
-@media (max-width: 768px) {
+@media (max-width: 820px) {
   .filters-container {
-    display: none;
+    display: grid;
   }
 
   .filters-container.show {
