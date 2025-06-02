@@ -73,8 +73,8 @@ function EventsPage() {
 
   return (
   <div className="container">
-      <h1>EVENTS</h1>
-      <p>Bienvenido a la sección de eventos. Aquí podrás ver todos los eventos publicados por la comunidad.</p>
+      <h1>SeaEvents</h1>
+      <p>Where you can explore all events shared by the community.</p>
 
       <div className="responsive-grid">
 
@@ -112,8 +112,8 @@ function EventsPage() {
 
     <h3>{event.event_name}</h3>
 
-{event.city && <p><strong>Ciudad:</strong> {event.city}</p>}
-{event.country && <p><strong>País:</strong> {event.country}</p>}
+{event.city && <p><strong>City:</strong> {event.city}</p>}
+{event.country && <p><strong>Country:</strong> {event.country}</p>}
 {event.start_date && (
   <p>
     <strong>Fecha:</strong>{' '}
@@ -123,23 +123,23 @@ function EventsPage() {
 
 {expandedEventId === event.id && (
   <div className="event-details">
-    {event.description && <p><strong>Descripción:</strong> {event.description}</p>}
+    {event.description && <p><strong>Description:</strong> {event.description}</p>}
 
-    {event.start_time && <p><strong>Hora de inicio:</strong> {formatTime(event.start_time)}</p>}
-    {event.end_time && <p><strong>Hora de fin:</strong> {formatTime(event.end_time)}</p>}
+    {event.start_time && <p><strong>Start Time:</strong> {formatTime(event.start_time)}</p>}
+    {event.end_time && <p><strong>End Time:</strong> {formatTime(event.end_time)}</p>}
 
     {event.location_details && (
-      <p><strong>Ubicación:</strong> {event.location_details}</p>
+      <p><strong>Location:</strong> {event.location_details}</p>
     )}
 
     {event.is_free
       ? <p><strong>Participación:</strong> Gratuita</p>
-      : event.cost && <p><strong>Costo de participación:</strong> {event.cost} {event.currency}</p>
+      : event.cost && <p><strong>Cost:</strong> {event.cost} {event.currency}</p>
     }
 
-    {event.contact_email && <p><strong>Correo de contacto:</strong> {event.contact_email}</p>}
-    {event.contact_phone && <p><strong>Teléfono:</strong> {event.contact_phone}</p>}
-    {event.alt_phone && <p><strong>Tel. alternativo:</strong> {event.alt_phone}</p>}
+    {event.contact_email && <p><strong>Email:</strong> {event.contact_email}</p>}
+    {event.contact_phone && <p><strong>Phone:</strong> {event.contact_phone}</p>}
+    {event.alt_phone && <p><strong>Alternative Phone:</strong> {event.alt_phone}</p>}
 
     {event.website && (
       <p><strong>Web:</strong> <a href={event.website} target="_blank" rel="noopener noreferrer">{event.website}</a></p>

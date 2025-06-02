@@ -113,27 +113,27 @@ function RegisterPage() {
     <div className="login-form">
       <h2>Registrar nuevo usuario</h2>
 
-      <input name="firstName" placeholder="Nombre" onChange={handleChange} required />
-      <input name="lastName" placeholder="Apellido" onChange={handleChange} required />
+      <input name="firstName" placeholder="Name" onChange={handleChange} required />
+      <input name="lastName" placeholder="Last Name" onChange={handleChange} required />
 
       <select name="birthYear" onChange={handleChange} required>
-        <option value="">Año de nacimiento</option>
+        <option value="">Year of Birth</option>
         {birthYears.map((year) => (
           <option key={year} value={year}>{year}</option>
         ))}
       </select>
 
       <input name="nickname" placeholder="Nickname" onChange={handleChange} required />
-      <input name="phone" placeholder="Teléfono principal" onChange={handleChange} required />
-      <input name="altPhone" placeholder="Teléfono alternativo (opcional)" onChange={handleChange} />
-      <input name="email" placeholder="Correo principal" onChange={handleChange} required />
-      <input name="altEmail" placeholder="Correo alternativo (opcional)" onChange={handleChange} />
+      <input name="phone" placeholder="Primary Phone" onChange={handleChange} required />
+      <input name="altPhone" placeholder="Alternative Phone (optional)" onChange={handleChange} />
+      <input name="email" placeholder="Primary Email" onChange={handleChange} required />
+      <input name="altEmail" placeholder="Alternative Email (optional)" onChange={handleChange} />
 
-      <input type="password" name="password" placeholder="Contraseña" onChange={handleChange} required />
-      <input type="password" name="confirmPassword" placeholder="Confirmar contraseña" onChange={handleChange} required />
+      <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
+      <input type="password" name="confirmPassword" placeholder="Confirm Password" onChange={handleChange} required />
 
       <button onClick={handleRegister} disabled={!isFormComplete()}>
-  Registrarse
+  Sign Up
 </button>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}

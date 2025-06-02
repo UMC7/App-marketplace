@@ -137,7 +137,7 @@ const formReady = (() => {
 const isShoreBased = formData.work_environment === 'Shore-based';
 
 if (!formData.work_environment) {
-  alert('Selecciona un entorno de trabajo.');
+  alert('Work environment.');
   return;
 }
 
@@ -154,7 +154,7 @@ if (isOnboard) {
     !formData.country ||
     (formData.team === 'Yes' && (!formData.teammate_rank || (!formData.teammate_salary && !formData.is_doe)))
   ) {
-    alert('Completa todos los campos requeridos marcados con *.');
+    alert('Fill in all required fields marked with *.');
     return;
   }
 }
@@ -168,7 +168,7 @@ if (isShoreBased) {
     !formData.work_location ||
     (formData.work_location === 'On - site' && (!formData.city || !formData.country))
   ) {
-    alert('Completa todos los campos requeridos marcados con *.');
+    alert('Fill in all required fields marked with *.');
     return;
   }
 }
@@ -233,10 +233,10 @@ const sanitizedData = {
     setLoading(false);
 
     if (error) {
-      console.error('Error al publicar oferta:', error);
-      alert('Hubo un error. Intenta nuevamente.');
+      console.error('Error posting the offer:', error);
+      alert('Something went wrong. Please try again.');
     } else {
-      alert('Oferta publicada exitosamente.');
+      alert('Offer posted successfully.');
       setFormData(initialState);
       onOfferPosted();
     }
@@ -258,7 +258,7 @@ const sanitizedData = {
     onChange={handleChange}
     required
   >
-    <option value="">Selecciona...</option>
+    <option value="">Select...</option>
     <option value="Onboard">Onboard</option>
     <option value="Shore-based">Shore-based</option>
   </select>
@@ -266,7 +266,7 @@ const sanitizedData = {
     {/* Mostrar solo si ya se seleccionó un entorno */}
     {formData.work_environment === '' && (
       <p style={{ marginTop: '1em', fontStyle: 'italic' }}>
-        Selecciona un entorno de trabajo para continuar...
+        Select a work environment to continue...
       </p>
     )}
 
@@ -283,14 +283,14 @@ const sanitizedData = {
     {/* 2. Título del puesto */}
     <label>Rank: *</label>
     <select name="title" value={formData.title} onChange={handleChange} required>
-      <option value="">Selecciona...</option>
+      <option value="">Select...</option>
       {titles.map((t) => <option key={t} value={t}>{t}</option>)}
     </select>
 
     {/* 3. Años en el cargo */}
     <label>Time in Rank:</label>
     <select name="years_in_rank" value={formData.years_in_rank} onChange={handleChange}>
-      <option value="">Selecciona...</option>
+      <option value="">Select...</option>
       {yearsOptions.map((y) => (
         <option key={y} value={y}>{y === 'Green' ? 'Green' : `>${y}`}</option>
       ))}
@@ -336,13 +336,13 @@ const sanitizedData = {
   <>
     <label>Teammate Rank: *</label>
     <select name="teammate_rank" value={formData.teammate_rank} onChange={handleChange}>
-      <option value="">Selecciona...</option>
+      <option value="">Select...</option>
       {titles.map((t) => <option key={t} value={t}>{t}</option>)}
     </select>
 
     <label>Teammate Experience:</label>
     <select name="teammate_experience" value={formData.teammate_experience} onChange={handleChange}>
-      <option value="">Selecciona...</option>
+      <option value="">Select...</option>
       {yearsOptions.map((y) => (
         <option key={y} value={y}>{y === 'Green' ? 'Green' : `>${y}`}</option>
       ))}
@@ -387,7 +387,7 @@ const sanitizedData = {
   </select>
 
   <select name="language_1_fluency" value={formData.language_1_fluency} onChange={handleChange}>
-    <option value="">Fluidez...</option>
+    <option value="">Fluency...</option>
     <option value="Native">Native</option>
     <option value="Fluent">Fluent</option>
     <option value="Conversational">Conversational</option>
@@ -413,7 +413,7 @@ const sanitizedData = {
   </select>
 
   <select name="language_2_fluency" value={formData.language_2_fluency} onChange={handleChange}>
-    <option value="">Fluidez...</option>
+    <option value="">Fluency...</option>
     <option value="Native">Native</option>
     <option value="Fluent">Fluent</option>
     <option value="Conversational">Conversational</option>
@@ -429,7 +429,7 @@ const sanitizedData = {
   required
   disabled={isDayworker}
 >
-  <option value="">Selecciona...</option>
+  <option value="">Select...</option>
   {types.map((t) => <option key={t} value={t}>{t}</option>)}
 </select>
 
@@ -441,7 +441,7 @@ const sanitizedData = {
   onChange={handleChange}
   disabled={isDayworker}
 >
-      <option value="">Selecciona...</option>
+      <option value="">Select...</option>
       <option value="No">No</option>
       <option value="Own Cabin">Own Cabin</option>
       <option value="Share Cabin">Share Cabin</option>
@@ -455,7 +455,7 @@ const sanitizedData = {
   onChange={handleChange}
   disabled={isDayworker}
 >
-      <option value="">Selecciona...</option>
+      <option value="">Select...</option>
       <option value="Private">Private</option>
       <option value="Charter">Charter</option>
       <option value="Private/Charter">Private/Charter</option>
@@ -469,7 +469,7 @@ const sanitizedData = {
   onChange={handleChange}
   disabled={isDayworker}
 >
-      <option value="">Selecciona...</option>
+      <option value="">Select...</option>
       <option value="Single Season">Single Season</option>
       <option value="Dual Season">Dual Season</option>
       <option value="Year-round">Year-round</option>
@@ -478,7 +478,7 @@ const sanitizedData = {
     {/* 10. Tipo de Yate */}
     <label>Yacht Type: *</label>
     <select name="yacht_type" value={formData.yacht_type} onChange={handleChange}>
-      <option value="">Selecciona...</option>
+      <option value="">Select...</option>
       <option value="Motor Yacht">Motor Yacht</option>
       <option value="Sailing Yacht">Sailing Yacht</option>
       <option value="Chase Boat">Chase Boat</option>
@@ -488,7 +488,7 @@ const sanitizedData = {
     {/* 11. Tamaño del Yate */}
 <label>Yacht Size: *</label>
 <select name="yacht_size" value={formData.yacht_size} onChange={handleChange}>
-  <option value="">Selecciona...</option>
+  <option value="">Select...</option>
   {yachtSizeOptions.map((size) => (
     <option key={size} value={size}>{size}</option>
   ))}
@@ -506,7 +506,7 @@ const sanitizedData = {
     {/* 12. Flag */}
     <label>Flag:</label>
     <select name="flag" value={formData.flag} onChange={handleChange}>
-      <option value="">Selecciona...</option>
+      <option value="">Select...</option>
       {['Cayman Islands', 'Marshall Islands', 'Malta', 'Panama', 'Bermuda', 'BVI', 'UK', 'USA', 'France', 'Italy', 'Spain', 'Holland', 'Greece', 'Germany', 'Portugal', 'Cyprus', 'Isle of Man', 'Gibraltar', 'Jersey', 'Guernsey', 'Belgium', 'Australia', 'Poland', 'Delaware', 'Cook Islands', 'Langkawi', 'Jamaica', 'San Marino', 'Hong Kong', 'Singapore'].map((f) => (
         <option key={f} value={f}>{f}</option>
       ))}
@@ -565,7 +565,7 @@ const sanitizedData = {
     {/* 16. País */}
     <label>Country: *</label>
     <select name="country" value={formData.country} onChange={handleChange} required>
-      <option value="">Selecciona...</option>
+      <option value="">Select...</option>
       {countries.map((c) => <option key={c} value={c}>{c}</option>)}
     </select>
 
@@ -656,7 +656,7 @@ const sanitizedData = {
       </select>
 
       <select name="language_1_fluency" value={formData.language_1_fluency} onChange={handleChange}>
-        <option value="">Fluidez...</option>
+        <option value="">Fluency...</option>
         <option value="Native">Native</option>
         <option value="Fluent">Fluent</option>
         <option value="Conversational">Conversational</option>
@@ -683,7 +683,7 @@ const sanitizedData = {
       </select>
 
       <select name="language_2_fluency" value={formData.language_2_fluency} onChange={handleChange}>
-        <option value="">Fluidez...</option>
+        <option value="">Fluency...</option>
         <option value="Native">Native</option>
         <option value="Fluent">Fluent</option>
         <option value="Conversational">Conversational</option>
@@ -726,7 +726,7 @@ const sanitizedData = {
     {/* Work Location */}
     <label>Work Location: *</label>
     <select name="work_location" value={formData.work_location} onChange={handleChange}>
-      <option value="">Selecciona...</option>
+      <option value="">Select...</option>
       <option value="Remote">Remote</option>
       <option value="On - site">On - site</option>
     </select>
@@ -739,7 +739,7 @@ const sanitizedData = {
 
         <label>Country: *</label>
         <select name="country" value={formData.country} onChange={handleChange} required>
-          <option value="">Selecciona...</option>
+          <option value="">Select...</option>
           {countries.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </>
@@ -780,7 +780,7 @@ const sanitizedData = {
   className="landing-button"
   disabled={loading || !formReady}
 >
-  {loading ? 'Publicando...' : 'Publicar Oferta'}
+  {loading ? 'Posting...' : 'Post Offer'}
 </button>
   </form>
   </div>

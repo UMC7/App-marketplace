@@ -34,14 +34,14 @@ const PostProductForm = () => {
     "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"
   ];
 
-  const conditions = ["Nuevo", "Usado", "Reacondicionado"];
+  const conditions = ["New", "Secon-hand", "Refurbished"];
 
   useEffect(() => {
     const fetchUser = async () => {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError || !authData?.user) {
-        console.error('Error al obtener el usuario:', authError?.message || 'Usuario no autenticado');
-        alert('Debes iniciar sesión primero.');
+        console.error('Error retrieving the user:', authError?.message || 'User not authenticated');
+        alert('Please log in first.');
         return;
       }
 
@@ -70,7 +70,7 @@ const PostProductForm = () => {
         });
 
       if (error || !data?.path) {
-        throw new Error(error?.message || 'Error al subir la imagen.');
+        throw new Error(error?.message || 'Photo upload failed.');
       }
 
       const { publicUrl } = supabase
@@ -79,10 +79,10 @@ const PostProductForm = () => {
         .getPublicUrl(data.path).data;
 
       setMainPhoto(publicUrl);
-      console.log("Foto principal cargada correctamente:", publicUrl);
+      console.log("Main photo uploaded successfully:", publicUrl);
     } catch (error) {
-      console.error("Error al cargar la foto principal:", error.message);
-      alert("Error al subir la foto principal.");
+      console.error("Failed to upload the main photo:", error.message);
+      alert("Failed to upload the main photo.");
     } finally {
       setUploading(false);
     }
@@ -92,11 +92,11 @@ const PostProductForm = () => {
     e.preventDefault();
 
     if (!categoryId || !mainPhoto || !city || !country || !condition) {
-      alert('Por favor, completa todos los campos obligatorios.');
+      alert('Please fill in all required fields.');
       return;
     }
 
-    console.log("Fotos adicionales subidas:", photos);
+    console.log("Additional photos uploaded:", photos);
 
     try {
       const { data, error } = await supabase
@@ -119,11 +119,11 @@ const PostProductForm = () => {
         .select('*');
 
       if (error) {
-        console.error("Error al guardar el producto:", error.message);
-        alert(`Error al guardar el producto: ${error.message}`);
+        console.error("Failed to save the product:", error.message);
+        alert(`Failed to save the product: ${error.message}`);
       } else if (data && data.length > 0) {
-        console.log('Producto guardado correctamente:', data);
-        alert('Producto guardado correctamente');
+        console.log('The product was saved successfully:', data);
+        alert('The product was saved successfully');
         setName('');
         setDescription('');
         setPrice('');
@@ -135,43 +135,43 @@ const PostProductForm = () => {
         setCountry('');
         setCondition('');
       } else {
-        alert('Hubo un error desconocido al guardar el producto.');
+        alert('"Unexpected error occurred while saving the product.');
       }
     } catch (error) {
-      console.error('Error inesperado:', error.message);
-      alert('Hubo un error inesperado al guardar el producto.');
+      console.error('An unexpected error occurred:', error.message);
+      alert('"Unexpected error occurred while saving the product.');
     }
   };
 
   return (
   <div className="container">
     <div className="login-form">
-      <h2>Agregar Producto</h2>
+      <h2>Add Product</h2>
       <form onSubmit={handleSubmit}>
-        <label>Nombre del Producto:</label>
+        <label>Product Name:</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
 
-        <label>Descripción:</label>
+        <label>Description:</label>
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
 
-        <label>Moneda:</label>
+        <label>Currency:</label>
         <select value={currency} onChange={(e) => setCurrency(e.target.value)} required>
-        <option value="">Seleccione una moneda</option>
+        <option value="">Select a currency</option>
         <option value="USD">USD</option>
         <option value="EUR">EUR</option>
         <option value="AUD">AUD</option>
         <option value="GBP">GBP</option>
         </select>
 
-        <label>Precio:</label>
+        <label>Price:</label>
         <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required min="0" />
 
-        <label>Cantidad:</label>
+        <label>Quantity:</label>
         <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} required min="1" />
 
-        <label>Categoría:</label>
+        <label>Category:</label>
         <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
-          <option value="">Seleccione una categoría</option>
+          <option value="">Select a category</option>
           <option value="1">Deck</option>
           <option value="2">Engineering</option>
           <option value="3">Navigation</option>
@@ -180,29 +180,29 @@ const PostProductForm = () => {
           <option value="6">Others</option>
         </select>
 
-        <label>Ciudad:</label>
+        <label>City:</label>
         <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
 
-        <label>País:</label>
+        <label>Country:</label>
         <select value={country} onChange={(e) => setCountry(e.target.value)} required>
-          <option value="">Seleccione un país</option>
+          <option value="">Select a country</option>
           {countries.map((pais, idx) => (
             <option key={idx} value={pais}>{pais}</option>
           ))}
         </select>
 
-        <label>Condición:</label>
+        <label>Condition:</label>
         <select value={condition} onChange={(e) => setCondition(e.target.value)} required>
-          <option value="">Seleccione una condición</option>
+          <option value="">Select a condition</option>
           {conditions.map((c, idx) => (
             <option key={idx} value={c}>{c}</option>
           ))}
         </select>
 
-        <label>Fotos adicionales:</label>
+        <label>Additional photos:</label>
         <ImageUploader onUpload={(urls) => setPhotos(urls)} />
 
-        <label>Foto principal:</label>
+        <label>Main photo:</label>
         <input type="file" accept="image/*" onChange={handleMainPhotoUpload} required />
 
         <button
@@ -210,7 +210,7 @@ const PostProductForm = () => {
   className="landing-button"
   disabled={uploading}
 >
-  {uploading ? 'Subiendo imágenes...' : 'Guardar Producto'}
+  {uploading ? 'Uploading photos...' : 'Save Product'}
 </button>
       </form>
     </div>

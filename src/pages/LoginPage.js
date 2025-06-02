@@ -32,22 +32,22 @@ function LoginPage() {
 
   return (
     <div className="container login-form">
-      <h2>Iniciar sesión</h2>
+      <h2>Welcome Back</h2>
       <input
         type="email"
-        placeholder="Correo electrónico"
+        placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
       />
       <input
         type="password"
-        placeholder="Contraseña"
+        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
       />
-      <button onClick={handleLogin}>Iniciar sesión</button>
+      <button onClick={handleLogin}>Sign In</button>
       {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
   );

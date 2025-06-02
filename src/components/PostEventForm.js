@@ -48,7 +48,7 @@ const PostEventForm = () => {
     const fetchUser = async () => {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError || !authData?.user) {
-        alert('Debes iniciar sesión primero.');
+        alert('You must log in first.');
         return;
       }
 
@@ -77,7 +77,7 @@ const PostEventForm = () => {
         });
 
       if (error || !data?.path) {
-        throw new Error(error?.message || 'Error al subir la imagen.');
+        throw new Error(error?.message || 'Error uploading the image. Please try again.');
       }
 
       const { publicUrl } = supabase
@@ -87,7 +87,7 @@ const PostEventForm = () => {
 
       setMainPhoto(publicUrl);
     } catch (error) {
-      alert("Error al subir la foto principal.");
+      alert("Error uploading the main photo. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -97,7 +97,7 @@ const PostEventForm = () => {
     e.preventDefault();
 
     if (!eventName || !mainPhoto || !city || !country) {
-      alert('Por favor, completa todos los campos obligatorios.');
+      alert('Please fill in all required fields.');
       return;
     }
 
@@ -132,9 +132,9 @@ const PostEventForm = () => {
         .select('*');
 
       if (error) {
-        alert(`Error al guardar el evento: ${error.message}`);
+        alert(`Error saving the event. Please try again: ${error.message}`);
       } else {
-        alert('Evento guardado correctamente');
+        alert('Event saved successfully');
         setEventName('');
         setDescription('');
         setMainPhoto('');
@@ -153,42 +153,42 @@ const PostEventForm = () => {
         setLocationDetails('');
       }
     } catch (error) {
-      alert('Hubo un error inesperado al guardar el evento.');
+      alert('An unexpected error occurred while saving the event. Please try again.');
     }
   };
 
   return (
     <div className="container">
     <div className="login-form">
-      <h2>Agregar Evento</h2>
+      <h2>New Event</h2>
       <form onSubmit={handleSubmit} className="login-form">
-        <label>Nombre del Evento:</label>
+        <label>Event Name:</label>
         <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} required />
 
-        <label>Descripción:</label>
+        <label>Description:</label>
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
 
-        <label>Ciudad:</label>
+        <label>City:</label>
         <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
 
-        <label>País:</label>
+        <label>Country:</label>
         <select value={country} onChange={(e) => setCountry(e.target.value)} required>
-          <option value="">Seleccione un país</option>
+          <option value="">Select a Country</option>
           {countries.map((pais, idx) => (
             <option key={idx} value={pais}>{pais}</option>
           ))}
         </select>
 
-        <label>Correo de contacto:</label>
+        <label>Contact Email:</label>
         <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
 
-        <label>Teléfono principal:</label>
+        <label>Primary Phone:</label>
         <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
 
-        <label>Teléfono alternativo:</label>
+        <label>Alternative Phone:</label>
         <input type="text" value={altPhone} onChange={(e) => setAltPhone(e.target.value)} />
 
-        <label>Foto principal:</label>
+        <label>Main Photo:</label>
         <input type="file" accept="image/*" onChange={handleMainPhotoUpload} required />
         {mainPhoto && (
   <div style={{ marginTop: '12px', textAlign: 'center' }}>
@@ -205,7 +205,7 @@ const PostEventForm = () => {
   </div>
 )}
 
-        <label>Fecha del evento:</label>
+        <label>Dates:</label>
 <div className="form-inline-group">
   <input
     type="date"
@@ -226,11 +226,11 @@ const PostEventForm = () => {
       checked={isSingleDay}
       onChange={() => setIsSingleDay(!isSingleDay)}
     />{' '}
-    Evento de un solo día
+    One-Day Event
   </label>
 </div>
 
-<label>Horario del evento:</label>
+<label>Schedule:</label>
 <div style={{ display: 'flex', gap: '10px' }}>
   <input
     type="time"
@@ -245,14 +245,14 @@ const PostEventForm = () => {
   />
 </div>
 
-<label>Ubicación exacta:</label>
+<label>Location Detail:</label>
 <input
   type="text"
   value={locationDetails}
   onChange={(e) => setLocationDetails(e.target.value)}
 />
 
-<label>Costo de participación:</label>
+<label>Cost:</label>
 <div className="form-inline-group">
   <select
     value={currency}
@@ -277,11 +277,11 @@ const PostEventForm = () => {
       checked={isFree}
       onChange={() => setIsFree(!isFree)}
     />{' '}
-    Evento gratuito
+    Free Event
   </label>
 </div>
 
-        <label>Sitio Web:</label>
+        <label>Website:</label>
         <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} />
 
         <label>Facebook:</label>
@@ -294,7 +294,7 @@ const PostEventForm = () => {
         <input type="text" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
 
         <button type="submit" disabled={uploading} className="landing-button">
-        {uploading ? 'Subiendo imagen...' : 'Guardar Evento'}
+        {uploading ? 'Uploading image...' : 'Save Event'}
         </button>
       </form>
     </div>

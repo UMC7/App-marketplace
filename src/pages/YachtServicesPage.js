@@ -39,8 +39,8 @@ function YachtServicesPage() {
 
   return (
     <div className="container">
-      <h1>Servicios Náuticos</h1>
-      <p>Bienvenido a la sección de servicios náuticos. Aquí los proveedores pueden publicar y mostrar los servicios que ofrecen.</p>
+      <h1>SeaServices</h1>
+      <p>Where providers can list and display the services they offer.</p>
 
       <div className="responsive-grid">
 
@@ -56,16 +56,16 @@ function YachtServicesPage() {
               style={{ width: '100%', height: '150px', objectFit: 'cover' }}
             />
             <h3>{service.company_name}</h3>
-            <p><strong>Ciudad:</strong> {service.city}</p>
-            <p><strong>País:</strong> {service.country}</p>
-            <p><strong>Categoría:</strong> {service.category_id}</p>
+            <p><strong>City:</strong> {service.city}</p>
+            <p><strong>Country:</strong> {service.country}</p>
+            <p><strong>Category:</strong> {service.category_id}</p>
 
             {expandedServiceId === service.id && (
               <div style={{ marginTop: '10px', fontSize: '0.9em' }}>
-                <p><strong>Descripción:</strong> {service.description}</p>
-                <p><strong>Correo de contacto:</strong> {service.contact_email}</p>
-                <p><strong>Teléfono:</strong> {service.contact_phone}</p>
-                <p><strong>Tel. alternativo:</strong> {service.alt_phone}</p>
+                <p><strong>Description:</strong> {service.description}</p>
+                <p><strong>Email:</strong> {service.contact_email}</p>
+                <p><strong>Phone:</strong> {service.contact_phone}</p>
+                <p><strong>Alternative Phone:</strong> {service.alt_phone}</p>
                 {service.website && (
                   <p><strong>Web:</strong> <a href={service.website} target="_blank" rel="noopener noreferrer">{service.website}</a></p>
                 )}
