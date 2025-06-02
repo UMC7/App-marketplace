@@ -133,7 +133,7 @@ function EventsPage() {
     )}
 
     {event.is_free
-      ? <p><strong>Participación:</strong> Gratuita</p>
+      ? <p><strong>Participation:</strong> Free admission</p>
       : event.cost && <p><strong>Cost:</strong> {event.cost} {event.currency}</p>
     }
 

@@ -27,7 +27,7 @@ function RegisterPage() {
     setError('');
 
     if (form.password !== form.confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      setError('Passwords do not match.');
       return;
     }
 
@@ -41,12 +41,12 @@ function RegisterPage() {
 
       if (signUpError || !data?.user) {
         console.error('❌ Error en signUp:', signUpError?.message);
-        alert('No se pudo registrar. Verifica tus datos.');
+        alert('Registration failed. Please check your information.');
         return;
       }
 
       const userId = data.user.id;
-      console.log('✅ Usuario registrado:', userId);
+      console.log('✅ User successfully registered:', userId);
 
       const insertData = {
         id: userId,
@@ -68,16 +68,16 @@ function RegisterPage() {
       console.log('🧪 Resultado de upsert:', upsertResult);
 
       if (upsertError) {
-        console.error('❌ Error al guardar datos del usuario:', upsertError.message);
-        alert('Registro incompleto: se creó el usuario pero no se guardaron todos los datos.');
+        console.error('❌ Failed to save user data:', upsertError.message);
+        alert('Partial registration: user account created, but some data was not saved.');
         return;
       }
 
-      console.log('✅ Datos de usuario actualizados correctamente.');
+      console.log('✅ User information updated successfully.');
       navigate('/profile');
     } catch (err) {
-      console.error('❌ Error inesperado:', err.message);
-      setError('Ocurrió un error inesperado.');
+      console.error('❌ Something went wrong:', err.message);
+      setError('Something went wrong.');
     }
   };
 
@@ -111,7 +111,7 @@ function RegisterPage() {
   return (
     <div className="container">
     <div className="login-form">
-      <h2>Registrar nuevo usuario</h2>
+      <h2>User Registration</h2>
 
       <input name="firstName" placeholder="Name" onChange={handleChange} required />
       <input name="lastName" placeholder="Last Name" onChange={handleChange} required />

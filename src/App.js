@@ -1,5 +1,7 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+// src/App.js
+
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 // Contexts
 import { useAuth } from './context/AuthContext';
@@ -23,8 +25,32 @@ import YachtServicesPage from './pages/YachtServicesPage';
 import YachtWorksPage from './pages/YachtWorksPage'; // ajusta el path si es necesario
 import EventsPage from './pages/EventsPage';
 import EditServicePage from './pages/EditServicePage'; // ✅ Importación agregada
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 import './App.css';
+
+function AuthRedirectHandler() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const type = params.get('type');
+    const access_token = params.get('access_token');
+
+    if (type === 'recovery' && access_token) {
+      navigate(`/reset-password?${params.toString()}`, { replace: true });
+    }
+
+    if (type === 'signup' && access_token) {
+      // Mostrar mensaje y redirigir al login
+      alert('Your email has been successfully verified.');
+      navigate('/login', { replace: true });
+    }
+  }, [location, navigate]);
+
+  return null;
+}
 
 function App() {
   const { currentUser, loading } = useAuth();
@@ -36,6 +62,7 @@ function App() {
   return (
     <Router>
       <Navbar />
+      <AuthRedirectHandler />
 
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -103,7 +130,7 @@ function App() {
         <Route path="/yacht-services/post-product" element={<PostProduct />} />
         <Route path="/yacht-works" element={<YachtWorksPage />} />
         <Route path="/events" element={<EventsPage />} />
-
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
