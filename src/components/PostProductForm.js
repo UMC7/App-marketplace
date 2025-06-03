@@ -34,7 +34,7 @@ const PostProductForm = () => {
     "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"
   ];
 
-  const conditions = ["New", "Secon-hand", "Refurbished"];
+  const conditions = ["New", "Second-hand", "Refurbished"];
 
   useEffect(() => {
     const fetchUser = async () => {

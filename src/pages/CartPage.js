@@ -64,7 +64,7 @@ function CartPage() {
           });
         setCartItems(formattedCart);
       } else {
-        console.error('Error al cargar el carrito:', error?.message);
+        console.error('Failed to load the cart:', error?.message);
       }
     };
 
@@ -74,7 +74,7 @@ function CartPage() {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'Visible') {
         fetchCartItems();
       }
     };
@@ -105,7 +105,7 @@ function CartPage() {
         )
       );
     } else {
-      alert(`No puedes seleccionar más de ${item.stock} unidades.`);
+      alert(`You can not select more than ${item.stock} units.`);
     }
   };
 
@@ -123,7 +123,7 @@ function CartPage() {
         .insert({
           user_id: currentUser.id,
           total_amount: total,
-          status: 'pendiente',
+          status: 'Pending',
         })
         .select('id')
         .single();
@@ -174,8 +174,8 @@ clearCart();
 setCartItems([]);
 
     } catch (err) {
-      console.error('Error en la compra:', err.message);
-      alert('Ocurrió un error al procesar la compra.');
+      console.error('Purchase error:', err.message);
+      alert('An error occurred while processing the purchase.');
     }
 
     setProcessing(false);
@@ -190,14 +190,14 @@ setCartItems([]);
         .eq('user_id', currentUser.id);
 
       if (error) {
-        console.error('Error al eliminar producto del carrito:', error.message);
-        alert('No se pudo eliminar el producto del carrito.');
+        console.error('Failed to remove product from cart:', error.message);
+        alert('Could not remove the product from the cart.');
       } else {
         setCartItems(prev => prev.filter(p => p.id !== productId));
-        alert('Producto eliminado del carrito.');
+        alert('Product removed from cart.');
       }
     } catch (err) {
-      console.error('Error inesperado al eliminar producto del carrito:', err.message);
+      console.error('Unexpected error while removing product from cart:', err.message);
     }
   };
 
@@ -222,17 +222,17 @@ setCartItems([]);
       style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
     />
     <div style={{ flex: 1 }}>
-      <h3>{item.name || 'Producto no disponible'}</h3>
+      <h3>{item.name || 'Product not available'}</h3>
 
       {item.status === 'deleted' ? (
-        <p style={{ color: 'red', fontWeight: 'bold' }}>Producto no disponible.</p>
+        <p style={{ color: 'red', fontWeight: 'bold' }}>Product not available.</p>
       ) : item.status === 'paused' ? (
-        <p style={{ color: 'orange', fontWeight: 'bold' }}>Este producto está pausado.</p>
+        <p style={{ color: 'orange', fontWeight: 'bold' }}>This product is currently paused.</p>
       ) : (
         <>
-          <p>Precio unitario: {item.currency} {item.price}</p>
+          <p>Unit Price: {item.currency} {item.price}</p>
           <p>
-            Cantidad:
+            Quantity:
             <input
               type="number"
               min="1"
@@ -245,7 +245,7 @@ setCartItems([]);
 
           {item.recortado && (
             <p style={{ color: 'orange', fontWeight: 'bold' }}>
-              El stock disponible se redujo. Se ajustó tu cantidad a {item.quantity}.
+              Available stock has decreased. Your quantity has been adjusted to {item.quantity}.
             </p>
           )}
         </>
@@ -253,14 +253,14 @@ setCartItems([]);
 
       <p>Subtotal: {item.currency} {item.status === 'deleted' ? 0 : (item.price * item.quantity).toFixed(2)}</p>
       <button className="landing-button" onClick={() => handleRemoveFromCart(item.id)}>
-        Eliminar
+        Remove from Cart
       </button>
     </div>
   </div>
 ))}
 
           <div style={{ marginTop: '30px' }}>
-  <h2>Subtotal por moneda:</h2>
+  <h2>Subtotal by currency:</h2>
   <ul style={{ paddingLeft: '20px', marginBottom: '20px' }}>
     {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
       <li key={moneda}>
@@ -275,7 +275,7 @@ setCartItems([]);
       disabled={processing || availableItems.length === 0}
       style={{ flex: '1 1 180px' }}
     >
-      {processing ? 'Procesando...' : 'Confirmar Compra'}
+      {processing ? 'Processing...' : 'Confirm Purchase'}
     </button>
   </div>
 </div>
@@ -298,9 +298,9 @@ setCartItems([]);
   maxWidth: '400px',
   boxSizing: 'border-box'
 }}>
-            <h3>¿Deseas confirmar tu compra?</h3>
-            <p>{availableItems.length} producto(s)</p>
-            <p><strong>Totales por moneda:</strong></p>
+            <h3>Do you want to confirm your purchase?</h3>
+            <p>{availableItems.length} product(s)</p>
+            <p><strong>Totals by currency:</strong></p>
             <ul style={{ listStyle: 'none', padding: 0, marginBottom: '20px' }}>
               {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
                 <li key={moneda}>
@@ -313,10 +313,10 @@ setCartItems([]);
             onClick={handleProceedPurchase}
             style={{ marginRight: '10px' }}
           >
-          Confirmar
+          Confirm
           </button>
             <button className="landing-button" onClick={() => setShowConfirmModal(false)}>
-            Cancelar
+            Cancel
           </button>
           </div>
         </div>
@@ -338,12 +338,12 @@ setCartItems([]);
   maxWidth: '400px',
   boxSizing: 'border-box'
 }}>
-            <h3>Información de vendedores</h3>
+            <h3>Seller Information</h3>
 
           {sellerInfo.map((seller, i) => (
             <div key={i} style={{ marginBottom: '10px' }}>
-              <p><strong>Nombre:</strong> {seller.name}</p>
-              <p><strong>Teléfono:</strong> {seller.phone || 'No disponible'}</p>
+              <p><strong>Name:</strong> {seller.name}</p>
+              <p><strong>Phone:</strong> {seller.phone || 'Not available'}</p>
               <p><strong>Email:</strong> {seller.email}</p>
             </div>
             ))}
@@ -353,7 +353,7 @@ setCartItems([]);
           onClick={() => setShowSellerModal(false)}
           style={{ width: '100%' }}
         >
-          Cerrar
+          Close
           </button>
           </div>
           </div>

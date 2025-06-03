@@ -20,7 +20,7 @@ function FavoritesPage() {
         .eq('user_id', currentUser.id);
 
       if (error) {
-        console.error('Error al cargar favoritos:', error.message);
+        console.error('Failed to load favorites:', error.message);
         return;
       }
 
@@ -33,7 +33,7 @@ function FavoritesPage() {
           .in('id', productIds);
 
         if (prodError) {
-          console.error('Error al cargar productos favoritos:', prodError.message);
+          console.error('Failed to load favorite products:', prodError.message);
           return;
         }
 
@@ -44,7 +44,7 @@ function FavoritesPage() {
               id,
               product: {
                 id,
-                name: 'Producto eliminado',
+                name: 'Product removed',
                 price: null,
                 country: null,
                 mainphoto: null,
@@ -60,7 +60,7 @@ function FavoritesPage() {
         setFavorites([]);
       }
     } catch (err) {
-      console.error('Error inesperado al cargar favoritos:', err.message);
+      console.error('Unexpected error while loading favorites:', err.message);
     } finally {
       setLoading(false);
     }
@@ -75,13 +75,13 @@ function FavoritesPage() {
         .eq('product_id', productId);
 
       if (error) {
-        console.error('Error al eliminar de favoritos:', error.message);
-        alert('No se pudo quitar el producto de favoritos.');
+        console.error('Failed to remove from favorites:', error.message);
+        alert('Could not remove the product from favorites.');
       } else {
         setFavorites((prev) => prev.filter((p) => p.id !== productId));
       }
     } catch (err) {
-      console.error('Error inesperado al eliminar favorito:', err.message);
+      console.error('Unexpected error while removing favorite:', err.message);
     }
   };
 
@@ -92,11 +92,11 @@ function FavoritesPage() {
 
   return (
   <div className="container">
-    <h1>Mis productos favoritos</h1>
+    <h1>My Favorite Products</h1>
     {loading ? (
-      <p className="loading">Cargando favoritos...</p>
+      <p className="loading">Loading favorites...</p>
     ) : favorites.length === 0 ? (
-      <p className="no-products">No has agregado productos a favoritos.</p>
+      <p className="no-products">You have not added any products to favorites.</p>
     ) : (
       <div className="products-grid-wrapper">
   <div className="products-grid">

@@ -20,7 +20,7 @@ const COUNTRIES = [
     "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"
 ];
 
-const CONDITIONS = ['Nuevo', 'Usado', 'Reacondicionado'];
+const CONDITIONS = ['New', 'Second-hand', 'Refurbished'];
 
 function EditProductPage() {
   const { id } = useParams();
@@ -53,12 +53,12 @@ function EditProductPage() {
         .single();
 
       if (error) {
-        console.error('Error al obtener el producto:', error.message);
+        console.error('Error retrieving the product:', error.message);
         return;
       }
 
       if (data.owner !== currentUser.id) {
-        alert('No tienes permiso para editar este producto.');
+        alert('You do not have access to edit this product.');
         navigate('/profile');
         return;
       }
@@ -117,7 +117,7 @@ function EditProductPage() {
       });
 
     if (uploadError) {
-      console.error('Error al subir la foto principal:', uploadError.message);
+      console.error('Failed to upload the main photo:', uploadError.message);
       return formData.mainphoto;
     }
 
@@ -153,22 +153,22 @@ function EditProductPage() {
     setSaving(false);
 
     if (error) {
-      console.error('Error al actualizar el producto:', error.message);
-      alert('Ocurrió un error al guardar los cambios.');
+      console.error('Failed to update the product:', error.message);
+      alert('An error occurred while saving the changes.');
     } else {
-      alert('Producto actualizado con éxito.');
+      alert('Product updated successfully.');
       navigate('/profile');
     }
   };
 
-  if (loading) return <p>Cargando producto...</p>;
+  if (loading) return <p>Loading product...</p>;
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>Editar Producto</h1>
+      <h1>Edit Product</h1>
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Nombre:</label>
+          <label>Product Name:</label>
           <input
             type="text"
             name="name"
@@ -179,7 +179,7 @@ function EditProductPage() {
         </div>
 
         <div>
-          <label>Descripción:</label>
+          <label>Description:</label>
           <textarea
             name="description"
             value={formData.description}
@@ -189,7 +189,7 @@ function EditProductPage() {
         </div>
 
         <div>
-          <label>Moneda:</label>
+          <label>Currency:</label>
           <select
             name="currency"
             value={formData.currency}
@@ -204,7 +204,7 @@ function EditProductPage() {
         </div>
 
         <div>
-          <label>Precio:</label>
+          <label>Price:</label>
           <input
             type="number"
             name="price"
@@ -217,7 +217,7 @@ function EditProductPage() {
         </div>
 
         <div>
-          <label>Cantidad:</label>
+          <label>Quantity:</label>
           <input
             type="number"
             name="quantity"
@@ -229,7 +229,7 @@ function EditProductPage() {
         </div>
 
         <div>
-          <label>Ciudad:</label>
+          <label>City:</label>
           <input
             type="text"
             name="city"
@@ -240,14 +240,14 @@ function EditProductPage() {
         </div>
 
         <div>
-          <label>País:</label>
+          <label>Country:</label>
           <select
             name="country"
             value={formData.country}
             onChange={handleChange}
             required
           >
-            <option value="">Seleccione un país</option>
+            <option value="">Select a country</option>
             {COUNTRIES.map((country) => (
               <option key={country} value={country}>
                 {country}
@@ -257,14 +257,14 @@ function EditProductPage() {
         </div>
 
         <div>
-          <label>Condición:</label>
+          <label>Condition:</label>
           <select
             name="condition"
             value={formData.condition}
             onChange={handleChange}
             required
           >
-            <option value="">Seleccione una condición</option>
+            <option value="">Select a condition</option>
             {CONDITIONS.map((cond) => (
               <option key={cond} value={cond}>
                 {cond}
@@ -274,7 +274,7 @@ function EditProductPage() {
         </div>
 
         <div>
-          <label>Foto principal:</label>
+          <label>Main Photo:</label>
           <input type="file" accept="image/*" onChange={handleMainPhotoChange} />
           {formData.mainphoto && (
             <div style={{ marginTop: '10px' }}>
@@ -288,12 +288,12 @@ function EditProductPage() {
         </div>
 
         <div>
-          <label>Fotos adicionales:</label>
+          <label>Additional Photos:</label>
           <ImageUploader onUpload={handlePhotosChange} />
         </div>
 
         <button type="submit" disabled={saving}>
-          {saving ? 'Guardando...' : 'Guardar Cambios'}
+          {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </form>
     </div>

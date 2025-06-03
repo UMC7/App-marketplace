@@ -62,8 +62,8 @@ function ProductDetailPage() {
     checkIfFavorite();
   }, [id, currentUser]);
 
-  if (loading) return <p>Cargando producto...</p>;
-  if (!product) return <p>Producto no encontrado.</p>;
+  if (loading) return <p>Loading product...</p>;
+  if (!product) return <p>Product not found.</p>;
 
   const isOwner = currentUser?.id === product.owner;
   const enCarrito = cartItems.find(item => item.id === product.id)?.quantity || 0;
@@ -73,26 +73,26 @@ function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (product.status === 'paused') {
-      alert('Este producto está pausado y no puede ser añadido al carrito.');
+      alert('This product is paused and cannot be added to the cart.');
       return;
     }
 
     if (purchaseQty > stockDisponible) {
-      alert(`Solo puedes agregar hasta ${stockDisponible} unidades.`);
+      alert(`You can only add up to ${stockDisponible} units.`);
       return;
     }
 
     addToCart(product, purchaseQty);
-    alert('Producto agregado al carrito.');
+    alert('Product added to cart.');
   };
 
   const handleAddToFavorites = async () => {
     if (product.status === 'paused') {
-      alert('Este producto está pausado y no puede ser añadido a favoritos.');
+      alert('This product is paused and cannot be added to favorites.');
       return;
     }
 
-    if (!currentUser) return alert('Debes iniciar sesión.');
+    if (!currentUser) return alert('You must log in.');
     setFavLoading(true);
     const { error } = await supabase.from('favorites').insert({
       product_id: parseInt(id),
@@ -103,7 +103,7 @@ function ProductDetailPage() {
   };
 
   const handleRemoveFavorite = async () => {
-    if (!currentUser) return alert('Debes iniciar sesión.');
+    if (!currentUser) return alert('You must log in.');
     const { error } = await supabase
       .from('favorites')
       .delete()
@@ -111,13 +111,13 @@ function ProductDetailPage() {
       .eq('user_id', currentUser.id);
 
     if (!error) setIsFavorite(false);
-    else alert('Error al eliminar de favoritos');
+    else alert('Failed to remove from favorites');
   };
 
   const handleSubmitQuestion = async () => {
     if (!currentUser || !questionText.trim()) return;
     if (product.owner === currentUser.id) {
-      alert('No puedes preguntar sobre tu propio producto.');
+      alert('You can not ask a question about your own product.');
       return;
     }
 
@@ -189,23 +189,23 @@ function ProductDetailPage() {
         ))}
       </Slider>
 
-      <h3>Descripción</h3>
+      <h3>Description</h3>
       <p>{product.description}</p>
 
-      <h3>Información del producto</h3>
-      <p><strong>Precio:</strong> {product.currency || ''} {product.price}</p>
-      <p><strong>Stock disponible:</strong> {stockDisponible}</p>
-      <p><strong>Ciudad:</strong> {product.city}</p>
-      <p><strong>País:</strong> {product.country}</p>
-      <p><strong>Condición:</strong> {product.condition}</p>
+      <h3>Product Information</h3>
+      <p><strong>Price:</strong> {product.currency || ''} {product.price}</p>
+      <p><strong>Available Stock:</strong> {stockDisponible}</p>
+      <p><strong>City:</strong> {product.city}</p>
+      <p><strong>Country:</strong> {product.country}</p>
+      <p><strong>Condition:</strong> {product.condition}</p>
 
       {product.status === 'paused' ? (
-        <p style={{ color: 'red' }}>Este producto está pausado y no se puede agregar al carrito ni a favoritos.</p>
+        <p style={{ color: 'red' }}>This product is paused and can not be added to the cart or favorites.</p>
       ) : (
         <>
           {!isOwner && currentUser && stockDisponible > 0 && (
             <>
-              <h3>Cantidad a comprar</h3>
+              <h3>Quantity to Purchase</h3>
               <input
                 type="number"
                 min="1"
@@ -213,20 +213,20 @@ function ProductDetailPage() {
                 value={purchaseQty}
                 onChange={(e) => setPurchaseQty(parseInt(e.target.value))}
               />
-              <button className="landing-button" onClick={handleAddToCart}>Agregar al carrito</button>
+              <button className="landing-button" onClick={handleAddToCart}>Add to cart</button>
             </>
           )}
 
           {!isOwner && currentUser && (
             <button className="landing-button" onClick={handleAddToFavorites} disabled={isFavorite || favLoading}>
-              {isFavorite ? '✔ En favoritos' : 'Agregar a favoritos'}
+              {isFavorite ? '✔ In favorites' : 'Add to favorites'}
             </button>
           )}
         </>
       )}
 
       <div style={{ marginTop: 40 }}>
-        <h3>Preguntas y Respuestas</h3>
+        <h3>Questions and Answers</h3>
 
         {messages
           .filter((msg) => !msg.receiver_id)
@@ -234,10 +234,10 @@ function ProductDetailPage() {
             const respuesta = messages.find((m) => m.receiver_id === msg.id);
             return (
               <div key={msg.id} style={{ borderBottom: '1px solid #ccc', marginBottom: 10 }}>
-                <p><strong>{msg.users?.nickname || 'Usuario'}:</strong> {msg.content}</p>
+                <p><strong>{msg.users?.nickname || 'User'}:</strong> {msg.content}</p>
                 {respuesta && (
                   <p style={{ marginLeft: '20px', color: 'green' }}>
-                    <strong>Vendedor:</strong> {respuesta.content}
+                    <strong>Seller:</strong> {respuesta.content}
                   </p>
                 )}
                 {isOwner && !respuesta && (
@@ -250,11 +250,11 @@ function ProductDetailPage() {
                           onChange={(e) => setResponseText(e.target.value)}
                         />
                         <br />
-                        <button className="landing-button" onClick={handleSubmitAnswer}>Responder</button>
-                        <button className="landing-button" onClick={() => setRespondingTo(null)}>Cancelar</button>
+                        <button className="landing-button" onClick={handleSubmitAnswer}>Reply</button>
+                        <button className="landing-button" onClick={() => setRespondingTo(null)}>Cancel</button>
                       </div>
                     ) : (
-                      <button onClick={() => setRespondingTo(msg.id)}>Responder</button>
+                      <button onClick={() => setRespondingTo(msg.id)}>Reply</button>
                     )}
                   </div>
                 )}
@@ -268,16 +268,16 @@ function ProductDetailPage() {
               rows={3}
               value={questionText}
               onChange={(e) => setQuestionText(e.target.value)}
-              placeholder="Haz una pregunta..."
+              placeholder="Ask a question..."
               style={{ width: '100%' }}
             />
             <button className="landing-button" onClick={handleSubmitQuestion} disabled={messageLoading}>
-              {messageLoading ? 'Enviando...' : 'Enviar pregunta'}
+              {messageLoading ? 'Sending...' : 'Submit question'}
             </button>
           </div>
         )}
 
-        {!currentUser && <p>Inicia sesión para hacer preguntas.</p>}
+        {!currentUser && <p>Log in to ask questions.</p>}
       </div>
     </div>
   );
