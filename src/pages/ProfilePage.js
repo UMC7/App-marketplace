@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import { submitUserReview } from '../lib/reviewUtils';
+import EditJobModal from '../components/EditJobModal';
 import {
   confirmPurchase,
   reportProblem,
@@ -26,6 +27,7 @@ function ProfilePage() {
   const [userDetails, setUserDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('productos');
+  const [editingJobId, setEditingJobId] = useState(null);
   const [receivedReviews, setReceivedReviews] = useState([]);
   const [sentReviews, setSentReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(null);
@@ -588,23 +590,30 @@ const deleteEvent = async (eventId) => {
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
           {jobOffers.map((offer) => (
-            <div key={offer.id} className="profile-card">
-              <h3>{offer.title}</h3>
-              <p><strong>Tipo:</strong> {offer.type}</p>
-              <p><strong>Ubicación:</strong> {offer.city}, {offer.country}</p>
-              <p><strong>Inicio:</strong> {new Date(offer.start_date).toLocaleDateString()}</p>
-              {offer.end_date && <p><strong>Fin:</strong> {new Date(offer.end_date).toLocaleDateString()}</p>}
-              {offer.salary && !offer.is_doe && <p><strong>Salario:</strong> ${offer.salary}</p>}
-              {offer.is_doe && <p><strong>Salario:</strong> DOE</p>}
-              <p><strong>Estado:</strong> {offer.status}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <button onClick={() => handlePauseToggleJob(offer.id, offer.status)}>
-                  {offer.status === 'paused' ? 'Reactivar' : 'Pausar'}
-                </button>
-                <button onClick={() => handleDeleteJob(offer.id)} style={{ color: 'red' }}>Eliminar</button>
-              </div>
-            </div>
-          ))}
+  <div key={offer.id} className="profile-card">
+    <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+      {offer.title}
+    </div>
+    {offer.teammate_rank && (
+      <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+        {offer.teammate_rank}
+      </div>
+    )}
+    <p style={{ margin: '4px 0' }}>
+      {offer.city}, {offer.country}
+    </p>
+    <p style={{ margin: '4px 0', fontWeight: '500', fontSize: '0.95rem', color: '#333' }}>
+      <strong>Posted:</strong> {new Date(offer.created_at).toLocaleDateString('en-GB')}
+    </p>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', gap: '6px' }}>
+      <button onClick={() => handlePauseToggleJob(offer.id, offer.status)}>
+        {offer.status === 'paused' ? 'Reactivar' : 'Pausar'}
+      </button>
+      <button onClick={() => setEditingJobId(offer.id)}>Editar</button>
+      <button onClick={() => handleDeleteJob(offer.id)} style={{ color: 'red' }}>Eliminar</button>
+    </div>
+  </div>
+))}
         </div>
       )}
     </>
@@ -1045,6 +1054,13 @@ console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
 </div>
 
     {loading ? <p>Cargando datos...</p> : renderTabContent()}
+
+    {editingJobId && (
+  <EditJobModal
+    jobId={editingJobId}
+    onClose={() => setEditingJobId(null)}
+  />
+)}
   </div>
 );
 }

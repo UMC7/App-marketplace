@@ -66,8 +66,8 @@ const countries = ["Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "A
 const types = ['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Cruising', 'DayWork'];
 const yearsOptions = ['Green', 1, 2, 2.5, 3, 5];
 
-function YachtOfferForm({ user, onOfferPosted }) {
-  const [formData, setFormData] = useState(initialState);
+function YachtOfferForm({ user, onOfferPosted, initialValues, mode }) {
+  const [formData, setFormData] = useState(initialValues ? { ...initialState, ...initialValues } : initialState);
   const [loading, setLoading] = useState(false);
   const isDayworker = formData.title === 'Dayworker';
 
@@ -191,56 +191,65 @@ const sanitizedData = {
 
     setLoading(true);
 
-    const { error } = await supabase.from('yacht_work_offers').insert([{
-  user_id: user.id,
-  work_environment: sanitizedData.work_environment,
-  work_location: sanitizedData.work_location || null,
-  title: sanitizedData.title,
-  city: sanitizedData.city,
-  country: sanitizedData.country,
-  type: isOnboard ? sanitizedData.type : null,
-  start_date: sanitizedData.is_asap
-  ? new Date().toISOString().split('T')[0]  // fecha actual
-  : sanitizedData.start_date || null,
-  end_date: sanitizedData.type === 'Permanent' ? null : (sanitizedData.end_date || null),
-  is_doe: sanitizedData.is_doe,
-  salary: sanitizedData.is_doe ? null : sanitizedData.salary,
-  salary_currency: sanitizedData.is_doe ? null : sanitizedData.salary_currency || null,
-  years_in_rank: sanitizedData.years_in_rank,
-  description: sanitizedData.description || null,
-  contact_email: sanitizedData.contact_email || null,
-  contact_phone: sanitizedData.contact_phone || null,
-  team: sanitizedData.team === 'Yes',
-  teammate_rank: sanitizedData.team === 'Yes' ? sanitizedData.teammate_rank || null : null,
-  teammate_salary: sanitizedData.team === 'Yes' ? sanitizedData.teammate_salary || null : null,
-  teammate_salary_currency: sanitizedData.team === 'Yes' ? sanitizedData.teammate_salary_currency || null : null,
-  teammate_experience: sanitizedData.team === 'Yes' ? sanitizedData.teammate_experience || null : null,
-  flag: sanitizedData.flag || null,
-  yacht_size: sanitizedData.yacht_size || null,
-  yacht_type: sanitizedData.yacht_type || null,
-  uses: sanitizedData.uses || null,
-  homeport: sanitizedData.homeport || null,
-  liveaboard: sanitizedData.liveaboard || null,
-  season_type: sanitizedData.season_type || null,
-  is_asap: sanitizedData.is_asap,
-  holidays: sanitizedData.holidays ? Number(sanitizedData.holidays) : null,
-  language_1: sanitizedData.language_1 || null,
-  language_1_fluency: sanitizedData.language_1_fluency || null,
-  language_2: sanitizedData.language_2 || null,
-  language_2_fluency: sanitizedData.language_2_fluency || null,
-}]);
+    if (mode === 'edit') {
+  // en modo edición, delega a la función onOfferPosted que viene del modal
+  await onOfferPosted(sanitizedData);
+} else {
+  // en modo creación, inserta como siempre
+  const { error } = await supabase.from('yacht_work_offers').insert([{
+    user_id: user.id,
+    work_environment: sanitizedData.work_environment,
+    work_location: sanitizedData.work_location || null,
+    title: sanitizedData.title,
+    city: sanitizedData.city,
+    country: sanitizedData.country,
+    type: sanitizedData.type || null,
+    start_date: sanitizedData.is_asap
+      ? new Date().toISOString().split('T')[0]
+      : sanitizedData.start_date || null,
+    end_date:
+      sanitizedData.type === 'Permanent'
+        ? null
+        : sanitizedData.end_date || null,
+    is_doe: sanitizedData.is_doe,
+    salary: sanitizedData.is_doe ? null : sanitizedData.salary,
+    salary_currency: sanitizedData.is_doe ? null : sanitizedData.salary_currency || null,
+    years_in_rank: sanitizedData.years_in_rank,
+    description: sanitizedData.description || null,
+    contact_email: sanitizedData.contact_email || null,
+    contact_phone: sanitizedData.contact_phone || null,
+    team: sanitizedData.team === 'Yes',
+    teammate_rank: sanitizedData.team === 'Yes' ? sanitizedData.teammate_rank || null : null,
+    teammate_salary: sanitizedData.team === 'Yes' ? sanitizedData.teammate_salary || null : null,
+    teammate_salary_currency: sanitizedData.team === 'Yes' ? sanitizedData.teammate_salary_currency || null : null,
+    teammate_experience: sanitizedData.team === 'Yes' ? sanitizedData.teammate_experience || null : null,
+    flag: sanitizedData.flag || null,
+    yacht_size: sanitizedData.yacht_size || null,
+    yacht_type: sanitizedData.yacht_type || null,
+    uses: sanitizedData.uses || null,
+    homeport: sanitizedData.homeport || null,
+    liveaboard: sanitizedData.liveaboard || null,
+    season_type: sanitizedData.season_type || null,
+    is_asap: sanitizedData.is_asap,
+    holidays: sanitizedData.holidays ? Number(sanitizedData.holidays) : null,
+    language_1: sanitizedData.language_1 || null,
+    language_1_fluency: sanitizedData.language_1_fluency || null,
+    language_2: sanitizedData.language_2 || null,
+    language_2_fluency: sanitizedData.language_2_fluency || null,
+  }]);
+
+  if (error) {
+    console.error('Error posting the offer:', error);
+    alert('Something went wrong. Please try again.');
+  } else {
+    alert('Offer posted successfully.');
+    setFormData(initialState);
+    onOfferPosted(); // en modo creación esto puede ser una recarga o mensaje
+  }
+}
 
     setLoading(false);
-
-    if (error) {
-      console.error('Error posting the offer:', error);
-      alert('Something went wrong. Please try again.');
-    } else {
-      alert('Offer posted successfully.');
-      setFormData(initialState);
-      onOfferPosted();
-    }
-  };
+};
 
   return (
   <div className="container">
@@ -250,18 +259,21 @@ const sanitizedData = {
   </h2>
   <form onSubmit={handleSubmit}>
 
-    {/* 0. Work Environment */}
-  <label>Work Environment:</label>
-  <select
-    name="work_environment"
-    value={formData.work_environment}
-    onChange={handleChange}
-    required
-  >
-    <option value="">Select...</option>
-    <option value="Onboard">Onboard</option>
-    <option value="Shore-based">Shore-based</option>
-  </select>
+    {mode !== 'edit' && (
+  <>
+    <label>Work Environment:</label>
+    <select
+      name="work_environment"
+      value={formData.work_environment}
+      onChange={handleChange}
+      required
+    >
+      <option value="">Select...</option>
+      <option value="Onboard">Onboard</option>
+      <option value="Shore-based">Shore-based</option>
+    </select>
+  </>
+)}
 
     {/* Mostrar solo si ya se seleccionó un entorno */}
     {formData.work_environment === '' && (
@@ -780,7 +792,7 @@ const sanitizedData = {
   className="landing-button"
   disabled={loading || !formReady}
 >
-  {loading ? 'Posting...' : 'Post Offer'}
+  {loading ? (mode === 'edit' ? 'Updating...' : 'Posting...') : (mode === 'edit' ? 'Update Offer' : 'Post Offer')}
 </button>
   </form>
   </div>
