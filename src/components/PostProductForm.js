@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import ImageUploader from '../components/ImageUploader';
 
-const PostProductForm = () => {
+  const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect = null }) => {
   const [uploading, setUploading] = useState(false);
+  const navigate = useNavigate();
+  useEffect(() => {
+  if (mode === 'edit' && initialValues) {
+    setName(initialValues.name || '');
+    setDescription(initialValues.description || '');
+    setCurrency(initialValues.currency || '');
+    setPrice(initialValues.price?.toString() || '');
+    setQuantity(initialValues.quantity || 1);
+    setCategoryId(initialValues.categoryId || '');
+    setCity(initialValues.city || '');
+    setCountry(initialValues.country || '');
+    setCondition(initialValues.condition || '');
+    setMainPhoto(initialValues.mainPhoto || '');
+    setPhotos(initialValues.photos || []);
+  }
+}, [initialValues, mode]);
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [currency, setCurrency] = useState('');
@@ -92,6 +110,38 @@ const PostProductForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (mode === 'edit' && initialValues.id) {
+  try {
+    const { error } = await supabase
+      .from('products')
+      .update({
+        name,
+        description,
+        price: parseFloat(price),
+        currency,
+        quantity: parseInt(quantity, 10),
+        category_id: parseInt(categoryId, 10),
+        photos,
+        mainphoto: mainPhoto,
+        city,
+        country,
+        condition,
+      })
+      .eq('id', initialValues.id);
+
+    if (error) {
+      toast.error('Error updating the product.');
+    } else {
+      toast.success('Product updated successfully');
+      if (onSubmitRedirect) navigate(onSubmitRedirect);
+    }
+  } catch (error) {
+    toast.error('Unexpected error during update.');
+    console.error(error);
+  }
+  return;
+}
+
     if (!categoryId || !mainPhoto || !city || !country || !condition) {
       toast.error('Please fill in all required fields.');
       return;
@@ -125,6 +175,7 @@ const PostProductForm = () => {
       } else if (data && data.length > 0) {
         console.log('The product was saved successfully:', data);
         toast.error('The product was saved successfully');
+        if (onSubmitRedirect) navigate(onSubmitRedirect);
         setName('');
         setDescription('');
         setPrice('');
@@ -147,7 +198,7 @@ const PostProductForm = () => {
   return (
   <div className="container">
     <div className="login-form">
-      <h2>Add Product</h2>
+      <h2>{mode === 'edit' ? 'Edit Product' : 'Add Product'}</h2>
       <form onSubmit={handleSubmit}>
         <label>Product Name:</label>
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
@@ -203,16 +254,30 @@ const PostProductForm = () => {
         <label>Additional photos:</label>
         <ImageUploader onUpload={(urls) => setPhotos(urls)} />
 
-        <label>Main photo:</label>
-        <input type="file" accept="image/*" onChange={handleMainPhotoUpload} required />
+        <label>Main Photo:</label>
+        {mainPhoto && (
+          <div style={{ marginBottom: '10px' }}>
+            <img
+              src={mainPhoto}
+              alt="Main"
+              style={{ width: '100%', maxWidth: '300px', borderRadius: '8px' }}
+            />
+          </div>
+        )}
+        <input type="file" accept="image/*" onChange={handleMainPhotoUpload} />
 
         <button
-  type="submit"
-  className="landing-button"
-  disabled={uploading}
->
-  {uploading ? 'Uploading photos...' : 'Save Product'}
-</button>
+          type="submit"
+          className="landing-button"
+          disabled={uploading}
+        >
+          {uploading
+            ? 'Uploading photos...'
+            : mode === 'edit'
+            ? 'Update Product'
+            : 'Save Product'}
+        </button>
+
       </form>
     </div>
   </div>

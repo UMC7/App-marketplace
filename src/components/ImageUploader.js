@@ -35,7 +35,7 @@ function ImageUploader({ onUpload, existingImages = [], bucket = 'products' }) {
         });
 
       if (uploadError) {
-        console.error('Error al subir imagen:', uploadError.message);
+        console.error('Error uploading image:', uploadError.message);
         continue;
       }
 
@@ -45,9 +45,9 @@ function ImageUploader({ onUpload, existingImages = [], bucket = 'products' }) {
 
       if (publicUrlData?.publicUrl) {
         uploadedUrls.push(publicUrlData.publicUrl);
-        console.log('Imagen subida:', publicUrlData.publicUrl);
+        console.log('Image uploaded:', publicUrlData.publicUrl);
       } else {
-        console.warn(`No se obtuvo publicURL para ${fileName}`);
+        console.warn(`No public URL returned for ${fileName}`);
       }
     }
 
@@ -59,14 +59,14 @@ function ImageUploader({ onUpload, existingImages = [], bucket = 'products' }) {
     <div>
       <input type="file" multiple onChange={handleFileChange} />
       <button onClick={uploadImages} disabled={uploading}>
-        {uploading ? 'Subiendo...' : 'Subir imágenes'}
+        {uploading ? 'Uploading...' : 'Upload Images'}
       </button>
       <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: '10px' }}>
         {previewUrls.map((url, index) => (
           <img
             key={index}
             src={url}
-            alt={`Vista previa ${index + 1}`}
+            alt={`Preview ${index + 1}`}
             style={{
               width: '100px',
               height: '100px',

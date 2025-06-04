@@ -3,10 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
 import { submitUserReview } from '../lib/reviewUtils';
+import EditProductModal from '../components/EditProductModal';
+import EditServiceModal from '../components/EditServiceModal';
 import EditJobModal from '../components/EditJobModal';
+import EditEventModal from '../components/EditEventModal';
 import {
   confirmPurchase,
   reportProblem,
@@ -24,11 +28,42 @@ function ProfilePage() {
   const [jobOffers, setJobOffers] = useState([]);
   const [deletedJobs, setDeletedJobs] = useState([]);
   const [events, setEvents] = useState([]);
+  const fetchEvents = async () => {
+  if (!currentUser) return;
+
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .eq('owner', currentUser.id);
+
+  if (error) {
+    console.error('Error fetching events:', error.message);
+  } else {
+    setEvents(data);
+  }
+};
+const fetchServices = async () => {
+  if (!currentUser) return;
+
+  const { data, error } = await supabase
+    .from('services')
+    .select('*')
+    .eq('owner', currentUser.id);
+
+  if (error) {
+    console.error('Error fetching services:', error.message);
+  } else {
+    setServices(data);
+  }
+};
   const [deletedEvents, setDeletedEvents] = useState([]);
   const [userDetails, setUserDetails] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('productos');
+  const [editingProductId, setEditingProductId] = useState(null);
+  const [editingServiceId, setEditingServiceId] = useState(null);
   const [editingJobId, setEditingJobId] = useState(null);
+  const [editingEventId, setEditingEventId] = useState(null);
   const [receivedReviews, setReceivedReviews] = useState([]);
   const [sentReviews, setSentReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(null);
@@ -48,7 +83,27 @@ function ProfilePage() {
   });
   const [updateMessage, setUpdateMessage] = useState('');
 
-  const navigate = useNavigate();
+const navigate = useNavigate();
+const location = useLocation();
+
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const refreshTarget = params.get('refresh');
+
+  if (refreshTarget === 'products') {
+    refetchProducts?.();
+    navigate('/profile', { replace: true });
+  } else if (refreshTarget === 'services') {
+    refetchServices?.();
+    navigate('/profile', { replace: true });
+  } else if (refreshTarget === 'events') {
+    refetchEvents?.();
+    navigate('/profile', { replace: true });
+  } else if (refreshTarget === 'jobs') {
+    refetchJobOffers?.();
+    navigate('/profile', { replace: true });
+  }
+}, [location.search]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -271,6 +326,11 @@ setAverageRating(avgRating);
 
     if (currentUser?.id) fetchUserData();
 }, [currentUser]);
+
+useEffect(() => {
+  fetchEvents();
+}, [currentUser]);
+
 
   const handlePauseToggle = async (productId, currentStatus) => {
     try {
@@ -543,7 +603,7 @@ const deleteEvent = async (eventId) => {
                     <p><strong>Precio:</strong> {product.currency || ''} {product.price}</p>
                     <p><strong>Estado:</strong> {product.status}</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <button onClick={() => navigate(`/editproduct/${product.id}`)}>Editar</button>
+                      <button onClick={() => setEditingProductId(product.id)}>Edit</button>
                       <button onClick={() => handlePauseToggle(product.id, product.status)}>{product.status === 'paused' ? 'Reactivar' : 'Pausar'}</button>
                       <button onClick={() => handleDelete(product.id)} style={{ color: 'red' }}>Eliminar</button>
                     </div>
@@ -562,23 +622,32 @@ const deleteEvent = async (eventId) => {
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
           {services.map((service) => (
-           <div key={service.id} className="profile-card">
+            <div key={service.id} className="profile-card">
               <img src={service.mainphoto || 'https://via.placeholder.com/250'} alt={service.company_name} />
               <h3>{service.company_name}</h3>
-              <p><strong>Ciudad:</strong> {service.city}</p>
-              <p><strong>País:</strong> {service.country}</p>
-              <p><strong>Categoría:</strong> {service.category_id}</p>
-              <p><strong>Estado:</strong> {service.status}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <button onClick={() => navigate(`/editservice/${service.id}`)}>Editar</button>
+              <p><strong>City:</strong> {service.city}</p>
+              <p><strong>Country:</strong> {service.country}</p>
+              <p><strong>Category:</strong> {service.category_id}</p>
+              <p><strong>Status:</strong> {service.status}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <button onClick={() => setEditingServiceId(service.id)}>Edit</button>
                 <button onClick={() => handlePauseToggleService(service.id, service.status)}>
-                {service.status === 'paused' ? 'Reactivar' : 'Pausar'}
+                  {service.status === 'paused' ? 'Reactivate' : 'Pause'}
                 </button>
-                <button onClick={() => handleDeleteService(service.id)} style={{ color: 'red' }}>Eliminar</button>
+                <button onClick={() => handleDeleteService(service.id)} style={{ color: 'red' }}>
+                  Delete
+                </button>
               </div>
             </div>
           ))}
         </div>
+      )}
+      {editingServiceId && (
+        <EditServiceModal
+          serviceId={editingServiceId}
+          onClose={() => setEditingServiceId(null)}
+          onUpdate={fetchServices}
+        />
       )}
     </>
   );
@@ -635,14 +704,22 @@ const deleteEvent = async (eventId) => {
               <p><strong>Country:</strong> {event.country}</p>
               <p><strong>Category:</strong> {event.category_id}</p>
               <p><strong>Status:</strong> {event.status}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'column', gap: '5px' }}>
-                <button onClick={() => updateEventStatus(event.id, 'cancelled')}>Cancelar</button>
-                <button onClick={() => updateEventStatus(event.id, 'postponed')}>Posponer</button>
-                <button onClick={() => deleteEvent(event.id)} style={{ color: 'red' }}>Eliminar</button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <button onClick={() => setEditingEventId(event.id)}>Edit</button>
+                <button onClick={() => updateEventStatus(event.id, 'cancelled')}>Cancel</button>
+                <button onClick={() => updateEventStatus(event.id, 'postponed')}>Postpone</button>
+                <button onClick={() => deleteEvent(event.id)} style={{ color: 'red' }}>Delete</button>
               </div>
             </div>
           ))}
         </div>
+      )}
+      {editingEventId && (
+        <EditEventModal
+          eventId={editingEventId}
+          onClose={() => setEditingEventId(null)}
+          onUpdate={fetchEvents}
+        />
       )}
     </>
   );
@@ -1033,6 +1110,66 @@ console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
   toast.error('An error occurred while submitting the rating.');
 }
 };
+const refetchJobOffers = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('yacht_work_offers')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .not('status', 'eq', 'deleted')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    setJobOffers(data || []);
+  } catch (error) {
+    console.error('Error refreshing job offers:', error.message);
+  }
+};
+const refetchProducts = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('owner', currentUser.id)
+      .not('status', 'eq', 'deleted')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    setProducts(data || []);
+  } catch (error) {
+    console.error('Error refreshing products:', error.message);
+  }
+};
+const refetchServices = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('owner', currentUser.id)
+      .not('status', 'eq', 'deleted')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    setServices(data || []);
+  } catch (error) {
+    console.error('Error refreshing services:', error.message);
+  }
+};
+const refetchEvents = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('owner', currentUser.id)
+      .not('status', 'eq', 'deleted')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    setEvents(data || []);
+  } catch (error) {
+    console.error('Error refreshing events:', error.message);
+  }
+};
   return (
   <div className="container">
     <h1>My Profile</h1>
@@ -1056,10 +1193,18 @@ console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
 
     {loading ? <p>Loading data...</p> : renderTabContent()}
 
-    {editingJobId && (
-  <EditJobModal
-    jobId={editingJobId}
-    onClose={() => setEditingJobId(null)}
+  {editingJobId && (
+    <EditJobModal
+      jobId={editingJobId}
+      onClose={() => setEditingJobId(null)}
+      onUpdate={refetchJobOffers}
+    />
+  )}
+  {editingProductId && (
+  <EditProductModal
+    productId={editingProductId}
+    onClose={() => setEditingProductId(null)}
+    onUpdate={refetchProducts}
   />
 )}
   </div>

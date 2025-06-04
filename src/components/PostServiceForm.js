@@ -1,26 +1,28 @@
+// src/components/PostServiceForm.js
+
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabase';
 import ImageUploader from './ImageUploader';
 
-const PostServiceForm = () => {
+const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   const [uploading, setUploading] = useState(false);
-  const [companyName, setCompanyName] = useState('');
-  const [description, setDescription] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [city, setCity] = useState('');
-  const [country, setCountry] = useState('');
-  const [photos, setPhotos] = useState([]);
-  const [mainPhoto, setMainPhoto] = useState('');
+  const [companyName, setCompanyName] = useState(initialValues.company_name || '');
+  const [description, setDescription] = useState(initialValues.description || '');
+  const [categoryId, setCategoryId] = useState(initialValues.category_id || '');
+  const [city, setCity] = useState(initialValues.city || '');
+  const [country, setCountry] = useState(initialValues.country || '');
+  const [photos, setPhotos] = useState(initialValues.photos || []);
+  const [mainPhoto, setMainPhoto] = useState(initialValues.mainphoto || '');
   const [ownerId, setOwnerId] = useState(null);
   const [ownerEmail, setOwnerEmail] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [altPhone, setAltPhone] = useState('');
-  const [website, setWebsite] = useState('');
-  const [facebook, setFacebook] = useState('');
-  const [instagram, setInstagram] = useState('');
-  const [linkedin, setLinkedin] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
+  const [contactEmail, setContactEmail] = useState(initialValues.contact_email || '');
+  const [phone, setPhone] = useState(initialValues.contact_phone || '');
+  const [altPhone, setAltPhone] = useState(initialValues.alt_phone || '');
+  const [website, setWebsite] = useState(initialValues.website || '');
+  const [facebook, setFacebook] = useState(initialValues.facebook_url || '');
+  const [instagram, setInstagram] = useState(initialValues.instagram_url || '');
+  const [linkedin, setLinkedin] = useState(initialValues.linkedin_url || '');
+  const [whatsapp, setWhatsapp] = useState(initialValues.whatsapp_number || '');
 
   const countries = [
     "Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "Aruba", "Australia", "Bahamas", "Bahrain", "Barbados",
@@ -42,8 +44,8 @@ const PostServiceForm = () => {
     const fetchUser = async () => {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError || !authData?.user) {
-        console.error('Error al obtener el usuario:', authError?.message || 'Usuario no autenticado');
-        alert('Debes iniciar sesión primero.');
+        console.error('Error fetching user:', authError?.message || 'Not authenticated');
+        alert('You must be logged in.');
         return;
       }
 
@@ -63,7 +65,6 @@ const PostServiceForm = () => {
 
     try {
       setUploading(true);
-
       const { data, error } = await supabase.storage
         .from('services')
         .upload(filePath, file, {
@@ -72,7 +73,7 @@ const PostServiceForm = () => {
         });
 
       if (error || !data?.path) {
-        throw new Error(error?.message || 'Error al subir la imagen.');
+        throw new Error(error?.message || 'Image upload failed.');
       }
 
       const { publicUrl } = supabase
@@ -81,10 +82,9 @@ const PostServiceForm = () => {
         .getPublicUrl(data.path).data;
 
       setMainPhoto(publicUrl);
-      console.log("Foto principal cargada correctamente:", publicUrl);
     } catch (error) {
-      console.error("Error al cargar la foto principal:", error.message);
-      alert("Error al subir la foto principal.");
+      console.error("Main photo upload error:", error.message);
+      alert("Error uploading main photo.");
     } finally {
       setUploading(false);
     }
@@ -94,43 +94,48 @@ const PostServiceForm = () => {
     e.preventDefault();
 
     if (!categoryId || !mainPhoto || !city || !country) {
-      alert('Por favor, completa todos los campos obligatorios.');
+      alert('Please fill in all required fields.');
       return;
     }
 
-    console.log("Fotos adicionales subidas:", photos);
+    const serviceData = {
+      company_name: companyName,
+      description,
+      category_id: parseInt(categoryId, 10),
+      owner: ownerId,
+      contact_email: contactEmail,
+      contact_phone: phone,
+      alt_phone: altPhone,
+      photos,
+      mainphoto: mainPhoto,
+      city,
+      country,
+      website,
+      facebook_url: facebook,
+      instagram_url: instagram,
+      linkedin_url: linkedin,
+      whatsapp_number: whatsapp,
+      status: 'active',
+    };
+
+    if (mode === 'edit') {
+      if (onSubmit) {
+        await onSubmit(serviceData);
+      }
+      return;
+    }
 
     try {
       const { data, error } = await supabase
         .from('services')
-        .insert([{
-          company_name: companyName,
-          description,
-          category_id: parseInt(categoryId, 10),
-          owner: ownerId,
-          contact_email: contactEmail,
-          contact_phone: phone,
-          alt_phone: altPhone,
-          photos,
-          mainphoto: mainPhoto,
-          city,
-          country,
-          website,
-          facebook_url: facebook,
-          instagram_url: instagram,
-          linkedin_url: linkedin,
-          whatsapp_number: whatsapp,
-
-          status: 'active' // 👈 AÑADIR ESTO
-        }])
+        .insert([serviceData])
         .select('*');
 
       if (error) {
-        console.error("Error al guardar el servicio:", error.message);
-        alert(`Error al guardar el servicio: ${error.message}`);
+        console.error("Insert error:", error.message);
+        alert(`Failed to save service: ${error.message}`);
       } else if (data && data.length > 0) {
-        console.log('Servicio guardado correctamente:', data);
-        alert('Servicio guardado correctamente');
+        alert('Service saved successfully');
         setCompanyName('');
         setDescription('');
         setCategoryId('');
@@ -142,83 +147,82 @@ const PostServiceForm = () => {
         setAltPhone('');
         setContactEmail('');
       } else {
-        alert('Hubo un error desconocido al guardar el servicio.');
+        alert('Unknown error occurred while saving service.');
       }
     } catch (error) {
-      console.error('Error inesperado:', error.message);
-      alert('Hubo un error inesperado al guardar el servicio.');
+      console.error('Unexpected error:', error.message);
+      alert('Unexpected error while saving service.');
     }
   };
 
   return (
-  <div className="container">
-    <div className="login-form">
-      <h2>Agregar Servicio</h2>
-      <form onSubmit={handleSubmit}>
-        <label>Nombre de la Compañía:</label>
-        <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
+    <div className="container">
+      <div className="login-form">
+        <h2>{mode === 'edit' ? 'Edit Service' : 'Add Service'}</h2>
+        <form onSubmit={handleSubmit}>
+          <label>Company Name:</label>
+          <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
 
-        <label>Descripción:</label>
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
+          <label>Description:</label>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
 
-        <label>Categoría:</label>
-        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
-          <option value="">Seleccione una categoría</option>
-          <option value="1">Mantenimiento</option>
-          <option value="2">Reparación</option>
-          <option value="3">Limpieza</option>
-          <option value="4">Transporte</option>
-          <option value="5">Otros</option>
-        </select>
+          <label>Category:</label>
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+            <option value="">Select a category</option>
+            <option value="1">Maintenance</option>
+            <option value="2">Repair</option>
+            <option value="3">Cleaning</option>
+            <option value="4">Transport</option>
+            <option value="5">Other</option>
+          </select>
 
-        <label>Ciudad:</label>
-        <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
+          <label>City:</label>
+          <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
 
-        <label>País:</label>
-        <select value={country} onChange={(e) => setCountry(e.target.value)} required>
-          <option value="">Seleccione un país</option>
-          {countries.map((pais, idx) => (
-            <option key={idx} value={pais}>{pais}</option>
-          ))}
-        </select>
+          <label>Country:</label>
+          <select value={country} onChange={(e) => setCountry(e.target.value)} required>
+            <option value="">Select a country</option>
+            {countries.map((pais, idx) => (
+              <option key={idx} value={pais}>{pais}</option>
+            ))}
+          </select>
 
-        <label>Correo de contacto:</label>
-        <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+          <label>Contact Email:</label>
+          <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
 
-        <label>Teléfono principal:</label>
-        <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <label>Main Phone:</label>
+          <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
 
-        <label>Teléfono alternativo:</label>
-        <input type="text" value={altPhone} onChange={(e) => setAltPhone(e.target.value)} />
+          <label>Alternative Phone:</label>
+          <input type="text" value={altPhone} onChange={(e) => setAltPhone(e.target.value)} />
 
-        <label>Fotos adicionales:</label>
-        <ImageUploader onUpload={(urls) => setPhotos(urls)} />
+          <label>Additional Photos:</label>
+          <ImageUploader onUpload={(urls) => setPhotos(urls)} initialUrls={photos} />
 
-        <label>Foto principal:</label>
-        <input type="file" accept="image/*" onChange={handleMainPhotoUpload} required />
+          <label>Main Photo:</label>
+          <input type="file" accept="image/*" onChange={handleMainPhotoUpload} />
 
-        <label>Sitio Web:</label>
-        <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} />
+          <label>Website:</label>
+          <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} />
 
-        <label>Facebook:</label>
-        <input type="url" value={facebook} onChange={(e) => setFacebook(e.target.value)} />
+          <label>Facebook:</label>
+          <input type="url" value={facebook} onChange={(e) => setFacebook(e.target.value)} />
 
-        <label>Instagram:</label>
-        <input type="url" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
+          <label>Instagram:</label>
+          <input type="url" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
 
-        <label>LinkedIn:</label>
-        <input type="url" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} />
+          <label>LinkedIn:</label>
+          <input type="url" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} />
 
-        <label>WhatsApp:</label>
-        <input type="text" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+          <label>WhatsApp:</label>
+          <input type="text" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
 
-
-        <button className="landing-button" type="submit" disabled={uploading}>
-          {uploading ? 'Subiendo imágenes...' : 'Guardar Servicio'}
-        </button>
-      </form>
+          <button className="landing-button" type="submit" disabled={uploading}>
+            {uploading ? 'Uploading images...' : mode === 'edit' ? 'Update Service' : 'Save Service'}
+          </button>
+        </form>
+      </div>
     </div>
-  </div>
   );
 };
 

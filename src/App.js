@@ -1,5 +1,3 @@
-// src/App.js
-
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
@@ -20,11 +18,9 @@ import PostProduct from './pages/PostProduct';
 import ProductDetailPage from './pages/ProductDetailPage';
 import FavoritesPage from './pages/FavoritesPage';
 import CartPage from './pages/CartPage';
-import EditProductPage from './pages/EditProductPage';
 import YachtServicesPage from './pages/YachtServicesPage';
-import YachtWorksPage from './pages/YachtWorksPage'; // ajusta el path si es necesario
+import YachtWorksPage from './pages/YachtWorksPage';
 import EventsPage from './pages/EventsPage';
-import EditServicePage from './pages/EditServicePage'; // ✅ Importación agregada
 import ResetPasswordPage from './pages/ResetPasswordPage';
 
 import './App.css';
@@ -45,8 +41,7 @@ function AuthRedirectHandler() {
     }
 
     if (type === 'signup' && access_token) {
-      // Mostrar mensaje y redirigir al login
-      toast.error('Your email has been successfully verified.');
+      toast.success('Your email has been successfully verified.');
       navigate('/login', { replace: true });
     }
   }, [location, navigate]);
@@ -58,18 +53,19 @@ function App() {
   const { currentUser, loading } = useAuth();
 
   if (loading) {
-    return <div>Cargando aplicación...</div>;
+    return <div>Loading application...</div>;
   }
 
   return (
     <Router>
       <Navbar />
       <AuthRedirectHandler />
-      <ToastContainer />
+      <ToastContainer autoClose={1500} />
 
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/marketplace" element={<HomePage />} />
+
         <Route
           path="/login"
           element={!currentUser ? <LoginPage /> : <Navigate to="/profile" replace />}
@@ -78,7 +74,12 @@ function App() {
           path="/register"
           element={!currentUser ? <RegisterPage /> : <Navigate to="/profile" replace />}
         />
+
         <Route path="/product/:id" element={<ProductDetailPage />} />
+        <Route path="/yacht-services" element={<YachtServicesPage />} />
+        <Route path="/yacht-services/post-product" element={<PostProduct />} />
+        <Route path="/yacht-works" element={<YachtWorksPage />} />
+        <Route path="/events" element={<EventsPage />} />
 
         <Route
           path="/profile"
@@ -112,27 +113,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/editproduct/:id"
-          element={
-            <ProtectedRoute>
-              <EditProductPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/editservice/:id"
-          element={
-            <ProtectedRoute>
-              <EditServicePage />
-            </ProtectedRoute>
-          }
-        />{/* ✅ Ruta agregada */}
 
-        <Route path="/yacht-services" element={<YachtServicesPage />} />
-        <Route path="/yacht-services/post-product" element={<PostProduct />} />
-        <Route path="/yacht-works" element={<YachtWorksPage />} />
-        <Route path="/events" element={<EventsPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

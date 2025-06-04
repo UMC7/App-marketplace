@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
-import YachtOfferForm from './YachtOfferForm';
-import Modal from './Modal'; // Asegúrate que la ruta sea correcta según tu estructura
+import Modal from './Modal';
+import PostEventForm from './PostEventForm';
 
-function EditJobModal({ jobId, onClose, onUpdate }) {
+function EditEventModal({ eventId, onClose, onUpdate }) {
   const [initialData, setInitialData] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,47 +16,49 @@ function EditJobModal({ jobId, onClose, onUpdate }) {
       setUser({ id: userId });
 
       const { data, error } = await supabase
-        .from('yacht_work_offers')
+        .from('events')
         .select('*')
-        .eq('id', jobId)
+        .eq('id', eventId)
         .single();
 
       if (error) {
-        console.error('Error fetching job:', error);
-        onClose(); // opcional
+        console.error('Error fetching event:', error);
+        toast.error('Error loading event data.');
+        onClose();
       } else {
         setInitialData(data);
       }
+
       setLoading(false);
     };
 
     fetchData();
-  }, [jobId]);
+  }, [eventId, onClose]);
 
   const handleUpdate = async (updatedData) => {
     const { created_at, ...dataToUpdate } = updatedData;
 
     const { error } = await supabase
-      .from('yacht_work_offers')
+      .from('events')
       .update(dataToUpdate)
-      .eq('id', jobId);
+      .eq('id', eventId);
 
     if (error) {
-  toast.error('Error updating the offer');
-} else {
-  toast.success('Offer updated successfully');
-  if (onUpdate) await onUpdate();
-  onClose();
-}
+      toast.error('Error updating the event');
+    } else {
+      toast.success('Event updated successfully');
+      if (onUpdate) await onUpdate();
+      onClose();
+    }
   };
 
   if (loading || !initialData || !user) return null;
 
   return (
     <Modal onClose={onClose}>
-      <YachtOfferForm
+      <PostEventForm
         user={user}
-        onOfferPosted={handleUpdate}
+        onSubmit={handleUpdate}
         initialValues={initialData}
         mode="edit"
       />
@@ -64,4 +66,4 @@ function EditJobModal({ jobId, onClose, onUpdate }) {
   );
 }
 
-export default EditJobModal;
+export default EditEventModal;
