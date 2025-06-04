@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import supabase from '../supabase';
+import { toast } from 'react-toastify';
 import { useAuth } from './AuthContext';
 
 const CarritoContext = createContext();
@@ -76,7 +77,7 @@ export function CarritoProvider({ children }) {
     if (existingItem) {
       const newQuantity = existingItem.quantity + quantity;
       if (newQuantity > product.quantity) {
-        alert(`Solo hay ${product.quantity} unidades disponibles.`);
+        toast.error(`Solo hay ${product.quantity} unidades disponibles.`);
         return;
       }
 
@@ -91,7 +92,7 @@ export function CarritoProvider({ children }) {
       }
     } else {
       if (quantity > product.quantity) {
-        alert(`Solo hay ${product.quantity} unidades disponibles.`);
+        toast.error(`Solo hay ${product.quantity} unidades disponibles.`);
         return;
       }
 

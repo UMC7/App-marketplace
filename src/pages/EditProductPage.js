@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
+import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import ImageUploader from '../components/ImageUploader';
 
@@ -58,7 +59,7 @@ function EditProductPage() {
       }
 
       if (data.owner !== currentUser.id) {
-        alert('You do not have access to edit this product.');
+        toast.error('You do not have access to edit this product.');
         navigate('/profile');
         return;
       }
@@ -154,9 +155,9 @@ function EditProductPage() {
 
     if (error) {
       console.error('Failed to update the product:', error.message);
-      alert('An error occurred while saving the changes.');
+      toast.error('An error occurred while saving the changes.');
     } else {
-      alert('Product updated successfully.');
+      toast.error('Product updated successfully.');
       navigate('/profile');
     }
   };

@@ -15,7 +15,7 @@ function YachtServicesPage() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error cargando servicios:', error.message);
+        console.error('Error loading services:', error.message);
       } else {
         setServices(data || []);
       }
@@ -30,11 +30,11 @@ function YachtServicesPage() {
   };
 
   if (loading) {
-    return <p style={{ padding: '20px' }}>Cargando servicios...</p>;
+    return <p style={{ padding: '20px' }}>Loading services...</p>;
   }
 
   if (services.length === 0) {
-    return <p style={{ padding: '20px' }}>No hay servicios disponibles.</p>;
+    return <p style={{ padding: '20px' }}>No services available.</p>;
   }
 
   return (

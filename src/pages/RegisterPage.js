@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
+import { toast } from 'react-toastify';
 
 function RegisterPage() {
   const [form, setForm] = useState({
@@ -41,7 +42,7 @@ function RegisterPage() {
 
       if (signUpError || !data?.user) {
         console.error('❌ Error en signUp:', signUpError?.message);
-        alert('Registration failed. Please check your information.');
+        toast.error('Registration failed. Please check your information.');
         return;
       }
 
@@ -69,7 +70,7 @@ function RegisterPage() {
 
       if (upsertError) {
         console.error('❌ Failed to save user data:', upsertError.message);
-        alert('Partial registration: user account created, but some data was not saved.');
+        toast.error('Partial registration: user account created, but some data was not saved.');
         return;
       }
 

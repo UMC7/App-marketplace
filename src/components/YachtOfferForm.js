@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import supabase from '../supabase'; // ✅ Ruta corregida según tu estructura
+import supabase from '../supabase';
+import { toast } from 'react-toastify';
 
 const defaultYachtSizes = [
   "0 - 30m", "31 - 40m", "41 - 50m", "51 - 70m", "> 70m"
@@ -137,7 +138,7 @@ const formReady = (() => {
 const isShoreBased = formData.work_environment === 'Shore-based';
 
 if (!formData.work_environment) {
-  alert('Work environment.');
+  toast.error('Work environment.');
   return;
 }
 
@@ -154,7 +155,7 @@ if (isOnboard) {
     !formData.country ||
     (formData.team === 'Yes' && (!formData.teammate_rank || (!formData.teammate_salary && !formData.is_doe)))
   ) {
-    alert('Fill in all required fields marked with *.');
+    toast.error('Fill in all required fields marked with *.');
     return;
   }
 }
@@ -168,7 +169,7 @@ if (isShoreBased) {
     !formData.work_location ||
     (formData.work_location === 'On - site' && (!formData.city || !formData.country))
   ) {
-    alert('Fill in all required fields marked with *.');
+    toast.error('Fill in all required fields marked with *.');
     return;
   }
 }
@@ -240,9 +241,9 @@ const sanitizedData = {
 
   if (error) {
     console.error('Error posting the offer:', error);
-    alert('Something went wrong. Please try again.');
+    toast.error('Something went wrong. Please try again.');
   } else {
-    alert('Offer posted successfully.');
+    toast.error('Offer posted successfully.');
     setFormData(initialState);
     onOfferPosted(); // en modo creación esto puede ser una recarga o mensaje
   }

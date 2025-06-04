@@ -28,6 +28,8 @@ import EditServicePage from './pages/EditServicePage'; // ✅ Importación agreg
 import ResetPasswordPage from './pages/ResetPasswordPage';
 
 import './App.css';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function AuthRedirectHandler() {
   const location = useLocation();
@@ -44,7 +46,7 @@ function AuthRedirectHandler() {
 
     if (type === 'signup' && access_token) {
       // Mostrar mensaje y redirigir al login
-      alert('Your email has been successfully verified.');
+      toast.error('Your email has been successfully verified.');
       navigate('/login', { replace: true });
     }
   }, [location, navigate]);
@@ -63,6 +65,7 @@ function App() {
     <Router>
       <Navbar />
       <AuthRedirectHandler />
+      <ToastContainer />
 
       <Routes>
         <Route path="/" element={<LandingPage />} />

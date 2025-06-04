@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
+import { toast } from 'react-toastify';
 import { submitUserReview } from '../lib/reviewUtils';
 import EditJobModal from '../components/EditJobModal';
 import {
@@ -286,7 +287,7 @@ setAverageRating(avgRating);
       );
     } catch (error) {
       console.error('Failed to update product status:', error.message);
-      alert('Could not update product status.');
+      toast.error('Could not update product status.');
     }
   };
 
@@ -310,10 +311,10 @@ setAverageRating(avgRating);
         .eq('status', 'deleted')
         .order('deleted_at', { ascending: false });
       setDeletedProducts(updatedDeleted);
-      alert('Product deleted successfully.');
+      toast.error('Product deleted successfully.');
     } catch (error) {
       console.error('Failed to delete product:', error.message);
-      alert('Could not delete the product.');
+      toast.error('Could not delete the product.');
     }
   };
 
@@ -337,10 +338,10 @@ setAverageRating(avgRating);
         .not('status', 'eq', 'deleted')
         .order('created_at', { ascending: false });
       setProducts(updatedProducts);
-      alert('Product restored successfully.');
+      toast.error('Product restored successfully.');
     } catch (error) {
       console.error('Failed to restore product:', error.message);
-      alert('Could not restore the product.');
+      toast.error('Could not restore the product.');
     }
   };
 
@@ -360,7 +361,7 @@ setAverageRating(avgRating);
     );
   } catch (error) {
     console.error('Failed to update service status:', error.message);
-    alert('Could not update service status.');
+    toast.error('Could not update service status.');
   }
 };
 
@@ -377,10 +378,10 @@ const handleDeleteService = async (serviceId) => {
     if (error) throw error;
 
     setServices((prev) => prev.filter((s) => s.id !== serviceId));
-    alert('Service deleted successfully.');
+    toast.error('Service deleted successfully.');
   } catch (error) {
     console.error('Failed to delete service:', error.message);
-    alert('Could not delete the service.');
+    toast.error('Could not delete the service.');
   }
 };
 
@@ -400,7 +401,7 @@ const handleDeleteService = async (serviceId) => {
     );
   } catch (error) {
     console.error('Failed to update job status:', error.message);
-    alert('Could not update the job status.');
+    toast.error('Could not update the job status.');
   }
 };
 
@@ -417,10 +418,10 @@ const handleDeleteJob = async (offerId) => {
     if (error) throw error;
 
     setJobOffers((prev) => prev.filter((o) => o.id !== offerId));
-    alert('Job deleted successfully.');
+    toast.error('Job deleted successfully.');
   } catch (error) {
     console.error('Failed to delete job:', error.message);
-    alert('Could not delete the job offer.');
+    toast.error('Could not delete the job offer.');
   }
 };
 
@@ -439,7 +440,7 @@ const updateEventStatus = async (eventId, newStatus) => {
       )
     );
   } catch (error) {
-    alert(`Failed to update status: ${error.message}`);
+    toast.error(`Failed to update status: ${error.message}`);
   }
 };
 
@@ -463,9 +464,9 @@ const deleteEvent = async (eventId) => {
       .eq('status', 'deleted')
       .order('deleted_at', { ascending: false });
     setDeletedEvents(updatedDeleted);
-    alert('Event deleted successfully.');
+    toast.error('Event deleted successfully.');
   } catch (error) {
-    alert('Could not delete the event.');
+    toast.error('Could not delete the event.');
   }
 };
 
@@ -861,7 +862,7 @@ const deleteEvent = async (eventId) => {
 
     <button onClick={async () => {
       await confirmPurchase(item.purchases.id);
-      alert('Purchase confirmed.');
+      toast.error('Purchase confirmed.');
 
       setPurchases(prev =>
         prev.map(p =>
@@ -886,7 +887,7 @@ const deleteEvent = async (eventId) => {
 
     <button onClick={async () => {
       await reportProblem(item.purchases.id);
-      alert('Problem reported.');
+      toast.error('Problem reported.');
       setPurchases(prev =>
         prev.map(p =>
           p.purchases.id === item.purchases.id
@@ -909,7 +910,7 @@ const deleteEvent = async (eventId) => {
 
     <button onClick={async () => {
       await cancelPurchase(item.purchases.id);
-      alert('Purchase cancelled.');
+      toast.error('Purchase cancelled.');
       setPurchases(prev =>
         prev.map(p =>
           p.purchases.id === item.purchases.id
@@ -1012,7 +1013,7 @@ console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
   });
 
   if (success) {
-  alert('Rating submitted successfully.');
+  toast.error('Rating submitted successfully.');
   form.reset();
   setPurchases(prev =>
     prev.map(p =>
@@ -1029,7 +1030,7 @@ console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
     )
   );
 } else {
-  alert('An error occurred while submitting the rating.');
+  toast.error('An error occurred while submitting the rating.');
 }
 };
   return (

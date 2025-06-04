@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
+import { toast } from 'react-toastify';
 import ImageUploader from '../components/ImageUploader';
 
 const EditServicePage = () => {
@@ -49,7 +50,7 @@ const EditServicePage = () => {
         .single();
 
       if (error) {
-        alert('Error al cargar el servicio.');
+        toast.error('Error al cargar el servicio.');
         console.error(error);
         return;
       }
@@ -90,7 +91,7 @@ const EditServicePage = () => {
       });
 
     if (error) {
-      alert('Error al subir imagen principal.');
+      toast.error('Error al subir imagen principal.');
       console.error(error);
       return;
     }
@@ -127,10 +128,10 @@ const EditServicePage = () => {
       .eq('id', id);
 
     if (error) {
-      alert('Error al guardar los cambios.');
+      toast.error('Error al guardar los cambios.');
       console.error(error);
     } else {
-      alert('Servicio actualizado correctamente.');
+      toast.error('Servicio actualizado correctamente.');
       navigate('/profile');
     }
   };

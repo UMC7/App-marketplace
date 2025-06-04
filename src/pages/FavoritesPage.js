@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import supabase from '../supabase';
+import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import ProductCard from '../components/ProductCard';
 
@@ -76,7 +77,7 @@ function FavoritesPage() {
 
       if (error) {
         console.error('Failed to remove from favorites:', error.message);
-        alert('Could not remove the product from favorites.');
+        toast.error('Could not remove the product from favorites.');
       } else {
         setFavorites((prev) => prev.filter((p) => p.id !== productId));
       }

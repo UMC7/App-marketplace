@@ -49,7 +49,7 @@ function EventsPage() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error cargando eventos:', error.message);
+        console.error('Error loading events:', error.message);
       } else {
         setEvents(data || []);
       }
@@ -64,11 +64,11 @@ function EventsPage() {
   };
 
   if (loading) {
-    return <p style={{ padding: '20px' }}>Cargando eventos...</p>;
+    return <p style={{ padding: '20px' }}>Loading events...</p>;
   }
 
   if (events.length === 0) {
-    return <p style={{ padding: '20px' }}>No hay eventos disponibles.</p>;
+    return <p style={{ padding: '20px' }}>No events available.</p>;
   }
 
   return (

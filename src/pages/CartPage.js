@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useCarrito } from '../context/CarritoContext';
 import { useAuth } from '../context/AuthContext';
 import supabase from '../supabase';
+import { toast } from 'react-toastify';
 
 function CartPage() {
   const { updateQuantity, removeFromCart, clearCart } = useCarrito();
@@ -105,7 +106,7 @@ function CartPage() {
         )
       );
     } else {
-      alert(`You can not select more than ${item.stock} units.`);
+      toast.error(`You can not select more than ${item.stock} units.`);
     }
   };
 
@@ -175,7 +176,7 @@ setCartItems([]);
 
     } catch (err) {
       console.error('Purchase error:', err.message);
-      alert('An error occurred while processing the purchase.');
+      toast.error('An error occurred while processing the purchase.');
     }
 
     setProcessing(false);
@@ -191,10 +192,10 @@ setCartItems([]);
 
       if (error) {
         console.error('Failed to remove product from cart:', error.message);
-        alert('Could not remove the product from the cart.');
+        toast.error('Could not remove the product from the cart.');
       } else {
         setCartItems(prev => prev.filter(p => p.id !== productId));
-        alert('Product removed from cart.');
+        toast.error('Product removed from cart.');
       }
     } catch (err) {
       console.error('Unexpected error while removing product from cart:', err.message);

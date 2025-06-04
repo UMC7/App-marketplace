@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import supabase from '../supabase';
+import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { useCarrito } from '../context/CarritoContext';
 import Slider from 'react-slick';
@@ -73,26 +74,26 @@ function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (product.status === 'paused') {
-      alert('This product is paused and cannot be added to the cart.');
+      toast.error('This product is paused and cannot be added to the cart.');
       return;
     }
 
     if (purchaseQty > stockDisponible) {
-      alert(`You can only add up to ${stockDisponible} units.`);
+      toast.error(`You can only add up to ${stockDisponible} units.`);
       return;
     }
 
     addToCart(product, purchaseQty);
-    alert('Product added to cart.');
+    toast.error('Product added to cart.');
   };
 
   const handleAddToFavorites = async () => {
     if (product.status === 'paused') {
-      alert('This product is paused and cannot be added to favorites.');
+      toast.error('This product is paused and cannot be added to favorites.');
       return;
     }
 
-    if (!currentUser) return alert('You must log in.');
+    if (!currentUser) return toast.error('You must log in.');
     setFavLoading(true);
     const { error } = await supabase.from('favorites').insert({
       product_id: parseInt(id),
@@ -103,7 +104,7 @@ function ProductDetailPage() {
   };
 
   const handleRemoveFavorite = async () => {
-    if (!currentUser) return alert('You must log in.');
+    if (!currentUser) return toast.error('You must log in.');
     const { error } = await supabase
       .from('favorites')
       .delete()
@@ -111,13 +112,13 @@ function ProductDetailPage() {
       .eq('user_id', currentUser.id);
 
     if (!error) setIsFavorite(false);
-    else alert('Failed to remove from favorites');
+    else toast.error('Failed to remove from favorites');
   };
 
   const handleSubmitQuestion = async () => {
     if (!currentUser || !questionText.trim()) return;
     if (product.owner === currentUser.id) {
-      alert('You can not ask a question about your own product.');
+      toast.error('You can not ask a question about your own product.');
       return;
     }
 

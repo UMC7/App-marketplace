@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabase';
+import { toast } from 'react-toastify';
 
 const PostEventForm = () => {
   const [uploading, setUploading] = useState(false);
@@ -48,7 +49,7 @@ const PostEventForm = () => {
     const fetchUser = async () => {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError || !authData?.user) {
-        alert('You must log in first.');
+        toast.error('You must log in first.');
         return;
       }
 
@@ -87,7 +88,7 @@ const PostEventForm = () => {
 
       setMainPhoto(publicUrl);
     } catch (error) {
-      alert("Error uploading the main photo. Please try again.");
+      toast.error("Error uploading the main photo. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -97,7 +98,7 @@ const PostEventForm = () => {
     e.preventDefault();
 
     if (!eventName || !mainPhoto || !city || !country) {
-      alert('Please fill in all required fields.');
+      toast.error('Please fill in all required fields.');
       return;
     }
 
@@ -132,9 +133,9 @@ const PostEventForm = () => {
         .select('*');
 
       if (error) {
-        alert(`Error saving the event. Please try again: ${error.message}`);
+        toast.error(`Error saving the event. Please try again: ${error.message}`);
       } else {
-        alert('Event saved successfully');
+        toast.error('Event saved successfully');
         setEventName('');
         setDescription('');
         setMainPhoto('');
@@ -153,7 +154,7 @@ const PostEventForm = () => {
         setLocationDetails('');
       }
     } catch (error) {
-      alert('An unexpected error occurred while saving the event. Please try again.');
+      toast.error('An unexpected error occurred while saving the event. Please try again.');
     }
   };
 

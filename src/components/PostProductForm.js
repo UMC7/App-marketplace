@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabase';
+import { toast } from 'react-toastify';
 import ImageUploader from '../components/ImageUploader';
 
 const PostProductForm = () => {
@@ -41,7 +42,7 @@ const PostProductForm = () => {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError || !authData?.user) {
         console.error('Error retrieving the user:', authError?.message || 'User not authenticated');
-        alert('Please log in first.');
+        toast.error('Please log in first.');
         return;
       }
 
@@ -82,7 +83,7 @@ const PostProductForm = () => {
       console.log("Main photo uploaded successfully:", publicUrl);
     } catch (error) {
       console.error("Failed to upload the main photo:", error.message);
-      alert("Failed to upload the main photo.");
+      toast.error("Failed to upload the main photo.");
     } finally {
       setUploading(false);
     }
@@ -92,7 +93,7 @@ const PostProductForm = () => {
     e.preventDefault();
 
     if (!categoryId || !mainPhoto || !city || !country || !condition) {
-      alert('Please fill in all required fields.');
+      toast.error('Please fill in all required fields.');
       return;
     }
 
@@ -120,10 +121,10 @@ const PostProductForm = () => {
 
       if (error) {
         console.error("Failed to save the product:", error.message);
-        alert(`Failed to save the product: ${error.message}`);
+        toast.error(`Failed to save the product: ${error.message}`);
       } else if (data && data.length > 0) {
         console.log('The product was saved successfully:', data);
-        alert('The product was saved successfully');
+        toast.error('The product was saved successfully');
         setName('');
         setDescription('');
         setPrice('');
@@ -135,11 +136,11 @@ const PostProductForm = () => {
         setCountry('');
         setCondition('');
       } else {
-        alert('"Unexpected error occurred while saving the product.');
+        toast.error('"Unexpected error occurred while saving the product.');
       }
     } catch (error) {
       console.error('An unexpected error occurred:', error.message);
-      alert('"Unexpected error occurred while saving the product.');
+      toast.error('"Unexpected error occurred while saving the product.');
     }
   };
 
