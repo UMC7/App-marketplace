@@ -192,13 +192,13 @@ const { data: myReviewsData, error: myReviewsError } = await supabase
   .eq('reviewer_id', currentUser.id);
 
 if (myReviewsError) {
-  console.error('Error cargando valoraciones enviadas:', myReviewsError.message);
+  console.error('Failed to load submitted ratings:', myReviewsError.message);
 } else {
   setSentReviews(myReviewsData || []);
 }
 
 if (reviewsError) {
-  console.error('Error cargando valoraciones recibidas:', reviewsError.message);
+  console.error('Failed to load received ratings:', reviewsError.message);
 }
 setReceivedReviews(reviewsData || []);
 
@@ -227,14 +227,14 @@ setAverageRating(avgRating);
         }));
     
         if (eventError) {
-  console.error('Error cargando eventos:', eventError.message);
+  console.error('Failed to load events:', eventError.message);
   setEvents([]);
 } else {
   setEvents(eventData || []);
 }
 
         if (deletedEventError) {
-  console.error('Error cargando eventos eliminados:', deletedEventError.message);
+  console.error('Failed to load deleted events:', deletedEventError.message);
   setDeletedEvents([]);
 } else {
   setDeletedEvents(deletedEventData || []);
@@ -243,17 +243,17 @@ setAverageRating(avgRating);
         const filteredSales = (soldItems || []).filter(item => item.products?.owner === currentUser.id);
         const filteredPurchases = (myPurchases || []).filter(item => item.purchases?.user_id === currentUser.id);
     
-        console.log('💰 Mis Ventas:', soldItems);
-        console.log('🧪 Mis Ventas - Owner IDs:', soldItems?.map(i => i.products?.owner));
-        console.log('🧪 Mis Ventas filtradas:', filteredSales);
+        console.log('💰 My Sales:', soldItems);
+        console.log('🧪 My Sales - Owner IDs:', soldItems?.map(i => i.products?.owner));
+        console.log('🧪 My Filtered Sales:', filteredSales);
         console.log('🧪 SOLD RAW:', JSON.stringify(soldItems, null, 2));
     
-        console.log('🛒 Mis Compras:', myPurchases);
-        console.log('🧪 Mis Compras - Buyer IDs:', myPurchases?.map(i => i.purchases?.user_id));
-        console.log('🧪 Mis Compras filtradas:', filteredPurchases);
+        console.log('🛒 My Purchases:', myPurchases);
+        console.log('🧪 My Purchases - Buyer IDs:', myPurchases?.map(i => i.purchases?.user_id));
+        console.log('🧪 My Filtered Purchases:', filteredPurchases);
         console.log('🧪 PURCHASE RAW:', JSON.stringify(myPurchases, null, 2));
     
-        console.log('🗑️ Productos Eliminados:', deletedData);
+        console.log('🗑️ Deleted Products:', deletedData);
     
         setProducts(productData || []);
         setDeletedProducts(deletedData || []);
@@ -262,7 +262,7 @@ setAverageRating(avgRating);
         setServices(serviceData || []);
         setReceivedReviews(reviewsData || []);
       } catch (error) {
-        console.error('Error general al cargar datos:', error.message);
+        console.error('General error loading data:', error.message);
       } finally {
         setLoading(false);
       }
@@ -285,13 +285,13 @@ setAverageRating(avgRating);
         )
       );
     } catch (error) {
-      console.error('Error actualizando estado del producto:', error.message);
-      alert('No se pudo actualizar el estado del producto.');
+      console.error('Failed to update product status:', error.message);
+      alert('Could not update product status.');
     }
   };
 
   const handleDelete = async (productId) => {
-    const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este producto? Esta acción lo ocultará de todos los usuarios.');
+    const confirmDelete = window.confirm('Are you sure you want to delete this product? This action will hide it from all users.');
     if (!confirmDelete) return;
 
     try {
@@ -310,15 +310,15 @@ setAverageRating(avgRating);
         .eq('status', 'deleted')
         .order('deleted_at', { ascending: false });
       setDeletedProducts(updatedDeleted);
-      alert('Producto eliminado correctamente.');
+      alert('Product deleted successfully.');
     } catch (error) {
-      console.error('Error al eliminar producto:', error.message);
-      alert('No se pudo eliminar el producto.');
+      console.error('Failed to delete product:', error.message);
+      alert('Could not delete the product.');
     }
   };
 
   const handleRestore = async (productId) => {
-    const confirmRestore = window.confirm('¿Deseas restaurar este producto como pausado?');
+    const confirmRestore = window.confirm('Do you want to restore this product as paused?');
     if (!confirmRestore) return;
 
     try {
@@ -337,10 +337,10 @@ setAverageRating(avgRating);
         .not('status', 'eq', 'deleted')
         .order('created_at', { ascending: false });
       setProducts(updatedProducts);
-      alert('Producto restaurado correctamente.');
+      alert('Product restored successfully.');
     } catch (error) {
-      console.error('Error al restaurar producto:', error.message);
-      alert('No se pudo restaurar el producto.');
+      console.error('Failed to restore product:', error.message);
+      alert('Could not restore the product.');
     }
   };
 
@@ -359,13 +359,13 @@ setAverageRating(avgRating);
       )
     );
   } catch (error) {
-    console.error('Error actualizando estado del servicio:', error.message);
-    alert('No se pudo actualizar el estado del servicio.');
+    console.error('Failed to update service status:', error.message);
+    alert('Could not update service status.');
   }
 };
 
 const handleDeleteService = async (serviceId) => {
-  const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este servicio? Esta acción lo ocultará de todos los usuarios.');
+  const confirmDelete = window.confirm('Are you sure you want to delete this service? This action will hide it from all users.');
   if (!confirmDelete) return;
 
   try {
@@ -377,10 +377,10 @@ const handleDeleteService = async (serviceId) => {
     if (error) throw error;
 
     setServices((prev) => prev.filter((s) => s.id !== serviceId));
-    alert('Servicio eliminado correctamente.');
+    alert('Service deleted successfully.');
   } catch (error) {
-    console.error('Error al eliminar servicio:', error.message);
-    alert('No se pudo eliminar el servicio.');
+    console.error('Failed to delete service:', error.message);
+    alert('Could not delete the service.');
   }
 };
 
@@ -399,13 +399,13 @@ const handleDeleteService = async (serviceId) => {
       )
     );
   } catch (error) {
-    console.error('Error actualizando estado del empleo:', error.message);
-    alert('No se pudo actualizar el estado del empleo.');
+    console.error('Failed to update job status:', error.message);
+    alert('Could not update the job status.');
   }
 };
 
 const handleDeleteJob = async (offerId) => {
-  const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar esta oferta de empleo?');
+  const confirmDelete = window.confirm('Are you sure you want to delete this job offer?');
   if (!confirmDelete) return;
 
   try {
@@ -417,10 +417,10 @@ const handleDeleteJob = async (offerId) => {
     if (error) throw error;
 
     setJobOffers((prev) => prev.filter((o) => o.id !== offerId));
-    alert('Empleo eliminado correctamente.');
+    alert('Job deleted successfully.');
   } catch (error) {
-    console.error('Error al eliminar empleo:', error.message);
-    alert('No se pudo eliminar la oferta de empleo.');
+    console.error('Failed to delete job:', error.message);
+    alert('Could not delete the job offer.');
   }
 };
 
@@ -439,12 +439,12 @@ const updateEventStatus = async (eventId, newStatus) => {
       )
     );
   } catch (error) {
-    alert(`Error al actualizar estado: ${error.message}`);
+    alert(`Failed to update status: ${error.message}`);
   }
 };
 
 const deleteEvent = async (eventId) => {
-  const confirmDelete = window.confirm('¿Seguro que deseas eliminar este evento?');
+  const confirmDelete = window.confirm('Are you sure you want to delete this event?');
   if (!confirmDelete) return;
 
   try {
@@ -463,9 +463,9 @@ const deleteEvent = async (eventId) => {
       .eq('status', 'deleted')
       .order('deleted_at', { ascending: false });
     setDeletedEvents(updatedDeleted);
-    alert('Evento eliminado correctamente.');
+    alert('Event deleted successfully.');
   } catch (error) {
-    alert('No se pudo eliminar el evento.');
+    alert('Could not delete the event.');
   }
 };
 
@@ -479,13 +479,13 @@ const deleteEvent = async (eventId) => {
       });
 
       if (error) {
-        setAuthError('Contraseña incorrecta. Inténtalo de nuevo.');
+        setAuthError('Incorrect password. Please try again.');
       } else {
         setShowPasswordPrompt(false);
       }
     } catch (error) {
-      console.error('Error al verificar la contraseña:', error.message);
-      setAuthError('Error al verificar la contraseña.');
+      console.error('Failed to verify password:', error.message);
+      setAuthError('Error verifying password.');
     }
   };
 
@@ -496,7 +496,7 @@ const deleteEvent = async (eventId) => {
 
   const handleUserFormSubmit = async (e) => {
     e.preventDefault();
-    const confirm = window.confirm('¿Deseas actualizar tus datos de usuario?');
+    const confirm = window.confirm('Do you want to update your user information?');
     if (!confirm) return;
 
     setUpdateMessage('');
@@ -518,10 +518,10 @@ const deleteEvent = async (eventId) => {
         .eq('id', currentUser.id);
 
       if (dbError) throw dbError;
-      setUpdateMessage('Información actualizada correctamente.');
+      setUpdateMessage('Information updated successfully.');
     } catch (error) {
-      console.error('Error actualizando datos:', error.message);
-      setUpdateMessage('Error al actualizar la información.');
+      console.error('Failed to update information:', error.message);
+      setUpdateMessage('Failed to update information.');
     }
   };
 
@@ -530,9 +530,9 @@ const deleteEvent = async (eventId) => {
       case 'productos':
         return (
           <>
-            <h2>Mis Productos Publicados</h2>
+            <h2>My Posted Products</h2>
             {products.length === 0 ? (
-              <p>No has publicado ningún producto.</p>
+              <p>You have not posted any products.</p>
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {products.map((product) => (
@@ -555,9 +555,9 @@ const deleteEvent = async (eventId) => {
   case 'servicios':
   return (
     <>
-      <h2>Mis Servicios Publicados</h2>
+      <h2>My Posted Services</h2>
       {services.length === 0 ? (
-        <p>No has publicado ningún servicio.</p>
+        <p>You have not posted any services.</p>
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
           {services.map((service) => (
@@ -584,9 +584,9 @@ const deleteEvent = async (eventId) => {
   case 'empleos':
   return (
     <>
-      <h2>Mis Empleos Publicados</h2>
+      <h2>My Posted Jobs</h2>
       {jobOffers.length === 0 ? (
-        <p>No has publicado ofertas de empleo aún.</p>
+        <p>You have not posted any job offers yet.</p>
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
           {jobOffers.map((offer) => (
@@ -621,19 +621,19 @@ const deleteEvent = async (eventId) => {
   case 'eventos':
   return (
     <>
-      <h2>Mis Eventos Publicados</h2>
+      <h2>My Posted Events</h2>
       {events.length === 0 ? (
-        <p>No has publicado ningún evento.</p>
+        <p>You have not posted any events.</p>
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
           {events.map((event) => (
             <div key={event.id} className="profile-card">
               <img src={event.mainphoto || 'https://via.placeholder.com/250'} alt={event.event_name} />
               <h3>{event.event_name}</h3>
-              <p><strong>Ciudad:</strong> {event.city}</p>
-              <p><strong>País:</strong> {event.country}</p>
-              <p><strong>Categoría:</strong> {event.category_id}</p>
-              <p><strong>Estado:</strong> {event.status}</p>
+              <p><strong>City:</strong> {event.city}</p>
+              <p><strong>Country:</strong> {event.country}</p>
+              <p><strong>Category:</strong> {event.category_id}</p>
+              <p><strong>Status:</strong> {event.status}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'column', gap: '5px' }}>
                 <button onClick={() => updateEventStatus(event.id, 'cancelled')}>Cancelar</button>
                 <button onClick={() => updateEventStatus(event.id, 'postponed')}>Posponer</button>
@@ -648,22 +648,22 @@ const deleteEvent = async (eventId) => {
   case 'eliminados':
   return (
     <>
-      <h2>Publicaciones Eliminadas</h2>
+      <h2>Deleted Posts</h2>
       {deletedProducts.length === 0 && deletedJobs.length === 0 ? (
-        <p>No tienes publicaciones eliminadas.</p>
+        <p>You have no deleted posts.</p>
       ) : (
         <>
           {deletedProducts.length > 0 && (
             <>
-              <h3>Productos Eliminados</h3>
+              <h3>Deleted Products</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {deletedProducts.map((product) => (
                   <div key={product.id} className="profile-card" style={{ border: '1px dashed red' }}>
                     <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} />
                     <h4>{product.name}</h4>
-                    <p><strong>Precio:</strong> {product.currency || ''} {product.price}</p>
-                    <p><strong>Eliminado el:</strong> {new Date(product.deleted_at).toLocaleDateString()}</p>
-                    <button onClick={() => handleRestore(product.id)}>Restaurar</button>
+                    <p><strong>Price:</strong> {product.currency || ''} {product.price}</p>
+                    <p><strong>Deleted on:</strong> {new Date(product.deleted_at).toLocaleDateString()}</p>
+                    <button onClick={() => handleRestore(product.id)}>Restore</button>
                   </div>
                 ))}
               </div>
@@ -671,22 +671,22 @@ const deleteEvent = async (eventId) => {
           )}
           {deletedJobs.length > 0 && (
             <>
-              <h3>Empleos Eliminados</h3>
+              <h3>Deleted Jobs</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {deletedJobs.map((job) => (
   <div key={job.id} style={{ border: '1px dashed red', padding: '10px', borderRadius: '8px', width: '280px' }}>
     <h4>{job.title}</h4>
-    <p><strong>Ubicación:</strong> {job.city}, {job.country}</p>
-    <p><strong>Tipo:</strong> {job.type}</p>
-    <p><strong>Fecha de inicio:</strong> {new Date(job.start_date).toLocaleDateString()}</p>
-    {job.end_date && <p><strong>Fin:</strong> {new Date(job.end_date).toLocaleDateString()}</p>}
+    <p><strong>Location:</strong> {job.city}, {job.country}</p>
+    <p><strong>Type:</strong> {job.type}</p>
+    <p><strong>Start Date:</strong> {new Date(job.start_date).toLocaleDateString()}</p>
+    {job.end_date && <p><strong>End Date:</strong> {new Date(job.end_date).toLocaleDateString()}</p>}
     {job.is_doe ? (
-      <p><strong>Salario:</strong> DOE</p>
+      <p><strong>Salary:</strong> DOE</p>
     ) : (
-      job.salary && <p><strong>Salario:</strong> ${job.salary}</p>
+      job.salary && <p><strong>Salary:</strong> ${job.salary}</p>
     )}
     {job.deleted_at && (
-      <p><strong>Eliminado el:</strong> {new Date(job.deleted_at).toLocaleDateString()}</p>
+      <p><strong>Deleted on:</strong> {new Date(job.deleted_at).toLocaleDateString()}</p>
     )}
   </div>
 ))}
@@ -701,17 +701,17 @@ const deleteEvent = async (eventId) => {
   case 'valoracion':
   return (
     <>
-      <h2>Valoraciones Recibidas</h2>
+      <h2>Received Ratings</h2>
 
       {averageRating ? (
-        <p><strong>⭐ Promedio general:</strong> {averageRating} / 5</p>
+        <p><strong>⭐ Overall Average:</strong> {averageRating} / 5</p>
       ) : (
-        <p>No has recibido valoraciones aún.</p>
+        <p>You have not received any ratings yet.</p>
       )}
 
       {receivedReviews.length > 0 && (
         <div style={{ marginTop: '20px' }}>
-          <h3>Comentarios Recibidos:</h3>
+          <h3>Received Comments:</h3>
           <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
             {receivedReviews.map((review) => {
   const productPhoto = review.purchases?.purchase_items?.[0]?.products?.mainphoto;
@@ -737,12 +737,12 @@ const deleteEvent = async (eventId) => {
         />
       )}
       <div>
-        <p><strong>⭐ Calificación:</strong> {review.rating} / 5</p>
+        <p><strong>⭐ Rating:</strong> {review.rating} / 5</p>
         {review.comment && (
-          <p><strong>📝 Comentario:</strong> {review.comment}</p>
+          <p><strong>📝 Comment:</strong> {review.comment}</p>
         )}
         <p style={{ fontSize: '0.9em', color: '#666' }}>
-          Fecha: {new Date(review.created_at).toLocaleDateString()}
+          Date: {new Date(review.created_at).toLocaleDateString()}
         </p>
       </div>
     </li>
@@ -757,24 +757,24 @@ const deleteEvent = async (eventId) => {
       case 'ventas':
         return (
           <>
-            <h2>Mis Ventas</h2>
+            <h2>My Sales</h2>
             {sales.length === 0 ? (
-              <p>No has realizado ventas aún.</p>
+              <p>You have not made any sales yet.</p>
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {sales.map((item) => (
                   <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
-                    <img src={item.products?.mainphoto || 'https://via.placeholder.com/250'} alt={item.products?.name || 'Producto'} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
-                    <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
-                    <p><strong>Cantidad:</strong> {item.quantity}</p>
+                    <img src={item.products?.mainphoto || 'https://via.placeholder.com/250'} alt={item.products?.name || 'Product'} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                    <p><strong>Product:</strong> {item.products?.name || 'Name not available'}</p>
+                    <p><strong>Quantity:</strong> {item.quantity}</p>
                     <p><strong>Total:</strong> ${item.total_price}</p>
-                    <p><strong>Comprador:</strong> {item.purchases?.buyer?.first_name} {item.purchases?.buyer?.last_name}</p>
-                    <p><strong>Teléfono:</strong> {item.purchases?.buyer?.phone || 'No disponible'}</p>
-                    <p><strong>Email:</strong> {item.purchases?.buyer?.email || 'No disponible'}</p>
-                    <p><strong>Fecha de Compra:</strong> {new Date(item.purchases?.created_at).toLocaleDateString('es-ES', {
-                      day: 'numeric',
+                    <p><strong>Buyer:</strong> {item.purchases?.buyer?.first_name} {item.purchases?.buyer?.last_name}</p>
+                    <p><strong>Phone:</strong> {item.purchases?.buyer?.phone || 'Not available'}</p>
+                    <p><strong>Email:</strong> {item.purchases?.buyer?.email || 'Not available'}</p>
+                    <p><strong>Sale Date:</strong> {new Date(item.purchases?.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
                       month: 'long',
-                      year: 'numeric'
+                      day: 'numeric'
                     })}</p>
                   </div>
                 ))}
@@ -785,25 +785,25 @@ const deleteEvent = async (eventId) => {
       case 'compras':
         return (
           <>
-            <h2>Mis Compras</h2>
+            <h2>My Purchases</h2>
             {purchases.length === 0 ? (
-              <p>No has realizado compras aún.</p>
+              <p>You have not made any purchases yet.</p>
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
                 {purchases.map((item) => (
                   <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '8px', width: '280px' }}>
-                    <img src={item.products?.mainphoto || 'https://via.placeholder.com/250'} alt={item.products?.name || 'Producto'} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
-                    <p><strong>Producto:</strong> {item.products?.name || 'Nombre no disponible'}</p>
-                    <p><strong>Cantidad:</strong> {item.quantity}</p>
+                    <img src={item.products?.mainphoto || 'https://via.placeholder.com/250'} alt={item.products?.name || 'Product'} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                    <p><strong>Product:</strong> {item.products?.name || 'Name not available'}</p>
+                    <p><strong>Quantity:</strong> {item.quantity}</p>
                     <p><strong>Total:</strong> ${item.total_price}</p>
-                    <p><strong>Vendedor:</strong> {item.products?.users?.first_name} {item.products?.users?.last_name}</p>
-                    <p><strong>Teléfono:</strong> {item.products?.users?.phone || 'No disponible'}</p>
-                    <p><strong>Email:</strong> {item.products?.users?.email || 'No disponible'}</p>
-                    <p><strong>Ciudad:</strong> {item.products?.city || 'No disponible'}</p>
-                    <p><strong>Fecha de Compra:</strong> {new Date(item.purchases?.created_at).toLocaleDateString('es-ES', {
-                      day: 'numeric',
+                    <p><strong>Seller:</strong> {item.products?.users?.first_name} {item.products?.users?.last_name}</p>
+                    <p><strong>Phone:</strong> {item.products?.users?.phone || 'Not available'}</p>
+                    <p><strong>Email:</strong> {item.products?.users?.email || 'Not available'}</p>
+                    <p><strong>City:</strong> {item.products?.city || 'Not available'}</p>
+                    <p><strong>Purchase Date:</strong> {new Date(item.purchases?.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
                       month: 'long',
-                      year: 'numeric'
+                      day: 'numeric',
                     })}</p>
                     {/* Mostrar el estado de la acción tomada */}
 {['completed', 'cancelled', 'problem_reported'].includes(
@@ -818,14 +818,14 @@ const deleteEvent = async (eventId) => {
       : 'red';
   const label =
     status === 'completed'
-      ? 'Compra confirmada'
+      ? 'Purchase confirmed'
       : status === 'cancelled'
-      ? 'Compra cancelada'
-      : 'Problema reportado';
+      ? 'Purchase cancelled'
+      : 'Problem reported';
 
   return (
     <div style={{ marginTop: '10px', color }}>
-      <strong>✅ Acción registrada:</strong> {label}
+      <strong>✅ Action recorded:</strong> {label}
     </div>
   );
 })()}
@@ -836,18 +836,18 @@ const deleteEvent = async (eventId) => {
   && (
   <div style={{ marginTop: '10px' }}>
     <form onSubmit={(e) => handleReviewSubmit(e, item)}>
-      <p><strong>Deja tu valoración para el vendedor:</strong></p>
+      <p><strong>Leave your rating for the seller:</strong></p>
       <label>
-        Puntuación (1–5): 
+        Score (1–5): 
         <input type="number" name="rating" min="1" max="5" required />
       </label>
       <br />
       <label>
-        Comentario:
+        Comment:
         <textarea name="comment" rows="3" style={{ width: '100%' }} />
       </label>
       <br />
-      <button type="submit">Enviar valoración</button>
+      <button type="submit">Submit Rating</button>
     </form>
   </div>
 )}
@@ -857,11 +857,11 @@ const deleteEvent = async (eventId) => {
   updatedPurchaseStatuses[item.purchases?.id] || item.purchases?.status
 ) && (
   <div style={{ marginTop: '10px' }}>
-    <p><strong>¿Cómo finalizó esta transacción?</strong></p>
+    <p><strong>How did this transaction end?</strong></p>
 
     <button onClick={async () => {
       await confirmPurchase(item.purchases.id);
-      alert('Compra confirmada.');
+      alert('Purchase confirmed.');
 
       setPurchases(prev =>
         prev.map(p =>
@@ -882,11 +882,11 @@ const deleteEvent = async (eventId) => {
   ...prev,
   [item.purchases.id]: 'completed'
 }));
-    }}>Recibido correctamente</button>
+    }}>Received successfully</button>
 
     <button onClick={async () => {
       await reportProblem(item.purchases.id);
-      alert('Problema reportado.');
+      alert('Problem reported.');
       setPurchases(prev =>
         prev.map(p =>
           p.purchases.id === item.purchases.id
@@ -905,11 +905,11 @@ const deleteEvent = async (eventId) => {
   ...prev,
   [item.purchases.id]: 'problem_reported'
 }));
-    }}>Hubo un problema</button>
+    }}>There was a problem</button>
 
     <button onClick={async () => {
       await cancelPurchase(item.purchases.id);
-      alert('Compra cancelada.');
+      alert('Purchase cancelled.');
       setPurchases(prev =>
         prev.map(p =>
           p.purchases.id === item.purchases.id
@@ -928,7 +928,7 @@ const deleteEvent = async (eventId) => {
   ...prev,
   [item.purchases.id]: 'cancelled'
 }));
-    }}>Cancelar compra</button>
+    }}>Cancel purchase</button>
   </div>
 )}
 
@@ -941,47 +941,47 @@ const deleteEvent = async (eventId) => {
       case 'usuario':
         return (
           <>
-            <h2>Datos del Usuario</h2>
+            <h2>User Information</h2>
             {showPasswordPrompt ? (
               <form onSubmit={handlePasswordVerification}>
-                <label>Contraseña:
+                <label>Password:
                   <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} required />
                 </label>
-                <button type="submit">Verificar</button>
+                <button type="submit">Verify</button>
                 {authError && <p style={{ color: 'red' }}>{authError}</p>}
               </form>
             ) : (
               <form onSubmit={handleUserFormSubmit}>
-                <div><strong>Nombre:</strong> {userDetails.first_name || ''}</div>
-                <div><strong>Apellido:</strong> {userDetails.last_name || ''}</div>
-                <div><strong>Fecha de Nacimiento:</strong> {userDetails.birth_year || ''}</div>
+                <div><strong>Name:</strong> {userDetails.first_name || ''}</div>
+                <div><strong>Last Name:</strong> {userDetails.last_name || ''}</div>
+                <div><strong>Date of Birth:</strong> {userDetails.birth_year || ''}</div>
                 <div><strong>Nickname:</strong> {userDetails.nickname || ''}</div>
                 <div>
-                  <label><strong>Teléfono Principal:</strong>
+                  <label><strong>Main Phone:</strong>
                     <input name="phone" value={userForm.phone} onChange={handleUserFormChange} />
                   </label>
                 </div>
                 <div>
-                  <label><strong>Teléfono Alternativo:</strong>
+                  <label><strong>Alternative Phone:</strong>
                     <input name="altPhone" value={userForm.altPhone} onChange={handleUserFormChange} />
                   </label>
                 </div>
                 <div>
-                  <label><strong>Correo Principal:</strong>
+                  <label><strong>Main Email:</strong>
                     <input name="email" value={userForm.email} onChange={handleUserFormChange} />
                   </label>
                 </div>
                 <div>
-                  <label><strong>Correo Alternativo:</strong>
+                  <label><strong>Alternative Email:</strong>
                     <input name="altEmail" value={userForm.altEmail} onChange={handleUserFormChange} />
                   </label>
                 </div>
                 <div>
-                  <label><strong>Contraseña:</strong>
+                  <label><strong>Password:</strong>
                     <input type="password" name="password" value={userForm.password} onChange={handleUserFormChange} />
                   </label>
                 </div>
-                <button type="submit">Actualizar Información</button>
+                <button type="submit">Update Information</button>
                 {updateMessage && <p>{updateMessage}</p>}
               </form>
             )}
@@ -1012,7 +1012,7 @@ console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
   });
 
   if (success) {
-  alert('Valoración enviada con éxito.');
+  alert('Rating submitted successfully.');
   form.reset();
   setPurchases(prev =>
     prev.map(p =>
@@ -1029,31 +1029,31 @@ console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
     )
   );
 } else {
-  alert('Ocurrió un error al enviar la valoración.');
+  alert('An error occurred while submitting the rating.');
 }
 };
   return (
   <div className="container">
-    <h1>Mi Perfil</h1>
+    <h1>My Profile</h1>
 
     <div className="tabs-container">
   <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-  Menú
+  Menu
 </button>
   <div className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
-    <button className="navLink" onClick={() => { setActiveTab('productos'); setIsMenuOpen(false); }}>Mis Productos</button>
-    <button className="navLink" onClick={() => { setActiveTab('servicios'); setIsMenuOpen(false); }}>Mis Servicios</button>
-    <button className="navLink" onClick={() => { setActiveTab('empleos'); setIsMenuOpen(false); }}>Mis Empleos</button>
-    <button className="navLink" onClick={() => { setActiveTab('eventos'); setIsMenuOpen(false); }}>Mis Eventos</button>
-    <button className="navLink" onClick={() => { setActiveTab('compras'); setIsMenuOpen(false); }}>Mis Compras</button>
-    <button className="navLink" onClick={() => { setActiveTab('ventas'); setIsMenuOpen(false); }}>Mis Ventas</button>
-    <button className="navLink" onClick={() => { setActiveTab('eliminados'); setIsMenuOpen(false); }}>Eliminados</button>
-    <button className="navLink" onClick={() => { setActiveTab('valoracion'); setIsMenuOpen(false); }}>Valoración</button>
-    <button className="navLink" onClick={() => { setActiveTab('usuario'); setIsMenuOpen(false); }}>Datos de Usuario</button>
+    <button className="navLink" onClick={() => { setActiveTab('productos'); setIsMenuOpen(false); }}>My Products</button>
+    <button className="navLink" onClick={() => { setActiveTab('servicios'); setIsMenuOpen(false); }}>My Services</button>
+    <button className="navLink" onClick={() => { setActiveTab('empleos'); setIsMenuOpen(false); }}>My Jobs</button>
+    <button className="navLink" onClick={() => { setActiveTab('eventos'); setIsMenuOpen(false); }}>My Events</button>
+    <button className="navLink" onClick={() => { setActiveTab('compras'); setIsMenuOpen(false); }}>My Purchases</button>
+    <button className="navLink" onClick={() => { setActiveTab('ventas'); setIsMenuOpen(false); }}>My Sales</button>
+    <button className="navLink" onClick={() => { setActiveTab('eliminados'); setIsMenuOpen(false); }}>Deleted</button>
+    <button className="navLink" onClick={() => { setActiveTab('valoracion'); setIsMenuOpen(false); }}>Rating</button>
+    <button className="navLink" onClick={() => { setActiveTab('usuario'); setIsMenuOpen(false); }}>User Details</button>
   </div>
 </div>
 
-    {loading ? <p>Cargando datos...</p> : renderTabContent()}
+    {loading ? <p>Loading data...</p> : renderTabContent()}
 
     {editingJobId && (
   <EditJobModal

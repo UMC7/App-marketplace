@@ -5,7 +5,7 @@ import '../LandingPage.css'; // Asegúrate de que este archivo existe
 function LandingPage() {
   return (
     <div className="container" style={{ textAlign: 'center' }}>
-      <h1>Welcome to your Yacht Hub</h1>
+      <h1>Welcome to your Yachting Hub</h1>
       <p>Choose your Option to Continue:</p>
       <div className="logo-grid">
         <Link to="/marketplace">
