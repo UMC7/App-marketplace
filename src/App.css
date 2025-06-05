@@ -9,7 +9,8 @@
   --font-body: 'Inter', sans-serif;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
@@ -20,7 +21,9 @@ html, body {
   color: #1c1c1c;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: 'Playfair Display', serif;
   color: #081a3b; /* azul profundo de tu logo */
 }
@@ -200,7 +203,7 @@ body {
 
 /* Estilos para las tarjetas de eventos */
 .event-card {
-  position: relative; /* 🔥 NECESARIO para que la marca de agua se posicione dentro */
+  position: relative;
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 10px;
@@ -299,7 +302,8 @@ body {
   }
 }
 
-button, .landing-button {
+button,
+.landing-button {
   background-color: var(--primary-color);
   color: var(--white-color);
   border: none;
@@ -312,7 +316,8 @@ button, .landing-button {
   text-decoration: none;
 }
 
-button:hover, .landing-button:hover {
+button:hover,
+.landing-button:hover {
   background-color: var(--accent-color);
 }
 
@@ -383,6 +388,7 @@ button:hover, .landing-button:hover {
   font-size: 1rem;
   box-sizing: border-box;
 }
+
 .login-form label {
   font-size: 1rem;
   font-weight: 500;
@@ -479,6 +485,7 @@ button:hover, .landing-button:hover {
   background-color: var(--accent-color);
   color: white;
 }
+
 .close-button {
   position: absolute;
   top: 10px;
@@ -516,6 +523,7 @@ button:hover, .landing-button:hover {
   min-width: 160px;
   text-align: center;
 }
+
 .form-inline-group {
   display: flex;
   gap: 12px;
@@ -608,6 +616,7 @@ button:hover, .landing-button:hover {
   .tab-buttons .landing-button:not(:last-child) {
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   }
+
   .filters-container.show {
     margin-top: 8px;
     margin-left: 0;
@@ -646,21 +655,23 @@ button:hover, .landing-button:hover {
   .filters-container.show label {
     color: white; /* ✅ textos específicos legibles */
   }
+
   .collapsed-offer {
     margin: 0 auto;
     max-width: 95%;
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     background-color: #ffffff;
   }
 }
+
 .region-dropdown {
   background-color: var(--white-color);
   border: 1px solid #ccc;
   border-radius: 6px;
   padding: 10px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   font-family: var(--font-body);
 }
 
@@ -683,7 +694,7 @@ button:hover, .landing-button:hover {
   font-size: 0.95rem;
 }
 
-.region-subgroup input[type="checkbox"] {
+.region-subgroup input[type='checkbox'] {
   margin-left: 10px;
 }
 
@@ -694,6 +705,7 @@ button:hover, .landing-button:hover {
   font-size: 0.9rem;
   color: var(--text-dark);
 }
+
 .scroll-to-top-button {
   position: fixed;
   bottom: 20px;
@@ -747,7 +759,8 @@ button:hover, .landing-button:hover {
   width: auto; /* Permite que la etiqueta ocupe solo el espacio necesario */
   /* Eliminar !important si la importación y la estructura son correctas */
 }
-.login-form .form-checkbox-label input[type="checkbox"] {
+
+.login-form .form-checkbox-label input[type='checkbox'] {
   margin: 0; /* Elimina márgenes por defecto del input */
   transform: translateY(1px); /* Ajuste fino para alineación visual */
   width: 16px; /* Tamaño explícito para asegurar visibilidad */
@@ -755,6 +768,7 @@ button:hover, .landing-button:hover {
   min-width: 16px; /* Evita que se achique */
   min-height: 16px; /* Evita que se achique */
 }
+
 .form-checkbox-label {
   display: inline-flex;
   align-items: center;
@@ -764,14 +778,17 @@ button:hover, .landing-button:hover {
   cursor: pointer;
   line-height: 1.2;
 }
-.form-checkbox-label input[type="checkbox"] {
+
+.form-checkbox-label input[type='checkbox'] {
   margin: 0;
   transform: translateY(1px); /* 🔧 Ajuste fino para alinearlo con el texto */
 }
+
 .form-group {
   margin-bottom: 16px;
   display: block;
 }
+
 .login-form label {
   font-size: 1rem;
   font-weight: 500;
@@ -788,23 +805,23 @@ button:hover, .landing-button:hover {
     margin-bottom: 20px;
   }
 
-.offer-card.expanded .expanded-block.block1,
-.offer-card.expanded .expanded-block.block2,
-.offer-card.expanded .expanded-block.block3,
-.offer-card.expanded .expanded-block.block4 {
-  flex: 1 1 auto;
-  box-sizing: border-box;
-  min-width: 0;
-  padding: 0;
-}
+  .offer-card.expanded .expanded-block.block1,
+  .offer-card.expanded .expanded-block.block2,
+  .offer-card.expanded .expanded-block.block3,
+  .offer-card.expanded .expanded-block.block4 {
+    flex: 1 1 auto;
+    box-sizing: border-box;
+    min-width: 0;
+    padding: 0;
+  }
 
-.offer-card.expanded .expanded-block.block5 {
-  flex: 0 0 auto;
-  margin-left: auto;
-  box-sizing: border-box;
-  min-width: max-content;
-  padding: 0;
-}
+  .offer-card.expanded .expanded-block.block5 {
+    flex: 0 0 auto;
+    margin-left: auto;
+    box-sizing: border-box;
+    min-width: max-content;
+    padding: 0;
+  }
 
   /* Bloques 6 y 7 debajo, ocupan todo el ancho */
   .offer-card.expanded .expanded-block.block6,
@@ -838,14 +855,17 @@ button:hover, .landing-button:hover {
     white-space: normal;
     overflow-wrap: break-word;
   }
+
   .offer-card.expanded .top-row.no-wrap-mobile {
-  flex-wrap: nowrap !important;
-  overflow-x: auto;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+  }
+
+  .offer-card.expanded .field-pair {
+    display: block;
+  }
 }
-.offer-card.expanded .field-pair {
-  display: block;
-}
-}
+
 /* Distribución horizontal para pantallas grandes (desktop) */
 @media (min-width: 821px) {
   .offer-card.expanded .top-row {
@@ -878,6 +898,7 @@ button:hover, .landing-button:hover {
     overflow-wrap: break-word;
   }
 }
+
 @media only screen and (max-width: 480px) and (orientation: portrait) {
   .offer-card.expanded .field-label {
     display: inline-flex;
@@ -897,6 +918,7 @@ button:hover, .landing-button:hover {
     line-height: 1;
   }
 }
+
 @media only screen and (max-width: 768px) and (orientation: portrait) {
   .scroll-to-top-button {
     bottom: 16px !important;

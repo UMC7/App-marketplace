@@ -281,15 +281,6 @@ const handleCopy = (text, field) => {
 
   return (
     <div>
-      {!isMobile && (
-  <h3
-    className="filter-toggle"
-    onClick={() => setFiltersVisible(prev => !prev)}
-    style={{ cursor: 'pointer' }}
-  >
-    {showFilters ? '▼ Filters' : '► Filters'}
-  </h3>
-)}
 
       {showFilters && (
         <div className={`filter-body expanded`}>

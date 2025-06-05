@@ -28,6 +28,7 @@ function ProfilePage() {
   const [jobOffers, setJobOffers] = useState([]);
   const [deletedJobs, setDeletedJobs] = useState([]);
   const [events, setEvents] = useState([]);
+  
   const fetchEvents = async () => {
   if (!currentUser) return;
 
@@ -68,8 +69,6 @@ const fetchServices = async () => {
   const [sentReviews, setSentReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false); // 🔧 Para menú hamburguesa
-
-
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(true);
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
