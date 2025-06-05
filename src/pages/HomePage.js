@@ -107,125 +107,136 @@ function HomePage() {
   }, [filterProducts]);
 
   return (
-    <div className="container">
-      <h1>SeaMarket</h1>
-      <h2>Explore Available Products</h2>
+  <div className="container">
+    <h1>SeaMarket</h1>
+    <h2>Explore Available Products</h2>
 
-      <button
-        className="navbar-toggle"
-        onClick={() => setShowFilters((prev) => !prev)}
-        style={{
+<h3
+  className="filter-toggle"
+  onClick={() => setShowFilters((prev) => !prev)}
+>
+  {showFilters ? 'Hide Filters ▲' : 'Show Filters ▼'}
+</h3>
+
+    <button
+      className="navbar-toggle"
+      onClick={() => setShowFilters((prev) => !prev)}
+      style={{
         marginBottom: '10px',
         padding: '10px 20px',
         fontSize: '16px',
         cursor: 'pointer',
       }}
-      >
-        ☰ Filtros
-      </button>
-  
-     <div className={`filters-container filters-panel ${showFilters ? 'show' : ''}`}>
-  {/* 🔍 Búsqueda */}
+    >
+      ☰ Filtros
+    </button>
+
+    {showFilters && (
+      <div className="filter-body expanded">
+        <div className="filters-container filters-panel show">
+          {/* 🔍 Búsqueda */}
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          {/* 🧾 Categoría + Condición */}
+          <input
+  type="text"
+  className="search-input"
+  placeholder="Search products..."
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+/>
+
+<select
+  className="category-select"
+  value={selectedCategory}
+  onChange={(e) => setSelectedCategory(e.target.value)}
+>
+  <option value="">Filter by category</option>
+  {categories.map((category) => (
+    <option key={category.id} value={category.id}>
+      {category.name}
+    </option>
+  ))}
+</select>
+
+<select
+  className="category-select"
+  value={selectedCondition}
+  onChange={(e) => setSelectedCondition(e.target.value)}
+>
+  <option value="">Filter by condition</option>
+  {['New', 'Second-hand', 'Refurbished'].map((condition) => (
+    <option key={condition} value={condition}>
+      {condition}
+    </option>
+  ))}
+</select>
+
+<select
+  className="category-select"
+  value={selectedCountry}
+  onChange={(e) => setSelectedCountry(e.target.value)}
+>
+  <option value="">Filter by country</option>
+  {countriesWithProducts.map((country) => (
+    <option key={country} value={country}>
+      {country}
+    </option>
+  ))}
+</select>
+
+<input
+  type="text"
+  className="search-input"
+  placeholder="Filter by city"
+  value={selectedCity}
+  onChange={(e) => setSelectedCity(e.target.value)}
+/>
+
+<div className="price-group-container">
   <input
-    type="text"
-    className="search-input"
-    placeholder="Search products..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
+    type="number"
+    className="price-input small-input"
+    placeholder="Minimum price"
+    value={priceRange.min}
+    onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
   />
 
-  {/* 🧾 Categoría + Condición */}
-  <div className="form-inline-group">
-    <select
-      className="category-select"
-      value={selectedCategory}
-      onChange={(e) => setSelectedCategory(e.target.value)}
-    >
-      <option value="">Filter by category</option>
-      {categories.map((category) => (
-        <option key={category.id} value={category.id}>
-          {category.name}
-        </option>
-      ))}
-    </select>
-
-    <select
-      className="category-select"
-      value={selectedCondition}
-      onChange={(e) => setSelectedCondition(e.target.value)}
-    >
-      <option value="">Filter by condition</option>
-      {['New', 'Second-hand', 'Refurbished'].map((condition) => (
-        <option key={condition} value={condition}>
-          {condition}
-        </option>
-      ))}
-    </select>
-  </div>
-
-  {/* 🗺 Ubicación: País + Ciudad */}
-  <div className="form-inline-group">
-    <select
-      className="category-select"
-      value={selectedCountry}
-      onChange={(e) => setSelectedCountry(e.target.value)}
-    >
-      <option value="">Filter by country</option>
-      {countriesWithProducts.map((country) => (
-        <option key={country} value={country}>
-          {country}
-        </option>
-      ))}
-    </select>
-
-    <input
-      type="text"
-      className="search-input"
-      placeholder="Filter by city"
-      value={selectedCity}
-      onChange={(e) => setSelectedCity(e.target.value)}
-    />
-  </div>
-
-  {/* 💰 Precio: mínimo + máximo */}
-  <div className="form-inline-group">
-    <input
-      type="number"
-      className="price-input"
-      placeholder="Minimum price"
-      value={priceRange.min}
-      onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
-    />
-    <input
-      type="number"
-      className="price-input"
-      placeholder="Maximum price"
-      value={priceRange.max}
-      onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-    />
-  </div>
-
-  {/* 📊 Ordenar */}
-  <select
-    className="category-select"
-    value={sortOrder}
-    onChange={(e) => setSortOrder(e.target.value)}
-  >
-    <option value="">Sort by price</option>
-    <option value="asc">Price: low to high</option>
-    <option value="desc">Price: high to low</option>
-  </select>
+  <input
+    type="number"
+    className="price-input small-input"
+    placeholder="Maximum price"
+    value={priceRange.max}
+    onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+  />
 </div>
 
+<select
+  className="category-select"
+  value={sortOrder}
+  onChange={(e) => setSortOrder(e.target.value)}
+>
+  <option value="">Sort by price</option>
+  <option value="asc">Price: low to high</option>
+  <option value="desc">Price: high to low</option>
+</select>
+        </div>
+      </div>
+    )}
 
-  
-      {loading ? (
-        <p>Loading products...</p>
-      ) : (
-        <ProductList products={filteredProducts} />
-      )}
-    </div>
-  );  
+    {loading ? (
+      <p>Loading products...</p>
+    ) : (
+      <ProductList products={filteredProducts} />
+    )}
+  </div>
+);  
 }
 
 export default HomePage;

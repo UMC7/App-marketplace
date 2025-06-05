@@ -940,3 +940,88 @@ button:hover,
     pointer-events: auto !important;
   }
 }
+
+@media (min-width: 1024px) {
+  .filter-toggle {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-primary);
+    cursor: pointer;
+    margin-bottom: 16px;
+    padding-left: 2px;
+    transition: color 0.2s ease;
+  }
+
+  .filter-toggle:hover {
+    color: var(--color-secondary);
+  }
+
+  .filter-body.collapsed {
+    display: none;
+  }
+
+  .filter-body.expanded {
+    display: block;
+  }
+
+  .filters-container {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px 24px;
+    margin-bottom: 30px;
+    border: 1px solid #e0e0e0;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .filters-container input,
+  .filters-container select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #fdfdfd;
+    transition: border-color 0.2s ease;
+  }
+
+  .filters-container input:focus,
+  .filters-container select:focus {
+    border-color: #68ada8;
+    outline: none;
+  }
+
+  .filters-container button {
+    grid-column: 1 / -1;
+    padding: 12px;
+    background-color: #081a3b;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out;
+  }
+
+  .filters-container button:hover {
+    background-color: #0f2a5f;
+  }
+
+  /* ✅ Campo más pequeño solo para Minimum y Maximum Price */
+  .price-group-container {
+    display: flex;
+    gap: 8px;
+    grid-column: span 1;
+  }
+
+  .filters-container .small-input {
+    flex: 1;
+    max-width: 140px;
+    min-width: 0;
+  }
+}
