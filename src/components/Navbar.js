@@ -65,17 +65,19 @@ function Navbar() {
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <nav className="navbar-container">
-  <div className="navbar-left">
-    <Link to="/">
-      <img
-        src="/logos/yachtdaywork.png"
-        alt="YachtDayWork logo"
-        className="navbar-logo"
-      />
-    </Link>
-    <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>☰</button>
-  </div>
+  <nav className="navbar-container">
+    <div className="navbar-left">
+      <Link to="/">
+        <img
+          src="/logos/yachtdaywork.png"
+          alt="YachtDayWork logo"
+          className="navbar-logo"
+        />
+      </Link>
+      {!window.matchMedia('(max-width: 900px) and (orientation: landscape)').matches && (
+        <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>☰</button>
+      )}
+    </div>
 
       <div className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
 

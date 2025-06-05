@@ -246,3 +246,107 @@
     color: var(--primary-color);
   }
 }
+
+@media (max-width: 768px) and (orientation: landscape) {
+  nav .navbar-toggle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .navbar-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .navbar-left {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    padding-bottom: 6px;
+  }
+
+  .navbar-logo {
+    height: 55px;
+  }
+
+  .navbar-links {
+    display: flex !important;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+    padding: 6px 2px;
+    background-color: #8c8c8c;
+    position: static;
+    box-shadow: none;
+    gap: 2px;
+  }
+
+  .navbar-links > * {
+    flex: 1 1 16%;
+    max-width: 16.6%;
+    text-align: center;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .profile-icon-text,
+  .logout-icon-text,
+  .cart-icon-text,
+  .favorites-icon-text,
+  .chats-icon-text,
+  .post-icon-text {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .profile-icon-text .material-icons,
+  .logout-icon-text .material-icons,
+  .cart-icon-text .material-icons,
+  .favorites-icon-text .material-icons,
+  .chats-icon-text .material-icons,
+  .post-icon-text .material-icons {
+    font-size: 21px !important;
+  }
+
+  .profile-icon-text small,
+  .logout-icon-text small,
+  .cart-icon-text small,
+  .favorites-icon-text small,
+  .chats-icon-text small,
+  .post-icon-text small {
+    font-size: 9.5px;
+  }
+
+  nav .navbar-toggle {
+    display: none !important;
+  }
+
+  .post-dropdown {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    background-color: #8c8c8c !important; /* igual al navbar */
+    z-index: 999;
+    padding: 8px 0;
+    border-radius: 8px;
+    width: max-content;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .post-dropdown .navLink {
+    color: white !important;
+    background-color: transparent !important;
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 15px;
+    width: 100%;
+  }
+
+  .post-dropdown .navLink:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: white !important;
+  }
+}

@@ -1173,20 +1173,20 @@ const refetchEvents = async () => {
   <div className="container">
     <h1>My Profile</h1>
 
-    <div className="tabs-container">
+  <div className="tabs-container">
   <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-  Menu
-</button>
-  <div className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
-    <button className="navLink" onClick={() => { setActiveTab('productos'); setIsMenuOpen(false); }}>My Products</button>
-    <button className="navLink" onClick={() => { setActiveTab('servicios'); setIsMenuOpen(false); }}>My Services</button>
-    <button className="navLink" onClick={() => { setActiveTab('empleos'); setIsMenuOpen(false); }}>My Jobs</button>
-    <button className="navLink" onClick={() => { setActiveTab('eventos'); setIsMenuOpen(false); }}>My Events</button>
-    <button className="navLink" onClick={() => { setActiveTab('compras'); setIsMenuOpen(false); }}>My Purchases</button>
-    <button className="navLink" onClick={() => { setActiveTab('ventas'); setIsMenuOpen(false); }}>My Sales</button>
-    <button className="navLink" onClick={() => { setActiveTab('eliminados'); setIsMenuOpen(false); }}>Deleted</button>
-    <button className="navLink" onClick={() => { setActiveTab('valoracion'); setIsMenuOpen(false); }}>Rating</button>
-    <button className="navLink" onClick={() => { setActiveTab('usuario'); setIsMenuOpen(false); }}>User Details</button>
+    Menu
+  </button>
+  <div className={`profile-tabs ${isMenuOpen ? 'active' : ''}`}>
+    <button onClick={() => { setActiveTab('productos'); setIsMenuOpen(false); }}>My Products</button>
+    <button onClick={() => { setActiveTab('servicios'); setIsMenuOpen(false); }}>My Services</button>
+    <button onClick={() => { setActiveTab('empleos'); setIsMenuOpen(false); }}>My Jobs</button>
+    <button onClick={() => { setActiveTab('eventos'); setIsMenuOpen(false); }}>My Events</button>
+    <button onClick={() => { setActiveTab('compras'); setIsMenuOpen(false); }}>My Purchases</button>
+    <button onClick={() => { setActiveTab('ventas'); setIsMenuOpen(false); }}>My Sales</button>
+    <button onClick={() => { setActiveTab('eliminados'); setIsMenuOpen(false); }}>Deleted</button>
+    <button onClick={() => { setActiveTab('valoracion'); setIsMenuOpen(false); }}>Rating</button>
+    <button onClick={() => { setActiveTab('usuario'); setIsMenuOpen(false); }}>User Details</button>
   </div>
 </div>
 

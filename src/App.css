@@ -1025,3 +1025,88 @@ button:hover,
     min-width: 0;
   }
 }
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .profile-menu-toggle {
+    display: block;
+    width: 100%;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 16px;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    text-align: left;
+    font-family: var(--font-body);
+  }
+
+  .profile-tabs {
+    display: none;
+    flex-direction: column;
+    background-color: #ccc;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+
+  .profile-tabs.active {
+    display: flex;
+    flex-direction: column;
+    background-color: #ccc;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+
+    align-items: center; /* ✅ Centrado horizontal */
+  }
+
+  .profile-tabs button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  text-align: center;         /* ✅ Cambiado a 'center' para alineación uniforme */
+  font-size: 14px;
+  font-family: var(--font-body);
+
+  width: 90%;                 /* ✅ Nuevo: ancho uniforme */
+  max-width: 320px;           /* ✅ Nuevo: límite superior */
+  margin-left: auto;          /* ✅ Nuevo: centra el botón */
+  margin-right: auto;         /* ✅ Nuevo: centra el botón */
+}
+}
+
+@media (min-width: 769px) {
+  .tabs-container .navbar-toggle {
+    display: none !important;
+  }
+
+  .profile-tabs {
+    display: flex !important;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    background-color: transparent;
+    padding: 12px 0;
+  }
+
+  .profile-tabs button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    margin: 4px;
+    cursor: pointer;
+  }
+
+  .profile-tabs button:hover {
+    background-color: var(--accent-color);
+  }
+}
