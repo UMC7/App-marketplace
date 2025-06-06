@@ -1,3 +1,5 @@
+// src/pages/RegisterPage.js
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
@@ -33,21 +35,17 @@ function RegisterPage() {
     }
 
     try {
-      console.log('Iniciando signUp con:', form.email);
-
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
       });
 
       if (signUpError || !data?.user) {
-        console.error('❌ Error en signUp:', signUpError?.message);
         toast.error('Registration failed. Please check your information.');
         return;
       }
 
       const userId = data.user.id;
-      console.log('✅ User successfully registered:', userId);
 
       const insertData = {
         id: userId,
@@ -61,23 +59,17 @@ function RegisterPage() {
         updated_at: new Date().toISOString(),
       };
 
-      // 👇 actualizamos con UPSERT para evitar errores si el trigger ya creó la fila
-      const { error: upsertError, data: upsertResult } = await supabase
+      const { error: upsertError } = await supabase
         .from('users')
         .upsert(insertData, { onConflict: 'id' });
 
-      console.log('🧪 Resultado de upsert:', upsertResult);
-
       if (upsertError) {
-        console.error('❌ Failed to save user data:', upsertError.message);
         toast.error('Partial registration: user account created, but some data was not saved.');
         return;
       }
 
-      console.log('✅ User information updated successfully.');
-      navigate('/profile');
+      navigate('/');
     } catch (err) {
-      console.error('❌ Something went wrong:', err.message);
       setError('Something went wrong.');
     }
   };
@@ -85,62 +77,112 @@ function RegisterPage() {
   const birthYears = Array.from({ length: 80 }, (_, i) => 2025 - i);
 
   const isFormComplete = () => {
-  const {
-    firstName,
-    lastName,
-    birthYear,
-    nickname,
-    phone,
-    email,
-    password,
-    confirmPassword
-  } = form;
+    const {
+      firstName,
+      lastName,
+      birthYear,
+      nickname,
+      phone,
+      email,
+      password,
+      confirmPassword,
+    } = form;
+
+    return (
+      firstName.trim() &&
+      lastName.trim() &&
+      birthYear &&
+      nickname.trim() &&
+      phone.trim() &&
+      email.trim() &&
+      password &&
+      confirmPassword &&
+      password === confirmPassword
+    );
+  };
 
   return (
-    firstName.trim() &&
-    lastName.trim() &&
-    birthYear &&
-    nickname.trim() &&
-    phone.trim() &&
-    email.trim() &&
-    password &&
-    confirmPassword &&
-    password === confirmPassword
-  );
-};
-
-  return (
-    <div className="container">
+  <div className="container">
     <div className="login-form">
       <h2>User Registration</h2>
 
+      <label>
+        Name <span style={{ color: 'red' }}>*</span>
+      </label>
       <input name="firstName" placeholder="Name" onChange={handleChange} required />
+
+      <label>
+        Last Name <span style={{ color: 'red' }}>*</span>
+      </label>
       <input name="lastName" placeholder="Last Name" onChange={handleChange} required />
 
+      <label>
+        Year of Birth <span style={{ color: 'red' }}>*</span>
+      </label>
       <select name="birthYear" onChange={handleChange} required>
         <option value="">Year of Birth</option>
         {birthYears.map((year) => (
-          <option key={year} value={year}>{year}</option>
+          <option key={year} value={year}>
+            {year}
+          </option>
         ))}
       </select>
 
+      <label>
+        Nickname <span style={{ color: 'red' }}>*</span>
+      </label>
       <input name="nickname" placeholder="Nickname" onChange={handleChange} required />
-      <input name="phone" placeholder="Primary Phone" onChange={handleChange} required />
-      <input name="altPhone" placeholder="Alternative Phone (optional)" onChange={handleChange} />
-      <input name="email" placeholder="Primary Email" onChange={handleChange} required />
-      <input name="altEmail" placeholder="Alternative Email (optional)" onChange={handleChange} />
 
-      <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
-      <input type="password" name="confirmPassword" placeholder="Confirm Password" onChange={handleChange} required />
+      <label>
+        Primary Phone <span style={{ color: 'red' }}>*</span>
+      </label>
+      <input name="phone" placeholder="Primary Phone" onChange={handleChange} required />
+
+      <label>Alternative Phone (optional)</label>
+      <input name="altPhone" placeholder="Alternative Phone" onChange={handleChange} />
+
+      <label>
+        Primary Email <span style={{ color: 'red' }}>*</span>
+      </label>
+      <input name="email" placeholder="Primary Email" onChange={handleChange} required />
+
+      <label>Alternative Email (optional)</label>
+      <input name="altEmail" placeholder="Alternative Email" onChange={handleChange} />
+
+      <label>
+        Password <span style={{ color: 'red' }}>*</span>
+      </label>
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        onChange={handleChange}
+        required
+      />
+
+      <label>
+        Confirm Password <span style={{ color: 'red' }}>*</span>
+      </label>
+      <input
+        type="password"
+        name="confirmPassword"
+        placeholder="Confirm Password"
+        onChange={handleChange}
+        required
+      />
 
       <button onClick={handleRegister} disabled={!isFormComplete()}>
-  Sign Up
-</button>
+        Sign Up
+      </button>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      <p style={{ marginTop: '10px', fontSize: '0.9rem' }}>
+        <span style={{ color: 'red' }}>*</span> Required fields
+      </p>
     </div>
   </div>
-  );
+);
 }
 
 export default RegisterPage;

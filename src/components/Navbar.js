@@ -16,6 +16,7 @@ function Navbar() {
   const { cartItems = [], setCartItems } = useCarrito();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
+  const [showPostOptions, setShowPostOptions] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
@@ -154,6 +155,72 @@ function Navbar() {
           />
         )
       )}
+      {window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches && (
+  <div className="navbar-bottom">
+    {currentUser ? (
+      <>
+        <button className="nav-icon-button" onClick={() => navigate('/profile')}>
+          <span className="material-icons">account_circle</span>
+          <small>Profile</small>
+        </button>
+
+        <button className="nav-icon-button" onClick={() => setShowPostOptions(true)}>
+          <span className="material-icons">add_circle_outline</span>
+          <small>Post</small>
+        </button>
+
+        <button className="nav-icon-button" onClick={() => setShowChatList(true)}>
+          {unreadCount > 0 && <span className="chat-badge">{unreadCount}</span>}
+          <span className="material-icons">chat_bubble_outline</span>
+          <small>Chats</small>
+        </button>
+
+        <button className="nav-icon-button" onClick={() => navigate('/favorites')}>
+          <span className="material-icons">favorite_border</span>
+          <small>Favorites</small>
+        </button>
+
+        <button className="nav-icon-button" onClick={() => navigate('/cart')}>
+          {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+          <span className="material-icons">shopping_cart</span>
+          <small>Cart</small>
+        </button>
+
+        <button className="nav-icon-button" onClick={handleLogout}>
+          <span className="material-icons">logout</span>
+          <small>Logout</small>
+        </button>
+      </>
+    ) : (
+      <>
+        <button className="nav-icon-button" onClick={() => navigate('/login')}>
+          <span className="material-icons">person_outline</span>
+          <small>Login</small>
+        </button>
+        <button className="nav-icon-button" onClick={() => navigate('/register')}>
+          <span className="material-icons">person_add</span>
+          <small>Register</small>
+        </button>
+      </>
+    )}
+  </div>
+)}
+
+{showPostOptions && (
+  <div
+    className="post-options-modal"
+    onClick={() => setShowPostOptions(false)}
+  >
+    <div className="post-options-content" onClick={(e) => e.stopPropagation()}>
+      <h3>Select what you want to post</h3>
+      <button className="navLink" onClick={() => { setShowProductModal(true); setShowPostOptions(false); }}>Post Product</button>
+      <button className="navLink" onClick={() => { setShowServiceModal(true); setShowPostOptions(false); }}>Post Service</button>
+      <button className="navLink" onClick={() => { setShowOfferModal(true); setShowPostOptions(false); }}>Post Job</button>
+      <button className="navLink" onClick={() => { setShowEventModal(true); setShowPostOptions(false); }}>Post Event</button>
+    </div>
+  </div>
+)}
+
     </nav>
   );
 

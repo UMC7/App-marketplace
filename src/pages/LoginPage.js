@@ -23,7 +23,7 @@ function LoginPage() {
       if (error) {
         setError(error.message);
       } else if (data.user) {
-        navigate('/profile');
+        navigate('/');
       } else {
         setError('Login failed. Please try again.');
       }
@@ -53,6 +53,10 @@ function LoginPage() {
     }
   };
 
+  const isLoginFormComplete = () => {
+  return email.trim() !== '' && password !== '';
+  };
+
   return (
     <div className="container login-form">
       <h2>Welcome Back</h2>
@@ -70,7 +74,9 @@ function LoginPage() {
         onChange={(e) => setPassword(e.target.value)}
         required
       />
-      <button onClick={handleLogin}>Sign In</button>
+      <button onClick={handleLogin} disabled={!isLoginFormComplete()}>
+        Sign In
+      </button>
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <div style={{ marginTop: '12px' }}>

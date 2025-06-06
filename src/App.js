@@ -1,5 +1,12 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 
 // Contexts
 import { useAuth } from './context/AuthContext';
@@ -62,61 +69,63 @@ function App() {
       <AuthRedirectHandler />
       <ToastContainer autoClose={1500} />
 
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/marketplace" element={<HomePage />} />
+      <div className="main-content">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/marketplace" element={<HomePage />} />
 
-        <Route
-          path="/login"
-          element={!currentUser ? <LoginPage /> : <Navigate to="/profile" replace />}
-        />
-        <Route
-          path="/register"
-          element={!currentUser ? <RegisterPage /> : <Navigate to="/profile" replace />}
-        />
+          <Route
+            path="/login"
+            element={!currentUser ? <LoginPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/register"
+            element={!currentUser ? <RegisterPage /> : <Navigate to="/profile" replace />}
+          />
 
-        <Route path="/product/:id" element={<ProductDetailPage />} />
-        <Route path="/yacht-services" element={<YachtServicesPage />} />
-        <Route path="/yacht-services/post-product" element={<PostProduct />} />
-        <Route path="/yacht-works" element={<YachtWorksPage />} />
-        <Route path="/events" element={<EventsPage />} />
+          <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/yacht-services" element={<YachtServicesPage />} />
+          <Route path="/yacht-services/post-product" element={<PostProduct />} />
+          <Route path="/yacht-works" element={<YachtWorksPage />} />
+          <Route path="/events" element={<EventsPage />} />
 
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/post-product"
-          element={
-            <ProtectedRoute>
-              <PostProduct />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/favorites"
-          element={
-            <ProtectedRoute>
-              <FavoritesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <CartPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/post-product"
+            element={
+              <ProtectedRoute>
+                <PostProduct />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/favorites"
+            element={
+              <ProtectedRoute>
+                <FavoritesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <CartPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
