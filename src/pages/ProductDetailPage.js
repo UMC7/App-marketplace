@@ -7,6 +7,8 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { useCarrito } from '../context/CarritoContext';
 import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 
 function ProductDetailPage(props) {
   const params = useParams();

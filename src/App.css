@@ -1110,3 +1110,72 @@ button:hover,
     background-color: var(--accent-color);
   }
 }
+
+/* Modal Styles for better control and reusability */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-content-wrapper {
+  background-color: #fff;
+  color: #000;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #000; /* Ensure button is visible */
+}
+
+/* Fix for navbar overlap on mobile portrait for modals */
+@media (max-width: 768px) and (orientation: portrait) {
+  .modal-overlay {
+    /* Volvemos a centrar el modal verticalmente por defecto en el overlay */
+    /* Quitamos el padding-top que pusimos antes aquí */
+    align-items: center; 
+    justify-content: center; /* Mantener este para centrado horizontal */
+  }
+
+  .modal-content-wrapper {
+    /*
+      Aplicamos un margin-top directo para empujar el modal hacia abajo
+      desde el borde superior de la pantalla.
+      Cálculo: Altura Navbar (76px) + Espacio deseado desde Navbar (ej. 20px) = 96px
+    */
+    margin-top: 96px; 
+
+    /*
+      Ajustamos la altura máxima del modal para asegurar espacio en la parte inferior.
+      Cálculo: 100vh (altura de la pantalla)
+               - margin-top del modal (96px)
+               - Espacio deseado en la parte inferior (ej. 20px)
+             = 100vh - 116px
+    */
+    max-height: calc(100vh - 96px - 20px); 
+    
+    height: auto; /* Permite que la altura del modal se ajuste a su contenido si es menor que max-height */
+    overflow-y: auto; /* Mantiene el scroll si el contenido excede la altura máxima */
+  }
+}

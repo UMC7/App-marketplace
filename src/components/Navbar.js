@@ -226,36 +226,14 @@ function Navbar() {
 
   function renderModal(content) {
     return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 2000
-      }} onClick={() => {
+      <div className="modal-overlay" onClick={() => {
         setShowProductModal(false);
         setShowOfferModal(false);
         setShowServiceModal(false);
         setShowEventModal(false);
         setShowChatList(false);
       }}>
-        <div style={{
-          backgroundColor: '#fff',
-          color: '#000',
-          padding: '20px',
-          borderRadius: '8px',
-          width: '90%',
-          maxWidth: '600px',
-          position: 'relative',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          boxSizing: 'border-box'
-        }} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-content-wrapper" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => {
               setShowProductModal(false);
@@ -264,15 +242,7 @@ function Navbar() {
               setShowEventModal(false);
               setShowChatList(false);
             }}
-            style={{
-              position: 'absolute',
-              top: '10px',
-              right: '15px',
-              background: 'transparent',
-              border: 'none',
-              fontSize: '18px',
-              cursor: 'pointer',
-            }}
+            className="modal-close-button"
           >X</button>
           {content}
         </div>
