@@ -1,14 +1,9 @@
+// src/components/ProductCard.js
 import React from 'react';
 
-function ProductCard({ product, onRemoveFavorite }) {
+function ProductCard({ product, onRemoveFavorite, onOpenModal }) {
   const isDeleted = product?.status === 'deleted';
   const isPaused = product?.status === 'paused';
-
-  const handleCardClick = (e) => {
-    if (isDeleted || isPaused) {
-      e.preventDefault();
-    }
-  };
 
   const id = product?.id ?? null;
   const name = product?.name || '';
@@ -16,9 +11,15 @@ function ProductCard({ product, onRemoveFavorite }) {
   const country = product?.country || 'No especificado';
   const mainphoto = product?.mainphoto || 'https://via.placeholder.com/200?text=Sin+imagen';
 
+  const handleClick = (e) => {
+    // Evita modal si es Ctrl+Click o clic derecho
+    if (e.ctrlKey || e.metaKey || e.button !== 0) return;
+    e.preventDefault();
+    if (!isDeleted && onOpenModal) onOpenModal(product);
+  };
+
   return (
     <div className="product-card">
-
       {isDeleted && (
         <div
           style={{
@@ -40,8 +41,8 @@ function ProductCard({ product, onRemoveFavorite }) {
       )}
 
       <a
-        href={isDeleted ? undefined : `/product/${id}`}
-        onClick={handleCardClick}
+        href={`/product/${id}`}
+        onClick={handleClick}
         style={{
           pointerEvents: isDeleted ? 'none' : 'auto',
           textDecoration: 'none',
@@ -64,12 +65,12 @@ function ProductCard({ product, onRemoveFavorite }) {
 
       {onRemoveFavorite && (
         <button
-  className="landing-button"
-  onClick={() => onRemoveFavorite(id)}
-  style={{ marginTop: '10px' }}
->
-  Quitar de favoritos
-</button>
+          className="landing-button"
+          onClick={() => onRemoveFavorite(id)}
+          style={{ marginTop: '10px' }}
+        >
+          Quitar de favoritos
+        </button>
       )}
     </div>
   );

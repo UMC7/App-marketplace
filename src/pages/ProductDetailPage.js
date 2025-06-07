@@ -8,8 +8,9 @@ import { useAuth } from '../context/AuthContext';
 import { useCarrito } from '../context/CarritoContext';
 import Slider from 'react-slick';
 
-function ProductDetailPage() {
-  const { id } = useParams();
+function ProductDetailPage(props) {
+  const params = useParams();
+  const id = props.id || params.id;
   const { currentUser } = useAuth();
   const { addToCart, cartItems = [] } = useCarrito();
 
