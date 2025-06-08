@@ -29,6 +29,7 @@ import YachtServicesPage from './pages/YachtServicesPage';
 import YachtWorksPage from './pages/YachtWorksPage';
 import EventsPage from './pages/EventsPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import AdminPanel from './pages/AdminPanel'; // ✅ NUEVO IMPORT
 
 import './App.css';
 import { toast, ToastContainer } from 'react-toastify';
@@ -118,6 +119,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <CartPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPanel />
               </ProtectedRoute>
             }
           />
