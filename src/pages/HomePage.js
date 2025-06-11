@@ -143,15 +143,6 @@ function HomePage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
 
-          {/* 🧾 Categoría + Condición */}
-          <input
-  type="text"
-  className="search-input"
-  placeholder="Search products..."
-  value={searchTerm}
-  onChange={(e) => setSearchTerm(e.target.value)}
-/>
-
 <select
   className="category-select"
   value={selectedCategory}

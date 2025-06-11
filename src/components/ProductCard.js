@@ -7,12 +7,12 @@ function ProductCard({ product, onRemoveFavorite, onOpenModal }) {
 
   const id = product?.id ?? null;
   const name = product?.name || '';
-  const price = product?.price ? `${product.currency || ''} ${product.price}` : '-';
-  const country = product?.country || 'No especificado';
+  const price = product?.price
+  ? `${product.currency || ''} ${Number(product.price).toLocaleString('en-US')}` : '-';
+  const country = product?.country || 'Not specified';
   const mainphoto = product?.mainphoto || 'https://via.placeholder.com/200?text=Sin+imagen';
 
   const handleClick = (e) => {
-    // Evita modal si es Ctrl+Click o clic derecho
     if (e.ctrlKey || e.metaKey || e.button !== 0) return;
     e.preventDefault();
     if (!isDeleted && onOpenModal) onOpenModal(product);
@@ -36,42 +36,39 @@ function ProductCard({ product, onRemoveFavorite, onOpenModal }) {
             pointerEvents: 'none',
           }}
         >
-          Producto eliminado
+          Product deleted
         </div>
       )}
 
-      <a
-        href={`/product/${id}`}
-        onClick={handleClick}
-        style={{
-          pointerEvents: isDeleted ? 'none' : 'auto',
-          textDecoration: 'none',
-          color: 'inherit',
-        }}
-      >
-        <img
-          src={mainphoto}
-          alt={name}
-          style={{ width: '200px', height: '200px', objectFit: 'cover' }}
-        />
-        <h3>{name}</h3>
-        <p>Precio: {price}</p>
-        <p>País: {country}</p>
-
-        {isPaused && (
-          <p style={{ color: 'orange', fontWeight: 'bold' }}>Producto Pausado</p>
-        )}
-      </a>
-
-      {onRemoveFavorite && (
-        <button
-          className="landing-button"
-          onClick={() => onRemoveFavorite(id)}
-          style={{ marginTop: '10px' }}
-        >
-          Quitar de favoritos
-        </button>
-      )}
+      <div className="product-card-inner" onClick={handleClick} style={{ cursor: isDeleted ? 'not-allowed' : 'pointer', opacity: isDeleted ? 0.5 : 1 }}>
+        <div className="product-image-col">
+          <img
+            src={mainphoto}
+            alt={name}
+            style={{ width: '110px', height: '110px', objectFit: 'cover', borderRadius: '10px' }}
+          />
+        </div>
+        <div className="product-info-col">
+          <h3>{name}</h3>
+          <p>{price}</p>
+          <p>{country}</p>
+          {isPaused && (
+            <p style={{ color: 'orange', fontWeight: 'bold' }}>Product Paused</p>
+          )}
+          {onRemoveFavorite && (
+            <button
+              className="landing-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveFavorite(id);
+              }}
+              style={{ marginTop: '10px' }}
+            >
+              Remove from favorites
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

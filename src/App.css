@@ -1140,8 +1140,30 @@ button:hover,
   color: #000; /* Ensure button is visible */
 }
 
-/* Fix for navbar overlap on mobile portrait for modals */
+/* Solo afecta los textarea dentro del bloque de preguntas y respuestas en ProductDetailPage */
+.product-detail-qa textarea {
+  width: 100%;
+  min-height: 1.5em;  /* No se puede hacer más bajo que una fila */
+  resize: vertical;   /* Solo permite crecer hacia abajo */
+  box-sizing: border-box;
+  font-size: 1rem;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #bbb;
+  margin-bottom: 8px;
+  background: #fff;
+}
+
 @media (max-width: 768px) and (orientation: portrait) {
+  .products-grid {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 0;
+  }
+
   .modal-overlay {
     align-items: center; 
     justify-content: center;
@@ -1155,9 +1177,75 @@ button:hover,
   }
 
   .close-button {
-    top: 10px; /* Mantener la distancia desde arriba */
-    right: unset; /* Deshacer el 'right' para poder usar 'left' */
-    left: 50%;    /* Posicionar el borde izquierdo en el centro */
-    transform: translateX(-50%); /* Mover hacia la izquierda la mitad de su propio ancho */
+    top: 10px;
+    right: unset;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .product-card {
+    width: 100%;
+    padding: 8px 0;
+    margin-bottom: 14px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+    position: relative;
+    min-height: 120px;
+  }
+
+  .product-card-inner {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+    /* gap: 12px;  <-- eliminado para usar margen izquierdo en la imagen */
+  }
+
+  .product-image-col {
+    flex: 0 0 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 110px;
+    background: none;
+    overflow: hidden;
+    margin-left: 12px; /* Espacio igual al "gap" original, crea simetría */
+  }
+
+  .product-info-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: 0 4px;
+  }
+
+  .product-info-col h3 {
+    font-size: 1.1rem;
+    margin: 0 0 2px 0;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .product-info-col p {
+    margin: 2px 0;
+    font-size: 0.99rem;
+  }
+
+  .product-image-col img {
+    max-width: 110px;
+    max-height: 110px;
+    display: block;
+    margin: 0 auto;
+    object-fit: contain;
+    background: none;
   }
 }

@@ -28,7 +28,6 @@ function ProductDetailPage(props) {
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState('');
 
-  // Fetch all data in one useEffect for conciseness
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -36,7 +35,7 @@ function ProductDetailPage(props) {
       const { data: productData, error: productError } = await supabase
         .from('products').select('*').eq('id', id).single();
       if (!productError) setProduct(productData);
-      else console.error("Error fetching product:", productError); // Keep console error for dev
+      else console.error("Error fetching product:", productError);
 
       // Fetch messages
       const { data: messagesData, error: messagesError } = await supabase
@@ -55,12 +54,11 @@ function ProductDetailPage(props) {
     };
 
     fetchData();
-  }, [id, currentUser]); // Dependencies: product ID and current user
+  }, [id, currentUser]);
 
   if (loading) return <p>Loading product...</p>;
   if (!product) return <p>Product not found.</p>;
 
-  // Derived state for conciseness
   const isOwner = currentUser?.id === product.owner;
   const enCarrito = cartItems.find(item => item.id === product.id)?.quantity || 0;
   const stockDisponible = Math.max(0, product.quantity - enCarrito);
@@ -83,9 +81,7 @@ function ProductDetailPage(props) {
     setFavLoading(false);
   };
 
-  // handleRemoveFavorite is not directly used in JSX, keeping it out for conciseness unless needed.
-
-  const refreshMessages = async () => { // Helper to refresh messages
+  const refreshMessages = async () => {
     const { data, error } = await supabase.from('messages')
       .select('id, content, sender_id, sent_at, product_id, receiver_id, users(nickname)')
       .eq('product_id', parseInt(id)).order('sent_at', { ascending: true });
@@ -130,16 +126,19 @@ function ProductDetailPage(props) {
         ))}
       </Slider>
 
-      <h3>Description</h3>
-      <p>{product.description}</p>
-
+      {/* Product Information (ahora reordenado, sin contenedor extra ni borde) */}
       <h3>Product Information</h3>
       <p><strong>Price:</strong> {product.currency || ''} {product.price}</p>
+      <p><strong>Condition:</strong> {product.condition}</p>
       <p><strong>Available Stock:</strong> {stockDisponible}</p>
       <p><strong>City:</strong> {product.city}</p>
       <p><strong>Country:</strong> {product.country}</p>
-      <p><strong>Condition:</strong> {product.condition}</p>
 
+      {/* Description ahora debajo de Product Information */}
+      <h3>Description</h3>
+      <p style={{ whiteSpace: 'pre-line' }}>{product.description}</p>
+
+      {/* Actions */}
       {isPaused ? (
         <p style={{ color: 'red' }}>This product is paused.</p>
       ) : (
@@ -147,23 +146,49 @@ function ProductDetailPage(props) {
           {!isOwner && currentUser && stockDisponible > 0 && (
             <>
               <h3>Quantity to Purchase</h3>
-              <input type="number" min="1" max={stockDisponible} value={purchaseQty}
-                onChange={(e) => setPurchaseQty(parseInt(e.target.value))} />
-              <button className="landing-button" onClick={handleAddToCart} disabled={purchaseQty === 0}>Add to cart</button>
+              <input
+                type="number"
+                min="1"
+                max={stockDisponible}
+                value={purchaseQty}
+                onChange={(e) => setPurchaseQty(parseInt(e.target.value))}
+                style={{ maxWidth: 80, textAlign: 'center', marginBottom: 8 }}
+              />
+              <button
+                className="landing-button"
+                onClick={handleAddToCart}
+                disabled={purchaseQty === 0}
+                style={{ marginLeft: 8 }}
+              >
+                Add to cart
+              </button>
             </>
           )}
 
           {!isOwner && currentUser && (
-            <button className="landing-button" onClick={handleAddToFavorites} disabled={isFavorite || favLoading}>
+            <button
+              className="landing-button"
+              onClick={handleAddToFavorites}
+              disabled={isFavorite || favLoading}
+              style={{ marginLeft: 8 }}
+            >
               {isFavorite ? '✔ In favorites' : 'Add to favorites'}
             </button>
           )}
         </>
       )}
 
-      <div style={{ marginTop: 40 }}>
-        <h3>Questions and Answers</h3>
-        {messages.filter(msg => !msg.receiver_id).map(q => { // Filter for questions
+      {/* Questions & Answers */}
+      <div
+        className="product-detail-qa"
+        style={{
+          margin: '40px auto 0 auto',
+          maxWidth: 500,
+          width: '100%',
+        }}
+      >
+        <h3 style={{ marginTop: 0 }}>Questions and Answers</h3>
+        {messages.filter(msg => !msg.receiver_id).map(q => {
           const answer = messages.find(m => m.receiver_id === q.id);
           return (
             <div key={q.id} style={{ borderBottom: '1px solid #ccc', marginBottom: 10, paddingBottom: 5 }}>
@@ -195,7 +220,7 @@ function ProductDetailPage(props) {
           <div style={{ marginTop: 20 }}>
             <textarea rows={3} value={questionText} onChange={(e) => setQuestionText(e.target.value)}
               placeholder="Ask a question..." style={{ width: '100%' }} disabled={messageLoading} />
-            <button className="landing-button" onClick={handleSubmitQuestion} disabled={messageLoading || !questionText.trim()}>
+            <button className="landing-button" onClick={handleSubmitQuestion} disabled={messageLoading || !questionText.trim()} style={{ marginTop: 8 }}>
               {messageLoading ? 'Sending...' : 'Submit question'}
             </button>
           </div>
