@@ -1,0 +1,92 @@
+.admin-panel {
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+.admin-panel h2 {
+  margin-bottom: 20px;
+}
+
+.admin-panel nav {
+  margin-bottom: 20px;
+}
+
+.admin-panel nav button {
+  margin-right: 8px;
+  padding: 6px 12px;
+  background-color: #ddd;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.admin-panel nav button.active {
+  background-color: #333;
+  color: #fff;
+}
+
+.admin-panel input[type="text"] {
+  margin-bottom: 10px;
+  padding: 5px;
+  width: 300px;
+  font-size: 14px;
+}
+
+.admin-panel table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.admin-panel th,
+.admin-panel td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.admin-panel th {
+  background-color: #f4f4f4;
+}
+
+.admin-panel tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.admin-panel button.block-btn {
+  padding: 4px 8px;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.admin-panel button.block {
+  background-color: #dc3545;
+}
+
+.admin-panel button.unblock {
+  background-color: #28a745;
+}
+
+.admin-panel .pagination button {
+  margin-right: 4px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.admin-panel .pagination button.active {
+  background-color: #333;
+  color: #fff;
+}
+
+.admin-panel table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+  max-width: 100%;
+}
