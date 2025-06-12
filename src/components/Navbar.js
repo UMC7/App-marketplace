@@ -29,6 +29,25 @@ function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const menuRef = useRef();
 
+  // Nuevo: detecta si está en móvil portrait en tiempo real
+  const [isMobilePortrait, setIsMobilePortrait] = useState(
+    window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches
+  );
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      setIsMobilePortrait(window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches);
+    };
+
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -72,19 +91,20 @@ function Navbar() {
   return (
     <nav className="navbar-container">
       <div className="navbar-left">
-  <div className="navbar-logo-wrapper">
-    <Link to="/">
-      <img
-        src="/logos/yachtdaywork.png"
-        alt="YachtDayWork logo"
-        className="navbar-logo"
-      />
-    </Link>
-  </div>
-  {!window.matchMedia('(max-width: 900px) and (orientation: landscape)').matches && (
-    <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>☰</button>
-  )}
-</div>
+        <div className="navbar-logo-wrapper">
+          <Link to="/">
+            <img
+              src="/logos/yachtdaywork.png"
+              alt="YachtDayWork logo"
+              className="navbar-logo"
+            />
+          </Link>
+        </div>
+        {/* No mostramos el toggle si es móvil landscape */}
+        {!window.matchMedia('(max-width: 900px) and (orientation: landscape)').matches && (
+          <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>☰</button>
+        )}
+      </div>
 
       <div className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
         {currentUser ? (
@@ -149,6 +169,7 @@ function Navbar() {
         )}
       </div>
 
+      {/* Modales de publicación y chats */}
       {showOfferModal && renderModal(<YachtOfferForm user={currentUser} onOfferPosted={() => { setShowOfferModal(false); window.location.reload(); }} />)}
       {showProductModal && renderModal(<PostProductForm onPosted={() => { setShowProductModal(false); window.location.reload(); }} />)}
       {showServiceModal && renderModal(<PostServiceForm onPosted={() => { setShowServiceModal(false); window.location.reload(); }} />)}
@@ -168,7 +189,8 @@ function Navbar() {
         )
       )}
 
-      {window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches && (
+      {/* Usamos el estado isMobilePortrait en vez de media query directa */}
+      {isMobilePortrait && (
         <div className="navbar-bottom">
           {currentUser ? (
             <>
@@ -226,6 +248,7 @@ function Navbar() {
         </div>
       )}
 
+      {/* Modal de selección de tipo de publicación desde el botón Post en el menú inferior móvil */}
       {showPostOptions && (
         <div className="post-options-modal" onClick={() => setShowPostOptions(false)}>
           <div className="post-options-content" onClick={(e) => e.stopPropagation()}>
