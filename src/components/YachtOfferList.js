@@ -850,13 +850,13 @@ const handleCopy = (text, field) => {
             handleStartChat(offer.id, offer.user_id);
           }}
         >
-          Iniciar chat privado
+          Start private chat
         </button>
       )}
     </div>
   </div>
 ) : (
-                          <div className="collapsed-offer">
+                          <div className={`collapsed-offer${offer.team ? ' team' : ''}`}>
                             <div className="collapsed-images">
                               <img
                                 src={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}

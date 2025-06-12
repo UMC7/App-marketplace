@@ -1249,3 +1249,32 @@ button:hover,
     background: none;
   }
 }
+
+/* Restaurar altura fija SOLO a tarjetas colapsadas de empleos (offer-card) en móvil portrait */
+@media (max-width: 768px) and (orientation: portrait) {
+  .collapsed-offer {
+    min-height: 110px !important;
+    max-height: 110px !important;
+    height: 110px !important;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+  }
+  .collapsed-info-row {
+    overflow: hidden;
+  }
+  .collapsed-info,
+  .collapsed-column,
+  .collapsed-primary {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .collapsed-offer.team {
+    min-height: 160px !important;
+    max-height: 160px !important;
+    height: 160px !important;
+  }
+}
