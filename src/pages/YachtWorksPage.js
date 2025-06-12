@@ -94,7 +94,7 @@ function YachtWorksPage() {
   };
 
   window.addEventListener('resize', handleResize);
-  handleResize(); // Ejecutar una vez al montar
+  handleResize();
 
   return () => {
     window.removeEventListener('resize', handleResize);
@@ -103,7 +103,7 @@ function YachtWorksPage() {
 
   const filteredOffers = useMemo(() => {
   return offers.filter((offer) => {
-    // ✅ Si el filtro 'selectedOnly' está activo, solo mostrar marcadas
+
     if (filters.selectedOnly) {
       const key = `markedOffers_user_${user?.id}`;
       const stored = localStorage.getItem(key);
@@ -111,7 +111,6 @@ function YachtWorksPage() {
       if (!parsed.includes(offer.id)) return false;
     }
 
-    // Las demás condiciones existentes:
     if (
       filters.rank &&
       !(
@@ -178,7 +177,7 @@ function YachtWorksPage() {
     className="navbar-toggle"
     onClick={() => setShowFilters((prev) => !prev)}
   >
-    ☰ Filtros
+    ☰ Filters
   </button>
 )}
 

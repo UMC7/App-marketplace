@@ -4,25 +4,11 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import ImageUploader from '../components/ImageUploader';
 
-  const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect = null }) => {
+const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect = null }) => {
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
-  useEffect(() => {
-  if (mode === 'edit' && initialValues) {
-    setName(initialValues.name || '');
-    setDescription(initialValues.description || '');
-    setCurrency(initialValues.currency || '');
-    setPrice(initialValues.price?.toString() || '');
-    setQuantity(initialValues.quantity || 1);
-    setCategoryId(initialValues.categoryId || '');
-    setCity(initialValues.city || '');
-    setCountry(initialValues.country || '');
-    setCondition(initialValues.condition || '');
-    setMainPhoto(initialValues.mainPhoto || '');
-    setPhotos(initialValues.photos || []);
-  }
-}, [initialValues, mode]);
 
+  // Campos del producto
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [currency, setCurrency] = useState('');
@@ -36,6 +22,22 @@ import ImageUploader from '../components/ImageUploader';
   const [mainPhoto, setMainPhoto] = useState('');
   const [ownerId, setOwnerId] = useState(null);
   const [ownerEmail, setOwnerEmail] = useState('');
+
+  useEffect(() => {
+    if (mode === 'edit' && initialValues) {
+      setName(initialValues.name || '');
+      setDescription(initialValues.description || '');
+      setCurrency(initialValues.currency || '');
+      setPrice(initialValues.price?.toString() || '');
+      setQuantity(initialValues.quantity || 1);
+      setCategoryId(initialValues.categoryId || '');
+      setCity(initialValues.city || '');
+      setCountry(initialValues.country || '');
+      setCondition(initialValues.condition || '');
+      setMainPhoto(initialValues.mainPhoto || '');
+      setPhotos(initialValues.photos || []);
+    }
+  }, [initialValues, mode]);
 
   const countries = [
     "Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "Aruba", "Australia", "Bahamas", "Bahrain", "Barbados",
@@ -71,6 +73,7 @@ import ImageUploader from '../components/ImageUploader';
     fetchUser();
   }, []);
 
+  // Subida de la foto principal
   const handleMainPhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -107,41 +110,47 @@ import ImageUploader from '../components/ImageUploader';
     }
   };
 
+  // Enviar formulario (create o edit)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // UPDATE PRODUCT
     if (mode === 'edit' && initialValues.id) {
-  try {
-    const { error } = await supabase
-      .from('products')
-      .update({
-        name,
-        description,
-        price: parseFloat(price),
-        currency,
-        quantity: parseInt(quantity, 10),
-        category_id: parseInt(categoryId, 10),
-        photos,
-        mainphoto: mainPhoto,
-        city,
-        country,
-        condition,
-      })
-      .eq('id', initialValues.id);
+      try {
+        // Filtro para que mainPhoto nunca esté en photos
+        const filteredPhotos = photos.filter((url) => url && url !== mainPhoto);
 
-    if (error) {
-      toast.error('Error updating the product.');
-    } else {
-      toast.success('Product updated successfully');
-      if (onSubmitRedirect) navigate(onSubmitRedirect);
+        const { error } = await supabase
+          .from('products')
+          .update({
+            name,
+            description,
+            price: parseFloat(price),
+            currency,
+            quantity: parseInt(quantity, 10),
+            category_id: parseInt(categoryId, 10),
+            photos: filteredPhotos,
+            mainphoto: mainPhoto,
+            city,
+            country,
+            condition,
+          })
+          .eq('id', initialValues.id);
+
+        if (error) {
+          toast.error('Error updating the product.');
+        } else {
+          toast.success('Product updated successfully');
+          if (onSubmitRedirect) navigate(onSubmitRedirect);
+        }
+      } catch (error) {
+        toast.error('Unexpected error during update.');
+        console.error(error);
+      }
+      return;
     }
-  } catch (error) {
-    toast.error('Unexpected error during update.');
-    console.error(error);
-  }
-  return;
-}
 
+    // Validación rápida para campos requeridos
     if (!categoryId || !mainPhoto || !city || !country || !condition) {
       toast.error('Please fill in all required fields.');
       return;
@@ -149,7 +158,11 @@ import ImageUploader from '../components/ImageUploader';
 
     console.log("Additional photos uploaded:", photos);
 
+    // CREATE PRODUCT
     try {
+      // Filtro para que mainPhoto nunca esté en photos
+      const filteredPhotos = photos.filter((url) => url && url !== mainPhoto);
+
       const { data, error } = await supabase
         .from('products')
         .insert([{
@@ -161,7 +174,7 @@ import ImageUploader from '../components/ImageUploader';
           category_id: parseInt(categoryId, 10),
           owner: ownerId,
           owneremail: ownerEmail,
-          photos: photos,
+          photos: filteredPhotos,
           mainphoto: mainPhoto,
           city,
           country,
@@ -174,7 +187,7 @@ import ImageUploader from '../components/ImageUploader';
         toast.error(`Failed to save the product: ${error.message}`);
       } else if (data && data.length > 0) {
         console.log('The product was saved successfully:', data);
-        toast.error('The product was saved successfully');
+        toast.success('The product was saved successfully');
         if (onSubmitRedirect) navigate(onSubmitRedirect);
         setName('');
         setDescription('');
@@ -187,100 +200,100 @@ import ImageUploader from '../components/ImageUploader';
         setCountry('');
         setCondition('');
       } else {
-        toast.error('"Unexpected error occurred while saving the product.');
+        toast.error('Unexpected error occurred while saving the product.');
       }
     } catch (error) {
       console.error('An unexpected error occurred:', error.message);
-      toast.error('"Unexpected error occurred while saving the product.');
+      toast.error('Unexpected error occurred while saving the product.');
     }
   };
 
   return (
-  <div className="container">
-    <div className="login-form">
-      <h2>{mode === 'edit' ? 'Edit Product' : 'Add Product'}</h2>
-      <form onSubmit={handleSubmit}>
-        <label>Product Name:</label>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+    <div className="container">
+      <div className="login-form">
+        <h2>{mode === 'edit' ? 'Edit Product' : 'Add Product'}</h2>
+        <form onSubmit={handleSubmit}>
+          <label>Product Name:</label>
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
 
-        <label>Description:</label>
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
+          <label>Description:</label>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
 
-        <label>Currency:</label>
-        <select value={currency} onChange={(e) => setCurrency(e.target.value)} required>
-        <option value="">Select a currency</option>
-        <option value="USD">USD</option>
-        <option value="EUR">EUR</option>
-        <option value="AUD">AUD</option>
-        <option value="GBP">GBP</option>
-        </select>
+          <label>Currency:</label>
+          <select value={currency} onChange={(e) => setCurrency(e.target.value)} required>
+            <option value="">Select a currency</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="AUD">AUD</option>
+            <option value="GBP">GBP</option>
+          </select>
 
-        <label>Price:</label>
-        <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required min="0" />
+          <label>Price:</label>
+          <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required min="0" />
 
-        <label>Quantity:</label>
-        <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} required min="1" />
+          <label>Quantity:</label>
+          <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} required min="1" />
 
-        <label>Category:</label>
-        <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
-          <option value="">Select a category</option>
-          <option value="1">Deck</option>
-          <option value="2">Engineering</option>
-          <option value="3">Navigation</option>
-          <option value="4">Galley</option>
-          <option value="5">Interior</option>
-          <option value="6">Others</option>
-        </select>
+          <label>Category:</label>
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+            <option value="">Select a category</option>
+            <option value="1">Deck</option>
+            <option value="2">Engineering</option>
+            <option value="3">Navigation</option>
+            <option value="4">Galley</option>
+            <option value="5">Interior</option>
+            <option value="6">Others</option>
+          </select>
 
-        <label>City:</label>
-        <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
+          <label>City:</label>
+          <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
 
-        <label>Country:</label>
-        <select value={country} onChange={(e) => setCountry(e.target.value)} required>
-          <option value="">Select a country</option>
-          {countries.map((pais, idx) => (
-            <option key={idx} value={pais}>{pais}</option>
-          ))}
-        </select>
+          <label>Country:</label>
+          <select value={country} onChange={(e) => setCountry(e.target.value)} required>
+            <option value="">Select a country</option>
+            {countries.map((pais, idx) => (
+              <option key={idx} value={pais}>{pais}</option>
+            ))}
+          </select>
 
-        <label>Condition:</label>
-        <select value={condition} onChange={(e) => setCondition(e.target.value)} required>
-          <option value="">Select a condition</option>
-          {conditions.map((c, idx) => (
-            <option key={idx} value={c}>{c}</option>
-          ))}
-        </select>
+          <label>Condition:</label>
+          <select value={condition} onChange={(e) => setCondition(e.target.value)} required>
+            <option value="">Select a condition</option>
+            {conditions.map((c, idx) => (
+              <option key={idx} value={c}>{c}</option>
+            ))}
+          </select>
 
-        <label>Additional photos:</label>
-        <ImageUploader onUpload={(urls) => setPhotos(urls)} />
+          <label>Additional photos:</label>
+          <ImageUploader onUpload={(urls) => setPhotos(urls)} />
 
-        <label>Main Photo:</label>
-        {mainPhoto && (
-          <div style={{ marginBottom: '10px' }}>
-            <img
-              src={mainPhoto}
-              alt="Main"
-              style={{ width: '100%', maxWidth: '300px', borderRadius: '8px' }}
-            />
-          </div>
-        )}
-        <input type="file" accept="image/*" onChange={handleMainPhotoUpload} />
+          <label>Main Photo:</label>
+          {mainPhoto && (
+            <div style={{ marginBottom: '10px' }}>
+              <img
+                src={mainPhoto}
+                alt="Main"
+                style={{ width: '100%', maxWidth: '300px', borderRadius: '8px' }}
+              />
+            </div>
+          )}
+          <input type="file" accept="image/*" onChange={handleMainPhotoUpload} />
 
-        <button
-          type="submit"
-          className="landing-button"
-          disabled={uploading}
-        >
-          {uploading
-            ? 'Uploading photos...'
-            : mode === 'edit'
-            ? 'Update Product'
-            : 'Save Product'}
-        </button>
+          <button
+            type="submit"
+            className="landing-button"
+            disabled={uploading}
+          >
+            {uploading
+              ? 'Uploading photos...'
+              : mode === 'edit'
+                ? 'Update Product'
+                : 'Save Product'}
+          </button>
 
-      </form>
+        </form>
+      </div>
     </div>
-  </div>
   );
 };
 

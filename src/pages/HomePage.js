@@ -128,7 +128,7 @@ function HomePage() {
         cursor: 'pointer',
       }}
     >
-      ☰ Filtros
+      ☰ Filters
     </button>
 
     {showFilters && (

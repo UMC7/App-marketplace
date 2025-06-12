@@ -1,5 +1,3 @@
-// src/components/ImageUploader.js
-
 import React, { useState } from 'react';
 import supabase from '../supabase';
 
@@ -58,9 +56,22 @@ function ImageUploader({ onUpload, existingImages = [], bucket = 'products' }) {
   return (
     <div>
       <input type="file" multiple onChange={handleFileChange} />
-      <button onClick={uploadImages} disabled={uploading}>
+      <button
+        type="button"
+        className="image-upload-btn"
+        onClick={uploadImages}
+        disabled={uploading}
+      >
         {uploading ? 'Uploading...' : 'Upload Images'}
       </button>
+      <div className="image-upload-helper">
+        <small>
+        <span style={{ color: '#a00' }}>
+          Click <b>Upload Images</b> after selecting additional photos.<br />
+        </span>
+          <b>Main Photo</b> does not require additional actions.
+        </small>
+      </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: '10px' }}>
         {previewUrls.map((url, index) => (
           <img

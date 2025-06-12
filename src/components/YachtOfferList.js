@@ -318,7 +318,7 @@ const handleCopy = (text, field) => {
               onChange={(e) => setFilters({ ...filters, team: e.target.value })}
             >
               <option value="">¿Team?</option>
-              <option value="Yes">Sí</option>
+              <option value="Yes">Yes</option>
               <option value="No">No</option>
             </select>
 
@@ -873,7 +873,7 @@ const handleCopy = (text, field) => {
                             </div>
                             <div className="collapsed-info-row">
                               {isMobile ? (
-  // 🔸 VERSIÓN PARA PANTALLAS PEQUEÑAS
+
   <div className="collapsed-column collapsed-primary">
     {/* Rank */}
     <span className="rank-fixed">{offer.title}</span>
