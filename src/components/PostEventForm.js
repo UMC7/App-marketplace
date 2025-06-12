@@ -168,9 +168,9 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
 
   return (
     <div className="container">
-      <div className="login-form">
+      <div className="login-form"> {/* This div now correctly wraps the h2 and the form */}
         <h2>{mode === 'edit' ? 'Edit Event' : 'New Event'}</h2>
-        <form onSubmit={handleSubmit} className="login-form">
+        <form onSubmit={handleSubmit}> {/* Removed the class from the form tag itself */}
           <label>Event Name:</label>
           <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} required />
 

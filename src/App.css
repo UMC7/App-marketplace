@@ -355,6 +355,8 @@ button:hover,
   width: 100%;
   margin-bottom: 12px;
   background-color: white;
+  resize: vertical !important;
+  min-height: 1.5em;
 }
 
 .login-form label + input,
