@@ -72,17 +72,19 @@ function Navbar() {
   return (
     <nav className="navbar-container">
       <div className="navbar-left">
-        <Link to="/">
-          <img
-            src="/logos/yachtdaywork.png"
-            alt="YachtDayWork logo"
-            className="navbar-logo"
-          />
-        </Link>
-        {!window.matchMedia('(max-width: 900px) and (orientation: landscape)').matches && (
-          <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>☰</button>
-        )}
-      </div>
+  <div className="navbar-logo-wrapper">
+    <Link to="/">
+      <img
+        src="/logos/yachtdaywork.png"
+        alt="YachtDayWork logo"
+        className="navbar-logo"
+      />
+    </Link>
+  </div>
+  {!window.matchMedia('(max-width: 900px) and (orientation: landscape)').matches && (
+    <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>☰</button>
+  )}
+</div>
 
       <div className={`navbar-links ${isMenuOpen ? 'active' : ''}`}>
         {currentUser ? (

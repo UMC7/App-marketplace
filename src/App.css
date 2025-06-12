@@ -327,6 +327,10 @@ button:hover,
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
+  min-height: calc(100vh - 80px); /* Ajusta si tu navbar es más grande/pequeño */
+  display: flex;
+  flex-direction: column;
+  /* background: none; <-- no pongas ningún color aquí */
 }
 
 .responsive-grid {

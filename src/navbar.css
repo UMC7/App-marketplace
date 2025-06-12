@@ -279,10 +279,27 @@
   display: inline-block;
 }
 
+.navbar-logo-wrapper {
+    position: relative;
+    height: 60px; /* igual que el navbar */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible; /* permite que el logo sobresalga */
+  }
+
   .navbar-logo {
-  height: 60px;
-  transform: translateX(-20px); /* Ajusta este valor manualmente */
-}
+    position: absolute;
+    height: 74px;       /* AUMENTA SOLO el logo */
+    left: 43%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    background: none;
+    box-shadow: none;
+    max-width: none;
+    width: auto;
+  }
 
   nav .navbar-toggle,
   .navbar-links {

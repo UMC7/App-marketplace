@@ -599,12 +599,12 @@ const deleteEvent = async (eventId) => {
                   <div key={product.id} className="profile-card">
                     <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} />
                     <h3>{product.name}</h3>
-                    <p><strong>Precio:</strong> {product.currency || ''} {product.price}</p>
-                    <p><strong>Estado:</strong> {product.status}</p>
+                    <p><strong>Price:</strong> {product.currency || ''} {product.price}</p>
+                    <p><strong>Status:</strong> {product.status}</p>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <button onClick={() => setEditingProductId(product.id)}>Edit</button>
-                      <button onClick={() => handlePauseToggle(product.id, product.status)}>{product.status === 'paused' ? 'Reactivar' : 'Pausar'}</button>
-                      <button onClick={() => handleDelete(product.id)} style={{ color: 'red' }}>Eliminar</button>
+                      <button onClick={() => handlePauseToggle(product.id, product.status)}>{product.status === 'paused' ? 'Reactivate' : 'Pause'}</button>
+                      <button onClick={() => handleDelete(product.id)} style={{ color: 'red' }}>Delete</button>
                     </div>
                   </div>
                 ))}
@@ -676,10 +676,10 @@ const deleteEvent = async (eventId) => {
     </p>
     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', gap: '6px' }}>
       <button onClick={() => handlePauseToggleJob(offer.id, offer.status)}>
-        {offer.status === 'paused' ? 'Reactivar' : 'Pausar'}
+        {offer.status === 'paused' ? 'Reactivate' : 'Pause'}
       </button>
-      <button onClick={() => setEditingJobId(offer.id)}>Editar</button>
-      <button onClick={() => handleDeleteJob(offer.id)} style={{ color: 'red' }}>Eliminar</button>
+      <button onClick={() => setEditingJobId(offer.id)}>Edit</button>
+      <button onClick={() => handleDeleteJob(offer.id)} style={{ color: 'red' }}>Delete</button>
     </div>
   </div>
 ))}
