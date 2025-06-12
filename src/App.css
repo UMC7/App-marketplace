@@ -302,25 +302,6 @@ body {
   }
 }
 
-button,
-.landing-button {
-  background-color: var(--primary-color);
-  color: var(--white-color);
-  border: none;
-  padding: 12px 24px;
-  font-size: 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  font-family: var(--font-body);
-  text-decoration: none;
-}
-
-button:hover,
-.landing-button:hover {
-  background-color: var(--accent-color);
-}
-
 .container {
   width: 100%;
   max-width: 1200px;
@@ -513,12 +494,6 @@ button:hover,
   gap: 12px;
   justify-content: center;
   margin-top: 30px;
-}
-
-.landing-button {
-  flex: 1 1 auto;
-  min-width: 160px;
-  text-align: center;
 }
 
 .form-inline-group {
@@ -1283,4 +1258,52 @@ button:hover,
     max-height: 160px !important;
     height: 160px !important;
   }
+}
+
+.landing-button,
+.product-card button,
+.remove-favorite-btn {
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color) 85%);
+  color: #fff;
+  border: none;
+  padding: 6px 18px;
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 1.5px 4px rgba(104, 173, 168, 0.08);
+  font-family: var(--font-body);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.18s;
+  outline: none;
+  min-width: 90px;
+  margin-top: 8px;
+  margin-bottom: 0;
+  letter-spacing: 0.02em;
+}
+
+.landing-button:hover,
+.product-card button:hover,
+.remove-favorite-btn:hover {
+  background: linear-gradient(90deg, var(--accent-color), var(--primary-color) 85%);
+  box-shadow: 0 4px 16px rgba(104, 173, 168, 0.18);
+  transform: translateY(-2px) scale(1.04);
+  color: #fff;
+}
+
+.product-card button,
+.landing-button {
+  font-weight: 500;
+  padding: 6px 12px;
+  font-size: 13.5px;
+}
+
+.product-card button:active,
+.landing-button:active {
+  transform: scale(0.97);
+  background: var(--primary-color);
+}
+
+.product-card button:focus,
+.landing-button:focus {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 1px;
 }

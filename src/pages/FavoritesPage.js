@@ -5,6 +5,7 @@ import supabase from '../supabase';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import ProductCard from '../components/ProductCard';
+import ProductList from '../components/ProductList';
 
 function FavoritesPage() {
   const { currentUser } = useAuth();
@@ -99,17 +100,7 @@ function FavoritesPage() {
     ) : favorites.length === 0 ? (
       <p className="no-products">You have not added any products to favorites.</p>
     ) : (
-      <div className="products-grid-wrapper">
-  <div className="products-grid">
-    {favorites.map(({ product, id }, idx) => (
-      <ProductCard
-        key={idx}
-        product={product}
-        onRemoveFavorite={() => handleRemoveFavorite(id)}
-      />
-    ))}
-  </div>
-</div>
+      <ProductList products={favorites.map(f => f.product)} />
     )}
   </div>
 );
