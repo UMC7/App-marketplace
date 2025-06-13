@@ -181,7 +181,7 @@ function Navbar() {
       </div>
 
       {/* BOTÓN TOU FLOTANTE - SOLO MOBILE PORTRAIT */}
-      {isMobilePortrait && (
+
         <button
           className="tou-tab-collapsed"
           onClick={() => setShowTouPanel(s => !s)}
@@ -228,7 +228,7 @@ function Navbar() {
             }} />
           )}
         </button>
-      )}
+
 
       {/* Modales de publicación y chats */}
 {showOfferModal && renderModal(<YachtOfferForm user={currentUser} onOfferPosted={() => { setShowOfferModal(false); window.location.reload(); }} />)}
