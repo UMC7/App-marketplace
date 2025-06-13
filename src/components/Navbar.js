@@ -27,12 +27,21 @@ function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeChat, setActiveChat] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showTouPanel, setShowTouPanel] = useState(false);
   const menuRef = useRef();
 
-  // Nuevo: detecta si está en móvil portrait en tiempo real
+  // Detecta si está en móvil portrait
   const [isMobilePortrait, setIsMobilePortrait] = useState(
     window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches
   );
+
+  // Auto-colapsa la pestaña TOU después de 2.5 segundos abierta
+  useEffect(() => {
+    if (showTouPanel) {
+      const timeout = setTimeout(() => setShowTouPanel(false), 2500);
+      return () => clearTimeout(timeout);
+    }
+  }, [showTouPanel]);
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -168,6 +177,49 @@ function Navbar() {
           </>
         )}
       </div>
+
+      {/* BOTÓN TOU FLOTANTE - SOLO MOBILE PORTRAIT */}
+      {isMobilePortrait && (
+        <button
+          className="tou-tab-collapsed"
+          onClick={() => setShowTouPanel(s => !s)}
+          aria-label="Terms of Use"
+          style={{
+            position: 'fixed',
+            top: '15px',
+            right: 0,
+            zIndex: 9999,
+            background: '#68ada8',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '8px 0 0 8px',
+            width: showTouPanel ? '42px' : '14px',
+            height: '44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
+            cursor: 'pointer',
+            opacity: 0.95,
+            padding: 0,
+            transition: 'width 0.2s cubic-bezier(.4,2.4,.7,.9)'
+          }}
+        >
+          {showTouPanel ? (
+            <span className="material-icons" style={{ fontSize: 26 }}>
+              library_books
+            </span>
+          ) : (
+            <div style={{
+              width: '3px',
+              height: '26px',
+              background: '#fff',
+              borderRadius: '2px',
+              marginLeft: '3px'
+            }} />
+          )}
+        </button>
+      )}
 
       {/* Modales de publicación y chats */}
       {showOfferModal && renderModal(<YachtOfferForm user={currentUser} onOfferPosted={() => { setShowOfferModal(false); window.location.reload(); }} />)}

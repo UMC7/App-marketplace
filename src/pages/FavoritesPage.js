@@ -100,7 +100,10 @@ function FavoritesPage() {
     ) : favorites.length === 0 ? (
       <p className="no-products">You have not added any products to favorites.</p>
     ) : (
-      <ProductList products={favorites.map(f => f.product)} />
+      <ProductList
+        products={favorites.map(f => f.product)}
+        onRemoveFavorite={handleRemoveFavorite}
+      />
     )}
   </div>
 );

@@ -1,0 +1,51 @@
+/* src/pages/LegalPage.css */
+.legal-container {
+  max-width: 700px;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(8, 26, 59, 0.08);
+  padding: 32px;
+  font-family: 'Inter', sans-serif;
+  color: #081a3b;
+}
+
+.legal-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.legal-logo {
+  max-width: 80px;
+  margin-bottom: 10px;
+}
+
+.legal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem;
+  color: #081a3b;
+  margin-bottom: 8px;
+}
+
+.legal-content h2 {
+  color: #68ada8;
+  font-size: 1.2rem;
+  margin-top: 1.8rem;
+}
+
+.legal-content ul {
+  margin: 8px 0 16px 20px;
+  padding-left: 0;
+}
+
+.legal-link {
+  color: #68ada8;
+  text-decoration: underline;
+}
+
+.legal-footer {
+  text-align: center;
+  margin-top: 36px;
+  color: #bca987;
+  font-size: 0.97rem;
+}

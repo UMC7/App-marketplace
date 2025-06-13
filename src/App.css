@@ -115,7 +115,7 @@ h3 {
 /* Estilos para el título de la página */
 h1 {
   font-size: 2rem;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
   font-weight: bold;
   color: var(--primary-color);
 }
@@ -1049,6 +1049,10 @@ body {
   margin-left: auto;          /* ✅ Nuevo: centra el botón */
   margin-right: auto;         /* ✅ Nuevo: centra el botón */
 }
+
+.container {
+    padding-bottom: 50px !important; /* Ajusta el valor al alto real de tu navbar si es necesario */
+  }
 }
 
 @media (min-width: 769px) {

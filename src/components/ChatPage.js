@@ -103,63 +103,63 @@ function ChatPage({ offerId, receiverId, onBack }) {
     }
   };
 
-  if (!currentUser) return <div>Cargando usuario...</div>;
+  if (!currentUser) return <div>Loading user...</div>;
 
   return (
     <div style={{ padding: 20 }}>
       {onBack && (
         <button onClick={onBack} style={{ marginBottom: '10px' }}>
-          ⬅ Volver a chats
+          ⬅ Back to chats
         </button>
       )}
-      <h2>Chat privado de la oferta</h2>
+      <h2>Offer private chat</h2>
       <div style={{ maxHeight: 400, overflowY: 'auto', border: '1px solid #ccc', padding: 10 }}>
         {messages.map((msg) => {
-  const isOwnMessage = msg.sender_id === currentUser.id;
+          const isOwnMessage = msg.sender_id === currentUser.id;
 
-  return (
-    <div
-      key={msg.id}
-      style={{
-        marginBottom: 12,
-        display: 'flex',
-        justifyContent: isOwnMessage ? 'flex-end' : 'flex-start'
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '75%',
-          backgroundColor: isOwnMessage ? '#d0ebff' : '#f1f1f1',
-          padding: '10px',
-          borderRadius: '10px',
-          textAlign: 'left',
-        }}
-      >
-        <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
-          {isOwnMessage ? 'Tú' : otherNickname}
-        </div>
-        {msg.message && <p style={{ margin: 0 }}>{msg.message}</p>}
-        {msg.file_url && (
-          <a
-            href={msg.file_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ display: 'block', marginTop: 4 }}
-          >
-            📎 Ver archivo
-          </a>
-        )}
-        <div style={{ fontSize: '0.8em', color: '#666', marginTop: 6 }}>
-          {new Date(msg.sent_at).toLocaleString()}
-        </div>
-      </div>
-    </div>
-  );
-})}
+          return (
+            <div
+              key={msg.id}
+              style={{
+                marginBottom: 12,
+                display: 'flex',
+                justifyContent: isOwnMessage ? 'flex-end' : 'flex-start'
+              }}
+            >
+              <div
+                style={{
+                  maxWidth: '75%',
+                  backgroundColor: isOwnMessage ? '#d0ebff' : '#f1f1f1',
+                  padding: '10px',
+                  borderRadius: '10px',
+                  textAlign: 'left',
+                }}
+              >
+                <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                  {isOwnMessage ? 'You' : otherNickname}
+                </div>
+                {msg.message && <p style={{ margin: 0 }}>{msg.message}</p>}
+                {msg.file_url && (
+                  <a
+                    href={msg.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: 'block', marginTop: 4 }}
+                  >
+                    📎 View file
+                  </a>
+                )}
+                <div style={{ fontSize: '0.8em', color: '#666', marginTop: 6 }}>
+                  {new Date(msg.sent_at).toLocaleString()}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
       <div style={{ marginTop: 20 }}>
         <textarea
-          placeholder="Escribe tu mensaje..."
+          placeholder="Type your message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={3}
@@ -172,7 +172,7 @@ function ChatPage({ offerId, receiverId, onBack }) {
           style={{ marginTop: 8 }}
         />
         <button onClick={handleSend} style={{ marginTop: 10 }}>
-          Enviar
+          Send
         </button>
       </div>
     </div>

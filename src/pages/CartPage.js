@@ -9,20 +9,21 @@ import { toast } from 'react-toastify';
 function CartPage() {
   const { updateQuantity, removeFromCart, clearCart } = useCarrito();
   const { currentUser } = useAuth();
+
   const [cartItems, setCartItems] = useState([]);
   const [processing, setProcessing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSellerModal, setShowSellerModal] = useState(false);
   const [sellerInfo, setSellerInfo] = useState([]);
 
-      const fetchCartItems = async () => {
-      if (!currentUser) return;
+  const fetchCartItems = async () => {
+    if (!currentUser) return;
 
-      const { data, error } = await supabase
-        .from('cart')
-        .select(`
-          *,
-          products (
+    const { data, error } = await supabase
+      .from('cart')
+      .select(`
+        *,
+        products (
           id,
           name,
           price,
@@ -43,34 +44,35 @@ function CartPage() {
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
 
-        if (!error && data) {
-          const formattedCart = data.map((item) => {
-            const adjustedQuantity = Math.min(item.quantity, item.products?.quantity || 0);
-            const recortado = item.quantity > adjustedQuantity;
-        
-            return {
-              id: item.product_id,
-              quantity: adjustedQuantity,
-              price: item.products?.price,
-              currency: item.products?.currency || 'USD', // ✅ nueva propiedad
-              name: item.products?.name,
-              stock: item.products?.quantity,
-              mainphoto: item.products?.mainphoto,
-              status: item.products?.status,
-              owner: item.products?.owner,
-              ownerInfo: item.products?.users,
-              created_at: item.created_at,
-              recortado, // 🔶 campo extra
-            };
-          });
-        setCartItems(formattedCart);
-      } else {
-        console.error('Failed to load the cart:', error?.message);
-      }
-    };
+    if (!error && data) {
+      const formattedCart = data.map((item) => {
+        const adjustedQuantity = Math.min(item.quantity, item.products?.quantity || 0);
+        const recortado = item.quantity > adjustedQuantity;
 
-    useEffect(() => {
+        return {
+          id: item.product_id,
+          quantity: adjustedQuantity,
+          price: item.products?.price,
+          currency: item.products?.currency || 'USD',
+          name: item.products?.name,
+          stock: item.products?.quantity,
+          mainphoto: item.products?.mainphoto,
+          status: item.products?.status,
+          owner: item.products?.owner,
+          ownerInfo: item.products?.users,
+          created_at: item.created_at,
+          recortado,
+        };
+      });
+      setCartItems(formattedCart);
+    } else {
+      console.error('Failed to load the cart:', error?.message);
+    }
+  };
+
+  useEffect(() => {
     fetchCartItems();
+    // eslint-disable-next-line
   }, [currentUser]);
 
   useEffect(() => {
@@ -79,23 +81,22 @@ function CartPage() {
         fetchCartItems();
       }
     };
-  
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [currentUser]);  
+    // eslint-disable-next-line
+  }, [currentUser]);
 
   const availableItems = cartItems.filter(item => item.status !== 'paused' && item.status !== 'deleted');
   const total = availableItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   const subtotalesPorMoneda = availableItems.reduce((acc, item) => {
-  const moneda = item.currency || 'USD';
-  const subtotal = item.price * item.quantity;
-
-  if (!acc[moneda]) acc[moneda] = 0;
-  acc[moneda] += subtotal;
-
-  return acc;
-}, {});
+    const moneda = item.currency || 'USD';
+    const subtotal = item.price * item.quantity;
+    if (!acc[moneda]) acc[moneda] = 0;
+    acc[moneda] += subtotal;
+    return acc;
+  }, {});
 
   const handleQuantityChange = (item, newQty) => {
     if (!isNaN(newQty) && newQty <= item.stock) {
@@ -157,22 +158,22 @@ function CartPage() {
       }
 
       // Mostrar modal de vendedores
-const sellerMap = {};
-availableItems.forEach(item => {
-  const id = item.ownerInfo?.id;
-  if (id && !sellerMap[id]) {
-    sellerMap[id] = {
-      email: item.ownerInfo?.email,
-      name: `${item.ownerInfo?.first_name} ${item.ownerInfo?.last_name}`,
-      phone: item.ownerInfo?.phone,
-    };
-  }
-});
+      const sellerMap = {};
+      availableItems.forEach(item => {
+        const id = item.ownerInfo?.id;
+        if (id && !sellerMap[id]) {
+          sellerMap[id] = {
+            email: item.ownerInfo?.email,
+            name: `${item.ownerInfo?.first_name} ${item.ownerInfo?.last_name}`,
+            phone: item.ownerInfo?.phone,
+          };
+        }
+      });
 
-setSellerInfo(Object.values(sellerMap));
-setShowSellerModal(true);
-clearCart();
-setCartItems([]);
+      setSellerInfo(Object.values(sellerMap));
+      setShowSellerModal(true);
+      clearCart();
+      setCartItems([]);
 
     } catch (err) {
       console.error('Purchase error:', err.message);
@@ -204,164 +205,226 @@ setCartItems([]);
 
   return (
     <div className="container">
-  <div className="login-form">
-      <h2>Your Cart</h2>
+      <div className="login-form">
+        <h2>Your Cart</h2>
 
-      {cartItems.length === 0 ? (
-        <p>No hay productos en tu carrito.</p>
-      ) : (
-        <div>
-         {cartItems.map((item) => (
-  <div
-    key={item.id}
-    className="product-card"
-    style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}
-  >
-    <img
-      src={item.mainphoto || 'https://via.placeholder.com/100'}
-      alt={item.name}
-      style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
-    />
-    <div style={{ flex: 1 }}>
-      <h3>{item.name || 'Product not available'}</h3>
+        {cartItems.length === 0 ? (
+          <p>There are no products in your cart.</p>
+        ) : (
+          <div>
+            {cartItems.map((item) => (
+              <div
+                key={item.id}
+                className="product-card"
+                style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}
+              >
+                <img
+                  src={item.mainphoto || 'https://via.placeholder.com/100'}
+                  alt={item.name}
+                  style={{
+                    width: '100px',
+                    height: '100px',
+                    objectFit: 'cover',
+                    borderRadius: '8px'
+                  }}
+                />
+                <div style={{ flex: 1 }}>
+                  <h3>{item.name || 'Product not available'}</h3>
 
-      {item.status === 'deleted' ? (
-        <p style={{ color: 'red', fontWeight: 'bold' }}>Product not available.</p>
-      ) : item.status === 'paused' ? (
-        <p style={{ color: 'orange', fontWeight: 'bold' }}>This product is currently paused.</p>
-      ) : (
-        <>
-          <p>Unit Price: {item.currency} {item.price}</p>
-          <p>
-            Quantity:
-            <input
-              type="number"
-              min="1"
-              max={item.stock}
-              value={item.quantity}
-              onChange={(e) => handleQuantityChange(item, parseInt(e.target.value))}
-              style={{ width: '60px', marginLeft: '10px' }}
-            />
-          </p>
+                  {item.status === 'deleted' ? (
+                    <p style={{ color: 'red', fontWeight: 'bold' }}>
+                      Product not available.
+                    </p>
+                  ) : item.status === 'paused' ? (
+                    <p style={{ color: 'orange', fontWeight: 'bold' }}>
+                      This product is currently paused.
+                    </p>
+                  ) : (
+                    <>
+                      <p>
+                        Unit Price: {item.currency}{' '}
+                        {Number(item.price).toLocaleString('en-US')}
+                      </p>
+                      <p>
+                        Quantity:
+                        <input
+                          type="number"
+                          min="1"
+                          max={item.stock}
+                          value={item.quantity}
+                          onChange={(e) =>
+                            handleQuantityChange(item, parseInt(e.target.value))
+                          }
+                          style={{ width: '60px', marginLeft: '10px' }}
+                        />
+                      </p>
+                      {item.recortado && (
+                        <p style={{ color: 'orange', fontWeight: 'bold' }}>
+                          Available stock has decreased. Your quantity has been adjusted to {item.quantity}.
+                        </p>
+                      )}
+                    </>
+                  )}
 
-          {item.recortado && (
-            <p style={{ color: 'orange', fontWeight: 'bold' }}>
-              Available stock has decreased. Your quantity has been adjusted to {item.quantity}.
-            </p>
-          )}
-        </>
-      )}
-
-      <p>Subtotal: {item.currency} {item.status === 'deleted' ? 0 : (item.price * item.quantity).toFixed(2)}</p>
-      <button className="landing-button" onClick={() => handleRemoveFromCart(item.id)}>
-        Remove from Cart
-      </button>
-    </div>
-  </div>
-))}
-
-          <div style={{ marginTop: '30px' }}>
-  <h2>Subtotal by currency:</h2>
-  <ul style={{ paddingLeft: '20px', marginBottom: '20px' }}>
-    {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
-      <li key={moneda}>
-        <strong>{moneda}:</strong> {subtotal.toFixed(2)}
-      </li>
-    ))}
-  </ul>
-  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-    <button
-      className="landing-button"
-      onClick={handleConfirmPurchase}
-      disabled={processing || availableItems.length === 0}
-      style={{ flex: '1 1 180px' }}
-    >
-      {processing ? 'Processing...' : 'Confirm Purchase'}
-    </button>
-  </div>
-</div>
-        </div>
-      )}
-
-      {showConfirmModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0,
-          width: '100%', height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
-        }}>
-          <div style={{
-  backgroundColor: 'white',
-  padding: '20px',
-  borderRadius: '8px',
-  textAlign: 'center',
-  width: '90%',
-  maxWidth: '400px',
-  boxSizing: 'border-box'
-}}>
-            <h3>Do you want to confirm your purchase?</h3>
-            <p>{availableItems.length} product(s)</p>
-            <p><strong>Totals by currency:</strong></p>
-            <ul style={{ listStyle: 'none', padding: 0, marginBottom: '20px' }}>
-              {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
-                <li key={moneda}>
-                  {moneda}: {subtotal.toFixed(2)}
-                </li>
-              ))}
-            </ul>
-          <button
-            className="landing-button"
-            onClick={handleProceedPurchase}
-            style={{ marginRight: '10px' }}
-          >
-          Confirm
-          </button>
-            <button className="landing-button" onClick={() => setShowConfirmModal(false)}>
-            Cancel
-          </button>
-          </div>
-        </div>
-      )}
-
-      {showSellerModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0,
-          width: '100%', height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
-        }}>
-          <div style={{
-  backgroundColor: 'white',
-  padding: '20px',
-  borderRadius: '8px',
-  textAlign: 'center',
-  width: '90%',
-  maxWidth: '400px',
-  boxSizing: 'border-box'
-}}>
-            <h3>Seller Information</h3>
-
-          {sellerInfo.map((seller, i) => (
-            <div key={i} style={{ marginBottom: '10px' }}>
-              <p><strong>Name:</strong> {seller.name}</p>
-              <p><strong>Phone:</strong> {seller.phone || 'Not available'}</p>
-              <p><strong>Email:</strong> {seller.email}</p>
-            </div>
+                  <p>
+                    Subtotal: {item.currency}{' '}
+                    {item.status === 'deleted'
+                      ? 0
+                      : (item.price * item.quantity).toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                  </p>
+                  <button
+                    className="landing-button"
+                    onClick={() => handleRemoveFromCart(item.id)}
+                  >
+                    Remove from Cart
+                  </button>
+                </div>
+              </div>
             ))}
-            <div style={{ marginTop: '20px' }}>
-        <button
-          className="landing-button"
-          onClick={() => setShowSellerModal(false)}
-          style={{ width: '100%' }}
-        >
-          Close
-          </button>
+
+            <div style={{ marginTop: '30px' }}>
+              <h2>Subtotal by currency:</h2>
+              <ul style={{ paddingLeft: '20px', marginBottom: '20px' }}>
+                {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
+                  <li key={moneda}>
+                    <strong>{moneda}:</strong>{' '}
+                    {subtotal.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </li>
+                ))}
+              </ul>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                <button
+                  className="landing-button"
+                  onClick={handleConfirmPurchase}
+                  disabled={processing || availableItems.length === 0}
+                  style={{ flex: '1 1 180px' }}
+                >
+                  {processing ? 'Processing...' : 'Confirm Purchase'}
+                </button>
+              </div>
+            </div>
           </div>
+        )}
+
+        {showConfirmModal && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: 'white',
+                padding: '20px',
+                borderRadius: '8px',
+                textAlign: 'center',
+                width: '90%',
+                maxWidth: '400px',
+                boxSizing: 'border-box',
+              }}
+            >
+              <h3>Do you want to confirm your purchase?</h3>
+              <p>{availableItems.length} product(s)</p>
+              <p>
+                <strong>Totals by currency:</strong>
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, marginBottom: '20px' }}>
+                {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
+                  <li key={moneda}>
+                    {moneda}:{' '}
+                    {subtotal.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </li>
+                ))}
+              </ul>
+              <button
+                className="landing-button"
+                onClick={handleProceedPurchase}
+                style={{ marginRight: '10px' }}
+              >
+                Confirm
+              </button>
+              <button
+                className="landing-button"
+                onClick={() => setShowConfirmModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {showSellerModal && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: 'white',
+                padding: '20px',
+                borderRadius: '8px',
+                textAlign: 'center',
+                width: '90%',
+                maxWidth: '400px',
+                boxSizing: 'border-box',
+              }}
+            >
+              <h3>Seller Information</h3>
+              {sellerInfo.map((seller, i) => (
+                <div key={i} style={{ marginBottom: '10px' }}>
+                  <p>
+                    <strong>Name:</strong> {seller.name}
+                  </p>
+                  <p>
+                    <strong>Phone:</strong> {seller.phone || 'Not available'}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {seller.email}
+                  </p>
+                </div>
+              ))}
+              <div style={{ marginTop: '20px' }}>
+                <button
+                  className="landing-button"
+                  onClick={() => setShowSellerModal(false)}
+                  style={{ width: '100%' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
   );
 }
 

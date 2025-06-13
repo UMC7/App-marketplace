@@ -51,40 +51,32 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
         toast.error('You must log in first.');
         return;
       }
-
       setOwnerId(authData.user.id);
       setOwnerEmail(authData.user.email);
     };
-
     fetchUser();
   }, []);
 
   const handleMainPhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const fileName = `main-${Date.now()}-${file.name}`;
     const filePath = `${fileName}`;
-
     try {
       setUploading(true);
-
       const { data, error } = await supabase.storage
         .from('events')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false,
         });
-
       if (error || !data?.path) {
         throw new Error(error?.message || 'Error uploading the image.');
       }
-
       const { publicUrl } = supabase
         .storage
         .from('events')
         .getPublicUrl(data.path).data;
-
       setMainPhoto(publicUrl);
     } catch (error) {
       toast.error("Error uploading the main photo.");
@@ -95,12 +87,10 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!eventName || !mainPhoto || !city || !country) {
       toast.error('Please fill in all required fields.');
       return;
     }
-
     const eventData = {
       event_name: eventName,
       description,
@@ -126,20 +116,17 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
       whatsapp_number: whatsapp,
       status: 'active',
     };
-
     if (mode === 'edit') {
       if (onSubmit) {
         await onSubmit(eventData);
       }
       return;
     }
-
     try {
       const { data, error } = await supabase
         .from('events')
         .insert([eventData])
         .select('*');
-
       if (error) {
         toast.error(`Error saving the event: ${error.message}`);
       } else {
@@ -166,11 +153,34 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
     }
   };
 
+  const checkboxLabelStyle = {
+  display: 'flex',
+  alignItems: 'baseline',  // <--- CAMBIO AQUÍ
+  gap: 8,
+  fontWeight: 500,
+  color: 'var(--primary-color)',
+  cursor: 'pointer',
+  margin: '12px 0 4px',
+  fontSize: '1rem',
+  userSelect: 'none',
+  lineHeight: 1.2
+};
+
+const checkboxInputStyle = {
+  marginRight: 6,
+  accentColor: 'var(--primary-color)',
+  width: 17,
+  height: 17,
+  minWidth: 17,
+  minHeight: 17,
+  verticalAlign: 'middle', // <--- CAMBIO AQUÍ
+};
+
   return (
     <div className="container">
-      <div className="login-form"> {/* This div now correctly wraps the h2 and the form */}
+      <div className="login-form">
         <h2>{mode === 'edit' ? 'Edit Event' : 'New Event'}</h2>
-        <form onSubmit={handleSubmit}> {/* Removed the class from the form tag itself */}
+        <form onSubmit={handleSubmit}>
           <label>Event Name:</label>
           <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} required />
 
@@ -216,14 +226,33 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
 
           <label>Dates:</label>
           <div className="form-inline-group">
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
-            {!isSingleDay && (
-              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-            )}
-            <label>
-              <input type="checkbox" checked={isSingleDay} onChange={() => setIsSingleDay(!isSingleDay)} /> One-Day Event
-            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              required
+              style={{ flex: 1 }}
+            />
+            <input
+              type="date"
+              value={isSingleDay ? '' : endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              disabled={isSingleDay}
+              required={!isSingleDay}
+              style={{ flex: 1, opacity: isSingleDay ? 0.6 : 1 }}
+              placeholder="End Date"
+            />
           </div>
+          {/* Checkbox: One-Day Event, always BELOW the date inputs */}
+          <label style={checkboxLabelStyle}>
+            <input
+              type="checkbox"
+              checked={isSingleDay}
+              onChange={() => setIsSingleDay(!isSingleDay)}
+              style={checkboxInputStyle}
+            />
+            One-Day Event
+          </label>
 
           <label>Schedule:</label>
           <div style={{ display: 'flex', gap: '10px' }}>
@@ -249,10 +278,17 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
               disabled={isFree}
               placeholder="Amount"
             />
-            <label>
-              <input type="checkbox" checked={isFree} onChange={() => setIsFree(!isFree)} /> Free Event
-            </label>
           </div>
+          {/* Checkbox: Free Event, always BELOW the currency/amount inputs */}
+          <label style={checkboxLabelStyle}>
+            <input
+              type="checkbox"
+              checked={isFree}
+              onChange={() => setIsFree(!isFree)}
+              style={checkboxInputStyle}
+            />
+            Free Event
+          </label>
 
           <label>Website:</label>
           <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} />
