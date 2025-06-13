@@ -11,6 +11,7 @@ import PostServiceForm from './PostServiceForm';
 import PostEventForm from './PostEventForm';
 import ChatList from './ChatList';
 import ChatPage from './ChatPage';
+import Modal from './Modal';
 import '../navbar.css';
 
 function Navbar() {
@@ -28,6 +29,7 @@ function Navbar() {
   const [activeChat, setActiveChat] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showTouPanel, setShowTouPanel] = useState(false);
+  const [showLegalModal, setShowLegalModal] = useState(false);
   const menuRef = useRef();
 
   // Detecta si está en móvil portrait
@@ -206,7 +208,14 @@ function Navbar() {
           }}
         >
           {showTouPanel ? (
-            <span className="material-icons" style={{ fontSize: 26 }}>
+            <span
+              className="material-icons"
+              style={{ fontSize: 26, cursor: 'pointer' }}
+              onClick={() => {
+                setShowLegalModal(true);
+                setShowTouPanel(false);
+              }}
+            >
               library_books
             </span>
           ) : (
@@ -222,24 +231,71 @@ function Navbar() {
       )}
 
       {/* Modales de publicación y chats */}
-      {showOfferModal && renderModal(<YachtOfferForm user={currentUser} onOfferPosted={() => { setShowOfferModal(false); window.location.reload(); }} />)}
-      {showProductModal && renderModal(<PostProductForm onPosted={() => { setShowProductModal(false); window.location.reload(); }} />)}
-      {showServiceModal && renderModal(<PostServiceForm onPosted={() => { setShowServiceModal(false); window.location.reload(); }} />)}
-      {showEventModal && renderModal(<PostEventForm />)}
-      {showChatList && renderModal(
-        !activeChat ? (
-          <ChatList
-            currentUser={currentUser}
-            onOpenChat={(offerId, receiverId) => setActiveChat({ offerId, receiverId })}
-          />
-        ) : (
-          <ChatPage
-            offerId={activeChat.offerId}
-            receiverId={activeChat.receiverId}
-            onBack={() => setActiveChat(null)}
-          />
-        )
-      )}
+{showOfferModal && renderModal(<YachtOfferForm user={currentUser} onOfferPosted={() => { setShowOfferModal(false); window.location.reload(); }} />)}
+{showProductModal && renderModal(<PostProductForm onPosted={() => { setShowProductModal(false); window.location.reload(); }} />)}
+{showServiceModal && renderModal(<PostServiceForm onPosted={() => { setShowServiceModal(false); window.location.reload(); }} />)}
+{showEventModal && renderModal(<PostEventForm />)}
+{showChatList && renderModal(
+  !activeChat ? (
+    <ChatList
+      currentUser={currentUser}
+      onOpenChat={(offerId, receiverId) => setActiveChat({ offerId, receiverId })}
+    />
+  ) : (
+    <ChatPage
+      offerId={activeChat.offerId}
+      receiverId={activeChat.receiverId}
+      onBack={() => setActiveChat(null)}
+    />
+  )
+)}
+{showLegalModal && (
+  <Modal onClose={() => setShowLegalModal(false)}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '32px 10px 20px 10px' }}>
+      <button
+        className="legal-modal-link"
+        onClick={() => {
+          setShowLegalModal(false);
+          navigate('/legal');
+        }}
+        style={{
+          background: '#68ada8',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '7px',
+          padding: '12px 24px',
+          fontSize: '1.15rem',
+          marginBottom: '8px',
+          width: '100%',
+          maxWidth: 220,
+          cursor: 'pointer'
+        }}
+      >
+        Terms of Use
+      </button>
+      <button
+        className="legal-modal-link"
+        onClick={() => {
+          setShowLegalModal(false);
+          navigate('/privacy');
+        }}
+        style={{
+          background: '#bca987',
+          color: '#081a3b',
+          border: 'none',
+          borderRadius: '7px',
+          padding: '12px 24px',
+          fontSize: '1.15rem',
+          width: '100%',
+          maxWidth: 220,
+          cursor: 'pointer'
+        }}
+      >
+        Privacy Policy
+      </button>
+    </div>
+  </Modal>
+)}
 
       {/* Usamos el estado isMobilePortrait en vez de media query directa */}
       {isMobilePortrait && (

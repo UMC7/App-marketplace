@@ -30,6 +30,8 @@ import YachtWorksPage from './pages/YachtWorksPage';
 import EventsPage from './pages/EventsPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import AdminPanel from './admin/AdminPanel';
+import LegalPage from './pages/legal/LegalPage';
+import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage';
 
 import './App.css';
 import { toast, ToastContainer } from 'react-toastify';
@@ -132,6 +134,8 @@ function App() {
             }
           />
 
+          <Route path="/legal" element={<LegalPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
