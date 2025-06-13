@@ -9,12 +9,12 @@ function PrivacyPolicyPage() {
   return (
     <div className="privacy-container">
       <header className="privacy-header">
-        <img src="/logo192.png" alt={`${brandName} Logo`} className="privacy-logo" />
+        <img src="/logos/Iniciales.png" alt={`${brandName} Logo`} className="privacy-logo" />
         <h1 className="privacy-title">Privacy Policy</h1>
       </header>
       <main className="privacy-content">
         <p>
-          <strong>Effective date:</strong> June 13, 2025
+          <strong>Effective date:</strong> June 01, 2025
         </p>
 
         <p>

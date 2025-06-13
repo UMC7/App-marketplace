@@ -10,12 +10,12 @@ function LegalPage() {
     <div className="legal-container">
       <header className="legal-header">
         {/* Si tienes un logo, reemplaza el src por el tuyo */}
-        <img src="/logo192.png" alt={`${brandName} Logo`} className="legal-logo" />
+        <img src="/logos/Iniciales.png" alt={`${brandName} Logo`} className="legal-logo" />
         <h1 className="legal-title">Terms of Use</h1>
       </header>
       <main className="legal-content">
         <p>
-          <strong>Effective date:</strong> June 13, 2025
+          <strong>Effective date:</strong> June 01, 2025
         </p>
 
         <p>
