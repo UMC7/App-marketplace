@@ -128,7 +128,7 @@ function ProductDetailPage(props) {
 
       {/* Product Information (ahora reordenado, sin contenedor extra ni borde) */}
       <h3>Product Information</h3>
-      <p><strong>Price:</strong> {product.currency || ''} {product.price}</p>
+      <p><strong>Price:</strong> {product.currency || ''} {Number(product.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
       <p><strong>Condition:</strong> {product.condition}</p>
       <p><strong>Available Stock:</strong> {stockDisponible}</p>
       <p><strong>City:</strong> {product.city}</p>

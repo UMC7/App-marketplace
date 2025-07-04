@@ -138,59 +138,62 @@ useEffect(() => {
             .eq('owner', currentUser.id)
             .eq('status', 'deleted')
             .order('deleted_at', { ascending: false }),
-          supabase
-            .from('purchase_items')
-            .select(`
-              id,
-              quantity,
-              total_price,
-              product_id,
-              products (
-                id,
-                name,
-                mainphoto,
-                owner
-              ),
-              purchases (
-                id,
-                created_at,
-                user_id,
-                buyer:users (
-                  first_name,
-                  last_name,
-                  phone,
-                  email
-                )
-              )
-            `),
-          supabase
-            .from('purchase_items')
-            .select(`
-              id,
-              quantity,
-              total_price,
-              product_id,
-              products (
-                id,
-                name,
-                mainphoto,
-                owner,
-                city,
-                users!products_owner_fkey (
-                  first_name,
-                  last_name,
-                  phone,
-                  email
-                )
-              ),
-              purchases (
-                id,
-                status,
-                buyer_confirmed,
-                created_at,
-                user_id
-              )
-            `),
+          // 🔵 Bloque para VENTAS (quién compró tus productos)
+supabase
+  .from('purchase_items')
+  .select(`
+    id,
+    quantity,
+    total_price,
+    product_id,
+    products (
+      id,
+      name,
+      mainphoto,
+      owner
+    ),
+    purchases (
+      id,
+      created_at,
+      user_id,
+      users!purchases_user_id_fkey (
+        first_name,
+        last_name,
+        phone,
+        email
+      )
+    )
+  `),
+
+// 🟢 Bloque para COMPRAS (a quién le compraste)
+supabase
+  .from('purchase_items')
+  .select(`
+    id,
+    quantity,
+    total_price,
+    product_id,
+    products (
+      id,
+      name,
+      mainphoto,
+      owner,
+      city,
+      users!products_owner_fkey (
+        first_name,
+        last_name,
+        phone,
+        email
+      )
+    ),
+    purchases (
+      id,
+      status,
+      buyer_confirmed,
+      created_at,
+      user_id
+    )
+  `),
           supabase
             .from('services') // Nueva consulta
             .select('*')
@@ -295,12 +298,15 @@ setAverageRating(avgRating);
   setDeletedEvents(deletedEventData || []);
 }
 
-        const filteredSales = (soldItems || []).filter(item => item.products?.owner === currentUser.id);
+        const filteredSales = (soldItems || []).filter(
+  item => String(item.products?.owner) === String(currentUser?.id)
+);
         const filteredPurchases = (myPurchases || []).filter(item => item.purchases?.user_id === currentUser.id);
     
         console.log('💰 My Sales:', soldItems);
         console.log('🧪 My Sales - Owner IDs:', soldItems?.map(i => i.products?.owner));
         console.log('🧪 My Filtered Sales:', filteredSales);
+        console.log("🧾 Ventas filtradas:", filteredSales);
         console.log('🧪 SOLD RAW:', JSON.stringify(soldItems, null, 2));
     
         console.log('🛒 My Purchases:', myPurchases);

@@ -1340,3 +1340,36 @@ body {
   font-size: 12.5px;
   line-height: 1.45;
 }
+
+.favorites-wrapper .products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  padding: 0 40px;
+  max-width: 1400px;
+  margin: 20px auto;
+}
+
+.favorites-wrapper .product-card {
+  width: 100%;
+  max-width: none;
+}
+
+@media (max-width: 600px) {
+  .favorites-wrapper .products-grid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding-left: 0;
+    padding-right: 0;
+    gap: 16px;
+  }
+
+  .favorites-wrapper .product-card {
+    width: 100%;
+    max-width: 400px;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
