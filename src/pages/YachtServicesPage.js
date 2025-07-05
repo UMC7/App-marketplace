@@ -10,7 +10,7 @@ function YachtServicesPage() {
     const fetchServices = async () => {
       const { data, error } = await supabase
         .from('services')
-        .select('*')
+        .select('*, categories(name)')
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
@@ -53,16 +53,16 @@ function YachtServicesPage() {
             <img
               src={service.mainphoto || 'https://via.placeholder.com/250'}
               alt={service.company_name}
-              style={{ width: '100%', height: '150px', objectFit: 'cover' }}
+              style={{ width: '100%', height: '150px', objectFit: 'contain', backgroundColor: '#fff' }}
             />
             <h3>{service.company_name}</h3>
             <p><strong>City:</strong> {service.city}</p>
             <p><strong>Country:</strong> {service.country}</p>
-            <p><strong>Category:</strong> {service.category_id}</p>
+            <p><strong>Category:</strong> {service.categories?.name || 'Uncategorized'}</p>
 
             {expandedServiceId === service.id && (
               <div style={{ marginTop: '10px', fontSize: '0.9em' }}>
-                <p><strong>Description:</strong> {service.description}</p>
+                <p className="description"><strong>Description:</strong> {service.description}</p>
                 <p><strong>Email:</strong> {service.contact_email}</p>
                 <p><strong>Phone:</strong> {service.contact_phone}</p>
                 <p><strong>Alternative Phone:</strong> {service.alt_phone}</p>

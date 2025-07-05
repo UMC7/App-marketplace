@@ -1373,3 +1373,17 @@ body {
     padding-bottom: 12px;
   }
 }
+
+.yacht-card.expanded a {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  vertical-align: bottom;
+}
+
+.yacht-card.expanded .description {
+  text-align: justify;
+}

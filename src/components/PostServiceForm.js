@@ -9,6 +9,7 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   const [companyName, setCompanyName] = useState(initialValues.company_name || '');
   const [description, setDescription] = useState(initialValues.description || '');
   const [categoryId, setCategoryId] = useState(initialValues.category_id || '');
+  const [categories, setCategories] = useState([]);
   const [city, setCity] = useState(initialValues.city || '');
   const [country, setCountry] = useState(initialValues.country || '');
   const [photos, setPhotos] = useState(initialValues.photos || []);
@@ -53,7 +54,21 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
       setOwnerEmail(authData.user.email);
     };
 
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('module', 'service');
+
+      if (error) {
+        console.error('Error fetching service categories:', error.message);
+      } else {
+        setCategories(data || []);
+      }
+    };
+
     fetchUser();
+    fetchCategories();
   }, []);
 
   const handleMainPhotoUpload = async (e) => {
@@ -169,11 +184,9 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
           <label>Category:</label>
           <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
             <option value="">Select a category</option>
-            <option value="1">Maintenance</option>
-            <option value="2">Repair</option>
-            <option value="3">Cleaning</option>
-            <option value="4">Transport</option>
-            <option value="5">Other</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
           </select>
 
           <label>City:</label>
