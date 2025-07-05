@@ -851,9 +851,9 @@ const deleteEvent = async (eventId) => {
                     <p><strong>Product:</strong> {item.products?.name || 'Name not available'}</p>
                     <p><strong>Quantity:</strong> {item.quantity}</p>
                     <p><strong>Total:</strong> ${item.total_price}</p>
-                    <p><strong>Buyer:</strong> {item.purchases?.buyer?.first_name} {item.purchases?.buyer?.last_name}</p>
-                    <p><strong>Phone:</strong> {item.purchases?.buyer?.phone || 'Not available'}</p>
-                    <p><strong>Email:</strong> {item.purchases?.buyer?.email || 'Not available'}</p>
+                    <p><strong>Buyer:</strong> {item.purchases?.users?.first_name} {item.purchases?.users?.last_name}</p>
+                    <p><strong>Phone:</strong> {item.purchases?.users?.phone || 'Not available'}</p>
+                    <p><strong>Email:</strong> {item.purchases?.users?.email || 'Not available'}</p>
                     <p><strong>Sale Date:</strong> {new Date(item.purchases?.created_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
