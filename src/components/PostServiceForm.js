@@ -58,7 +58,8 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
       const { data, error } = await supabase
         .from('categories')
         .select('id, name')
-        .eq('module', 'service');
+        .eq('module', 'service')
+        .order('name', { ascending: true });
 
       if (error) {
         console.error('Error fetching service categories:', error.message);
