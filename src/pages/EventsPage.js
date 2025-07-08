@@ -235,7 +235,7 @@ function EventsPage() {
 
             {expandedEventId === event.id && (
               <div className="event-details">
-                {event.description && <p><strong>Description:</strong> {event.description}</p>}
+                {event.description && <p className="description-text"><strong>Description:</strong> {event.description}</p>}
 
                 {event.start_time && <p><strong>Start Time:</strong> {formatTime(event.start_time)}</p>}
                 {event.end_time && <p><strong>End Time:</strong> {formatTime(event.end_time)}</p>}

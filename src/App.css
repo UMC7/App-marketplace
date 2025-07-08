@@ -1426,6 +1426,6 @@ body {
   display: inline;
 }
 
-.event-details p {
+.description-text {
   text-align: justify;
 }
