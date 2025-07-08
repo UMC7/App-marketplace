@@ -1387,3 +1387,37 @@ body {
 .yacht-card.expanded .description {
   text-align: justify;
 }
+
+@media (min-width: 768px) {
+  .login-page-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 80px); /* ajusta según la altura del navbar si es necesario */
+    padding: 40px 20px;
+  }
+
+  .login-form {
+    max-width: 400px;
+    width: 100%;
+    padding: 30px 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .login-page-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 80px);
+    padding: 40px 20px 60px; /* margen inferior para dejar espacio al menú inferior */
+    box-sizing: border-box;
+  }
+
+  .login-form {
+    margin: 0 auto !important; /* elimina márgenes verticales previos si los hay */
+  }
+}

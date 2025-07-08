@@ -1,5 +1,3 @@
-// src/pages/LoginPage.js
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
@@ -54,46 +52,48 @@ function LoginPage() {
   };
 
   const isLoginFormComplete = () => {
-  return email.trim() !== '' && password !== '';
+    return email.trim() !== '' && password !== '';
   };
 
   return (
-    <div className="container login-form">
-      <h2>Welcome Back</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <button onClick={handleLogin} disabled={!isLoginFormComplete()}>
-        Sign In
-      </button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      <div style={{ marginTop: '12px' }}>
-        <button
-          onClick={() => setShowRecovery(!showRecovery)}
-          style={{ background: 'none', border: 'none', color: 'blue', cursor: 'pointer' }}
-        >
-          {showRecovery ? 'Hide recovery' : '¿Forgot your password?'}
+    <div className="login-page-wrapper">
+      <div className="login-form">
+        <h2>Welcome Back</h2>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button onClick={handleLogin} disabled={!isLoginFormComplete()}>
+          Sign In
         </button>
-      </div>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      {showRecovery && (
         <div style={{ marginTop: '12px' }}>
-          <button onClick={handlePasswordRecovery}>Send recovery link</button>
-          {recoveryMessage && <p style={{ color: 'green' }}>{recoveryMessage}</p>}
+          <button
+            onClick={() => setShowRecovery(!showRecovery)}
+            style={{ background: 'none', border: 'none', color: 'blue', cursor: 'pointer' }}
+          >
+            {showRecovery ? 'Hide recovery' : '¿Forgot your password?'}
+          </button>
         </div>
-      )}
+
+        {showRecovery && (
+          <div style={{ marginTop: '12px' }}>
+            <button onClick={handlePasswordRecovery}>Send recovery link</button>
+            {recoveryMessage && <p style={{ color: 'green' }}>{recoveryMessage}</p>}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
