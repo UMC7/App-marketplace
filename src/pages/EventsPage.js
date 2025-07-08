@@ -1,5 +1,3 @@
-// src/pages/EventsPage.js
-
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabase';
 
@@ -48,6 +46,7 @@ function EventsPage() {
   const [selectedCity, setSelectedCity] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [availableCountries, setAvailableCountries] = useState([]);
+  const [availableMonths, setAvailableMonths] = useState([]);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -62,9 +61,26 @@ function EventsPage() {
       } else {
         setEvents(data || []);
         setFilteredEvents(data || []);
+
         const countries = [...new Set((data || []).map((e) => e.country))];
         setAvailableCountries(countries);
+
+        // Extraer meses únicos en formato 'YYYY-MM'
+        const monthsSet = new Set();
+        (data || []).forEach(e => {
+          if (e.start_date) {
+            const date = new Date(e.start_date);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            monthsSet.add(`${year}-${month}`);
+          }
+        });
+
+        // Ordenar y guardar como array
+        const sortedMonths = Array.from(monthsSet).sort();
+        setAvailableMonths(sortedMonths);
       }
+
       setLoading(false);
     };
 
@@ -93,6 +109,12 @@ function EventsPage() {
 
   const toggleExpand = (eventId) => {
     setExpandedEventId((prevId) => (prevId === eventId ? null : eventId));
+  };
+
+  const formatMonthLabel = (value) => {
+    const [year, month] = value.split('-');
+    const date = new Date(`${value}-01`);
+    return `${date.toLocaleString('en-US', { month: 'long' })} ${year}`;
   };
 
   if (loading) {
@@ -131,12 +153,18 @@ function EventsPage() {
       {showFilters && (
         <div className="filter-body expanded">
           <div className="filters-container filters-panel show">
-            <input
-              type="date"
-              className="search-input"
+            <select
+              className="category-select"
               value={searchDate}
               onChange={(e) => setSearchDate(e.target.value)}
-            />
+            >
+              <option value="">Filter by month</option>
+              {availableMonths.map((value) => (
+                <option key={value} value={value}>
+                  {formatMonthLabel(value)}
+                </option>
+              ))}
+            </select>
 
             <select
               className="category-select"

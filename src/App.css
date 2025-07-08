@@ -1421,3 +1421,11 @@ body {
     margin: 0 auto !important; /* elimina márgenes verticales previos si los hay */
   }
 }
+
+.event-details p strong:contains("Description:") {
+  display: inline;
+}
+
+.event-details p {
+  text-align: justify;
+}
