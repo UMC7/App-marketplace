@@ -40,7 +40,10 @@ function HomePage() {
 
   const fetchCategories = async () => {
     try {
-      const { data, error } = await supabase.from('categories').select('*');
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('module', 'market');
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
@@ -149,10 +152,12 @@ function HomePage() {
   onChange={(e) => setSelectedCategory(e.target.value)}
 >
   <option value="">Filter by category</option>
-  {categories.map((category) => (
-    <option key={category.id} value={category.id}>
-      {category.name}
-    </option>
+  {[...categories]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((category) => (
+      <option key={category.id} value={category.id}>
+        {category.name}
+      </option>
   ))}
 </select>
 

@@ -136,7 +136,7 @@ function ProductDetailPage(props) {
 
       {/* Description ahora debajo de Product Information */}
       <h3>Description</h3>
-      <p style={{ whiteSpace: 'pre-line' }}>{product.description}</p>
+      <p className="description-text" style={{ whiteSpace: 'pre-line' }}>{product.description}</p>
 
       {/* Actions */}
       {isPaused ? (

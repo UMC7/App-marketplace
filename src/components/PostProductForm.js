@@ -237,12 +237,14 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
           <label>Category:</label>
           <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
             <option value="">Select a category</option>
-            <option value="1">Deck</option>
-            <option value="2">Engineering</option>
-            <option value="3">Navigation</option>
-            <option value="4">Galley</option>
-            <option value="5">Interior</option>
-            <option value="6">Others</option>
+              <option value="16">Boats and Watercrafts</option>
+              <option value="1">Deck</option>
+              <option value="2">Engineering</option>
+              <option value="4">Galley</option>
+              <option value="5">Interior</option>
+              <option value="3">Navigation</option>
+              <option value="6">Others</option>
+              <option value="15">Paints & Antifouling</option>
           </select>
 
           <label>City:</label>

@@ -834,11 +834,20 @@ const handleCopy = (text, field) => {
     {offer.description && (
   <div className="expanded-block block6">
     <div className="field-label">Remarks</div>
-   <div className="field-value remarks-content">
-  {offer.description.split('\n').map((line, index) => (
-    <p key={index} style={{ margin: '0 0 8px 0' }}>{line}</p>
-  ))}
-</div>
+    <div className="field-value remarks-content">
+      {offer.description.split(/\n{2,}/).map((paragraph, index) => (
+        <p
+          key={index}
+          style={{
+            whiteSpace: 'pre-line',
+            marginBottom: '12px',
+            textAlign: 'justify',
+          }}
+        >
+          {paragraph}
+        </p>
+      ))}
+    </div>
   </div>
 )}
 
