@@ -69,9 +69,6 @@ const fetchServices = async () => {
   const [sentReviews, setSentReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false); // 🔧 Para menú hamburguesa
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(true);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [authError, setAuthError] = useState('');
   const [userForm, setUserForm] = useState({
     email: '',
     nickname: '',
@@ -534,26 +531,6 @@ const deleteEvent = async (eventId) => {
     toast.error('Could not delete the event.');
   }
 };
-
-  const handlePasswordVerification = async (e) => {
-    e.preventDefault();
-    setAuthError('');
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: currentUser.email,
-        password: passwordInput,
-      });
-
-      if (error) {
-        setAuthError('Incorrect password. Please try again.');
-      } else {
-        setShowPasswordPrompt(false);
-      }
-    } catch (error) {
-      console.error('Failed to verify password:', error.message);
-      setAuthError('Error verifying password.');
-    }
-  };
 
   const handleUserFormChange = (e) => {
     const { name, value } = e.target;
@@ -1025,15 +1002,6 @@ const deleteEvent = async (eventId) => {
         return (
           <>
             <h2>User Information</h2>
-            {showPasswordPrompt ? (
-              <form onSubmit={handlePasswordVerification}>
-                <label>Password:
-                  <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} required />
-                </label>
-                <button type="submit">Verify</button>
-                {authError && <p style={{ color: 'red' }}>{authError}</p>}
-              </form>
-            ) : (
               <form onSubmit={handleUserFormSubmit}>
                 <div><strong>Name:</strong> {userDetails.first_name || ''}</div>
                 <div><strong>Last Name:</strong> {userDetails.last_name || ''}</div>
@@ -1067,7 +1035,6 @@ const deleteEvent = async (eventId) => {
                 <button type="submit">Update Information</button>
                 {updateMessage && <p>{updateMessage}</p>}
               </form>
-            )}
           </>
         );
       default:
