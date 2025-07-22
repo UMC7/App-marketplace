@@ -25,6 +25,20 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, data });
   } catch (error) {
     console.error('🛑 RESEND ERROR:', error);
-    return res.status(500).json({ error: error.message || 'Failed to send email' });
+
+    if (error?.response) {
+      const { statusCode, message, name } = error.response;
+      return res.status(500).json({
+        error: 'Resend API error',
+        statusCode,
+        message,
+        name
+      });
+    }
+
+    return res.status(500).json({
+      error: 'Unexpected error',
+      message: error.message || 'Failed to send email'
+    });
   }
 }
