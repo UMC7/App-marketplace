@@ -175,6 +175,76 @@ function CartPage() {
       clearCart();
       setCartItems([]);
 
+      // Enviar correos al comprador y a los vendedores
+const buyerName = `${currentUser.user_metadata?.first_name || ''} ${currentUser.user_metadata?.last_name || ''}`.trim();
+const buyerEmail = currentUser.email;
+const buyerPhone = currentUser.user_metadata?.phone || 'Not available';
+
+// Agrupar productos por vendedor
+const productsBySeller = {};
+availableItems.forEach(item => {
+  const sellerId = item.owner;
+  if (!productsBySeller[sellerId]) {
+    productsBySeller[sellerId] = {
+      seller: item.ownerInfo,
+      products: []
+    };
+  }
+  productsBySeller[sellerId].products.push(item);
+});
+
+// Preparar contenido HTML para el comprador
+let htmlToBuyer = `<h2>Thank you for your purchase, ${buyerName}!</h2>`;
+htmlToBuyer += `<p>You have purchased the following items:</p>`;
+
+for (const { seller, products } of Object.values(productsBySeller)) {
+  htmlToBuyer += `<h3>Seller: ${seller.first_name} ${seller.last_name}</h3>`;
+  htmlToBuyer += `<p>Email: ${seller.email}<br>Phone: ${seller.phone || 'Not available'}</p>`;
+  htmlToBuyer += `<ul>`;
+  products.forEach(p => {
+    htmlToBuyer += `<li>${p.name} — ${p.currency} ${p.price} × ${p.quantity}</li>`;
+  });
+  htmlToBuyer += `</ul>`;
+}
+
+// Enviar correo al comprador
+await fetch('/api/sendEmail', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    to: buyerEmail,
+    subject: 'Purchase Confirmation - Yacht Daywork',
+    html: htmlToBuyer
+  })
+});
+
+// Enviar un correo por vendedor
+for (const { seller, products } of Object.values(productsBySeller)) {
+  const htmlToSeller = `
+    <h2>Hello ${seller.first_name},</h2>
+    <p>You have received a new order from:</p>
+    <p>
+      Name: ${buyerName}<br>
+      Email: ${buyerEmail}<br>
+      Phone: ${buyerPhone}
+    </p>
+    <p>Products sold:</p>
+    <ul>
+      ${products.map(p => `<li>${p.name} — ${p.currency} ${p.price} × ${p.quantity}</li>`).join('')}
+    </ul>
+  `;
+
+  await fetch('/api/sendEmail', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      to: seller.email,
+      subject: 'New Order Received - Yacht Daywork',
+      html: htmlToSeller
+    })
+  });
+}
+
     } catch (err) {
       console.error('Purchase error:', err.message);
       toast.error('An error occurred while processing the purchase.');

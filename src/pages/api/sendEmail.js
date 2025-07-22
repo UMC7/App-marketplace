@@ -1,33 +1,26 @@
-import nodemailer from 'nodemailer';
+// /pages/api/sendEmail.js
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { to, subject, text } = req.body;
-
-  const transporter = nodemailer.createTransport({
-    host: 'email-smtp.eu-north-1.amazonaws.com', // Estocolmo
-    port: 465,
-    secure: true, // SSL
-    auth: {
-      user: 'AKIA3HBIPA3MBUV3HXPY',
-      pass: 'BEpRm9q/Xd+t3A2kB9xXKY0wCryF9RxKSUSnQeFj6QIs'
-    }
-  });
+  const { to, subject, html } = req.body;
 
   try {
-    await transporter.sendMail({
+    const data = await resend.emails.send({
       from: 'Yacht Daywork <info@yachtdaywork.com>',
       to,
       subject,
-      text
+      html,
     });
 
-    res.status(200).json({ success: true });
+    res.status(200).json({ success: true, data });
   } catch (error) {
-    console.error('Error sending email via SES:', error);
+    console.error('Resend error:', error);
     res.status(500).json({ error: 'Failed to send email' });
   }
 }
