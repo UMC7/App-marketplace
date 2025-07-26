@@ -1139,99 +1139,45 @@ body {
   background: #fff;
 }
 
-@media (max-width: 768px) and (orientation: portrait) {
-  .products-grid {
-    width: 100%;
-    max-width: 500px;
-    margin: 0 auto;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 0;
-  }
-
-  .modal-overlay {
-    align-items: center; 
-    justify-content: center;
-  }
-
-  .modal-content-wrapper {
-    margin-top: 50px; 
-    max-height: calc(100vh - 50px - 40px); 
-    height: auto; 
-    overflow-y: auto; 
-  }
-
-  .close-button {
-    top: 10px;
-    right: unset;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
+@media only screen and (max-width: 768px) {
+  /* 1) Aseguramos altura mínima idéntica */
   .product-card {
-    width: 100%;
-    padding: 8px 0;
-    margin-bottom: 14px;
+    min-height: 140px; /* ajusta si quieres más o menos alto */
     box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
-    position: relative;
-    min-height: 120px;
+    padding: 12px !important;
+    margin-bottom: 16px !important;
   }
 
+  /* 2) ProductCard-inner pasa a row-reverse para imagen a la derecha */
   .product-card-inner {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    align-items: center;
-    /* gap: 12px;  <-- eliminado para usar margen izquierdo en la imagen */
+    display: flex !important;
+    flex-direction: row-reverse !important;
+    align-items: center !important;
+    gap: 12px;
   }
 
+  /* 3) Columna de imagen fija a 110px, sin márgenes a la izquierda */
   .product-image-col {
-    flex: 0 0 110px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 110px;
-    background: none;
-    overflow: hidden;
-    margin-left: 12px; /* Espacio igual al "gap" original, crea simetría */
+    flex: 0 0 110px !important;
+    width: 110px !important;
+    margin: 0 !important;
   }
 
+  /* 4) Columna de texto rellena el resto */
   .product-info-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 0;
-    padding: 0 4px;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;    /* muy importante para que el texto no se salga */
+    padding: 0 !important;
   }
 
-  .product-info-col h3 {
-    font-size: 1.1rem;
-    margin: 0 0 2px 0;
-    line-height: 1.2;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-
-  .product-info-col p {
-    margin: 2px 0;
-    font-size: 0.99rem;
-  }
-
-  .product-image-col img {
-    max-width: 110px;
-    max-height: 110px;
-    display: block;
-    margin: 0 auto;
-    object-fit: contain;
-    background: none;
+  /* 5) Asegura que la grid (o flex) envuelva correctamente */
+  .products-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px;
+    padding: 0 20px !important;
+    margin: 0 auto !important;
+    box-sizing: border-box;
   }
 }
 
@@ -1439,8 +1385,3 @@ a {
   vertical-align: middle;
   text-align: left; /* Para evitar justificación */
 }
-
-.module-carousel .slick-list {
-  height: auto !important;
-}
-

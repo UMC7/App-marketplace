@@ -27,3 +27,7 @@
     height: 140px;
   }
 }
+
+.module-carousel .slick-list {
+  height: auto !important;
+}
