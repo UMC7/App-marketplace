@@ -1439,3 +1439,8 @@ a {
   vertical-align: middle;
   text-align: left; /* Para evitar justificación */
 }
+
+.module-carousel .slick-list {
+  height: auto !important;
+}
+
