@@ -31,3 +31,14 @@
 .module-carousel .slick-list {
   height: auto !important;
 }
+
+.module-carousel .slick-slide {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.module-carousel .slick-slide.slick-active {
+  opacity: 1;
+  pointer-events: auto;
+}

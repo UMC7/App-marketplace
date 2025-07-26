@@ -46,7 +46,7 @@ function LandingPage() {
           slidesToShow: 1,
           slidesToScroll: 1,
           centerMode: true,                 // centra en móvil
-          centerPadding: mobileCenterPadding, // ¡padd dinámico!
+          centerPadding: mobileCenterPadding, // ¡padding dinámico!
           adaptiveHeight: true,
           arrows: false
         }
@@ -80,8 +80,7 @@ function LandingPage() {
             <div className="module-card">
               <h3>SeaMarket</h3>
               <p>
-                Buy and sell yacht-related equipment, spare parts, and supplies
-                directly with other professionals.
+                From spare parts to top gear, buy and sell everything for your yacht in one place.
               </p>
             </div>
           </div>
@@ -89,8 +88,7 @@ function LandingPage() {
             <div className="module-card">
               <h3>SeaServices</h3>
               <p>
-                Find or offer professional maritime services such as repairs,
-                maintenance, and yacht management.
+                Need a hand with your yacht? Discover or offer top maritime services, from repairs to full management.
               </p>
             </div>
           </div>
