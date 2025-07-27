@@ -62,3 +62,94 @@
   margin-bottom: 10px;
   color: #333;
 }
+
+.profile-products-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.profile-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.profile-action-buttons button {
+  flex: 1 1 100px;
+  max-width: 120px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease-in-out;
+  font-family: var(--font-body, 'Inter', sans-serif);
+}
+
+/* ✅ Botón Editar */
+.profile-action-buttons .edit-btn {
+  background-color: #f4f6f8;
+  color: #081a3b;
+  border: 1px solid #ccc;
+}
+
+.profile-action-buttons .edit-btn:hover {
+  background-color: #e0e5ec;
+}
+
+/* ✅ Botón Pausar */
+.profile-action-buttons .pause-btn {
+  background-color: #fff8e1;
+  color: #aa7b00;
+  border: 1px solid #f4ca64;
+}
+
+.profile-action-buttons .pause-btn:hover {
+  background-color: #fff3cd;
+}
+
+/* ✅ Botón Eliminar */
+.profile-action-buttons .delete-btn {
+  background-color: #ffe8e8;
+  color: #b00020;
+  border: 1px solid #ffcdd2;
+}
+
+.profile-action-buttons .delete-btn:hover {
+  background-color: #ffebee;
+}
+
+.success-btn {
+  background-color: #e8f5e9; /* Verde muy claro */
+  color: #2e7d32;           /* Verde más sobrio */
+  border: 1px solid #c8e6c9;
+}
+
+.success-btn:hover {
+  background-color: #d0f0d4;
+}
+
+.warning-btn {
+  background-color: #fff8e1; /* Amarillo claro */
+  color: #aa7b00;            /* Amarillo dorado */
+  border: 1px solid #f4ca64;
+}
+
+.warning-btn:hover {
+  background-color: #fff3cd;
+}
+
+.danger-btn {
+  background-color: #ffe8e8; /* Rojo claro */
+  color: #b00020;
+  border: 1px solid #ffcdd2;
+}
+
+.danger-btn:hover {
+  background-color: #ffebee;
+}
