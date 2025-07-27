@@ -11,6 +11,7 @@ import EditProductModal from '../components/EditProductModal';
 import EditServiceModal from '../components/EditServiceModal';
 import EditJobModal from '../components/EditJobModal';
 import EditEventModal from '../components/EditEventModal';
+import './ProfilePage.css';
 import {
   confirmPurchase,
   reportProblem,
