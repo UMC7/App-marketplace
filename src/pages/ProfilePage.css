@@ -86,7 +86,6 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  border: none;
   transition: all 0.2s ease-in-out;
   font-family: var(--font-body, 'Inter', sans-serif);
 }
@@ -97,7 +96,6 @@
   color: #081a3b;
   border: 1px solid #ccc;
 }
-
 .profile-action-buttons .edit-btn:hover {
   background-color: #e0e5ec;
 }
@@ -108,7 +106,6 @@
   color: #aa7b00;
   border: 1px solid #f4ca64;
 }
-
 .profile-action-buttons .pause-btn:hover {
   background-color: #fff3cd;
 }
@@ -119,37 +116,36 @@
   color: #b00020;
   border: 1px solid #ffcdd2;
 }
-
 .profile-action-buttons .delete-btn:hover {
   background-color: #ffebee;
 }
 
-.success-btn {
-  background-color: #e8f5e9; /* Verde muy claro */
-  color: #2e7d32;           /* Verde más sobrio */
+/* ✅ Botón Confirmar (verde) */
+.profile-action-buttons .success-btn {
+  background-color: #e8f5e9;
+  color: #2e7d32;
   border: 1px solid #c8e6c9;
 }
-
-.success-btn:hover {
+.profile-action-buttons .success-btn:hover {
   background-color: #d0f0d4;
 }
 
-.warning-btn {
-  background-color: #fff8e1; /* Amarillo claro */
-  color: #aa7b00;            /* Amarillo dorado */
+/* ✅ Botón Problema (amarillo) */
+.profile-action-buttons .warning-btn {
+  background-color: #fff8e1;
+  color: #aa7b00;
   border: 1px solid #f4ca64;
 }
-
-.warning-btn:hover {
+.profile-action-buttons .warning-btn:hover {
   background-color: #fff3cd;
 }
 
-.danger-btn {
-  background-color: #ffe8e8; /* Rojo claro */
+/* ✅ Botón Cancelar (rojo) */
+.profile-action-buttons .danger-btn {
+  background-color: #ffe8e8;
   color: #b00020;
   border: 1px solid #ffcdd2;
 }
-
-.danger-btn:hover {
+.profile-action-buttons .danger-btn:hover {
   background-color: #ffebee;
 }

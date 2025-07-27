@@ -708,7 +708,7 @@ case 'eventos':
       )}
     </>
   );
-  
+
   case 'eliminados':
   return (
     <>
@@ -862,7 +862,8 @@ case 'compras':
             const reviewed = sentReviews.some(r => r.purchase_id === item.purchases?.id);
             return (
               <div key={item.id} className="profile-card">
-                <img src={item.products?.mainphoto || 'https://via.placeholder.com/250'} alt={item.products?.name || 'Product'} />
+                <img src={item.products?.mainphoto || 'https://via.placeholder.com/250'}
+                     alt={item.products?.name || 'Product'} />
                 <p><strong>Product:</strong> {item.products?.name || 'Name not available'}</p>
                 <p><strong>Quantity:</strong> {item.quantity}</p>
                 <p><strong>Total:</strong> ${item.total_price}</p>
@@ -877,8 +878,12 @@ case 'compras':
                 })}</p>
 
                 {['completed', 'cancelled', 'problem_reported'].includes(status) && (
-                  <div style={{ marginTop: '10px', color: status === 'completed' ? 'green' : status === 'cancelled' ? 'orange' : 'red' }}>
-                    <strong>✅ Action recorded:</strong> {status === 'completed' ? 'Purchase confirmed' : status === 'cancelled' ? 'Purchase cancelled' : 'Problem reported'}
+                  <div style={{ marginTop: '10px', color:
+                    status === 'completed' ? '#2e7d32' :
+                    status === 'cancelled' ? '#aa7b00' : '#b00020' }}>
+                    <strong>✅ Action recorded:</strong> {status === 'completed' ? 'Purchase confirmed'
+                      : status === 'cancelled' ? 'Purchase cancelled'
+                      : 'Problem reported'}
                   </div>
                 )}
 
@@ -887,7 +892,7 @@ case 'compras':
                     <form onSubmit={(e) => handleReviewSubmit(e, item)}>
                       <p><strong>Leave your rating for the seller:</strong></p>
                       <label>
-                        Score (1–5): 
+                        Score (1–5):
                         <input type="number" name="rating" min="1" max="5" required />
                       </label>
                       <br />
@@ -896,7 +901,9 @@ case 'compras':
                         <textarea name="comment" rows="3" style={{ width: '100%' }} />
                       </label>
                       <br />
-                      <button className="action-btn" type="submit">Submit Rating</button>
+                      <button className="profile-action-buttons action-btn" type="submit">
+                        Submit Rating
+                      </button>
                     </form>
                   </div>
                 )}
