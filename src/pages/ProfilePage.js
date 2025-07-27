@@ -999,44 +999,36 @@ const deleteEvent = async (eventId) => {
           </>
         );
       case 'usuario':
-        return (
-          <>
-            <h2>User Information</h2>
-              <form onSubmit={handleUserFormSubmit}>
-                <div><strong>Name:</strong> {userDetails.first_name || ''}</div>
-                <div><strong>Last Name:</strong> {userDetails.last_name || ''}</div>
-                <div><strong>Date of Birth:</strong> {userDetails.birth_year || ''}</div>
-                <div><strong>Nickname:</strong> {userDetails.nickname || ''}</div>
-                <div>
-                  <label><strong>Main Phone:</strong>
-                    <input name="phone" value={userForm.phone} onChange={handleUserFormChange} />
-                  </label>
-                </div>
-                <div>
-                  <label><strong>Alternative Phone:</strong>
-                    <input name="altPhone" value={userForm.altPhone} onChange={handleUserFormChange} />
-                  </label>
-                </div>
-                <div>
-                  <label><strong>Main Email:</strong>
-                    <input name="email" value={userForm.email} onChange={handleUserFormChange} />
-                  </label>
-                </div>
-                <div>
-                  <label><strong>Alternative Email:</strong>
-                    <input name="altEmail" value={userForm.altEmail} onChange={handleUserFormChange} />
-                  </label>
-                </div>
-                <div>
-                  <label><strong>Password:</strong>
-                    <input type="password" name="password" value={userForm.password} onChange={handleUserFormChange} />
-                  </label>
-                </div>
-                <button type="submit">Update Information</button>
-                {updateMessage && <p>{updateMessage}</p>}
-              </form>
-          </>
-        );
+  return (
+    <div className="user-info-form">
+      <h2>User Information</h2>
+      <form onSubmit={handleUserFormSubmit}>
+        <div className="static-info"><strong>Name:</strong> {userDetails.first_name || ''}</div>
+        <div className="static-info"><strong>Last Name:</strong> {userDetails.last_name || ''}</div>
+        <div className="static-info"><strong>Date of Birth:</strong> {userDetails.birth_year || ''}</div>
+        <div className="static-info"><strong>Nickname:</strong> {userDetails.nickname || ''}</div>
+
+        <label htmlFor="phone">Main Phone</label>
+        <input id="phone" name="phone" value={userForm.phone} onChange={handleUserFormChange} />
+
+        <label htmlFor="altPhone">Alternative Phone</label>
+        <input id="altPhone" name="altPhone" value={userForm.altPhone} onChange={handleUserFormChange} />
+
+        <label htmlFor="email">Main Email</label>
+        <input id="email" name="email" value={userForm.email} onChange={handleUserFormChange} />
+
+        <label htmlFor="altEmail">Alternative Email</label>
+        <input id="altEmail" name="altEmail" value={userForm.altEmail} onChange={handleUserFormChange} />
+
+        <label htmlFor="password">Password</label>
+        <input id="password" type="password" name="password" value={userForm.password} onChange={handleUserFormChange} />
+
+        <button type="submit">Update Information</button>
+        {updateMessage && <p style={{ marginTop: '10px', color: '#007700' }}>{updateMessage}</p>}
+      </form>
+    </div>
+  );
+
       default:
         return null;
     }
