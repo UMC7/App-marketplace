@@ -31,20 +31,17 @@ function ProductDetailPage(props) {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      // Fetch product
       const { data: productData, error: productError } = await supabase
         .from('products').select('*').eq('id', id).single();
       if (!productError) setProduct(productData);
       else console.error("Error fetching product:", productError);
 
-      // Fetch messages
       const { data: messagesData, error: messagesError } = await supabase
         .from('messages').select('id, content, sender_id, sent_at, product_id, receiver_id, users(nickname)')
         .eq('product_id', parseInt(id)).order('sent_at', { ascending: true });
       if (!messagesError) setMessages(messagesData);
       else console.error("Error fetching messages:", messagesError);
 
-      // Check if favorite
       if (currentUser) {
         const { data: favData } = await supabase
           .from('favorites').select('id').eq('product_id', id).eq('user_id', currentUser.id).single();
@@ -126,7 +123,8 @@ function ProductDetailPage(props) {
         ))}
       </Slider>
 
-      {/* Product Information (ahora reordenado, sin contenedor extra ni borde) */}
+      <div className="section-divider" />
+
       <h3>Product Information</h3>
       <p><strong>Price:</strong> {product.currency || ''} {Number(product.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
       <p><strong>Condition:</strong> {product.condition}</p>
@@ -134,11 +132,13 @@ function ProductDetailPage(props) {
       <p><strong>City:</strong> {product.city}</p>
       <p><strong>Country:</strong> {product.country}</p>
 
-      {/* Description ahora debajo de Product Information */}
+      <div className="section-divider" />
+
       <h3>Description</h3>
       <p className="description-text" style={{ whiteSpace: 'pre-line' }}>{product.description}</p>
 
-      {/* Actions */}
+      <div className="section-divider" />
+
       {isPaused ? (
         <p style={{ color: 'red' }}>This product is paused.</p>
       ) : (
@@ -178,7 +178,6 @@ function ProductDetailPage(props) {
         </>
       )}
 
-      {/* Questions & Answers */}
       <div
         className="product-detail-qa"
         style={{

@@ -1385,3 +1385,13 @@ a {
   vertical-align: middle;
   text-align: left; /* Para evitar justificación */
 }
+
+.section-divider {
+  border-top: 1px solid #bca987;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.slick-slider {
+  margin-bottom: 24px; /* Ajustá este valor según el espacio que necesites */
+}
