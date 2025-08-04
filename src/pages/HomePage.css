@@ -1,0 +1,46 @@
+.module-header-wrapper {
+  width: 100%;
+  padding: 0 20px;
+  display: flex;
+  justify-content: flex-start; /* 🔥 fuerza alineación izquierda */
+}
+
+.module-header-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+  justify-content: flex-start;  /* 👈 fuerza la alineación a la izquierda */
+  flex-wrap: wrap;
+}
+
+.module-header-row h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  color: var(--primary-color);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.module-header-row span {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  color: #1c1c1c;
+  margin: 0;
+  line-height: 1.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* En móviles: apila verticalmente */
+@media (max-width: 600px) {
+  .module-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .module-header-row span {
+    white-space: normal;
+  }
+}

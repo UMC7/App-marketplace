@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './EventsPage.css';
 import supabase from '../supabase';
 
 const formatDate = (dateStr) => {
@@ -127,8 +128,12 @@ function EventsPage() {
 
   return (
     <div className="container">
-      <h1>SeaEvents</h1>
-      <p>Where you can explore all events shared by the community.</p>
+      <div className="module-header-wrapper">
+        <div className="module-header-row">
+        <h1>SeaEvents</h1>
+        <span>Where you can explore all events shared by the community.</span>
+      </div>
+    </div>
 
       <h3
         className="filter-toggle"

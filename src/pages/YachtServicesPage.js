@@ -1,6 +1,7 @@
 // src/pages/YachtServicesPage.js
 
 import React, { useState, useEffect, useCallback } from 'react';
+import './YachtServicesPage.css';
 import supabase from '../supabase';
 
 function YachtServicesPage() {
@@ -93,8 +94,12 @@ function YachtServicesPage() {
 
   return (
     <div className="container">
-      <h1>SeaServices</h1>
-      <p>Where providers can list and display the services they offer.</p>
+      <div className="module-header-wrapper">
+      <div className="module-header-row">
+        <h1>SeaServices</h1>
+        <span>Discover Professional Yacht Services</span>
+      </div>
+    </div>
 
       <h3
         className="filter-toggle"

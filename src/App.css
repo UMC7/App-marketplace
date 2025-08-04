@@ -1383,7 +1383,7 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
-  text-align: left; /* Para evitar justificación */
+  text-align: left;
 }
 
 .section-divider {
@@ -1393,5 +1393,5 @@ a {
 }
 
 .slick-slider {
-  margin-bottom: 24px; /* Ajustá este valor según el espacio que necesites */
+  margin-bottom: 24px;
 }

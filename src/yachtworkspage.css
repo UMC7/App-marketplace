@@ -790,3 +790,54 @@
     order: 2;
   }
 }
+
+.module-header-wrapper {
+  width: 100%;
+  padding: 0 20px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.module-header-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.module-header-row h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  color: var(--primary-color);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.module-header-row span {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  color: #1c1c1c;
+  margin: 0;
+  white-space: nowrap;
+  line-height: 1.6;
+  position: relative;
+  top: -1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+@media (max-width: 600px) {
+  .module-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .module-header-row span {
+    white-space: normal;
+    top: 0;
+  }
+}

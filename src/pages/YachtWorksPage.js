@@ -159,8 +159,12 @@ function YachtWorksPage() {
 
   return (
   <div className="container">
-    <h1>SeaJobs</h1>
-    <h2>Available Offers</h2>
+    <div className="module-header-wrapper">
+      <div className="module-header-row">
+      <h1>SeaJobs</h1>
+      <span>Available Offers</span>
+    </div>
+  </div>
 
     {!isMobile && (
       <h3

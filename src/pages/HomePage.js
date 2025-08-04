@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import ProductList from '../components/ProductList';
+import './HomePage.css';
 import supabase from '../supabase';
 
 function HomePage() {
@@ -111,8 +112,14 @@ function HomePage() {
 
   return (
   <div className="container">
+    <div className="module-header-wrapper">
+    <div className="module-header-row">
     <h1>SeaMarket</h1>
-    <h2>Explore Available Products</h2>
+    <span>Explore Available Products</span>
+  </div>
+</div>
+
+
 
 <h3
   className="filter-toggle"
