@@ -233,7 +233,7 @@ function EventsPage() {
             {event.country && <p><strong>Country:</strong> {event.country}</p>}
             {event.start_date && (
               <p>
-                <strong>Fecha:</strong>{' '}
+                <strong>Date:</strong>{' '}
                 {formatDateRange(event.start_date, event.end_date, event.is_single_day)}
               </p>
             )}

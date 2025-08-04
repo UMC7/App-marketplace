@@ -119,8 +119,6 @@ function HomePage() {
   </div>
 </div>
 
-
-
 <h3
   className="filter-toggle"
   onClick={() => setShowFilters((prev) => !prev)}

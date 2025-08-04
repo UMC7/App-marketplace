@@ -1,8 +1,9 @@
+/* Encabezado */
 .module-header-wrapper {
   width: 100%;
   padding: 0 20px;
   display: flex;
-  justify-content: flex-start; /* 🔥 fuerza alineación izquierda */
+  justify-content: flex-start;
 }
 
 .module-header-row {
@@ -10,7 +11,7 @@
   align-items: baseline;
   gap: 12px;
   margin-bottom: 20px;
-  justify-content: flex-start;  /* 👈 fuerza la alineación a la izquierda */
+  justify-content: flex-start;
   flex-wrap: wrap;
 }
 
@@ -33,7 +34,7 @@
   text-overflow: ellipsis;
 }
 
-/* En móviles: apila verticalmente */
+/* Móviles */
 @media (max-width: 600px) {
   .module-header-row {
     flex-direction: column;
@@ -43,4 +44,40 @@
   .module-header-row span {
     white-space: normal;
   }
+}
+
+/* Grilla de productos */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Se adapta mejor */
+  gap: 24px;
+  padding: 20px;
+  justify-items: center; /* Centra tarjetas en cada celda */
+}
+
+/* Tarjeta de producto */
+.product-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 340px; /* Más grande en desktop pero adaptable */
+}
+
+.product-card h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 12px 0 8px;
+  text-align: center;
+}
+
+.product-card p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+  text-align: center;
 }

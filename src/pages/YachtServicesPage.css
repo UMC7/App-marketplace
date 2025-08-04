@@ -48,3 +48,57 @@
     top: 0;
   }
 }
+
+/* Grilla con tamaño estándar */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .responsive-grid {
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+}
+
+/* Tarjeta estándar */
+.yacht-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* 🔹 Evita centrar todo el contenido */
+  width: 100%;
+  min-height: 320px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.yacht-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 12px 0 8px;
+  text-align: center;
+}
+
+.event-card p {
+  margin: 8px 0;
+  font-size: 0.95rem;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.yacht-card .description {
+  text-align: justify;
+}
+
+.yacht-card.expanded {
+  min-height: 450px;
+}
