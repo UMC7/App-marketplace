@@ -49,11 +49,6 @@
   color: #fff;
 }
 
-.cookie-buttons .reject {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  color: #fff;
-}
-
 .cookie-buttons .configure {
   background: #f1f1f1;
   color: #333;
@@ -149,6 +144,16 @@
 .cookie-preferences-buttons .cancel {
   background: #f1f1f1;
   color: #333;
+}
+
+/* 🔹 Botón Reject All en rojo dentro del modal */
+.cookie-preferences-buttons .reject {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: #fff;
+}
+
+.cookie-preferences-buttons .reject:hover {
+  background: linear-gradient(135deg, #ff6655, #e74c3c);
 }
 
 .cookie-preferences-buttons button:hover {

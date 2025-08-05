@@ -1,13 +1,14 @@
+// src/components/cookies/CookiePreferences.js
 import React, { useState, useEffect } from 'react';
 import { cookieCategories, getConsent, saveConsent } from './cookiesConfig';
 import './CookieBanner.css';
 
-const CookiePreferences = ({ onClose }) => {
+const CookiePreferences = ({ onClose, onShowBanner }) => {
   const [preferences, setPreferences] = useState({
     necessary: true,
-    preferences: false,
-    statistics: false,
-    marketing: false,
+    preferences: true,
+    statistics: true,
+    marketing: true,
   });
 
   useEffect(() => {
@@ -18,7 +19,7 @@ const CookiePreferences = ({ onClose }) => {
   }, []);
 
   const handleToggle = (category) => {
-    if (category === 'necessary') return; // Cannot disable necessary cookies
+    if (category === 'necessary') return;
     setPreferences((prev) => ({
       ...prev,
       [category]: !prev[category],
@@ -28,6 +29,13 @@ const CookiePreferences = ({ onClose }) => {
   const handleSave = () => {
     saveConsent(preferences);
     onClose();
+  };
+
+  const handleCancel = () => {
+    onClose();
+    if (onShowBanner) {
+      onShowBanner();
+    }
   };
 
   return (
@@ -51,10 +59,9 @@ const CookiePreferences = ({ onClose }) => {
             ))}
           </ul>
         </div>
-
         <div className="cookie-preferences-buttons">
+          <button className="cancel" onClick={handleCancel}>Cancel</button>
           <button className="save" onClick={handleSave}>Save</button>
-          <button className="cancel" onClick={onClose}>Cancel</button>
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+// src/components/cookies/CookieBanner.js
 import React, { useState, useEffect } from 'react';
 import CookiePreferences from './CookiePreferences';
 import { getConsent, saveConsent } from './cookiesConfig';
@@ -19,50 +20,35 @@ const CookieBanner = () => {
       necessary: true,
       preferences: true,
       statistics: true,
-      marketing: true
-    });
-    setShowBanner(false);
-  };
-
-  const handleReject = () => {
-    saveConsent({
-      necessary: true,
-      preferences: false,
-      statistics: false,
-      marketing: false
+      marketing: true,
     });
     setShowBanner(false);
   };
 
   const handleConfigure = () => {
     setShowPreferences(true);
-  };
-
-  const handleClosePreferences = () => {
-    setShowPreferences(false);
     setShowBanner(false);
   };
-
-  if (!showBanner) return null;
 
   return (
     <>
       {showBanner && !showPreferences && (
         <div className="cookie-banner">
           <p>
-            We use cookies to enhance your browsing experience, serve personalized ads or content, 
-            and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.
+            We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.
           </p>
           <div className="cookie-buttons">
             <button className="accept" onClick={handleAcceptAll}>Accept All</button>
-            <button className="reject" onClick={handleReject}>Reject</button>
             <button className="configure" onClick={handleConfigure}>Configure</button>
           </div>
         </div>
       )}
 
       {showPreferences && (
-        <CookiePreferences onClose={handleClosePreferences} />
+        <CookiePreferences
+          onClose={() => setShowPreferences(false)}
+          onShowBanner={() => setShowBanner(true)}
+        />
       )}
     </>
   );
