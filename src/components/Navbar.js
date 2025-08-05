@@ -183,30 +183,30 @@ function Navbar() {
       {/* BOTÓN TOU FLOTANTE - SOLO MOBILE PORTRAIT */}
 
         <button
-          className="tou-tab-collapsed"
-          onClick={() => setShowTouPanel(s => !s)}
-          aria-label="Terms of Use"
-          style={{
-            position: 'fixed',
-            top: '15px',
-            right: 0,
-            zIndex: 9999,
-            background: '#68ada8',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px 0 0 8px',
-            width: showTouPanel ? '42px' : '14px',
-            height: '44px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
-            cursor: 'pointer',
-            opacity: 0.95,
-            padding: 0,
-            transition: 'width 0.2s cubic-bezier(.4,2.4,.7,.9)'
-          }}
-        >
+  className="tou-tab-collapsed"
+  onClick={() => setShowTouPanel(s => !s)}
+  aria-label="Terms of Use"
+  style={{
+    position: 'fixed',
+    top: '15px',
+    right: window.innerWidth > 1024 ? '12px' : 0, // 🔹 Mueve 12px en desktop
+    zIndex: 9999,
+    background: '#68ada8',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px 0 0 8px',
+    width: showTouPanel ? '42px' : '14px',
+    height: '44px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
+    cursor: 'pointer',
+    opacity: 0.95,
+    padding: 0,
+    transition: 'width 0.2s cubic-bezier(.4,2.4,.7,.9)'
+  }}
+>
           {showTouPanel ? (
             <span
               className="material-icons"
