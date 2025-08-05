@@ -9,7 +9,6 @@ function LegalPage() {
   return (
     <div className="legal-container">
       <header className="legal-header">
-        {/* Si tienes un logo, reemplaza el src por el tuyo */}
         <img src="/logos/Iniciales.png" alt={`${brandName} Logo`} className="legal-logo" />
         <h1 className="legal-title">Terms of Use</h1>
       </header>
@@ -65,12 +64,17 @@ function LegalPage() {
 
         <h2>8. Privacy Policy</h2>
         <p>
-          Please also review our <a href="/privacy" className="legal-link">Privacy Policy</a> to understand how we collect, use, and protect your personal information.
+          Please also review our <a href="/privacy" className="legal-link">Privacy Policy</a> to understand how we collect, use, and protect your personal information, including our use of Google Analytics for statistical purposes, which you can disable via our cookie preferences tool.
         </p>
 
         <h2>9. Governing Law & Jurisdiction</h2>
         <p>
           Unless otherwise required by mandatory law, these Terms shall be governed by and construed in accordance with the laws of your country of residence, without regard to its conflict of law provisions.
+        </p>
+
+        <h2>10. Cookies</h2>
+        <p>
+          {brandName} uses cookies and similar technologies to improve user experience, analyze site traffic, and provide personalized content. By continuing to use our platform, you consent to the use of cookies in accordance with our <a href="/privacy" className="legal-link">Privacy Policy</a>. You can manage your cookie preferences at any time using our cookie settings tool available on the site.
         </p>
 
         <h2>Contact Us</h2>
