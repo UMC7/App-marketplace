@@ -1,9 +1,9 @@
 // src/components/cookies/CookiePreferences.js
 import React, { useState, useEffect } from 'react';
-import { cookieCategories, getConsent, saveConsent } from './cookiesConfig';
+import { cookieCategories, getConsent } from './cookiesConfig';
 import './CookieBanner.css';
 
-const CookiePreferences = ({ onClose, onShowBanner }) => {
+const CookiePreferences = ({ onSave, onCancel }) => {
   const [preferences, setPreferences] = useState({
     necessary: true,
     preferences: true,
@@ -26,16 +26,8 @@ const CookiePreferences = ({ onClose, onShowBanner }) => {
     }));
   };
 
-  const handleSave = () => {
-    saveConsent(preferences);
-    onClose();
-  };
-
-  const handleCancel = () => {
-    onClose();
-    if (onShowBanner) {
-      onShowBanner();
-    }
+  const handleSaveClick = () => {
+    onSave(preferences);
   };
 
   return (
@@ -60,8 +52,8 @@ const CookiePreferences = ({ onClose, onShowBanner }) => {
           </ul>
         </div>
         <div className="cookie-preferences-buttons">
-          <button className="cancel" onClick={handleCancel}>Cancel</button>
-          <button className="save" onClick={handleSave}>Save</button>
+          <button className="cancel" onClick={onCancel}>Cancel</button>
+          <button className="save" onClick={handleSaveClick}>Save</button>
         </div>
       </div>
     </div>

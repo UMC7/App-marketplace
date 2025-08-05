@@ -16,6 +16,9 @@ import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import CookieBanner from './components/cookies/CookieBanner';
 
+// Utils
+import { initAnalytics } from './utils/analytics';
+
 // Pages
 import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
@@ -62,6 +65,11 @@ function AuthRedirectHandler() {
 
 function App() {
   const { currentUser, loading } = useAuth();
+
+  // Inicializar Google Analytics si el consentimiento lo permite
+  useEffect(() => {
+    initAnalytics();
+  }, []);
 
   if (loading) {
     return <div>Loading application...</div>;

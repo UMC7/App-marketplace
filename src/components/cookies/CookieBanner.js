@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import CookiePreferences from './CookiePreferences';
 import { getConsent, saveConsent } from './cookiesConfig';
+import { initAnalytics } from '../../utils/analytics';
 import './CookieBanner.css';
 
 const CookieBanner = () => {
@@ -16,12 +17,16 @@ const CookieBanner = () => {
   }, []);
 
   const handleAcceptAll = () => {
-    saveConsent({
+    const newConsent = {
       necessary: true,
       preferences: true,
       statistics: true,
       marketing: true,
-    });
+    };
+    saveConsent(newConsent);
+    if (newConsent.statistics) {
+      initAnalytics();
+    }
     setShowBanner(false);
   };
 
@@ -30,12 +35,26 @@ const CookieBanner = () => {
     setShowBanner(false);
   };
 
+  const handlePreferencesSave = (newConsent) => {
+    saveConsent(newConsent);
+    if (newConsent.statistics) {
+      initAnalytics();
+    }
+    setShowPreferences(false);
+    setShowBanner(false);
+  };
+
+  const handlePreferencesCancel = () => {
+    setShowPreferences(false);
+    setShowBanner(true); // vuelve a mostrar el banner inicial
+  };
+
   return (
     <>
       {showBanner && !showPreferences && (
         <div className="cookie-banner">
           <p>
-            We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.
+            We use cookies to enhance your experience. You can accept all or configure your preferences.
           </p>
           <div className="cookie-buttons">
             <button className="accept" onClick={handleAcceptAll}>Accept All</button>
@@ -46,8 +65,8 @@ const CookieBanner = () => {
 
       {showPreferences && (
         <CookiePreferences
-          onClose={() => setShowPreferences(false)}
-          onShowBanner={() => setShowBanner(true)}
+          onSave={handlePreferencesSave}
+          onCancel={handlePreferencesCancel}
         />
       )}
     </>
