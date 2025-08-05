@@ -14,6 +14,7 @@ import { useAuth } from './context/AuthContext';
 // Components
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import CookieBanner from './components/cookies/CookieBanner';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -71,6 +72,9 @@ function App() {
       <Navbar />
       <AuthRedirectHandler />
       <ToastContainer autoClose={1500} />
+
+      {/* Banner de Cookies */}
+      <CookieBanner />
 
       <div className="main-content">
         <Routes>
