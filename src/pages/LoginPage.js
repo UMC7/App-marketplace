@@ -81,7 +81,7 @@ function LoginPage() {
         <div style={{ marginTop: '12px' }}>
           <button
             onClick={() => setShowRecovery(!showRecovery)}
-            style={{ background: 'none', border: 'none', color: 'blue', cursor: 'pointer' }}
+            className="forgot-password-btn"
           >
             {showRecovery ? 'Hide recovery' : '¿Forgot your password?'}
           </button>

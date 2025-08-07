@@ -172,10 +172,10 @@ function Navbar() {
       {/* BOTÓN TOU FLOTANTE EXPANDIBLE */}
       <div
         style={{
-          position: 'fixed',
-          top: '15px',
-          right: window.innerWidth > 1024 ? '12px' : 0,
-          zIndex: 9999,
+          position: 'absolute',
+          top: '50%',
+          right: window.innerWidth > 1024 ? '12px' : '0',
+          transform: 'translateY(-50%)',
           background: '#68ada8',
           color: '#fff',
           borderRadius: '8px 0 0 8px',

@@ -339,3 +339,169 @@ body.dark-mode .cookie-preferences-buttons {
     background-color: var(--navbar-bg-color) !important;
   }
 }
+
+body.dark-mode .login-page-wrapper {
+  background-color: var(--bg-color) !important;
+}
+
+body.dark-mode .login-form {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .forgot-password-btn {
+  background-color: #b3b3b3 !important;
+  color: var(--bg-color) !important;
+  border: none !important;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+/* =========================
+   NAVBAR DESKTOP ICON BUTTONS
+   ========================= */
+body.dark-mode .navbar-links button.profile-icon-text,
+body.dark-mode .navbar-links button.admin-icon-text,
+body.dark-mode .navbar-links button.post-icon-text,
+body.dark-mode .navbar-links button.chats-icon-text,
+body.dark-mode .navbar-links button.favorites-icon-text,
+body.dark-mode .navbar-links button.cart-icon-text,
+body.dark-mode .navbar-links button.logout-icon-text {
+  background-color: transparent !important;
+  color: var(--text-color) !important;
+  border: none !important;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* =========================
+   MODO OSCURO - Tarjetas de perfil
+   ========================= */
+body.dark-mode .profile-card {
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+  border: 1px solid #333;
+}
+
+body.dark-mode .profile-card p,
+body.dark-mode .profile-card h3,
+body.dark-mode .profile-card h4 {
+  color: #f0f0f0;
+}
+
+body.dark-mode .profile-card img {
+  border: 1px solid #444;
+}
+
+/* 🎨 Estilos personalizados para botones en modo oscuro */
+
+/* Gris intermedio para Edit y Pause */
+body.dark-mode .profile-action-buttons .edit-btn,
+body.dark-mode .profile-action-buttons .pause-btn {
+  background-color: #666 !important;  /* Gris intermedio */
+  color: #fff !important;
+  border: 1px solid #888 !important;
+}
+
+body.dark-mode .profile-action-buttons .edit-btn:hover,
+body.dark-mode .profile-action-buttons .pause-btn:hover {
+  background-color: #777 !important;
+}
+
+/* Rojo muy suave para Delete */
+body.dark-mode .profile-action-buttons .delete-btn {
+  background-color: #ffcccc !important;
+  color: #990000 !important;
+  border: 1px solid #f4aaaa !important;
+}
+
+body.dark-mode .profile-action-buttons .delete-btn:hover {
+  background-color: #ffb3b3 !important;
+}
+
+/*  Estilos personalizados en modo oscuro para pestaña “My Posted Events” */
+
+/* Botón Edit y ahora también Cancel y Postpone en gris intermedio */
+body.dark-mode .profile-action-buttons .edit-btn,
+body.dark-mode .profile-action-buttons .pause-btn,
+body.dark-mode .profile-action-buttons .cancel-btn,
+body.dark-mode .profile-action-buttons .postpone-btn {
+  background-color: #666 !important;  /* Gris intermedio */
+  color: #fff !important;
+  border: 1px solid #888 !important;
+}
+
+body.dark-mode .profile-action-buttons .edit-btn:hover,
+body.dark-mode .profile-action-buttons .pause-btn:hover,
+body.dark-mode .profile-action-buttons .cancel-btn:hover,
+body.dark-mode .profile-action-buttons .postpone-btn:hover {
+  background-color: #777 !important;
+}
+
+/* 🌙 Correcciones modo oscuro para la pestaña "User Details" */
+
+body.dark-mode .user-info-form {
+  background-color: #1c1c1c;
+  color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+body.dark-mode .user-info-form label {
+  color: #ddd;
+  font-weight: bold;
+}
+
+body.dark-mode .user-info-form input,
+body.dark-mode .user-info-form textarea {
+  background-color: #222;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 8px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+body.dark-mode .user-info-form input:focus,
+body.dark-mode .user-info-form textarea:focus {
+  outline: none;
+  border-color: #888;
+}
+
+body.dark-mode .user-info-form .static-info {
+  color: #ccc;
+  margin-bottom: 10px;
+}
+
+body.dark-mode .user-info-form button[type="submit"] {
+  background-color: #666;
+  color: #fff;
+  border: 1px solid #888;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+body.dark-mode .user-info-form button[type="submit"]:hover {
+  background-color: #777;
+}
+
+body.dark-mode .user-info-form {
+  background-color: #1c1c1c;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15); /* 👉 sutil borde claro */
+  border-radius: 10px;
+  padding: 20px;
+}
