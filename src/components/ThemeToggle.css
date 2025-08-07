@@ -1,0 +1,42 @@
+/* Toggle vertical para cambio de tema */
+.theme-switch-vertical {
+  width: 30px;
+  height: 60px;
+  border-radius: 30px;
+  padding: 3px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column; /* Vertical */
+  align-items: center;
+  transition: background 0.3s ease, justify-content 0.3s ease;
+}
+
+/* Estado Light */
+.theme-switch-vertical.light {
+  background: linear-gradient(180deg, #ffb347, #ff7e5f); /* Naranja degradado */
+  justify-content: flex-start;
+}
+
+/* Estado Dark */
+.theme-switch-vertical.dark {
+  background: linear-gradient(180deg, #00c6ff, #0072ff); /* Azul degradado */
+  justify-content: flex-end;
+}
+
+/* Botón circular interno */
+.switch-handle {
+  width: 24px;
+  height: 24px;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: transform 0.3s ease;
+}
+
+/* Ajuste extra para modal */
+.legal-modal-link + .theme-switch-vertical {
+  margin-top: 8px;
+}

@@ -8,11 +8,19 @@
   --text-dark: #1c1c1c;
   --font-header: 'Playfair Display', serif;
   --font-body: 'Inter', sans-serif;
+
+  /* Color por defecto del navbar (modo claro) */
+  --navbar-bg-color: #8c8c8c;
+}
+
+/* Modo oscuro */
+[data-theme='dark'] {
+  --navbar-bg-color: #2a2a2a; /* Cambia este valor si tu navbar superior en oscuro usa otro */
 }
 
 /* === NAVBAR GENERAL === */
 .navbar-container {
-  position: fixed; /* <-- FIJO EN TODAS LAS PANTALLAS */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
@@ -22,7 +30,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: #8c8c8c;
+  background-color: var(--navbar-bg-color);
   color: var(--white-color);
   flex-wrap: wrap;
   min-height: 100px;
@@ -164,7 +172,7 @@
   position: absolute;
   top: 100%;
   left: 0;
-  background-color: #8c8c8c;
+  background-color: var(--navbar-bg-color);
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   z-index: 1000;
   border-radius: 8px;
@@ -281,7 +289,7 @@
     justify-content: center;
     align-items: center;
     padding: 6px 16px;
-    background-color: #8c8c8c;
+    background-color: var(--navbar-bg-color);
     flex-direction: column;
     min-height: 60px;
     box-sizing: border-box;
@@ -334,7 +342,7 @@
     left: 0;
     width: 100vw;
     min-width: 100vw;
-    background-color: #8c8c8c;
+    background-color: var(--navbar-bg-color);
     display: flex;
     z-index: 1001;
     box-shadow: 0 -2px 6px rgba(0,0,0,0.2);
@@ -481,5 +489,16 @@
 @media (min-width: 769px) {
   .tou-tab-collapsed {
     top: 35px !important
+  }
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  body.dark-mode .navbar-bottom {
+    background-color: #2a2a2a !important;
+  }
+
+  body.dark-mode .navbar-bottom .material-icons,
+  body.dark-mode .navbar-bottom small {
+    color: #f5f5f5 !important;
   }
 }

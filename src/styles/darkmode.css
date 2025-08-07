@@ -1,0 +1,341 @@
+/* =========================
+   DARK MODE - PALETA DE GRISES ELEGANTE
+   ========================= */
+body.dark-mode {
+  --bg-color: #121212;
+  --bg-secondary: #1e1e1e;
+  --navbar-bg: #2a2a2a;
+  --card-bg: #2a2a2a;
+  --card-hover: #333333;
+  --text-color: #f5f5f5;
+  --text-muted: #b3b3b3;
+  --primary-color: #68ada8;
+  --border-color: #3a3a3a;
+  --navbar-bg-color: #2a2a2a; /* 🔧 clave para ambos navbars */
+}
+
+/* =========================
+   GLOBAL
+   ========================= */
+body.dark-mode {
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+  color: var(--text-color) !important;
+}
+
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode small,
+body.dark-mode label,
+body.dark-mode strong {
+  color: var(--text-color) !important;
+}
+
+body.dark-mode a {
+  color: var(--primary-color) !important;
+}
+
+/* =========================
+   NAVBAR
+   ========================= */
+body.dark-mode .navbar-container,
+body.dark-mode .navbar-left,
+body.dark-mode .navbar-links,
+body.dark-mode .navbar-bottom {
+  background-color: var(--navbar-bg-color) !important;
+}
+
+body.dark-mode .navbar-logo {
+  filter: brightness(1) contrast(1.1);
+}
+
+body.dark-mode .profile-icon-text,
+body.dark-mode .cart-icon-text,
+body.dark-mode .favorites-icon-text,
+body.dark-mode .chats-icon-text,
+body.dark-mode .logout-icon-text,
+body.dark-mode .login-icon-text,
+body.dark-mode .register-icon-text,
+body.dark-mode .nav-icon-button,
+body.dark-mode .post-icon-text {
+  color: var(--text-color) !important;
+}
+
+/* =========================
+   BOTONES
+   ========================= */
+body.dark-mode button,
+body.dark-mode .btn {
+  background-color: var(--primary-color) !important;
+  color: var(--bg-color) !important;
+  border: none !important;
+}
+
+body.dark-mode button:hover,
+body.dark-mode .btn:hover {
+  opacity: 0.9;
+}
+
+/* =========================
+   INPUTS Y FILTROS
+   ========================= */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: #262626 !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+body.dark-mode .filters-container,
+body.dark-mode .filters-panel {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+body.dark-mode .filters-container label,
+body.dark-mode .filters-panel label {
+  color: var(--text-color) !important;
+}
+
+/* =========================
+   TARJETAS - TODOS LOS MÓDULOS
+   ========================= */
+body.dark-mode .card,
+body.dark-mode .module-card,
+body.dark-mode .product-card,
+body.dark-mode .service-card,
+body.dark-mode .event-card,
+body.dark-mode .offer-card,
+body.dark-mode .favorite-card,
+body.dark-mode .job-card,
+body.dark-mode .yacht-card {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+  transition: background-color 0.2s ease;
+}
+
+body.dark-mode .card:hover,
+body.dark-mode .module-card:hover,
+body.dark-mode .product-card:hover,
+body.dark-mode .service-card:hover,
+body.dark-mode .event-card:hover,
+body.dark-mode .offer-card:hover,
+body.dark-mode .favorite-card:hover,
+body.dark-mode .job-card:hover,
+body.dark-mode .yacht-card:hover {
+  background-color: var(--card-hover) !important;
+}
+
+body.dark-mode .card h3,
+body.dark-mode .module-card h3,
+body.dark-mode .product-card h3,
+body.dark-mode .service-card h3,
+body.dark-mode .event-card h3,
+body.dark-mode .offer-card h3,
+body.dark-mode .favorite-card h3,
+body.dark-mode .job-card h3,
+body.dark-mode .yacht-card h3 {
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .card p,
+body.dark-mode .module-card p,
+body.dark-mode .product-card p,
+body.dark-mode .service-card p,
+body.dark-mode .event-card p,
+body.dark-mode .offer-card p,
+body.dark-mode .favorite-card p,
+body.dark-mode .job-card p,
+body.dark-mode .yacht-card p {
+  color: var(--text-muted) !important;
+}
+
+body.dark-mode .yacht-card strong {
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .yacht-card .description {
+  color: var(--text-muted) !important;
+}
+
+body.dark-mode .yacht-card img {
+  background-color: var(--card-bg) !important;
+}
+
+/* =========================
+   CAMPOS DE TARJETAS / TABLAS
+   ========================= */
+body.dark-mode .field-label,
+body.dark-mode .offer-card strong,
+body.dark-mode .job-card strong,
+body.dark-mode td,
+body.dark-mode th {
+  color: var(--text-color) !important;
+}
+
+/* =========================
+   CABECERAS DE MÓDULOS
+   ========================= */
+body.dark-mode .module-header-wrapper,
+body.dark-mode .module-header-row {
+  background-color: transparent !important;
+  color: var(--text-color) !important;
+}
+
+/* =========================
+   MENÚS Y DESPLEGABLES
+   ========================= */
+body.dark-mode .post-dropdown,
+body.dark-mode .dropdown-menu,
+body.dark-mode .menu-panel {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+body.dark-mode .post-dropdown button,
+body.dark-mode .dropdown-menu button {
+  background-color: transparent !important;
+  color: var(--text-color) !important;
+}
+
+/* =========================
+   MODALES
+   ========================= */
+body.dark-mode .modal-overlay {
+  background: rgba(0, 0, 0, 0.85) !important;
+}
+
+body.dark-mode .modal-content-wrapper {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .modal-close-button {
+  background-color: var(--primary-color) !important;
+  color: var(--bg-color) !important;
+}
+
+/* =========================
+   BANNER DE COOKIES
+   ========================= */
+body.dark-mode .cookie-banner {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+body.dark-mode .cookie-banner button {
+  background-color: var(--primary-color) !important;
+  color: var(--bg-color) !important;
+}
+
+/* =========================
+   FOOTER
+   ========================= */
+body.dark-mode footer {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-color) !important;
+}
+
+/* =========================
+   CARRUSEL
+   ========================= */
+body.dark-mode .module-carousel .module-card {
+  background-color: var(--bg-color) !important;
+  border: none !important;
+}
+
+body.dark-mode .slick-prev,
+body.dark-mode .slick-next {
+  background: none !important;
+  color: var(--text-color) !important;
+  border: none !important;
+}
+
+body.dark-mode .slick-prev svg,
+body.dark-mode .slick-next svg,
+body.dark-mode .slick-prev i,
+body.dark-mode .slick-next i {
+  fill: var(--text-color) !important;
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .slick-dots li button {
+  background: none !important;
+}
+
+body.dark-mode .slick-dots li button:before {
+  color: var(--text-muted) !important;
+}
+
+body.dark-mode .slick-dots li.slick-active button:before {
+  color: var(--text-color) !important;
+}
+
+/* =========================
+   COOKIE BANNER BUTTONS
+   ========================= */
+body.dark-mode .cookie-banner button:nth-child(2),
+body.dark-mode .cookie-banner .cky-btn-reject {
+  background-color: #b3b3b3 !important;
+  color: var(--bg-color) !important;
+}
+
+/* =========================
+   COOKIE MODAL
+   ========================= */
+body.dark-mode .cookie-preferences {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .cookie-preferences-content h3,
+body.dark-mode .cookie-preferences-content label,
+body.dark-mode .cookie-preferences-content strong {
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .cookie-preferences-content {
+  background-color: transparent !important;
+}
+
+body.dark-mode .cookie-preferences-buttons .cancel {
+  background-color: #b3b3b3 !important;
+  color: var(--bg-color) !important;
+}
+
+body.dark-mode .cookie-preferences-buttons .save {
+  background-color: var(--primary-color) !important;
+  color: var(--bg-color) !important;
+}
+
+body.dark-mode .cookie-preferences-buttons {
+  background-color: #2a2a2a !important;
+  border-top: 1px solid var(--border-color) !important;
+}
+
+/* =========================
+   MOBILE NAVBAR BOTTOM
+   ========================= */
+@media (max-width: 768px) and (orientation: portrait) {
+  body.dark-mode .navbar-bottom {
+    background-color: var(--navbar-bg-color) !important;
+  }
+
+  body.dark-mode .navbar-bottom .material-icons,
+  body.dark-mode .navbar-bottom small,
+  body.dark-mode .navbar-bottom .nav-icon-button {
+    color: var(--text-color) !important;
+    background-color: var(--navbar-bg-color) !important;
+  }
+}

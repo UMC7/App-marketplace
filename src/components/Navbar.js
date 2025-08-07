@@ -12,6 +12,7 @@ import PostEventForm from './PostEventForm';
 import ChatList from './ChatList';
 import ChatPage from './ChatPage';
 import Modal from './Modal';
+import ThemeToggle from './ThemeToggle';
 import '../navbar.css';
 
 function Navbar() {
@@ -32,12 +33,10 @@ function Navbar() {
   const [showLegalModal, setShowLegalModal] = useState(false);
   const menuRef = useRef();
 
-  // Detecta si está en móvil portrait
   const [isMobilePortrait, setIsMobilePortrait] = useState(
     window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches
   );
 
-  // Auto-colapsa la pestaña TOU después de 2.5 segundos abierta
   useEffect(() => {
     if (showTouPanel) {
       const timeout = setTimeout(() => setShowTouPanel(false), 2500);
@@ -49,10 +48,8 @@ function Navbar() {
     const checkOrientation = () => {
       setIsMobilePortrait(window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches);
     };
-
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
-
     return () => {
       window.removeEventListener('resize', checkOrientation);
       window.removeEventListener('orientationchange', checkOrientation);
@@ -104,14 +101,9 @@ function Navbar() {
       <div className="navbar-left">
         <div className="navbar-logo-wrapper">
           <Link to="/">
-            <img
-              src="/logos/yachtdaywork.png"
-              alt="YachtDayWork logo"
-              className="navbar-logo"
-            />
+            <img src="/logos/yachtdaywork.png" alt="YachtDayWork logo" className="navbar-logo" />
           </Link>
         </div>
-        {/* No mostramos el toggle si es móvil landscape */}
         {!window.matchMedia('(max-width: 900px) and (orientation: landscape)').matches && (
           <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>☰</button>
         )}
@@ -124,14 +116,12 @@ function Navbar() {
               <span className="material-icons">account_circle</span>
               <small>Profile</small>
             </button>
-
             {currentUser?.app_metadata?.role === 'admin' && (
               <button onClick={() => { navigate('/admin'); setIsMenuOpen(false); }} className="profile-icon-text">
                 <span className="material-icons">admin_panel_settings</span>
                 <small>Admin</small>
               </button>
             )}
-
             <div ref={menuRef} style={{ position: 'relative', width: '100%' }}>
               <button className="post-icon-text" onClick={() => setShowMenu(!showMenu)}>
                 <span className="material-icons">add_circle_outline</span>
@@ -146,7 +136,6 @@ function Navbar() {
                 </div>
               )}
             </div>
-
             <button onClick={() => { setShowChatList(true); setIsMenuOpen(false); }} className="chats-icon-text">
               {unreadCount > 0 && <span className="chat-badge">{unreadCount}</span>}
               <span className="material-icons">chat_bubble_outline</span>
@@ -180,124 +169,126 @@ function Navbar() {
         )}
       </div>
 
-      {/* BOTÓN TOU FLOTANTE - SOLO MOBILE PORTRAIT */}
-
-        <button
-  className="tou-tab-collapsed"
-  onClick={() => setShowTouPanel(s => !s)}
-  aria-label="Terms of Use"
-  style={{
-    position: 'fixed',
-    top: '15px',
-    right: window.innerWidth > 1024 ? '12px' : 0, // 🔹 Mueve 12px en desktop
-    zIndex: 9999,
-    background: '#68ada8',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px 0 0 8px',
-    width: showTouPanel ? '42px' : '14px',
-    height: '44px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
-    cursor: 'pointer',
-    opacity: 0.95,
-    padding: 0,
-    transition: 'width 0.2s cubic-bezier(.4,2.4,.7,.9)'
-  }}
->
-          {showTouPanel ? (
+      {/* BOTÓN TOU FLOTANTE EXPANDIBLE */}
+      <div
+        style={{
+          position: 'fixed',
+          top: '15px',
+          right: window.innerWidth > 1024 ? '12px' : 0,
+          zIndex: 9999,
+          background: '#68ada8',
+          color: '#fff',
+          borderRadius: '8px 0 0 8px',
+          width: showTouPanel ? '60px' : '14px',
+          height: showTouPanel ? '100px' : '44px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: showTouPanel ? 'flex-start' : 'center',
+          boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
+          cursor: 'pointer',
+          opacity: 0.95,
+          padding: showTouPanel ? '6px 0' : '0',
+          transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)'
+        }}
+        onClick={() => setShowTouPanel(s => !s)}
+      >
+        {showTouPanel ? (
+          <>
+            <div style={{ transform: 'scale(0.85)', marginBottom: '6px' }}>
+              <ThemeToggle />
+            </div>
             <span
               className="material-icons"
               style={{ fontSize: 26, cursor: 'pointer' }}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setShowLegalModal(true);
                 setShowTouPanel(false);
               }}
             >
               library_books
             </span>
-          ) : (
-            <div style={{
-              width: '3px',
-              height: '26px',
-              background: '#fff',
-              borderRadius: '2px',
-              marginLeft: '3px'
-            }} />
-          )}
-        </button>
+          </>
+        ) : (
+          <div style={{
+            width: '3px',
+            height: '26px',
+            background: '#fff',
+            borderRadius: '2px',
+            marginLeft: '3px'
+          }} />
+        )}
+      </div>
 
+      {/* Modales */}
+      {showOfferModal && renderModal(<YachtOfferForm user={currentUser} onOfferPosted={() => { setShowOfferModal(false); window.location.reload(); }} />)}
+      {showProductModal && renderModal(<PostProductForm onPosted={() => { setShowProductModal(false); window.location.reload(); }} />)}
+      {showServiceModal && renderModal(<PostServiceForm onPosted={() => { setShowServiceModal(false); window.location.reload(); }} />)}
+      {showEventModal && renderModal(<PostEventForm />)}
+      {showChatList && renderModal(
+        !activeChat ? (
+          <ChatList
+            currentUser={currentUser}
+            onOpenChat={(offerId, receiverId) => setActiveChat({ offerId, receiverId })}
+          />
+        ) : (
+          <ChatPage
+            offerId={activeChat.offerId}
+            receiverId={activeChat.receiverId}
+            onBack={() => setActiveChat(null)}
+          />
+        )
+      )}
+      {showLegalModal && (
+        <Modal onClose={() => setShowLegalModal(false)}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '32px 10px 20px 10px' }}>
+            <button
+              className="legal-modal-link"
+              onClick={() => {
+                setShowLegalModal(false);
+                navigate('/legal');
+              }}
+              style={{
+                background: '#68ada8',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '7px',
+                padding: '12px 24px',
+                fontSize: '1.15rem',
+                marginBottom: '8px',
+                width: '100%',
+                maxWidth: 220,
+                cursor: 'pointer'
+              }}
+            >
+              Terms of Use
+            </button>
+            <button
+              className="legal-modal-link"
+              onClick={() => {
+                setShowLegalModal(false);
+                navigate('/privacy');
+              }}
+              style={{
+                background: '#bca987',
+                color: '#081a3b',
+                border: 'none',
+                borderRadius: '7px',
+                padding: '12px 24px',
+                fontSize: '1.15rem',
+                width: '100%',
+                maxWidth: 220,
+                cursor: 'pointer'
+              }}
+            >
+              Privacy Policy
+            </button>
+          </div>
+        </Modal>
+      )}
 
-      {/* Modales de publicación y chats */}
-{showOfferModal && renderModal(<YachtOfferForm user={currentUser} onOfferPosted={() => { setShowOfferModal(false); window.location.reload(); }} />)}
-{showProductModal && renderModal(<PostProductForm onPosted={() => { setShowProductModal(false); window.location.reload(); }} />)}
-{showServiceModal && renderModal(<PostServiceForm onPosted={() => { setShowServiceModal(false); window.location.reload(); }} />)}
-{showEventModal && renderModal(<PostEventForm />)}
-{showChatList && renderModal(
-  !activeChat ? (
-    <ChatList
-      currentUser={currentUser}
-      onOpenChat={(offerId, receiverId) => setActiveChat({ offerId, receiverId })}
-    />
-  ) : (
-    <ChatPage
-      offerId={activeChat.offerId}
-      receiverId={activeChat.receiverId}
-      onBack={() => setActiveChat(null)}
-    />
-  )
-)}
-{showLegalModal && (
-  <Modal onClose={() => setShowLegalModal(false)}>
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '32px 10px 20px 10px' }}>
-      <button
-        className="legal-modal-link"
-        onClick={() => {
-          setShowLegalModal(false);
-          navigate('/legal');
-        }}
-        style={{
-          background: '#68ada8',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '7px',
-          padding: '12px 24px',
-          fontSize: '1.15rem',
-          marginBottom: '8px',
-          width: '100%',
-          maxWidth: 220,
-          cursor: 'pointer'
-        }}
-      >
-        Terms of Use
-      </button>
-      <button
-        className="legal-modal-link"
-        onClick={() => {
-          setShowLegalModal(false);
-          navigate('/privacy');
-        }}
-        style={{
-          background: '#bca987',
-          color: '#081a3b',
-          border: 'none',
-          borderRadius: '7px',
-          padding: '12px 24px',
-          fontSize: '1.15rem',
-          width: '100%',
-          maxWidth: 220,
-          cursor: 'pointer'
-        }}
-      >
-        Privacy Policy
-      </button>
-    </div>
-  </Modal>
-)}
-
-      {/* Usamos el estado isMobilePortrait en vez de media query directa */}
+      {/* Menú inferior móvil */}
       {isMobilePortrait && (
         <div className="navbar-bottom">
           {currentUser ? (
@@ -306,36 +297,30 @@ function Navbar() {
                 <span className="material-icons">account_circle</span>
                 <small>Profile</small>
               </button>
-
               {currentUser?.app_metadata?.role === 'admin' && (
                 <button className="nav-icon-button" onClick={() => navigate('/admin')}>
                   <span className="material-icons">admin_panel_settings</span>
                   <small>Admin</small>
                 </button>
               )}
-
               <button className="nav-icon-button" onClick={() => setShowPostOptions(true)}>
                 <span className="material-icons">add_circle_outline</span>
                 <small>Post</small>
               </button>
-
               <button className="nav-icon-button" onClick={() => setShowChatList(true)}>
                 {unreadCount > 0 && <span className="chat-badge">{unreadCount}</span>}
                 <span className="material-icons">chat_bubble_outline</span>
                 <small>Chats</small>
               </button>
-
               <button className="nav-icon-button" onClick={() => navigate('/favorites')}>
                 <span className="material-icons">favorite_border</span>
                 <small>Favorites</small>
               </button>
-
               <button className="nav-icon-button" onClick={() => navigate('/cart')}>
                 {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
                 <span className="material-icons">shopping_cart</span>
                 <small>Cart</small>
               </button>
-
               <button className="nav-icon-button" onClick={handleLogout}>
                 <span className="material-icons">logout</span>
                 <small>Logout</small>
@@ -356,7 +341,6 @@ function Navbar() {
         </div>
       )}
 
-      {/* Modal de selección de tipo de publicación desde el botón Post en el menú inferior móvil */}
       {showPostOptions && (
         <div className="post-options-modal" onClick={() => setShowPostOptions(false)}>
           <div className="post-options-content" onClick={(e) => e.stopPropagation()}>
