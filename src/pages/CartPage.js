@@ -383,36 +383,11 @@ for (const { seller, products } of Object.values(productsBySeller)) {
         )}
 
         {showConfirmModal && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 9999,
-            }}
-          >
-            <div
-              style={{
-                backgroundColor: 'white',
-                padding: '20px',
-                borderRadius: '8px',
-                textAlign: 'center',
-                width: '90%',
-                maxWidth: '400px',
-                boxSizing: 'border-box',
-              }}
-            >
+          <div className="custom-modal-overlay" onClick={() => setShowConfirmModal(false)}>
+            <div className="custom-modal-content" onClick={e => e.stopPropagation()}>
               <h3>Do you want to confirm your purchase?</h3>
               <p>{availableItems.length} product(s)</p>
-              <p>
-                <strong>Totals by currency:</strong>
-              </p>
+              <p><strong>Totals by currency:</strong></p>
               <ul style={{ listStyle: 'none', padding: 0, marginBottom: '20px' }}>
                 {Object.entries(subtotalesPorMoneda).map(([moneda, subtotal]) => (
                   <li key={moneda}>
@@ -424,19 +399,8 @@ for (const { seller, products } of Object.values(productsBySeller)) {
                   </li>
                 ))}
               </ul>
-              <button
-                className="landing-button"
-                onClick={handleProceedPurchase}
-                style={{ marginRight: '10px' }}
-              >
-                Confirm
-              </button>
-              <button
-                className="landing-button"
-                onClick={() => setShowConfirmModal(false)}
-              >
-                Cancel
-              </button>
+              <button className="landing-button" onClick={handleProceedPurchase}>Confirm</button>
+              <button className="landing-button" onClick={() => setShowConfirmModal(false)}>Cancel</button>
             </div>
           </div>
         )}

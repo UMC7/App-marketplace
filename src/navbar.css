@@ -492,6 +492,62 @@
   }
 }
 
+/* === AJUSTES EXTRAS PARA MENÚ POST EN DAY MODE === */
+.post-options-modal {
+  padding: 20px;
+}
+
+.post-options-content {
+  padding: 24px 16px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #081a3b;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.post-options-content h3 {
+  color: #081a3b;
+  font-size: 1.25rem;
+  font-family: var(--font-header);
+  margin-bottom: 20px;
+}
+
+.post-options-content .navLink {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  margin: 10px auto;
+  padding: 12px;
+  font-size: 1rem;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.post-options-content .navLink:hover {
+  background-color: #4d8c89;
+}
+
+/* === BOTONES POST EN MODAL (modo claro) === */
+.post-options-content .navLink {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  border: none;
+  font-weight: 500;
+}
+
+.post-options-content .navLink:hover {
+  background-color: var(--accent-color);
+  color: var(--primary-color);
+}
+
 @media (max-width: 768px) and (orientation: portrait) {
   body.dark-mode .navbar-bottom {
     background-color: #2a2a2a !important;
