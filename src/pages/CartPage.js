@@ -284,75 +284,104 @@ for (const { seller, products } of Object.values(productsBySeller)) {
           <div>
             {cartItems.map((item) => (
               <div
-                key={item.id}
-                className="product-card"
-                style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}
-              >
-                <img
-                  src={item.mainphoto || 'https://via.placeholder.com/100'}
-                  alt={item.name}
-                  style={{
-                    width: '100px',
-                    height: '100px',
-                    objectFit: 'cover',
-                    borderRadius: '8px'
-                  }}
-                />
-                <div style={{ flex: 1 }}>
-                  <h3>{item.name || 'Product not available'}</h3>
+  key={item.id}
+  className="product-card"
+  style={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    marginBottom: '24px',
+    borderBottom: '1px solid #444',
+    paddingBottom: '20px',
+  }}
+>
+  <div
+  style={{
+    display: 'flex',
+    flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+    gap: '16px',
+    alignItems: window.innerWidth < 768 ? 'center' : 'center',
+  }}
+>
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: window.innerWidth < 768 ? 'center' : 'flex-start',
+      alignItems: window.innerWidth < 768 ? 'center' : 'center',
+      height: '100%',
+    }}
+  >
+    <img
+      src={item.mainphoto || 'https://via.placeholder.com/100'}
+      alt={item.name}
+      style={{
+        width: window.innerWidth < 768 ? '100px' : '140px',
+        height: window.innerWidth < 768 ? '100px' : '140px',
+        objectFit: 'cover',
+        borderRadius: '8px',
+        flexShrink: 0,
+      }}
+    />
+  </div>
+    <div style={{ flex: 1 }}>
+      <h3>{item.name || 'Product not available'}</h3>
 
-                  {item.status === 'deleted' ? (
-                    <p style={{ color: 'red', fontWeight: 'bold' }}>
-                      Product not available.
-                    </p>
-                  ) : item.status === 'paused' ? (
-                    <p style={{ color: 'orange', fontWeight: 'bold' }}>
-                      This product is currently paused.
-                    </p>
-                  ) : (
-                    <>
-                      <p>
-                        Unit Price: {item.currency}{' '}
-                        {Number(item.price).toLocaleString('en-US')}
-                      </p>
-                      <p>
-                        Quantity:
-                        <input
-                          type="number"
-                          min="1"
-                          max={item.stock}
-                          value={item.quantity}
-                          onChange={(e) =>
-                            handleQuantityChange(item, parseInt(e.target.value))
-                          }
-                          style={{ width: '60px', marginLeft: '10px' }}
-                        />
-                      </p>
-                      {item.recortado && (
-                        <p style={{ color: 'orange', fontWeight: 'bold' }}>
-                          Available stock has decreased. Your quantity has been adjusted to {item.quantity}.
-                        </p>
-                      )}
-                    </>
-                  )}
+      {item.status === 'deleted' ? (
+        <p style={{ color: 'red', fontWeight: 'bold' }}>
+          Product not available.
+        </p>
+      ) : item.status === 'paused' ? (
+        <p style={{ color: 'orange', fontWeight: 'bold' }}>
+          This product is currently paused.
+        </p>
+      ) : (
+        <>
+          <p>
+            Unit Price: {item.currency}{' '}
+            {Number(item.price).toLocaleString('en-US')}
+          </p>
+          <p>
+            Quantity:
+            <input
+              type="number"
+              min="1"
+              max={item.stock}
+              value={item.quantity}
+              onChange={(e) =>
+                handleQuantityChange(item, parseInt(e.target.value))
+              }
+              style={{ width: '60px', marginLeft: '10px' }}
+            />
+          </p>
+          {item.recortado && (
+            <p style={{ color: 'orange', fontWeight: 'bold' }}>
+              Available stock has decreased. Your quantity has been adjusted to {item.quantity}.
+            </p>
+          )}
+        </>
+      )}
 
-                  <p>
-                    Subtotal: {item.currency}{' '}
-                    {item.status === 'deleted'
-                      ? 0
-                      : (item.price * item.quantity).toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                  </p>
-                  <button
-                    className="landing-button"
-                    onClick={() => handleRemoveFromCart(item.id)}
-                  >
-                    Remove from Cart
-                  </button>
-                </div>
-              </div>
+      <p>
+        Subtotal: {item.currency}{' '}
+        {item.status === 'deleted'
+          ? 0
+          : (item.price * item.quantity).toLocaleString('en-US', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+      </p>
+    </div>
+  </div>
+
+  <div style={{ marginTop: '10px' }}>
+    <button
+      className="landing-button"
+      onClick={() => handleRemoveFromCart(item.id)}
+    >
+      Remove from Cart
+    </button>
+  </div>
+</div>
             ))}
 
             <div style={{ marginTop: '30px' }}>

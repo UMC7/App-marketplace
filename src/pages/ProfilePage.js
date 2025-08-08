@@ -859,7 +859,11 @@ case 'compras':
         <div className="profile-products-container">
           {purchases.map((item) => {
             const status = updatedPurchaseStatuses[item.purchases?.id] || item.purchases?.status;
-            const reviewed = sentReviews.some(r => r.purchase_id === item.purchases?.id);
+            const reviewed = sentReviews.some(
+              r =>
+                r.purchase_id === item.purchases?.id &&
+                r.product_id === item.product_id
+            );
             return (
               <div key={item.id} className="profile-card">
                 <img src={item.products?.mainphoto || 'https://via.placeholder.com/250'}

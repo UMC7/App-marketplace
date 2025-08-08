@@ -585,3 +585,62 @@ body.dark-mode .post-options-content .navLink:hover {
   width: 100%;
   margin-bottom: 10px;
 }
+
+@media screen and (min-width: 821px) {
+  body.dark-mode .filters-panel details {
+    background-color: var(--bg-secondary) !important;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+
+  body.dark-mode .filters-panel details summary {
+    color: var(--text-color) !important;
+    background-color: var(--bg-secondary) !important;
+    padding: 8px 12px;
+    font-weight: bold;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    list-style: none;
+  }
+
+  body.dark-mode .filters-panel details[open] summary {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  body.dark-mode .filters-panel details > div {
+    background-color: var(--bg-secondary) !important;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+
+  body.dark-mode .filters-panel label {
+    color: var(--text-color) !important;
+    display: block;
+    padding: 4px 0;
+  }
+
+  body.dark-mode .filters-panel input[type="checkbox"] {
+    accent-color: var(--primary-color);
+  }
+}
+
+@media screen and (min-width: 821px) {
+  /* Restaurar y estilizar la flecha de summary */
+  body.dark-mode .filters-panel details summary {
+    list-style: disclosure-closed inside !important; /* ✅ Usa flecha cerrada por defecto */
+  }
+
+  body.dark-mode .filters-panel details[open] summary {
+    list-style: disclosure-open inside !important;  /* ✅ Usa flecha abierta cuando se expande */
+  }
+
+  /* Safari/WebKit fix */
+  body.dark-mode .filters-panel details summary::-webkit-details-marker {
+    color: var(--text-color);
+  }
+}
