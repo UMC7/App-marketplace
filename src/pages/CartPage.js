@@ -449,17 +449,7 @@ for (const { seller, products } of Object.values(productsBySeller)) {
               zIndex: 9999,
             }}
           >
-            <div
-              style={{
-                backgroundColor: 'white',
-                padding: '20px',
-                borderRadius: '8px',
-                textAlign: 'center',
-                width: '90%',
-                maxWidth: '400px',
-                boxSizing: 'border-box',
-              }}
-            >
+            <div className="custom-modal-content">
               <h3>Seller Information</h3>
               {sellerInfo.map((seller, i) => (
                 <div key={i} style={{ marginBottom: '10px' }}>

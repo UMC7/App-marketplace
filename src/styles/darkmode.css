@@ -225,6 +225,17 @@ body.dark-mode .modal-close-button {
   color: var(--bg-color) !important;
 }
 
+body.dark-mode .custom-modal-content {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .custom-modal-content p,
+body.dark-mode .custom-modal-content h3,
+body.dark-mode .custom-modal-content strong {
+  color: var(--text-color) !important;
+}
+
 /* =========================
    BANNER DE COOKIES
    ========================= */
@@ -643,4 +654,32 @@ body.dark-mode .post-options-content .navLink:hover {
   body.dark-mode .filters-panel details summary::-webkit-details-marker {
     color: var(--text-color);
   }
+}
+
+/* ===== Corrección colores botones en My Purchases solo en dark mode ===== */
+body.dark-mode .success-btn {
+  background-color: #e8f5e9 !important;
+  color: #2e7d32 !important;
+  border: 1px solid #c8e6c9 !important;
+}
+body.dark-mode .success-btn:hover {
+  background-color: #d0f0d4 !important;
+}
+
+body.dark-mode .warning-btn {
+  background-color: #fff8e1 !important;
+  color: #aa7b00 !important;
+  border: 1px solid #f4ca64 !important;
+}
+body.dark-mode .warning-btn:hover {
+  background-color: #fff3cd !important;
+}
+
+body.dark-mode .danger-btn {
+  background-color: #ffe8e8 !important;
+  color: #b00020 !important;
+  border: 1px solid #ffcdd2 !important;
+}
+body.dark-mode .danger-btn:hover {
+  background-color: #ffebee !important;
 }
