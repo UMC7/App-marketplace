@@ -859,10 +859,9 @@ case 'compras':
         <div className="profile-products-container">
           {purchases.map((item) => {
             const status = updatedPurchaseStatuses[item.purchases?.id] || item.purchases?.status;
-            const reviewed = sentReviews.some(
-              r =>
-                r.purchase_id === item.purchases?.id &&
-                r.product_id === item.product_id
+            const reviewed = sentReviews.some(r =>
+              r.purchase_id === item.purchases?.id &&
+              r.product_id === item.product_id
             );
             return (
               <div key={item.id} className="profile-card">
@@ -1003,13 +1002,14 @@ const handleReviewSubmit = async (e, item) => {
 
 console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
 
-  const { success } = await submitUserReview({
+    const { success } = await submitUserReview({
     reviewerId,
     reviewedUserId,
     rating,
     comment,
     role: 'buyer',
     purchaseId: item.purchases?.id,
+    productId: item.product_id,
   });
 
   if (success) {
