@@ -1,5 +1,3 @@
-// src/pages/ProductDetailPage.js
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import supabase from '../supabase';
@@ -7,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { useCarrito } from '../context/CarritoContext';
 import Slider from 'react-slick';
+import RatingModal from '../components/RatingModal';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
@@ -28,25 +27,54 @@ function ProductDetailPage(props) {
   const [respondingTo, setRespondingTo] = useState(null);
   const [responseText, setResponseText] = useState('');
 
+  const [sellerRating, setSellerRating] = useState(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       const { data: productData, error: productError } = await supabase
-        .from('products').select('*').eq('id', id).single();
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
       if (!productError) setProduct(productData);
       else console.error("Error fetching product:", productError);
 
       const { data: messagesData, error: messagesError } = await supabase
-        .from('messages').select('id, content, sender_id, sent_at, product_id, receiver_id, users(nickname)')
-        .eq('product_id', parseInt(id)).order('sent_at', { ascending: true });
+        .from('messages')
+        .select('id, content, sender_id, sent_at, product_id, receiver_id, users(nickname)')
+        .eq('product_id', parseInt(id))
+        .order('sent_at', { ascending: true });
       if (!messagesError) setMessages(messagesData);
       else console.error("Error fetching messages:", messagesError);
 
       if (currentUser) {
         const { data: favData } = await supabase
-          .from('favorites').select('id').eq('product_id', id).eq('user_id', currentUser.id).single();
+          .from('favorites')
+          .select('id')
+          .eq('product_id', id)
+          .eq('user_id', currentUser.id)
+          .single();
         setIsFavorite(!!favData);
       }
+
+      // Obtener average rating del vendedor
+      if (productData?.owner) {
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from('user_reviews')
+          .select('rating')
+          .eq('reviewed_user_id', productData.owner);
+
+        if (!reviewsError && reviewsData.length > 0) {
+          const total = reviewsData.reduce((sum, r) => sum + r.rating, 0);
+          const avg = (total / reviewsData.length).toFixed(1);
+          setSellerRating(avg);
+        } else {
+          setSellerRating(null);
+        }
+      }
+
       setLoading(false);
     };
 
@@ -62,38 +90,55 @@ function ProductDetailPage(props) {
   const isPaused = product.status === 'paused';
 
   const handleAddToCart = () => {
-    if (isPaused) { toast.error('This product is paused.'); return; }
-    if (purchaseQty > stockDisponible) { toast.error(`Only ${stockDisponible} units available.`); return; }
+    if (isPaused) return toast.error('This product is paused.');
+    if (purchaseQty > stockDisponible) return toast.error(`Only ${stockDisponible} units available.`);
     addToCart(product, purchaseQty);
     toast.success('Product added to cart.');
   };
 
   const handleAddToFavorites = async () => {
-    if (isPaused) { toast.error('This product is paused.'); return; }
-    if (!currentUser) { toast.error('You must log in.'); return; }
+    if (isPaused) return toast.error('This product is paused.');
+    if (!currentUser) return toast.error('You must log in.');
     setFavLoading(true);
-    const { error } = await supabase.from('favorites').insert({ product_id: parseInt(id), user_id: currentUser.id });
-    if (!error) { setIsFavorite(true); toast.success('Added to favorites!'); }
-    else { toast.error('Failed to add to favorites.'); console.error(error); }
+    const { error } = await supabase
+      .from('favorites')
+      .insert({ product_id: parseInt(id), user_id: currentUser.id });
+    if (!error) {
+      setIsFavorite(true);
+      toast.success('Added to favorites!');
+    } else {
+      toast.error('Failed to add to favorites.');
+      console.error(error);
+    }
     setFavLoading(false);
   };
 
   const refreshMessages = async () => {
-    const { data, error } = await supabase.from('messages')
+    const { data, error } = await supabase
+      .from('messages')
       .select('id, content, sender_id, sent_at, product_id, receiver_id, users(nickname)')
-      .eq('product_id', parseInt(id)).order('sent_at', { ascending: true });
+      .eq('product_id', parseInt(id))
+      .order('sent_at', { ascending: true });
     if (!error) setMessages(data || []);
   };
 
   const handleSubmitQuestion = async () => {
     if (!currentUser || !questionText.trim()) return;
-    if (isOwner) { toast.error('You cannot ask about your own product.'); return; }
+    if (isOwner) return toast.error('You cannot ask about your own product.');
     setMessageLoading(true);
     const { error } = await supabase.from('messages').insert({
-      sender_id: currentUser.id, content: questionText.trim(), product_id: parseInt(id),
+      sender_id: currentUser.id,
+      content: questionText.trim(),
+      product_id: parseInt(id),
     });
-    if (!error) { setQuestionText(''); await refreshMessages(); toast.success('Question submitted!'); }
-    else { toast.error('Failed to submit question.'); console.error(error); }
+    if (!error) {
+      setQuestionText('');
+      await refreshMessages();
+      toast.success('Question submitted!');
+    } else {
+      toast.error('Failed to submit question.');
+      console.error(error);
+    }
     setMessageLoading(false);
   };
 
@@ -101,14 +146,31 @@ function ProductDetailPage(props) {
     if (!responseText.trim() || !respondingTo) return;
     setMessageLoading(true);
     const { error } = await supabase.from('messages').insert({
-      sender_id: currentUser.id, content: responseText.trim(), product_id: parseInt(id), receiver_id: respondingTo,
+      sender_id: currentUser.id,
+      content: responseText.trim(),
+      product_id: parseInt(id),
+      receiver_id: respondingTo,
     });
-    if (!error) { setResponseText(''); setRespondingTo(null); await refreshMessages(); toast.success('Answer submitted!'); }
-    else { toast.error('Failed to submit answer.'); console.error(error); }
+    if (!error) {
+      setResponseText('');
+      setRespondingTo(null);
+      await refreshMessages();
+      toast.success('Answer submitted!');
+    } else {
+      toast.error('Failed to submit answer.');
+      console.error(error);
+    }
     setMessageLoading(false);
   };
 
-  const sliderSettings = { dots: true, infinite: true, speed: 500, slidesToShow: 1, slidesToScroll: 1 };
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1
+  };
+
   const allPhotos = [...(product.mainphoto ? [product.mainphoto] : []), ...(product.photos || [])];
 
   return (
@@ -139,6 +201,26 @@ function ProductDetailPage(props) {
 
       <div className="section-divider" />
 
+      {/* 🔥 NUEVA SECCIÓN: RATING */}
+      <h3>Rating</h3>
+      {sellerRating ? (
+        <p><strong>⭐ Seller Rating:</strong> {sellerRating} / 5</p>
+      ) : (
+        <p>This user doesn't have enough ratings to display an average yet.</p>
+      )}
+      <button onClick={() => setShowRatingModal(true)} className="landing-button" style={{ marginBottom: '20px' }}>
+        View Seller Ratings
+      </button>
+
+      {showRatingModal && (
+        <RatingModal
+          sellerId={product.owner}
+          onClose={() => setShowRatingModal(false)}
+        />
+      )}
+      <div className="section-divider" />
+
+      {/* 🔽 COMPRA Y FAVORITOS */}
       {isPaused ? (
         <p style={{ color: 'red' }}>This product is paused.</p>
       ) : (
@@ -175,17 +257,14 @@ function ProductDetailPage(props) {
               {isFavorite ? '✔ In favorites' : 'Add to favorites'}
             </button>
           )}
+          <div style={{ marginTop: '24px' }}>
+            <div className="section-divider" />
+          </div>
         </>
       )}
 
-      <div
-        className="product-detail-qa"
-        style={{
-          margin: '40px auto 0 auto',
-          maxWidth: 500,
-          width: '100%',
-        }}
-      >
+      {/* 🔽 PREGUNTAS Y RESPUESTAS */}
+      <div className="product-detail-qa" style={{ margin: '40px auto 0 auto', maxWidth: 500, width: '100%' }}>
         <h3 style={{ marginTop: 0 }}>Questions and Answers</h3>
         {messages.filter(msg => !msg.receiver_id).map(q => {
           const answer = messages.find(m => m.receiver_id === q.id);
@@ -217,8 +296,7 @@ function ProductDetailPage(props) {
 
         {currentUser && !isOwner && (
           <div style={{ marginTop: 20 }}>
-            <textarea rows={3} value={questionText} onChange={(e) => setQuestionText(e.target.value)}
-              placeholder="Ask a question..." style={{ width: '100%' }} disabled={messageLoading} />
+            <textarea rows={3} value={questionText} onChange={(e) => setQuestionText(e.target.value)} placeholder="Ask a question..." style={{ width: '100%' }} disabled={messageLoading} />
             <button className="landing-button" onClick={handleSubmitQuestion} disabled={messageLoading || !questionText.trim()} style={{ marginTop: 8 }}>
               {messageLoading ? 'Sending...' : 'Submit question'}
             </button>

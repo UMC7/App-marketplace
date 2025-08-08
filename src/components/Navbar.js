@@ -221,24 +221,42 @@ function Navbar() {
         )}
       </div>
 
-      {/* Modales */}
-      {showOfferModal && renderModal(<YachtOfferForm user={currentUser} onOfferPosted={() => { setShowOfferModal(false); window.location.reload(); }} />)}
-      {showProductModal && renderModal(<PostProductForm onPosted={() => { setShowProductModal(false); window.location.reload(); }} />)}
-      {showServiceModal && renderModal(<PostServiceForm onPosted={() => { setShowServiceModal(false); window.location.reload(); }} />)}
-      {showEventModal && renderModal(<PostEventForm />)}
-      {showChatList && renderModal(
-        !activeChat ? (
-          <ChatList
-            currentUser={currentUser}
-            onOpenChat={(offerId, receiverId) => setActiveChat({ offerId, receiverId })}
-          />
-        ) : (
-          <ChatPage
-            offerId={activeChat.offerId}
-            receiverId={activeChat.receiverId}
-            onBack={() => setActiveChat(null)}
-          />
-        )
+      {/* === MODALES UNIFICADOS === */}
+      {showOfferModal && (
+        <Modal onClose={() => setShowOfferModal(false)}>
+          <YachtOfferForm user={currentUser} onOfferPosted={() => window.location.reload()} />
+        </Modal>
+      )}
+      {showProductModal && (
+        <Modal onClose={() => setShowProductModal(false)}>
+          <PostProductForm onPosted={() => window.location.reload()} />
+        </Modal>
+      )}
+      {showServiceModal && (
+        <Modal onClose={() => setShowServiceModal(false)}>
+          <PostServiceForm onPosted={() => window.location.reload()} />
+        </Modal>
+      )}
+      {showEventModal && (
+        <Modal onClose={() => setShowEventModal(false)}>
+          <PostEventForm />
+        </Modal>
+      )}
+      {showChatList && (
+        <Modal onClose={() => { setActiveChat(null); setShowChatList(false); }}>
+          {!activeChat ? (
+            <ChatList
+              currentUser={currentUser}
+              onOpenChat={(offerId, receiverId) => setActiveChat({ offerId, receiverId })}
+            />
+          ) : (
+            <ChatPage
+              offerId={activeChat.offerId}
+              receiverId={activeChat.receiverId}
+              onBack={() => setActiveChat(null)}
+            />
+          )}
+        </Modal>
       )}
       {showLegalModal && (
         <Modal onClose={() => setShowLegalModal(false)}>
@@ -354,32 +372,6 @@ function Navbar() {
       )}
     </nav>
   );
-
-  function renderModal(content) {
-    return (
-      <div className="modal-overlay" onClick={() => {
-        setShowProductModal(false);
-        setShowOfferModal(false);
-        setShowServiceModal(false);
-        setShowEventModal(false);
-        setShowChatList(false);
-      }}>
-        <div className="modal-content-wrapper" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => {
-              setShowProductModal(false);
-              setShowOfferModal(false);
-              setShowServiceModal(false);
-              setShowEventModal(false);
-              setShowChatList(false);
-            }}
-            className="modal-close-button"
-          >X</button>
-          {content}
-        </div>
-      </div>
-    );
-  }
 }
 
 export default Navbar;
