@@ -1,30 +1,83 @@
-/* Solo para pantallas móviles */
-@media (max-width: 480px) {
-  .close-button {
-    all: unset; /* limpia todas las herencias previas */
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    font-size: 1.4rem;
-    font-weight: bold;
-    color: var(--text-color, #ffffff);
-    cursor: pointer;
-    z-index: 10;
-    padding: 4px;
-    line-height: 1;
-  }
+/* === Estilos base para nuestros modales === */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
 }
 
+.modal-content-wrapper {
+  position: relative;
+  background-color: var(--card-bg, #fff);
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 90%;
+  max-height: 90%;
+  overflow-y: auto;
+}
+
+/* === Unificar estilo del botón Cerrar (X) en TODOS los modales === */
+/* Base: modo claro -> X azul; sin fondo */
+.modal-overlay .modal-content-wrapper > .close-button,
+.modal-overlay .modal-content-wrapper > .modal-close-button,
+.modal-overlay .modal-content-wrapper > button[aria-label="Close"],
+.modal-overlay .modal-content-wrapper > button[title="Close"],
+.modal-overlay .modal-content-wrapper > button.close-button,
+.modal-overlay .modal-content-wrapper > button.modal-close-button {
+  all: unset;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--primary-color, #081a3b) !important; /* visible en light */
+  cursor: pointer;
+  z-index: 1000;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Librería: react-responsive-modal */
+.react-responsive-modal-closeButton {
+  all: unset;
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  cursor: pointer;
+  z-index: 1000;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.react-responsive-modal-closeButton svg {
+  fill: var(--primary-color, #081a3b) !important; /* visible en light */
+}
+
+/* Modo oscuro: X blanca para alto contraste */
+[data-theme="dark"] .modal-overlay .modal-content-wrapper > .close-button,
+[data-theme="dark"] .modal-overlay .modal-content-wrapper > .modal-close-button,
+[data-theme="dark"] .modal-overlay .modal-content-wrapper > button[aria-label="Close"],
+[data-theme="dark"] .modal-overlay .modal-content-wrapper > button[title="Close"],
+[data-theme="dark"] .modal-overlay .modal-content-wrapper > button.close-button,
+[data-theme="dark"] .modal-overlay .modal-content-wrapper > button.modal-close-button {
+  color: #fff !important;
+}
+[data-theme="dark"] .react-responsive-modal-closeButton svg {
+  fill: #fff !important;
+}
+
+/* Pequeños ajustes en móviles */
 @media (max-width: 768px) {
-  .modal-content-wrapper .close-button {
-    position: absolute !important;
+  .modal-overlay .modal-content-wrapper > .close-button,
+  .modal-overlay .modal-content-wrapper > .modal-close-button,
+  .react-responsive-modal-closeButton {
     top: 10px !important;
     right: 10px !important;
-    background-color: transparent !important;
-    color: #fff !important;
     font-size: 1.6rem !important;
-    padding: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
   }
 }

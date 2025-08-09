@@ -149,3 +149,55 @@
 .profile-action-buttons .danger-btn:hover {
   background-color: #ffebee;
 }
+
+/* ──────────────────────────────────────────────
+   Desktop-only tabs (permanent bg per theme)
+   ────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  .tabs-container .profile-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  /* MODO CLARO: fondo gris permanente */
+  .tabs-container .profile-tabs button {
+    color: #081a3b;                       /* azul texto */
+    background-color: rgba(8, 26, 59, 0.10); /* gris azulado permanente */
+    border: 1px solid rgba(8, 26, 59, 0.10);
+    padding: 8px 14px;
+    border-radius: 9999px;                /* pill */
+    font-weight: 600;
+    transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .08s ease;
+    box-shadow: 0 1px 2px rgba(8,26,59,0.06);
+  }
+  .tabs-container .profile-tabs button:hover {
+    background-color: rgba(8, 26, 59, 0.16);  /* un poco más oscuro en hover */
+    border-color: rgba(8, 26, 59, 0.16);
+    box-shadow: 0 2px 6px rgba(8,26,59,0.10);
+  }
+  .tabs-container .profile-tabs button:active {
+    transform: translateY(1px);
+  }
+
+  /* MODO OSCURO: se mantiene look turquesa permanente */
+  [data-theme="dark"] .tabs-container .profile-tabs button {
+    color: #68ada8;
+    background-color: rgba(104, 173, 168, 0.18);
+    border: 1px solid rgba(104, 173, 168, 0.22);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.20);
+  }
+  [data-theme="dark"] .tabs-container .profile-tabs button:hover {
+    background-color: rgba(104, 173, 168, 0.28);
+    border-color: rgba(104, 173, 168, 0.32);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.28);
+  }
+
+  /* Focus accesible */
+  .tabs-container .profile-tabs button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
