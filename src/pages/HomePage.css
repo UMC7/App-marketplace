@@ -76,10 +76,27 @@
 
 /* 📱 Ajuste móvil */
 @media (max-width: 820px) {
+  /* 🔹 Asegura que los filtros se apilen en una sola columna */
   .filters-container {
-    grid-template-columns: 1fr; /* apilar todo en una sola columna */
-    padding: 16px; /* más aire interno */
-    border-radius: 10px; /* bordes suavemente redondeados */
+    grid-template-columns: 1fr;
+    padding: 16px 20px;
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+
+  /* 🔹 Da más aire al contenedor principal de filtros */
+  .filter-body.expanded {
+    padding: 16px 0; /* espacio arriba y abajo */
+    background: transparent; /* elimina bloque oscuro innecesario */
+  }
+
+  /* 🔹 Quita borde y fondo innecesario del contenedor interior en móviles */
+  .filter-body.expanded .filters-container {
+    background: var(--background-color, transparent);
+    border: none;
+    border-radius: 10px;
+    padding-top: 12px;
+    padding-bottom: 12px;
   }
 
   .price-group-container {
