@@ -255,3 +255,22 @@
     margin-right: 6px;
   }
 }
+
+/* Asegurar altura correcta en móviles modernos */
+@supports (height: 100dvh) {
+  .chat-container {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+}
+
+/* Cuando el chat está en fullscreen, evitar scrolls fantasma */
+body.chat-fullscreen-active {
+  height: 100%;
+  overflow: hidden;
+}
+
+body.chat-fullscreen-active .container {
+  min-height: auto !important;
+  padding: 0 !important;
+}
