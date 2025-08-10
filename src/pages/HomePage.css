@@ -1,9 +1,6 @@
-/* Encabezado */
 .module-header-wrapper {
   width: 100%;
   padding: 0 20px;
-  display: flex;
-  justify-content: flex-start;
 }
 
 .module-header-row {
@@ -11,97 +8,92 @@
   align-items: baseline;
   gap: 12px;
   margin-bottom: 20px;
-  justify-content: flex-start;
   flex-wrap: wrap;
 }
 
 .module-header-row h1 {
-  font-family: 'Playfair Display', serif;
   font-size: 1.8rem;
   color: var(--primary-color);
-  margin: 0;
-  white-space: nowrap;
 }
 
-.module-header-row span {
-  font-family: 'Inter', sans-serif;
-  font-size: 1.1rem;
-  color: #1c1c1c;
-  margin: 0;
-  line-height: 1.6;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Móviles */
-@media (max-width: 600px) {
-  .module-header-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .module-header-row span {
-    white-space: normal;
-  }
-}
-
-/* Grilla de productos */
-.responsive-grid {
+/* 🔹 Grid para que las columnas se mantengan alineadas en desktop */
+.filters-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Se adapta mejor */
-  gap: 24px;
-  padding: 20px;
-  justify-items: center; /* Centra tarjetas en cada celda */
+  grid-template-columns: repeat(4, minmax(220px, 1fr)); /* 4 columnas fijas */
+  gap: 16px;
 }
 
-/* Tarjeta de producto */
-.product-card {
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 340px; /* Más grande en desktop pero adaptable */
-}
-
-.product-card h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 12px 0 8px;
-  text-align: center;
-}
-
-.product-card p {
-  margin: 4px 0;
-  font-size: 0.95rem;
-  text-align: center;
-}
-
-/* 🔹 Botón Clear all filters */
-.filters-panel .clear-filters-btn {
-  height: 40px; /* igual que los selects */
+.search-input,
+.category-select,
+.price-input,
+.sort-clear-group select,
+.clear-filters-btn {
+  height: 40px;
   padding: 0 12px;
+  border: 1px solid #ccc;
   border-radius: 8px;
-  border: 1px solid var(--border-color, #3a3a3a);
-  background: var(--card-bg, #ffffff);
-  color: var(--text-color, #1c1c1c);
-  white-space: nowrap;
+  background: #fff;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* 🔹 Precio compacto */
+.price-group-container {
+  display: flex;
+  gap: 8px;
+}
+
+.price-input {
+  width: 100px; /* compacto */
+}
+
+/* 🔹 Sort y Clear alineados en la misma columna que Condition y Country */
+.sort-clear-group {
+  display: contents; /* permite que los hijos se alineen con el grid padre */
+}
+
+.sort-clear-group select {
+  grid-column: 3; /* debajo de Filter by condition */
+}
+
+.sort-clear-group .clear-filters-btn {
+  grid-column: 4; /* debajo de Filter by country */
+}
+
+.clear-filters-btn {
   cursor: pointer;
-  font-family: inherit;
-  font-size: 0.95rem;
+  white-space: nowrap;
 }
 
-.filters-panel .clear-filters-btn:hover {
-  filter: brightness(0.98);
+.clear-filters-btn:hover {
+  background-color: var(--accent-color);
+  color: #fff;
 }
 
-body.dark-mode .filters-panel .clear-filters-btn {
-  background: var(--card-bg, #2a2a2a);
-  color: var(--text-color, #f5f5f5);
-  border-color: var(--border-color, #3a3a3a);
+.navbar-toggle {
+  display: none;
+}
+
+/* 📱 Ajuste móvil */
+@media (max-width: 820px) {
+  .filters-container {
+    grid-template-columns: 1fr; /* apilar todo en una sola columna */
+    padding: 16px; /* más aire interno */
+    border-radius: 10px; /* bordes suavemente redondeados */
+  }
+
+  .price-group-container {
+    flex-direction: column; /* precios uno debajo del otro */
+    gap: 8px;
+  }
+
+  .sort-clear-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .navbar-toggle {
+    display: block;
+  }
 }
