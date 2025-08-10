@@ -89,8 +89,6 @@
   color: #FFD700 !important; /* GOLD llamativo siempre visible */
   text-decoration: underline;
 }
-
-/* Forzar color GOLD en mensajes recibidos (modo claro y oscuro) */
 .chat-message.other .chat-file-link {
   color: #FFD700 !important;
 }
@@ -166,10 +164,10 @@
   color: #bbb;
 }
 .dark-mode .chat-file-link {
-  color: #FFD700 !important; /* GOLD sobre oscuro */
+  color: #FFD700 !important;
 }
 .dark-mode .chat-message.other .chat-file-link {
-  color: #FFD700 !important; /* GOLD sobre turquesa */
+  color: #FFD700 !important;
 }
 .dark-mode .chat-input {
   background-color: #1e1e1e;
@@ -187,8 +185,8 @@
 /* ======== Ajustes Móvil ======== */
 @media (max-width: 768px) {
   .chat-container {
-    height: 100%;
-    max-height: 100%;
+    height: 100vh; /* altura real pantalla */
+    max-height: 100vh;
     border-radius: 0;
   }
   .modal-content-wrapper .chat-container {
@@ -207,6 +205,8 @@
   }
   .chat-messages {
     padding: 10px;
+    flex: 1;
+    min-height: 0; /* evita overflow raro en móviles */
   }
   .chat-input {
     position: sticky;
@@ -214,6 +214,7 @@
     background-color: var(--white-color);
     padding: 8px;
     border-top: 1px solid #ddd;
+    flex-shrink: 0;
   }
   .dark-mode .chat-input {
     background-color: #1e1e1e;
@@ -228,7 +229,6 @@
   left: 0;
   width: 100%;
   height: 100%;
-  max-height: 100%;
   background: var(--white-color);
   z-index: 9999;
   border-radius: 0;
