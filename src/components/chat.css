@@ -20,7 +20,6 @@
   cursor: pointer;
   text-align: left;
 }
-
 .chat-back-btn:hover {
   color: var(--accent-color);
 }
@@ -49,7 +48,7 @@
 /* Mensaje propio (gris) */
 .chat-message.own {
   align-self: flex-end;
-  background-color: #e4e6eb; /* gris claro */
+  background-color: #e4e6eb;
   color: var(--text-dark);
   border-radius: 14px 14px 0 14px;
   padding: 10px 14px;
@@ -82,13 +81,18 @@
   line-height: 1.4;
 }
 
-/* Link de archivo */
+/* ======== Link de archivo ======== */
 .chat-file-link {
   display: inline-block;
   margin-top: 4px;
   font-size: 0.85rem;
-  color: #0056b3;
+  color: #FFD700 !important; /* GOLD llamativo siempre visible */
   text-decoration: underline;
+}
+
+/* Forzar color GOLD en mensajes recibidos (modo claro y oscuro) */
+.chat-message.other .chat-file-link {
+  color: #FFD700 !important;
 }
 
 /* Hora del mensaje */
@@ -108,7 +112,6 @@
   background-color: white;
   border-top: 1px solid #ddd;
 }
-
 .chat-input textarea {
   flex: 1;
   resize: none;
@@ -119,16 +122,13 @@
   font-family: inherit;
   outline: none;
 }
-
 .chat-input textarea:focus {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 2px rgba(104, 173, 168, 0.2);
 }
-
 .chat-input input[type="file"] {
   font-size: 0.85rem;
 }
-
 .chat-input button {
   background-color: var(--primary-color);
   color: white;
@@ -139,7 +139,6 @@
   font-size: 0.9rem;
   transition: background 0.2s ease;
 }
-
 .chat-input button:hover {
   background-color: var(--accent-color);
 }
@@ -148,47 +147,39 @@
 .dark-mode .chat-container {
   background-color: #1e1e1e;
 }
-
 .dark-mode .chat-header {
   background: #111827;
   border-bottom: 1px solid #222;
 }
-
 .dark-mode .chat-messages {
   background-color: #121212;
 }
-
-/* Mensaje propio en dark mode (gris suave) */
 .dark-mode .chat-message.own {
-  background-color: #3a3a3a; /* gris más claro que el fondo */
+  background-color: #3a3a3a;
   color: #ddd;
 }
-
-/* Mensaje recibido en dark mode (turquesa) */
 .dark-mode .chat-message.other {
   background-color: var(--accent-color);
   color: white;
 }
-
 .dark-mode .chat-message-sender {
   color: #bbb;
 }
-
 .dark-mode .chat-file-link {
-  color: #4ea6ff;
+  color: #FFD700 !important; /* GOLD sobre oscuro */
 }
-
+.dark-mode .chat-message.other .chat-file-link {
+  color: #FFD700 !important; /* GOLD sobre turquesa */
+}
 .dark-mode .chat-input {
   background-color: #1e1e1e;
   border-top: 1px solid #333;
 }
-
 .dark-mode .chat-input textarea {
   background-color: #2a2a2a;
   color: #fff;
   border: 1px solid #444;
 }
-
 .dark-mode .chat-input button {
   background-color: var(--accent-color);
 }
@@ -200,13 +191,11 @@
     max-height: 100%;
     border-radius: 0;
   }
-
   .modal-content-wrapper .chat-container {
     padding: 0;
     box-shadow: none;
     border-radius: 0;
   }
-
   .chat-back-btn {
     width: 100%;
     background-color: var(--primary-color);
@@ -216,11 +205,9 @@
     border-radius: 0;
     border-bottom: 1px solid rgba(255,255,255,0.1);
   }
-
   .chat-messages {
     padding: 10px;
   }
-
   .chat-input {
     position: sticky;
     bottom: 0;
@@ -228,7 +215,6 @@
     padding: 8px;
     border-top: 1px solid #ddd;
   }
-
   .dark-mode .chat-input {
     background-color: #1e1e1e;
     border-top: 1px solid #333;
@@ -249,7 +235,6 @@
   display: flex;
   flex-direction: column;
 }
-
 .dark-mode .chat-mobile-fullscreen {
   background-color: #1e1e1e;
 }

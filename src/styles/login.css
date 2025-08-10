@@ -1,0 +1,16 @@
+/* login.css */
+/* Solo cambiamos el color del botón "Forgot your password?" */
+
+.login-form .forgot-password-btn {
+  background-color: #ccc; /* Gris claro como en dark mode */
+  color: #000;
+}
+
+.login-form .forgot-password-btn:hover {
+  background-color: #b3b3b3; /* Un poco más oscuro al pasar el mouse */
+}
+
+.dark-mode .login-form .forgot-password-btn {
+  background-color: #ccc; /* Mantener mismo gris en dark mode */
+  color: #000;
+}
