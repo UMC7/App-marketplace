@@ -110,6 +110,18 @@ function HomePage() {
     filterProducts();
   }, [filterProducts]);
 
+  // 🔹 Función para limpiar filtros
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('');
+    setSelectedCountry('');
+    setSelectedCity('');
+    setPriceRange({ min: '', max: '' });
+    setSelectedCondition('');
+    setSortOrder('');
+    setFilteredProducts(products);
+  };
+
   return (
   <div className="container">
     <div className="module-header-wrapper">
@@ -227,6 +239,15 @@ function HomePage() {
   <option value="asc">Price: low to high</option>
   <option value="desc">Price: high to low</option>
 </select>
+
+<button
+  type="button"
+  className="clear-filters-btn"
+  onClick={clearFilters}
+>
+  Clear all filters
+</button>
+
         </div>
       </div>
     )}
