@@ -58,7 +58,7 @@ function ChatList({ currentUser, onOpenChat }) {
 
   return (
     <div>
-      <h3>Chats Activos</h3>
+      <h3>Active Chats</h3>
       {chatSummaries.length === 0 ? (
         <p>No hay chats por ahora.</p>
       ) : (

@@ -46,22 +46,22 @@
   background-color: #f7f9fb;
 }
 
-/* Mensaje propio */
+/* Mensaje propio (gris) */
 .chat-message.own {
   align-self: flex-end;
-  background-color: var(--accent-color);
-  color: white;
+  background-color: #e4e6eb; /* gris claro */
+  color: var(--text-dark);
   border-radius: 14px 14px 0 14px;
   padding: 10px 14px;
   max-width: 70%;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-/* Mensaje recibido */
+/* Mensaje recibido (turquesa) */
 .chat-message.other {
   align-self: flex-start;
-  background-color: #e4e6eb;
-  color: var(--text-dark);
+  background-color: var(--accent-color);
+  color: white;
   border-radius: 14px 14px 14px 0;
   padding: 10px 14px;
   max-width: 70%;
@@ -158,14 +158,16 @@
   background-color: #121212;
 }
 
+/* Mensaje propio en dark mode (gris suave) */
 .dark-mode .chat-message.own {
-  background-color: var(--accent-color);
-  color: white;
+  background-color: #3a3a3a; /* gris más claro que el fondo */
+  color: #ddd;
 }
 
+/* Mensaje recibido en dark mode (turquesa) */
 .dark-mode .chat-message.other {
-  background-color: #2a2a2a;
-  color: #ddd;
+  background-color: var(--accent-color);
+  color: white;
 }
 
 .dark-mode .chat-message-sender {
@@ -199,14 +201,12 @@
     border-radius: 0;
   }
 
-  /* Evita que se encierre en un cuadro dentro del modal */
   .modal-content-wrapper .chat-container {
     padding: 0;
     box-shadow: none;
     border-radius: 0;
   }
 
-  /* Botón back adaptado */
   .chat-back-btn {
     width: 100%;
     background-color: var(--primary-color);
@@ -217,12 +217,10 @@
     border-bottom: 1px solid rgba(255,255,255,0.1);
   }
 
-  /* Mensajes con menos padding en móvil */
   .chat-messages {
     padding: 10px;
   }
 
-  /* Input fijo abajo */
   .chat-input {
     position: sticky;
     bottom: 0;
@@ -254,4 +252,21 @@
 
 .dark-mode .chat-mobile-fullscreen {
   background-color: #1e1e1e;
+}
+
+/* Icono clip en móviles */
+@media (max-width: 768px) {
+  .chat-input input[type="file"] {
+    max-width: 32px;
+    opacity: 0;
+    position: absolute;
+    z-index: 2;
+  }
+  .chat-input::before {
+    content: "📎";
+    display: inline-block;
+    cursor: pointer;
+    font-size: 1.2rem;
+    margin-right: 6px;
+  }
 }
