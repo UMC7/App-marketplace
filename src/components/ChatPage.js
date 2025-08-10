@@ -129,99 +129,62 @@ function ChatPage({ offerId, receiverId, onBack }) {
 
   if (!currentUser) return <div>Loading user...</div>;
 
-  // --- Vista móvil fullscreen ---
+  const renderMessages = () => (
+    <div className="chat-messages">
+      {messages.map((msg) => {
+        const isOwnMessage = msg.sender_id === currentUser.id;
+        return (
+          <div key={msg.id} className={`chat-message ${isOwnMessage ? 'own' : 'other'}`}>
+            <div className="chat-message-sender">{isOwnMessage ? 'You' : otherNickname}</div>
+            {msg.message && <p className="chat-message-text">{msg.message}</p>}
+            {msg.file_url && (
+              <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="chat-file-link">
+                📎 View file
+              </a>
+            )}
+            <div className="chat-message-time">{new Date(msg.sent_at).toLocaleString()}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const renderInput = () => (
+    <div className="chat-input">
+      <label className="file-clip" htmlFor="file-input">📎</label>
+      <input
+        id="file-input"
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => setFile(e.target.files[0])}
+      />
+      <textarea
+        placeholder="Type your message..."
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        rows={2}
+      />
+      <button onClick={handleSend}>Send</button>
+    </div>
+  );
+
   if (isMobile) {
     return (
       <div className="chat-container chat-mobile-fullscreen">
-        <button className="chat-back-btn" onClick={onBack}>
-          ⬅ Back to chats
-        </button>
-
-        <div className="chat-header">
-          Offer private chat – {otherNickname}
-        </div>
-
-        <div className="chat-messages">
-          {messages.map((msg) => {
-            const isOwnMessage = msg.sender_id === currentUser.id;
-            return (
-              <div key={msg.id} className={`chat-message ${isOwnMessage ? 'own' : 'other'}`}>
-                <div className="chat-message-sender">{isOwnMessage ? 'You' : otherNickname}</div>
-                {msg.message && <p className="chat-message-text">{msg.message}</p>}
-                {msg.file_url && (
-                  <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="chat-file-link">
-                    📎 View file
-                  </a>
-                )}
-                <div className="chat-message-time">{new Date(msg.sent_at).toLocaleString()}</div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="chat-input">
-          <textarea
-            placeholder="Type your message..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={2}
-          />
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={(e) => setFile(e.target.files[0])}
-          />
-          <button onClick={handleSend}>Send</button>
-        </div>
+        <button className="chat-back-btn" onClick={onBack}>⬅ Back to chats</button>
+        <div className="chat-header">Offer private chat – {otherNickname}</div>
+        {renderMessages()}
+        {renderInput()}
       </div>
     );
   }
 
-  // --- Vista desktop ---
   return (
     <div className="chat-container">
-      {onBack && (
-        <button className="chat-back-btn" onClick={onBack}>
-          ⬅ Back to chats
-        </button>
-      )}
-
-      <div className="chat-header">
-        Offer private chat – {otherNickname}
-      </div>
-
-      <div className="chat-messages">
-        {messages.map((msg) => {
-          const isOwnMessage = msg.sender_id === currentUser.id;
-          return (
-            <div key={msg.id} className={`chat-message ${isOwnMessage ? 'own' : 'other'}`}>
-              <div className="chat-message-sender">{isOwnMessage ? 'You' : otherNickname}</div>
-              {msg.message && <p className="chat-message-text">{msg.message}</p>}
-              {msg.file_url && (
-                <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="chat-file-link">
-                  📎 View file
-                </a>
-              )}
-              <div className="chat-message-time">{new Date(msg.sent_at).toLocaleString()}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="chat-input">
-        <textarea
-          placeholder="Type your message..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={2}
-        />
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={(e) => setFile(e.target.files[0])}
-        />
-        <button onClick={handleSend}>Send</button>
-      </div>
+      {onBack && <button className="chat-back-btn" onClick={onBack}>⬅ Back to chats</button>}
+      <div className="chat-header">Offer private chat – {otherNickname}</div>
+      {renderMessages()}
+      {renderInput()}
     </div>
   );
 }
