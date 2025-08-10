@@ -1,0 +1,257 @@
+/* ======== Chat Container ======== */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  max-height: 90vh;
+  background-color: var(--white-color);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* Botón para volver atrás */
+.chat-back-btn {
+  border: none;
+  background: transparent;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  padding: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.chat-back-btn:hover {
+  color: var(--accent-color);
+}
+
+/* ======== Encabezado ======== */
+.chat-header {
+  background: var(--primary-color);
+  color: white;
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ======== Mensajes ======== */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: #f7f9fb;
+}
+
+/* Mensaje propio */
+.chat-message.own {
+  align-self: flex-end;
+  background-color: var(--accent-color);
+  color: white;
+  border-radius: 14px 14px 0 14px;
+  padding: 10px 14px;
+  max-width: 70%;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Mensaje recibido */
+.chat-message.other {
+  align-self: flex-start;
+  background-color: #e4e6eb;
+  color: var(--text-dark);
+  border-radius: 14px 14px 14px 0;
+  padding: 10px 14px;
+  max-width: 70%;
+}
+
+/* Nombre del remitente */
+.chat-message-sender {
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+  opacity: 0.85;
+}
+
+/* Texto del mensaje */
+.chat-message-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Link de archivo */
+.chat-file-link {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* Hora del mensaje */
+.chat-message-time {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  opacity: 0.6;
+  text-align: right;
+}
+
+/* ======== Área de Input ======== */
+.chat-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background-color: white;
+  border-top: 1px solid #ddd;
+}
+
+.chat-input textarea {
+  flex: 1;
+  resize: none;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.chat-input textarea:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(104, 173, 168, 0.2);
+}
+
+.chat-input input[type="file"] {
+  font-size: 0.85rem;
+}
+
+.chat-input button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s ease;
+}
+
+.chat-input button:hover {
+  background-color: var(--accent-color);
+}
+
+/* ======== Modo Oscuro ======== */
+.dark-mode .chat-container {
+  background-color: #1e1e1e;
+}
+
+.dark-mode .chat-header {
+  background: #111827;
+  border-bottom: 1px solid #222;
+}
+
+.dark-mode .chat-messages {
+  background-color: #121212;
+}
+
+.dark-mode .chat-message.own {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.dark-mode .chat-message.other {
+  background-color: #2a2a2a;
+  color: #ddd;
+}
+
+.dark-mode .chat-message-sender {
+  color: #bbb;
+}
+
+.dark-mode .chat-file-link {
+  color: #4ea6ff;
+}
+
+.dark-mode .chat-input {
+  background-color: #1e1e1e;
+  border-top: 1px solid #333;
+}
+
+.dark-mode .chat-input textarea {
+  background-color: #2a2a2a;
+  color: #fff;
+  border: 1px solid #444;
+}
+
+.dark-mode .chat-input button {
+  background-color: var(--accent-color);
+}
+
+/* ======== Ajustes Móvil ======== */
+@media (max-width: 768px) {
+  .chat-container {
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  /* Evita que se encierre en un cuadro dentro del modal */
+  .modal-content-wrapper .chat-container {
+    padding: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  /* Botón back adaptado */
+  .chat-back-btn {
+    width: 100%;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 14px;
+    font-size: 1rem;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* Mensajes con menos padding en móvil */
+  .chat-messages {
+    padding: 10px;
+  }
+
+  /* Input fijo abajo */
+  .chat-input {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--white-color);
+    padding: 8px;
+    border-top: 1px solid #ddd;
+  }
+
+  .dark-mode .chat-input {
+    background-color: #1e1e1e;
+    border-top: 1px solid #333;
+  }
+}
+
+/* ======== Pantalla Completa en Móvil ======== */
+.chat-mobile-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  background: var(--white-color);
+  z-index: 9999;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dark-mode .chat-mobile-fullscreen {
+  background-color: #1e1e1e;
+}

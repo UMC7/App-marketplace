@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import supabase from '../supabase';
+import './chat.css';
 
 function ChatPage({ offerId, receiverId, onBack }) {
   const [messages, setMessages] = useState([]);
@@ -7,8 +8,30 @@ function ChatPage({ offerId, receiverId, onBack }) {
   const [message, setMessage] = useState('');
   const [file, setFile] = useState(null);
   const [otherNickname, setOtherNickname] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
   const fileInputRef = useRef();
 
+  // Detectar si es móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Marcar body cuando está en móvil fullscreen
+  useEffect(() => {
+    if (isMobile) {
+      document.body.classList.add('chat-fullscreen-active');
+    } else {
+      document.body.classList.remove('chat-fullscreen-active');
+    }
+    return () => document.body.classList.remove('chat-fullscreen-active');
+  }, [isMobile]);
+
+  // Obtener usuario actual
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -17,10 +40,10 @@ function ChatPage({ offerId, receiverId, onBack }) {
     fetchUser();
   }, []);
 
+  // Obtener nombre del otro usuario
   useEffect(() => {
     const fetchOtherNickname = async () => {
       if (!receiverId) return;
-
       const { data, error } = await supabase
         .from('users')
         .select('nickname')
@@ -31,10 +54,10 @@ function ChatPage({ offerId, receiverId, onBack }) {
         setOtherNickname(data.nickname);
       }
     };
-
     fetchOtherNickname();
   }, [receiverId]);
 
+  // Obtener mensajes
   useEffect(() => {
     if (!offerId || !currentUser) return;
 
@@ -44,8 +67,8 @@ function ChatPage({ offerId, receiverId, onBack }) {
         .select('id, sender_id, receiver_id, message, file_url, sent_at')
         .eq('offer_id', offerId)
         .or(
-          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId})` +
-          `,and(sender_id.eq.${receiverId},receiver_id.eq.${currentUser.id})`
+          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId}),` +
+          `and(sender_id.eq.${receiverId},receiver_id.eq.${currentUser.id})`
         )
         .order('sent_at', { ascending: true });
 
@@ -55,11 +78,11 @@ function ChatPage({ offerId, receiverId, onBack }) {
     fetchMessages();
   }, [offerId, currentUser, receiverId]);
 
+  // Enviar mensaje
   const handleSend = async () => {
     if (!message && !file) return;
 
     let fileUrl = null;
-
     if (file) {
       const path = `chat/${offerId}/${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage
@@ -73,7 +96,7 @@ function ChatPage({ offerId, receiverId, onBack }) {
 
       const { data } = await supabase.storage
         .from('chat-uploads')
-        .createSignedUrl(path, 60 * 60); // 1 hour
+        .createSignedUrl(path, 60 * 60);
       fileUrl = data.signedUrl;
     }
 
@@ -90,13 +113,14 @@ function ChatPage({ offerId, receiverId, onBack }) {
       setMessage('');
       setFile(null);
       fileInputRef.current.value = null;
+
       const { data: updated } = await supabase
         .from('yacht_work_messages')
         .select('id, sender_id, receiver_id, message, file_url, sent_at')
         .eq('offer_id', offerId)
         .or(
-          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId})` +
-          `,and(sender_id.eq.${receiverId},receiver_id.eq.${currentUser.id})`
+          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId}),` +
+          `and(sender_id.eq.${receiverId},receiver_id.eq.${currentUser.id})`
         )
         .order('sent_at', { ascending: true });
       setMessages(updated);
@@ -105,75 +129,98 @@ function ChatPage({ offerId, receiverId, onBack }) {
 
   if (!currentUser) return <div>Loading user...</div>;
 
-  return (
-    <div style={{ padding: 20 }}>
-      {onBack && (
-        <button onClick={onBack} style={{ marginBottom: '10px' }}>
+  // --- Vista móvil fullscreen ---
+  if (isMobile) {
+    return (
+      <div className="chat-container chat-mobile-fullscreen">
+        <button className="chat-back-btn" onClick={onBack}>
           ⬅ Back to chats
         </button>
-      )}
-      <h2>Offer private chat</h2>
-      <div style={{ maxHeight: 400, overflowY: 'auto', border: '1px solid #ccc', padding: 10 }}>
-        {messages.map((msg) => {
-          const isOwnMessage = msg.sender_id === currentUser.id;
 
-          return (
-            <div
-              key={msg.id}
-              style={{
-                marginBottom: 12,
-                display: 'flex',
-                justifyContent: isOwnMessage ? 'flex-end' : 'flex-start'
-              }}
-            >
-              <div
-                style={{
-                  maxWidth: '75%',
-                  backgroundColor: isOwnMessage ? '#d0ebff' : '#f1f1f1',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  textAlign: 'left',
-                }}
-              >
-                <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
-                  {isOwnMessage ? 'You' : otherNickname}
-                </div>
-                {msg.message && <p style={{ margin: 0 }}>{msg.message}</p>}
+        <div className="chat-header">
+          Offer private chat – {otherNickname}
+        </div>
+
+        <div className="chat-messages">
+          {messages.map((msg) => {
+            const isOwnMessage = msg.sender_id === currentUser.id;
+            return (
+              <div key={msg.id} className={`chat-message ${isOwnMessage ? 'own' : 'other'}`}>
+                <div className="chat-message-sender">{isOwnMessage ? 'You' : otherNickname}</div>
+                {msg.message && <p className="chat-message-text">{msg.message}</p>}
                 {msg.file_url && (
-                  <a
-                    href={msg.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: 'block', marginTop: 4 }}
-                  >
+                  <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="chat-file-link">
                     📎 View file
                   </a>
                 )}
-                <div style={{ fontSize: '0.8em', color: '#666', marginTop: 6 }}>
-                  {new Date(msg.sent_at).toLocaleString()}
-                </div>
+                <div className="chat-message-time">{new Date(msg.sent_at).toLocaleString()}</div>
               </div>
+            );
+          })}
+        </div>
+
+        <div className="chat-input">
+          <textarea
+            placeholder="Type your message..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={2}
+          />
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+          <button onClick={handleSend}>Send</button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Vista desktop ---
+  return (
+    <div className="chat-container">
+      {onBack && (
+        <button className="chat-back-btn" onClick={onBack}>
+          ⬅ Back to chats
+        </button>
+      )}
+
+      <div className="chat-header">
+        Offer private chat – {otherNickname}
+      </div>
+
+      <div className="chat-messages">
+        {messages.map((msg) => {
+          const isOwnMessage = msg.sender_id === currentUser.id;
+          return (
+            <div key={msg.id} className={`chat-message ${isOwnMessage ? 'own' : 'other'}`}>
+              <div className="chat-message-sender">{isOwnMessage ? 'You' : otherNickname}</div>
+              {msg.message && <p className="chat-message-text">{msg.message}</p>}
+              {msg.file_url && (
+                <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="chat-file-link">
+                  📎 View file
+                </a>
+              )}
+              <div className="chat-message-time">{new Date(msg.sent_at).toLocaleString()}</div>
             </div>
           );
         })}
       </div>
-      <div style={{ marginTop: 20 }}>
+
+      <div className="chat-input">
         <textarea
           placeholder="Type your message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          rows={3}
-          style={{ width: '100%' }}
+          rows={2}
         />
         <input
           type="file"
           ref={fileInputRef}
           onChange={(e) => setFile(e.target.files[0])}
-          style={{ marginTop: 8 }}
         />
-        <button onClick={handleSend} style={{ marginTop: 10 }}>
-          Send
-        </button>
+        <button onClick={handleSend}>Send</button>
       </div>
     </div>
   );
