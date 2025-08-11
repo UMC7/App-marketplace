@@ -191,7 +191,10 @@ function Navbar() {
           padding: showTouPanel ? '6px 0' : '0',
           transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)'
         }}
-        onClick={() => setShowTouPanel(s => !s)}
+        onClick={(e) => {
+          e.stopPropagation(); // Evita que el evento se propague a los hijos
+          setShowTouPanel(s => !s);
+        }}
       >
         {showTouPanel ? (
           <>
