@@ -1,12 +1,14 @@
+// src/components/ThemeToggle.js
 import React, { useEffect, useState } from "react";
 import "./ThemeToggle.css";
 import "../styles/darkmode.css";
+import { getThemePreference, saveThemePreference } from "./cookies/cookiesConfig";
 
 export default function ThemeToggle() {
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "light";
+    const savedTheme = getThemePreference(); // 🔹 Lee la preferencia guardada
     if (savedTheme === "dark") {
       document.body.classList.add("dark-mode");
       document.documentElement.setAttribute("data-theme", "dark");
@@ -14,6 +16,7 @@ export default function ThemeToggle() {
     } else {
       document.body.classList.remove("dark-mode");
       document.documentElement.setAttribute("data-theme", "light");
+      setDarkMode(false);
     }
   }, []);
 
@@ -21,12 +24,12 @@ export default function ThemeToggle() {
     if (darkMode) {
       document.body.classList.remove("dark-mode");
       document.documentElement.setAttribute("data-theme", "light");
-      localStorage.setItem("theme", "light");
+      saveThemePreference("light"); // 🔹 Guarda en cookiesConfig
       setDarkMode(false);
     } else {
       document.body.classList.add("dark-mode");
       document.documentElement.setAttribute("data-theme", "dark");
-      localStorage.setItem("theme", "dark");
+      saveThemePreference("dark"); // 🔹 Guarda en cookiesConfig
       setDarkMode(true);
     }
   };

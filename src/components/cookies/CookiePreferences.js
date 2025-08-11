@@ -15,6 +15,24 @@ const CookiePreferences = ({ onClose, onSave }) => {
     const stored = getConsent();
     if (stored) {
       setPreferences(stored);
+
+      // 🔹 Si "preferences" está habilitado, restaurar preferencias guardadas
+      if (stored.preferences) {
+        try {
+          const savedSettings = JSON.parse(localStorage.getItem('userPreferences'));
+          if (savedSettings) {
+            if (savedSettings.theme) {
+              document.documentElement.setAttribute('data-theme', savedSettings.theme);
+            }
+            if (savedSettings.language) {
+              // Aquí podrías integrar tu sistema de traducción si lo tienes
+              console.log('Language restored:', savedSettings.language);
+            }
+          }
+        } catch (err) {
+          console.error('Error restoring user preferences:', err);
+        }
+      }
     }
   }, []);
 
@@ -28,6 +46,23 @@ const CookiePreferences = ({ onClose, onSave }) => {
 
   const handleSave = () => {
     saveConsent(preferences);
+
+    // 🔹 Si "preferences" está habilitado, guardar configuración actual del usuario
+    if (preferences.preferences) {
+      try {
+        const currentSettings = {
+          theme: document.documentElement.getAttribute('data-theme') || 'light',
+          language: 'en', // Aquí pones el idioma actual de tu app
+        };
+        localStorage.setItem('userPreferences', JSON.stringify(currentSettings));
+      } catch (err) {
+        console.error('Error saving user preferences:', err);
+      }
+    } else {
+      // Si desactiva preferences, eliminar configuraciones guardadas
+      localStorage.removeItem('userPreferences');
+    }
+
     if (onSave) onSave();
   };
 

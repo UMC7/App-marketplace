@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+// src/App.js
+import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -18,6 +19,7 @@ import CookieBanner from './components/cookies/CookieBanner';
 
 // Utils
 import { initAnalytics } from './utils/analytics';
+import { getConsent, getThemePreference } from './components/cookies/cookiesConfig';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -65,13 +67,30 @@ function AuthRedirectHandler() {
 
 function App() {
   const { currentUser, loading } = useAuth();
+  const [consentLoaded, setConsentLoaded] = useState(false);
+
+  // Aplicar tema guardado antes de mostrar la app
+  useEffect(() => {
+    const savedTheme = getThemePreference();
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark-mode');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-mode');
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }, []);
 
   // Inicializar Google Analytics si el consentimiento lo permite
   useEffect(() => {
-    initAnalytics();
+    const storedConsent = getConsent();
+    if (storedConsent) {
+      initAnalytics();
+    }
+    setConsentLoaded(true);
   }, []);
 
-  if (loading) {
+  if (loading || !consentLoaded) {
     return <div>Loading application...</div>;
   }
 
