@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "yachtdaywork.com"
+        }
+      ],
+      "destination": "https://www.yachtdaywork.com/$1",
+      "permanent": true
+    }
+  ]
+}
