@@ -37,6 +37,19 @@ function Navbar() {
     window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches
   );
 
+  // 🔹 NEW: Logo dinámico según tema (claro/oscuro)
+  const [logoSrc, setLogoSrc] = useState('/logos/yachtdaywork.png');
+  useEffect(() => {
+    const updateLogo = () => {
+      const theme = document.documentElement.getAttribute('data-theme');
+      setLogoSrc(theme === 'dark' ? '/logos/yachtdayworkDarkMode.png' : '/logos/yachtdaywork.png');
+    };
+    updateLogo();
+    const obs = new MutationObserver(updateLogo);
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => obs.disconnect();
+  }, []);
+
   useEffect(() => {
     if (showTouPanel) {
       const timeout = setTimeout(() => setShowTouPanel(false), 2500);
@@ -101,7 +114,7 @@ function Navbar() {
       <div className="navbar-left">
         <div className="navbar-logo-wrapper">
           <Link to="/">
-            <img src="/logos/yachtdaywork.png" alt="YachtDayWork logo" className="navbar-logo" />
+            <img src={logoSrc} alt="YachtDayWork logo" className="navbar-logo" />
           </Link>
         </div>
         {!window.matchMedia('(max-width: 900px) and (orientation: landscape)').matches && (
@@ -192,7 +205,7 @@ function Navbar() {
           transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)'
         }}
         onClick={(e) => {
-          e.stopPropagation(); // Evita que el evento se propague a los hijos
+          e.stopPropagation();
           setShowTouPanel(s => !s);
         }}
       >

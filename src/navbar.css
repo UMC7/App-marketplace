@@ -558,3 +558,20 @@
     color: #f5f5f5 !important;
   }
 }
+
+/* Mover el logo ~1 cm hacia adentro en dark mode (solo desktop) */
+@media (min-width: 1024px) {
+  [data-theme='dark'] .navbar-logo-wrapper {
+    margin-left: 68px; /* ajusta 32–48px si quieres fino */
+  }
+
+  [data-theme='light'] .navbar-logo {
+    height: 118px !important;   /* ajusta 112–124px según lo veas */
+    width: auto !important;
+    max-height: none !important;
+  }
+
+  [data-theme='dark'] .navbar-logo {
+    transform: translateY(4px); /* prueba 2–6px para afinar */
+  }
+}
