@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Slider from 'react-slick';
+import ThemeLogo from '../components/ThemeLogo';
 import '../LandingPage.css';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -61,16 +62,36 @@ function LandingPage() {
 
       <div className="logo-grid">
         <Link to="/marketplace">
-          <img src="/logos/seamarket.png" alt="SeaMarket" className="module-logo" />
+          <ThemeLogo
+            light="/logos/seamarket.png"
+            dark="/logos/seamarketDM.png"
+            alt="SeaMarket"
+            className="module-logo"
+          />
         </Link>
         <Link to="/yacht-services">
-          <img src="/logos/seaservices.png" alt="SeaServices" className="module-logo" />
+          <ThemeLogo
+            light="/logos/seaservices.png"
+            dark="/logos/seaservicesDM.png"
+            alt="SeaServices"
+            className="module-logo"
+          />
         </Link>
         <Link to="/yacht-works">
-          <img src="/logos/seajobs.png" alt="SeaJobs" className="module-logo" />
+          <ThemeLogo
+            light="/logos/seajobs.png"
+            dark="/logos/seajobsDM.png"
+            alt="SeaJobs"
+            className="module-logo"
+          />
         </Link>
         <Link to="/events">
-          <img src="/logos/seaevents.png" alt="SeaEvents" className="module-logo" />
+          <ThemeLogo
+            light="/logos/seaevents.png"
+            dark="/logos/seaeventsDM.png"
+            alt="SeaEvents"
+            className="module-logo"
+          />
         </Link>
       </div>
 

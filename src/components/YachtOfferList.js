@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import supabase from '../supabase';
 import Modal from './Modal';
 import ChatPage from './ChatPage';
+import ThemeLogo from './ThemeLogo';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 
 const getRoleImage = (title) => {
@@ -867,18 +868,21 @@ const handleCopy = (text, field) => {
 ) : (
                           <div className={`collapsed-offer${offer.team ? ' team' : ''}`}>
                             <div className="collapsed-images">
-                              <img
-                                src={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
-                                alt="role"
-                                className="role-icon"
-                              />
-                              {offer.team && offer.teammate_rank && (
-                                <img
-                                  src={`/logos/roles/${getRoleImage(offer.teammate_rank)}.png`}
-                                  alt="teammate role"
-                                  className="role-icon"
-                                />
-                              )}
+                              <ThemeLogo
+  light={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
+  dark={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebasedDM' : getRoleImage(offer.title) + 'DM'}.png`}
+  alt="role"
+  className="role-icon"
+/>
+
+{offer.team && offer.teammate_rank && (
+  <ThemeLogo
+    light={`/logos/roles/${getRoleImage(offer.teammate_rank)}.png`}
+    dark={`/logos/roles/${getRoleImage(offer.teammate_rank)}DM.png`}
+    alt="teammate role"
+    className="role-icon"
+  />
+)}
                             </div>
                             <div className="collapsed-info-row">
                               {isMobile ? (
