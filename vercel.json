@@ -2,34 +2,7 @@
   "redirects": [
     {
       "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "yachtdaywork.com"
-        }
-      ],
-      "destination": "https://www.yachtdaywork.com/$1",
-      "permanent": true
-    },
-    {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "http://yachtdaywork.com"
-        }
-      ],
-      "destination": "https://www.yachtdaywork.com/$1",
-      "permanent": true
-    },
-    {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "http://www.yachtdaywork.com"
-        }
-      ],
+      "has": [{ "type": "host", "value": "yachtdaywork.com" }],
       "destination": "https://www.yachtdaywork.com/$1",
       "permanent": true
     }
