@@ -58,13 +58,13 @@ const countries = ["Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "A
     "Italy", "Jamaica", "Japan", "Kiribati", "Kuwait", "Latvia", "Libya", "Lithuania", "Madagascar",
     "Malaysia", "Maldives", "Malta", "Marshall Islands", "Mauritius", "Mexico", "Micronesia",
     "Monaco", "Montenegro", "Morocco", "Myanmar", "Netherlands", "New Zealand", "Nicaragua",
-    "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Saint Kitts and Nevis",
+    "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Saint Kitts and Nevis",
     "Saint Lucia", "Saint Maarten", "Saint Vincent and the Grenadines", "Samoa", "Saudi Arabia", "Seychelles",
     "Singapore", "Solomon Islands", "South Africa", "South Korea", "Spain", "Sweden", "Taiwan",
     "Thailand", "Trinidad and Tobago", "Tunisia", "Turkey", "United Arab Emirates", "United Kingdom",
     "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"];
 
-const types = ['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Cruising', 'DayWork'];
+const types = ['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Crossing', 'DayWork'];
 const yearsOptions = ['Green', 1, 2, 2.5, 3, 5];
 
 function YachtOfferForm({ user, onOfferPosted, initialValues, mode }) {

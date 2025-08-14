@@ -107,9 +107,6 @@ const handleCopy = (text, field) => {
     });
   };
 
-  // Efecto para manejar el cambio de usuario o la carga inicial:
-  // Carga las marcas del usuario actual desde localStorage.
-  // Si el usuario cierra sesión (currentUser se vuelve null), limpia las marcas en memoria.
   useEffect(() => {
     if (currentUser?.id) {
       const key = `markedOffers_user_${currentUser.id}`;
@@ -125,25 +122,15 @@ const handleCopy = (text, field) => {
     }
   }, [currentUser]); // Depende de `currentUser` para reaccionar a cambios de sesión
 
-  // Efecto para limpiar las marcas al cerrar sesión (usando el listener de Supabase):
   useEffect(() => {
-    // Suscribirse a los cambios de estado de autenticación de Supabase
-    // La corrección clave: desestructurar 'data' para obtener 'subscription'
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_OUT') {
-          // Si el usuario cierra sesión, limpia las marcas en la UI
           setMarkedOffers([]);
-          // Opcional: podrías limpiar la entrada específica de localStorage si tuvieras el ID del usuario anterior
-          // const lastUserId = ...; // Necesitarías una forma de guardar el ID antes del logout
-          // if (lastUserId) localStorage.removeItem(`markedOffers_user_${lastUserId}`);
         }
-        // No es necesario manejar SIGNED_IN/INITIAL_SESSION aquí,
-        // ya que el useEffect de arriba (que depende de currentUser) ya lo hace.
       }
     );
 
-    // Asegurarse de limpiar la suscripción al desmontar el componente
     return () => {
       if (subscription) {
         subscription.unsubscribe();
@@ -246,8 +233,41 @@ const handleCopy = (text, field) => {
   }, [offers]);
 
   useEffect(() => {
-    if (!offers.length) return;
+  if (!offers.length) {
+    setExpandedWeeks({});
+    setExpandedDays({});
+    return;
+  }
 
+  // Detectar si hay filtros activos
+  const hasFilters =
+    filters.rank ||
+    filters.city ||
+    filters.minSalary ||
+    filters.team ||
+    filters.yachtType ||
+    filters.yachtSize ||
+    filters.use ||
+    (filters.country && filters.country.length > 0) ||
+    (filters.languages && filters.languages.length > 0) ||
+    (filters.terms && filters.terms.length > 0) ||
+    filters.selectedOnly;
+
+  if (hasFilters) {
+    // 🔹 Con filtros: expandir todas las semanas y días con resultados
+    const newExpandedWeeks = {};
+    const newExpandedDays = {};
+
+    for (const [weekName, days] of Object.entries(groupedOffers)) {
+      newExpandedWeeks[weekName] = true;
+      for (const dayKey of Object.keys(days)) {
+        newExpandedDays[dayKey] = true;
+      }
+    }
+
+    setExpandedWeeks(newExpandedWeeks);
+    setExpandedDays(newExpandedDays);
+  } else {
     const dayToWeekMap = {};
 
     for (const [weekName, days] of Object.entries(groupedOffers)) {
@@ -263,17 +283,11 @@ const handleCopy = (text, field) => {
       const mostRecentDay = sortedDays[0];
       const correspondingWeek = dayToWeekMap[mostRecentDay];
 
-      setExpandedWeeks(prev => ({
-        ...prev,
-        [correspondingWeek]: true
-      }));
-
-      setExpandedDays(prev => ({
-        ...prev,
-        [mostRecentDay]: true
-      }));
+      setExpandedWeeks({ [correspondingWeek]: true });
+      setExpandedDays({ [mostRecentDay]: true });
     }
-  }, [offers]);
+  }
+}, [offers, groupedOffers, filters]);
 
 
   const toggleExpanded = (id) => {
@@ -287,181 +301,195 @@ const handleCopy = (text, field) => {
         <div className={`filter-body expanded`}>
 
           <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
-            <h3 style={{ gridColumn: '1 / -1' }}>Job Filters</h3>
+  <h3 style={{ gridColumn: '1 / -1' }}>Job Filters</h3>
 
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Position"
-              value={filters.rank}
-              onChange={(e) => setFilters({ ...filters, rank: e.target.value })}
-            />
+  {/* Team */}
+  <select
+    className="category-select"
+    value={filters.team}
+    onChange={(e) => setFilters({ ...filters, team: e.target.value })}
+  >
+    <option value="">¿Team?</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select>
 
-            <input
-              type="text"
-              className="search-input"
-              placeholder="City"
-              value={filters.city}
-              onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-            />
-
-            <input
-              type="number"
-              className="search-input"
-              placeholder="Salary From"
-              value={filters.minSalary}
-              onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
-            />
-
-            <select
-              className="category-select"
-              value={filters.team}
-              onChange={(e) => setFilters({ ...filters, team: e.target.value })}
-            >
-              <option value="">¿Team?</option>
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
-            </select>
-
-            <select
-              className="category-select"
-              value={filters.yachtType}
-              onChange={(e) => setFilters({ ...filters, yachtType: e.target.value })}
-            >
-              <option value="">Yacht Type</option>
-              <option value="Motor Yacht">Motor Yacht</option>
-              <option value="Sailing Yacht">Sailing Yacht</option>
-              <option value="Chase Boat">Chase Boat</option>
-              <option value="Catamaran">Catamaran</option>
-            </select>
-
-            <select
-              className="category-select"
-              value={filters.yachtSize}
-              onChange={(e) => setFilters({ ...filters, yachtSize: e.target.value })}
-            >
-              <option value="">Size</option>
-              <option value="0 - 30m">0 - 30m</option>
-              <option value="31 - 40m">31 - 40m</option>
-              <option value="41 - 50m">41 - 50m</option>
-              <option value="51 - 70m">51 - 70m</option>
-              <option value="> 70m">{'> 70m'}</option>
-            </select>
-
-            <select
-              className="category-select"
-              value={filters.use}
-              onChange={(e) => setFilters({ ...filters, use: e.target.value })}
-            >
-              <option value="">Use</option>
-              <option value="Private">Private</option>
-              <option value="Charter">Charter</option>
-              <option value="Private/Charter">Private/Charter</option>
-            </select>
-
-            <details style={{ gridColumn: '1 / -1' }}>
-              <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Country</summary>
-              <div style={{ marginTop: '8px', maxHeight: '300px', overflowY: 'auto' }}>
-                {regionOrder.map((region) => {
-                  const countryList = countriesByRegion[region];
-                  const allSelected = countryList.every((c) => filters.country.includes(c));
-                  return (
-                    <details key={region} style={{ marginBottom: '12px' }}>
-  <summary style={{ cursor: 'pointer', fontWeight: 'bold', userSelect: 'none' }}>
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-      <input
-        type="checkbox"
-        checked={allSelected}
-        onClick={(e) => e.stopPropagation()}
-        onChange={() => toggleRegionCountries(region)}
-        style={{ verticalAlign: 'middle', marginBottom: '1px' }}
-      />
-      {region}
-    </span>
-  </summary>
-
-  <div style={{ marginLeft: '20px', marginTop: '8px' }}>
-    {countryList.map((country) => (
-      <label key={country} className="filter-checkbox-label">
-        <input
-          type="checkbox"
-          checked={filters.country.includes(country)}
-          onChange={() => toggleMultiSelect('country', country)}
-        />
-        {country}
-      </label>
-    ))}
-  </div>
-</details>
-
-                  );
-                })}
-              </div>
-            </details>
-
-            <details style={{ gridColumn: '1 / -1' }}>
-              <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Languages</summary>
-              <div style={{ marginTop: '8px' }}>
-                {['Arabic', 'Dutch', 'English', 'French', 'German', 'Greek', 'Italian', 'Mandarin', 'Portuguese', 'Russian', 'Spanish', 'Turkish', 'Ukrainian'].map((lang) => (
-                 <label key={lang} className="filter-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={filters.languages.includes(lang)}
-                      onChange={() => toggleMultiSelect('languages', lang)}
-                    />
-                    {lang}
-                  </label>
-                ))}
-              </div>
-            </details>
-
-            <details style={{ gridColumn: '1 / -1' }}>
-              <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Terms</summary>
-              <div style={{ marginTop: '8px' }}>
-                {['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Cruising', 'DayWork'].map((term) => (
-                 <label key={term} className="filter-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={filters.terms.includes(term)}
-                      onChange={() => toggleMultiSelect('terms', term)}
-                    />
-                    {term}
-                  </label>
-                ))}
-              </div>
-            </details>
-            <label
-  htmlFor="selectedOnly"
-  className="filter-checkbox-label"
-  style={{ gridColumn: '1 / -1', marginBottom: '10px' }}
->
+  {/* Position */}
   <input
-    id="selectedOnly"
-    type="checkbox"
-    checked={filters.selectedOnly}
-    onChange={() => setFilters({ ...filters, selectedOnly: !filters.selectedOnly })}
+    type="text"
+    className="search-input"
+    placeholder="Position"
+    value={filters.rank}
+    onChange={(e) => setFilters({ ...filters, rank: e.target.value })}
   />
-  <span><strong>Only Selected</strong></span>
-</label>
-            <button
-              style={{ gridColumn: '1 / -1', marginBottom: '10px' }}
-              onClick={() => setFilters({
-                rank: '',
-                city: '',
-                minSalary: '',
-                team: '',
-                yachtType: '',
-                yachtSize: '',
-                use: '',
-                country: [],
-                languages: [],
-                terms: [],
-                selectedOnly: false,
-              })}
-            >
-              Clear All Filters
-            </button>
-          </div>
+
+  {/* Yacht Type */}
+  <select
+    className="category-select"
+    value={filters.yachtType}
+    onChange={(e) => setFilters({ ...filters, yachtType: e.target.value })}
+  >
+    <option value="">Yacht Type</option>
+    <option value="Motor Yacht">Motor Yacht</option>
+    <option value="Sailing Yacht">Sailing Yacht</option>
+    <option value="Chase Boat">Chase Boat</option>
+    <option value="Catamaran">Catamaran</option>
+  </select>
+
+  {/* Size */}
+  <select
+    className="category-select"
+    value={filters.yachtSize}
+    onChange={(e) => setFilters({ ...filters, yachtSize: e.target.value })}
+  >
+    <option value="">Size</option>
+    <option value="0 - 30m">0 - 30m</option>
+    <option value="31 - 40m">31 - 40m</option>
+    <option value="41 - 50m">41 - 50m</option>
+    <option value="51 - 70m">51 - 70m</option>
+    <option value="> 70m">{'> 70m'}</option>
+  </select>
+
+  {/* Use */}
+  <select
+    className="category-select"
+    value={filters.use}
+    onChange={(e) => setFilters({ ...filters, use: e.target.value })}
+  >
+    <option value="">Use</option>
+    <option value="Private">Private</option>
+    <option value="Charter">Charter</option>
+    <option value="Private/Charter">Private/Charter</option>
+  </select>
+
+  {/* Salary From */}
+  <input
+    type="number"
+    className="search-input"
+    placeholder="Salary From"
+    value={filters.minSalary}
+    onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
+  />
+
+  {/* City */}
+  <input
+    type="text"
+    className="search-input"
+    placeholder="City"
+    value={filters.city}
+    onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+  />
+
+  {/* Country (full width) */}
+  <details style={{ gridColumn: '1 / -1' }}>
+    <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Country</summary>
+    <div style={{ marginTop: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+      {regionOrder.map((region) => {
+        const countryList = countriesByRegion[region];
+        const allSelected = countryList.every((c) => filters.country.includes(c));
+        return (
+          <details key={region} style={{ marginBottom: '12px' }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 'bold', userSelect: 'none' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={() => toggleRegionCountries(region)}
+                  style={{ verticalAlign: 'middle', marginBottom: '1px' }}
+                />
+                {region}
+              </span>
+            </summary>
+
+            <div style={{ marginLeft: '20px', marginTop: '8px' }}>
+              {countryList.map((country) => (
+                <label key={country} className="filter-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={filters.country.includes(country)}
+                    onChange={() => toggleMultiSelect('country', country)}
+                  />
+                  {country}
+                </label>
+              ))}
+            </div>
+          </details>
+        );
+      })}
+    </div>
+  </details>
+
+  {/* Terms (full width) */}
+  <details style={{ gridColumn: '1 / -1' }}>
+    <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Terms</summary>
+    <div style={{ marginTop: '8px' }}>
+      {['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Crossing', 'DayWork'].map((term) => (
+        <label key={term} className="filter-checkbox-label">
+          <input
+            type="checkbox"
+            checked={filters.terms.includes(term)}
+            onChange={() => toggleMultiSelect('terms', term)}
+          />
+          {term}
+        </label>
+      ))}
+    </div>
+  </details>
+
+  {/* Languages (full width) */}
+  <details style={{ gridColumn: '1 / -1' }}>
+    <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Languages</summary>
+    <div style={{ marginTop: '8px' }}>
+      {['Arabic', 'Dutch', 'English', 'French', 'German', 'Greek', 'Italian', 'Mandarin', 'Portuguese', 'Russian', 'Spanish', 'Turkish', 'Ukrainian'].map((lang) => (
+        <label key={lang} className="filter-checkbox-label">
+          <input
+            type="checkbox"
+            checked={filters.languages.includes(lang)}
+            onChange={() => toggleMultiSelect('languages', lang)}
+          />
+          {lang}
+        </label>
+      ))}
+    </div>
+  </details>
+
+  {/* Only Selected (full width) */}
+  <label
+    htmlFor="selectedOnly"
+    className="filter-checkbox-label"
+    style={{ gridColumn: '1 / -1', marginBottom: '10px' }}
+  >
+    <input
+      id="selectedOnly"
+      type="checkbox"
+      checked={filters.selectedOnly}
+      onChange={() => setFilters({ ...filters, selectedOnly: !filters.selectedOnly })}
+    />
+    <span><strong>Only Selected</strong></span>
+  </label>
+
+  {/* Clear Filters (full width) */}
+  <button
+  className="clear-filters"                       // ← añade esta clase
+  style={{ gridColumn: '1 / -1', marginBottom: '10px' }}
+  onClick={() => setFilters({
+    rank: '',
+    city: '',
+    minSalary: '',
+    team: '',
+    yachtType: '',
+    yachtSize: '',
+    use: '',
+    country: [],
+    languages: [],
+    terms: [],
+    selectedOnly: false,
+  })}
+>
+  Clear All Filters
+</button>
+</div>
         </div>
       )}
 

@@ -12,12 +12,12 @@ const countriesByRegion = {
     'Dominica', 'Dominican Republic', 'Grenada', 'Jamaica', 'Saint Kitts and Nevis', 'Saint Lucia',
     'Saint Maarten', 'Saint Vincent and the Grenadines', 'Trinidad and Tobago'
   ],
-  'North Sea and Baltic Sea': [
+  'North and Baltic Seas': [
     'Belgium', 'Denmark', 'Estonia', 'Finland', 'Germany', 'Latvia', 'Lithuania',
     'Netherlands', 'Norway', 'Poland', 'Sweden', 'United Kingdom'
   ],
   'Western Europe': ['France', 'Ireland', 'Italy', 'Malta', 'Monaco', 'Portugal', 'Spain'],
-  'Eastern Europe': ['Bulgaria', 'Croatia', 'Cyprus', 'Greece', 'Montenegro', 'Turkey'],
+  'Eastern Europe': ['Albania', 'Bulgaria', 'Croatia', 'Cyprus', 'Greece', 'Montenegro', 'Romania', 'Turkey'],
   'Asia': [
     'Brunei', 'China', 'India', 'Indonesia', 'Israel', 'Japan', 'Malaysia',
     'Maldives', 'Myanmar', 'Philippines', 'Singapore', 'South Korea',
@@ -33,7 +33,7 @@ const countriesByRegion = {
 const regionOrder = [
   'Western Europe',
   'Eastern Europe',
-  'North Sea and Baltic Sea',
+  'North and Baltic Seas',
   'Caribbean',
   'North America',
   'Central America',
@@ -125,7 +125,7 @@ function YachtWorksPage() {
     ) return false;
     if (filters.minSalary && (!offer.salary || offer.salary < parseFloat(filters.minSalary))) return false;
     if (filters.team && ((filters.team === 'Yes' && !offer.team) || (filters.team === 'No' && offer.team))) return false;
-    if (filters.languages.length && !filters.languages.every(lang => [offer.language_1, offer.language_2].includes(lang))) return false;
+    if (filters.languages.length && !filters.languages.some(lang => [offer.language_1, offer.language_2].includes(lang))) return false;
     if (filters.terms.length && !filters.terms.includes(offer.type)) return false;
     if (filters.yachtType && offer.yacht_type !== filters.yachtType) return false;
     if (filters.yachtSize && offer.yacht_size !== filters.yachtSize) return false;
