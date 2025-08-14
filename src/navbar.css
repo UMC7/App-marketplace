@@ -331,6 +331,11 @@
     width: auto;
   }
 
+  body:not(.dark-mode) .navbar-logo {
+    height: 88px; /* antes 74px */
+     top: 45%;
+  }
+
   nav .navbar-toggle,
   .navbar-links {
     display: none !important;
