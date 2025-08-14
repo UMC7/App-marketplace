@@ -466,7 +466,7 @@ const handleCopy = (text, field) => {
       checked={filters.selectedOnly}
       onChange={() => setFilters({ ...filters, selectedOnly: !filters.selectedOnly })}
     />
-    <span><strong>Only Selected</strong></span>
+    <span><strong>Only highlighted</strong></span>
   </label>
 
   {/* Clear Filters (full width) */}

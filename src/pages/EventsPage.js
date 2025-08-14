@@ -131,7 +131,7 @@ function EventsPage() {
       <div className="module-header-wrapper">
         <div className="module-header-row">
         <h1>SeaEvents</h1>
-        <span>Where you can explore all events shared by the community.</span>
+        <span>Explore all events shared by the community.</span>
       </div>
     </div>
 
