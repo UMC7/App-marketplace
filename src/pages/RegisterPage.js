@@ -23,6 +23,16 @@ function RegisterPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const isPasswordValid = (password) => {
+    return (
+      password.length >= 8 &&
+      /[A-Z]/.test(password) &&
+      /[a-z]/.test(password) &&
+      /[0-9]/.test(password) &&
+      /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    );
+  };
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -32,6 +42,31 @@ function RegisterPage() {
 
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match.');
+      return;
+    }
+
+    // 🔒 Validación de contraseña segura
+    const password = form.password;
+    const passwordRequirements = [];
+
+    if (password.length < 8) {
+      passwordRequirements.push('at least 8 characters');
+    }
+    if (!/[A-Z]/.test(password)) {
+      passwordRequirements.push('one uppercase letter');
+    }
+    if (!/[a-z]/.test(password)) {
+      passwordRequirements.push('one lowercase letter');
+    }
+    if (!/[0-9]/.test(password)) {
+      passwordRequirements.push('one number');
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      passwordRequirements.push('one special character');
+    }
+
+    if (passwordRequirements.length > 0) {
+      setError(`Password must contain ${passwordRequirements.join(', ')}.`);
       return;
     }
 
@@ -166,24 +201,43 @@ function RegisterPage() {
         <label>
           Password <span style={{ color: 'red' }}>*</span>
         </label>
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          onChange={handleChange}
-          required
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            onChange={handleChange}
+            value={form.password}
+            required
+            style={{ flex: 1 }}
+          />
+          {form.password && isPasswordValid(form.password) && (
+            <span style={{ color: 'green', fontSize: '1.2rem' }}>✔️</span>
+          )}
+        </div>
+        <p style={{ fontSize: '0.85rem', marginBottom: '8px' }}>
+          Password must be at least 8 characters and include one uppercase letter, one lowercase letter,
+          one number, and one special character.
+        </p>
 
         <label>
           Confirm Password <span style={{ color: 'red' }}>*</span>
         </label>
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          onChange={handleChange}
-          required
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            onChange={handleChange}
+            value={form.confirmPassword}
+            required
+            style={{ flex: 1 }}
+          />
+          {form.confirmPassword &&
+            form.confirmPassword === form.password && (
+              <span style={{ color: 'green', fontSize: '1.2rem' }}>✔️</span>
+            )}
+        </div>
 
         <div
           style={{
@@ -219,7 +273,14 @@ function RegisterPage() {
           </label>
         </div>
 
-        <button onClick={handleRegister} disabled={!isFormComplete()}>
+        <button
+          onClick={handleRegister}
+          disabled={!isFormComplete()}
+          style={{
+            opacity: isFormComplete() ? 1 : 0.5,
+            cursor: isFormComplete() ? 'pointer' : 'not-allowed',
+          }}
+        >
           Sign Up
         </button>
 
