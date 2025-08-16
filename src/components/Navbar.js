@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCarrito } from '../context/CarritoContext';
+import { useUnreadMessages } from '../context/UnreadMessagesContext';
+import { useFavorites } from '../context/FavoritesContext';
 import supabase from '../supabase';
 import YachtOfferForm from './YachtOfferForm';
 import PostProductForm from './PostProductForm';
@@ -16,6 +18,8 @@ import '../navbar.css';
 function Navbar() {
   const { currentUser, loading } = useAuth();
   const { cartItems = [], setCartItems } = useCarrito();
+  const { unreadCount } = useUnreadMessages();
+  const { favorites } = useFavorites();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const [showPostOptions, setShowPostOptions] = useState(false);
@@ -26,7 +30,6 @@ function Navbar() {
   const [showChatList, setShowChatList] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeChat, setActiveChat] = useState(null);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [showTouPanel, setShowTouPanel] = useState(false);
   const [showLegalModal, setShowLegalModal] = useState(false);
   const menuRef = useRef();
@@ -84,19 +87,6 @@ function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    const fetchUnreadMessages = async () => {
-      if (!currentUser) return;
-      const { data, error } = await supabase
-        .from('yacht_work_messages')
-        .select('id')
-        .eq('receiver_id', currentUser.id)
-        .eq('read', false);
-      if (!error) setUnreadCount(data.length);
-    };
-    fetchUnreadMessages();
-  }, [currentUser]);
 
   if (loading) return null;
 
@@ -161,6 +151,7 @@ function Navbar() {
               <small>Chats</small>
             </button>
             <button onClick={() => { navigate('/favorites'); setIsMenuOpen(false); }} className="favorites-icon-text">
+              {favorites.length > 0 && <span className="favorites-badge">{favorites.length}</span>}
               <span className="material-icons">favorite_border</span>
               <small>Favorites</small>
             </button>
@@ -189,141 +180,140 @@ function Navbar() {
       </div>
 
       {/* BOTÓN TOU FLOTANTE EXPANDIBLE (TEMA) */}
-<div
-  style={{
-    position: 'absolute',
-    top: isMobilePortrait ? '50%' : '50%',
-    right: isMobilePortrait ? '0' : '12px',
-    transform: 'translateY(-50%)',
-    background: '#68ada8',
-    color: '#fff',
-    borderRadius: '8px 0 0 8px',
-    width: showTouPanel ? '60px' : '14px',
-    height: showTouPanel ? '100px' : '44px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: showTouPanel ? 'flex-start' : 'center',
-    boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
-    cursor: 'pointer',
-    opacity: 0.95,
-    paddingTop: showTouPanel ? (isMobilePortrait ? '24px' : '6px') : '0', // 🔹 MÁS espacio arriba en móviles
-    paddingBottom: showTouPanel ? '6px' : '0',
-    transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)',
-    zIndex: 1000,
-  }}
-  onClick={(e) => {
-    e.stopPropagation();
-    setShowTouPanel((s) => !s);
-  }}
->
-  {showTouPanel ? (
-    <>
-      <div style={{ transform: 'scale(0.85)', marginBottom: '6px' }}>
-        <ThemeToggle />
-      </div>
-      <span
-        className="material-icons"
-        style={{ fontSize: 26, cursor: 'pointer' }}
+      <div
+        style={{
+          position: 'absolute',
+          top: isMobilePortrait ? '50%' : '50%',
+          right: isMobilePortrait ? '0' : '12px',
+          transform: 'translateY(-50%)',
+          background: '#68ada8',
+          color: '#fff',
+          borderRadius: '8px 0 0 8px',
+          width: showTouPanel ? '60px' : '14px',
+          height: showTouPanel ? '100px' : '44px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: showTouPanel ? 'flex-start' : 'center',
+          boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
+          cursor: 'pointer',
+          opacity: 0.95,
+          paddingTop: showTouPanel ? (isMobilePortrait ? '24px' : '6px') : '0',
+          paddingBottom: showTouPanel ? '6px' : '0',
+          transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)',
+          zIndex: 1000,
+        }}
         onClick={(e) => {
           e.stopPropagation();
-          setShowLegalModal(true);
-          setShowTouPanel(false);
+          setShowTouPanel((s) => !s);
         }}
       >
-        library_books
-      </span>
-    </>
-  ) : (
-    <div
-      style={{
-        width: '3px',
-        height: '26px',
-        background: '#fff',
-        borderRadius: '2px',
-        marginLeft: '3px',
-      }}
-    />
-  )}
-</div>
+        {showTouPanel ? (
+          <>
+            <div style={{ transform: 'scale(0.85)', marginBottom: '6px' }}>
+              <ThemeToggle />
+            </div>
+            <span
+              className="material-icons"
+              style={{ fontSize: 26, cursor: 'pointer' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowLegalModal(true);
+                setShowTouPanel(false);
+              }}
+            >
+              library_books
+            </span>
+          </>
+        ) : (
+          <div
+            style={{
+              width: '3px',
+              height: '26px',
+              background: '#fff',
+              borderRadius: '2px',
+              marginLeft: '3px',
+            }}
+          />
+        )}
+      </div>
 
-{/* BOTÓN FLOTANTE DE ACCESO A REDES SOCIALES */}
-<div
-  style={{
-    position: 'absolute',
-    // 📌 En móviles sigue en la izquierda, en desktop debajo del otro TOU
-    top: isMobilePortrait ? '50%' : 'calc(50% + 60px)', 
-    right: isMobilePortrait ? 'unset' : '12px',
-    left: isMobilePortrait ? '0' : 'unset',
-    transform: isMobilePortrait ? 'translateY(-50%)' : 'none',
-    background: '#68ada8',
-    color: '#fff',
-    borderRadius: isMobilePortrait ? '0 8px 8px 0' : '8px 0 0 8px',
-    width: isMobilePortrait ? (showSocialPanel ? '60px' : '14px') : (showSocialPanel ? '60px' : '14px'),
-    height: isMobilePortrait ? (showSocialPanel ? '100px' : '44px') : (showSocialPanel ? '100px' : '44px'),
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: showSocialPanel ? 'space-evenly' : 'center',
-    boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
-    cursor: 'pointer',
-    opacity: 0.95,
-    paddingTop: showSocialPanel ? (isMobilePortrait ? '16px' : '10px') : '0',
-    paddingBottom: showSocialPanel ? '6px' : '0',
-    transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)',
-    zIndex: 1000,
-  }}
-  onClick={(e) => {
-    e.stopPropagation();
-    setShowSocialPanel((s) => !s);
-  }}
->
-  {showSocialPanel ? (
-    <>
-      <a
-        href="https://www.instagram.com/yachtdaywork"
-        target="_blank"
-        rel="noopener noreferrer"
+      {/* BOTÓN FLOTANTE DE ACCESO A REDES SOCIALES */}
+      <div
+        style={{
+          position: 'absolute',
+          top: isMobilePortrait ? '50%' : 'calc(50% + 60px)',
+          right: isMobilePortrait ? 'unset' : '12px',
+          left: isMobilePortrait ? '0' : 'unset',
+          transform: isMobilePortrait ? 'translateY(-50%)' : 'none',
+          background: '#68ada8',
+          color: '#fff',
+          borderRadius: isMobilePortrait ? '0 8px 8px 0' : '8px 0 0 8px',
+          width: isMobilePortrait ? (showSocialPanel ? '60px' : '14px') : (showSocialPanel ? '60px' : '14px'),
+          height: isMobilePortrait ? (showSocialPanel ? '100px' : '44px') : (showSocialPanel ? '100px' : '44px'),
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: showSocialPanel ? 'space-evenly' : 'center',
+          boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
+          cursor: 'pointer',
+          opacity: 0.95,
+          paddingTop: showSocialPanel ? (isMobilePortrait ? '16px' : '10px') : '0',
+          paddingBottom: showSocialPanel ? '6px' : '0',
+          transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)',
+          zIndex: 1000,
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowSocialPanel((s) => !s);
+        }}
       >
-        <img
-          src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg"
-          alt="Instagram"
-          style={{
-            width: '30px',
-            height: '30px',
-            filter: 'invert(100%)',
-            display: 'block',
-          }}
-        />
-      </a>
-      <a
-        href="https://www.facebook.com/profile.php?id=61579224787364"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <img
-          src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg"
-          alt="Facebook"
-          style={{
-            width: '30px',
-            height: '30px',
-            filter: 'invert(100%)',
-            display: 'block',
-          }}
-        />
-      </a>
-    </>
-  ) : (
-    <div
-      style={{
-        width: '3px',
-        height: '26px',
-        background: '#fff',
-        borderRadius: '2px',
-      }}
-    />
-  )}
-</div>
+        {showSocialPanel ? (
+          <>
+            <a
+              href="https://www.instagram.com/yachtdaywork"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg"
+                alt="Instagram"
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  filter: 'invert(100%)',
+                  display: 'block',
+                }}
+              />
+            </a>
+            <a
+              href="https://www.facebook.com/profile.php?id=61579224787364"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg"
+                alt="Facebook"
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  filter: 'invert(100%)',
+                  display: 'block',
+                }}
+              />
+            </a>
+          </>
+        ) : (
+          <div
+            style={{
+              width: '3px',
+              height: '26px',
+              background: '#fff',
+              borderRadius: '2px',
+            }}
+          />
+        )}
+      </div>
 
       {/* === MODALES UNIFICADOS === */}
       {showOfferModal && (
@@ -435,6 +425,7 @@ function Navbar() {
                 <small>Chats</small>
               </button>
               <button className="nav-icon-button" onClick={() => navigate('/favorites')}>
+                {favorites.length > 0 && <span className="favorites-badge">{favorites.length}</span>}
                 <span className="material-icons">favorite_border</span>
                 <small>Favorites</small>
               </button>

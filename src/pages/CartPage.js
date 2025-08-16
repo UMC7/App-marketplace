@@ -1,91 +1,17 @@
-// src/pages/CartPage.js
-
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useCarrito } from '../context/CarritoContext';
 import { useAuth } from '../context/AuthContext';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
 
 function CartPage() {
-  const { updateQuantity, removeFromCart, clearCart } = useCarrito();
+  const { cartItems, updateQuantity, removeFromCart, clearCart } = useCarrito();
   const { currentUser } = useAuth();
 
-  const [cartItems, setCartItems] = useState([]);
   const [processing, setProcessing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSellerModal, setShowSellerModal] = useState(false);
   const [sellerInfo, setSellerInfo] = useState([]);
-
-  const fetchCartItems = async () => {
-    if (!currentUser) return;
-
-    const { data, error } = await supabase
-      .from('cart')
-      .select(`
-        *,
-        products (
-          id,
-          name,
-          price,
-          currency,
-          quantity,
-          mainphoto,
-          status,
-          owner,
-          users!products_owner_fkey (
-            id,
-            email,
-            first_name,
-            last_name,
-            phone
-          )
-        )
-      `)
-      .eq('user_id', currentUser.id)
-      .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      const formattedCart = data.map((item) => {
-        const adjustedQuantity = Math.min(item.quantity, item.products?.quantity || 0);
-        const recortado = item.quantity > adjustedQuantity;
-
-        return {
-          id: item.product_id,
-          quantity: adjustedQuantity,
-          price: item.products?.price,
-          currency: item.products?.currency || 'USD',
-          name: item.products?.name,
-          stock: item.products?.quantity,
-          mainphoto: item.products?.mainphoto,
-          status: item.products?.status,
-          owner: item.products?.owner,
-          ownerInfo: item.products?.users,
-          created_at: item.created_at,
-          recortado,
-        };
-      });
-      setCartItems(formattedCart);
-    } else {
-      console.error('Failed to load the cart:', error?.message);
-    }
-  };
-
-  useEffect(() => {
-    fetchCartItems();
-    // eslint-disable-next-line
-  }, [currentUser]);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'Visible') {
-        fetchCartItems();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    // eslint-disable-next-line
-  }, [currentUser]);
 
   const availableItems = cartItems.filter(item => item.status !== 'paused' && item.status !== 'deleted');
   const total = availableItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -99,15 +25,10 @@ function CartPage() {
   }, {});
 
   const handleQuantityChange = (item, newQty) => {
-    if (!isNaN(newQty) && newQty <= item.stock) {
+    if (!isNaN(newQty) && newQty > 0 && newQty <= item.stock) {
       updateQuantity(item.id, newQty);
-      setCartItems(prev =>
-        prev.map(ci =>
-          ci.id === item.id ? { ...ci, quantity: newQty } : ci
-        )
-      );
     } else {
-      toast.error(`You can not select more than ${item.stock} units.`);
+      toast.error(`Solo puedes seleccionar entre 1 y ${item.stock} unidades.`);
     }
   };
 
@@ -147,7 +68,7 @@ function CartPage() {
       if (itemsError) throw new Error(itemsError.message);
 
       for (const item of availableItems) {
-        const updatedStock = item.quantity > item.stock ? 0 : item.stock - item.quantity;
+        const updatedStock = item.stock - item.quantity;
         await supabase
           .from('products')
           .update({
@@ -157,7 +78,6 @@ function CartPage() {
           .eq('id', item.id);
       }
 
-      // Mostrar modal de vendedores
       const sellerMap = {};
       availableItems.forEach(item => {
         const id = item.ownerInfo?.id;
@@ -173,77 +93,71 @@ function CartPage() {
       setSellerInfo(Object.values(sellerMap));
       setShowSellerModal(true);
       clearCart();
-      setCartItems([]);
 
-      // Enviar correos al comprador y a los vendedores
-const buyerName = `${currentUser.user_metadata?.first_name || ''} ${currentUser.user_metadata?.last_name || ''}`.trim();
-const buyerEmail = currentUser.email;
-const buyerPhone = currentUser.user_metadata?.phone || 'Not available';
+      const buyerName = `${currentUser.user_metadata?.first_name || ''} ${currentUser.user_metadata?.last_name || ''}`.trim();
+      const buyerEmail = currentUser.email;
+      const buyerPhone = currentUser.user_metadata?.phone || 'Not available';
 
-// Agrupar productos por vendedor
-const productsBySeller = {};
-availableItems.forEach(item => {
-  const sellerId = item.owner;
-  if (!productsBySeller[sellerId]) {
-    productsBySeller[sellerId] = {
-      seller: item.ownerInfo,
-      products: []
-    };
-  }
-  productsBySeller[sellerId].products.push(item);
-});
+      const productsBySeller = {};
+      availableItems.forEach(item => {
+        const sellerId = item.owner;
+        if (!productsBySeller[sellerId]) {
+          productsBySeller[sellerId] = {
+            seller: item.ownerInfo,
+            products: []
+          };
+        }
+        productsBySeller[sellerId].products.push(item);
+      });
 
-// Preparar contenido HTML para el comprador
-let htmlToBuyer = `<h2>Thank you for your purchase, ${buyerName}!</h2>`;
-htmlToBuyer += `<p>You have purchased the following items:</p>`;
+      let htmlToBuyer = `<h2>Thank you for your purchase, ${buyerName}!</h2>`;
+      htmlToBuyer += `<p>You have purchased the following items:</p>`;
 
-for (const { seller, products } of Object.values(productsBySeller)) {
-  htmlToBuyer += `<h3>Seller: ${seller.first_name} ${seller.last_name}</h3>`;
-  htmlToBuyer += `<p>Email: ${seller.email}<br>Phone: ${seller.phone || 'Not available'}</p>`;
-  htmlToBuyer += `<ul>`;
-  products.forEach(p => {
-    htmlToBuyer += `<li>${p.name} — ${p.currency} ${p.price} × ${p.quantity}</li>`;
-  });
-  htmlToBuyer += `</ul>`;
-}
+      for (const { seller, products } of Object.values(productsBySeller)) {
+        htmlToBuyer += `<h3>Seller: ${seller.first_name} ${seller.last_name}</h3>`;
+        htmlToBuyer += `<p>Email: ${seller.email}<br>Phone: ${seller.phone || 'Not available'}</p>`;
+        htmlToBuyer += `<ul>`;
+        products.forEach(p => {
+          htmlToBuyer += `<li>${p.name} — ${p.currency} ${p.price} × ${p.quantity}</li>`;
+        });
+        htmlToBuyer += `</ul>`;
+      }
 
-// Enviar correo al comprador
-await fetch('/api/sendEmail', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    to: buyerEmail,
-    subject: 'Purchase Confirmation - Yacht Daywork',
-    html: htmlToBuyer
-  })
-});
+      await fetch('/api/sendEmail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: buyerEmail,
+          subject: 'Purchase Confirmation - Yacht Daywork',
+          html: htmlToBuyer
+        })
+      });
 
-// Enviar un correo por vendedor
-for (const { seller, products } of Object.values(productsBySeller)) {
-  const htmlToSeller = `
-    <h2>Hello ${seller.first_name},</h2>
-    <p>You have received a new order from:</p>
-    <p>
-      Name: ${buyerName}<br>
-      Email: ${buyerEmail}<br>
-      Phone: ${buyerPhone}
-    </p>
-    <p>Products sold:</p>
-    <ul>
-      ${products.map(p => `<li>${p.name} — ${p.currency} ${p.price} × ${p.quantity}</li>`).join('')}
-    </ul>
-  `;
+      for (const { seller, products } of Object.values(productsBySeller)) {
+        const htmlToSeller = `
+          <h2>Hello ${seller.first_name},</h2>
+          <p>You have received a new order from:</p>
+          <p>
+            Name: ${buyerName}<br>
+            Email: ${buyerEmail}<br>
+            Phone: ${buyerPhone}
+          </p>
+          <p>Products sold:</p>
+          <ul>
+            ${products.map(p => `<li>${p.name} — ${p.currency} ${p.price} × ${p.quantity}</li>`).join('')}
+          </ul>
+        `;
 
-  await fetch('/api/sendEmail', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      to: seller.email,
-      subject: 'New Order Received - Yacht Daywork',
-      html: htmlToSeller
-    })
-  });
-}
+        await fetch('/api/sendEmail', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: seller.email,
+            subject: 'New Order Received - Yacht Daywork',
+            html: htmlToSeller
+          })
+        });
+      }
 
     } catch (err) {
       console.error('Purchase error:', err.message);
@@ -253,24 +167,9 @@ for (const { seller, products } of Object.values(productsBySeller)) {
     setProcessing(false);
   };
 
-  const handleRemoveFromCart = async (productId) => {
-    try {
-      const { error } = await supabase
-        .from('cart')
-        .delete()
-        .eq('product_id', productId)
-        .eq('user_id', currentUser.id);
-
-      if (error) {
-        console.error('Failed to remove product from cart:', error.message);
-        toast.error('Could not remove the product from the cart.');
-      } else {
-        setCartItems(prev => prev.filter(p => p.id !== productId));
-        toast.error('Product removed from cart.');
-      }
-    } catch (err) {
-      console.error('Unexpected error while removing product from cart:', err.message);
-    }
+  const handleRemoveFromCart = (productId) => {
+    removeFromCart(productId);
+    toast.error('Product removed from cart.');
   };
 
   return (
@@ -284,104 +183,104 @@ for (const { seller, products } of Object.values(productsBySeller)) {
           <div>
             {cartItems.map((item) => (
               <div
-  key={item.id}
-  className="product-card"
-  style={{
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-    marginBottom: '24px',
-    borderBottom: '1px solid #444',
-    paddingBottom: '20px',
-  }}
->
-  <div
-  style={{
-    display: 'flex',
-    flexDirection: window.innerWidth < 768 ? 'column' : 'row',
-    gap: '16px',
-    alignItems: window.innerWidth < 768 ? 'center' : 'center',
-  }}
->
-  <div
-    style={{
-      display: 'flex',
-      justifyContent: window.innerWidth < 768 ? 'center' : 'flex-start',
-      alignItems: window.innerWidth < 768 ? 'center' : 'center',
-      height: '100%',
-    }}
-  >
-    <img
-      src={item.mainphoto || 'https://via.placeholder.com/100'}
-      alt={item.name}
-      style={{
-        width: window.innerWidth < 768 ? '100px' : '140px',
-        height: window.innerWidth < 768 ? '100px' : '140px',
-        objectFit: 'cover',
-        borderRadius: '8px',
-        flexShrink: 0,
-      }}
-    />
-  </div>
-    <div style={{ flex: 1 }}>
-      <h3>{item.name || 'Product not available'}</h3>
+                key={item.id}
+                className="product-card"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                  marginBottom: '24px',
+                  borderBottom: '1px solid #444',
+                  paddingBottom: '20px',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+                    gap: '16px',
+                    alignItems: window.innerWidth < 768 ? 'center' : 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: window.innerWidth < 768 ? 'center' : 'flex-start',
+                      alignItems: window.innerWidth < 768 ? 'center' : 'center',
+                      height: '100%',
+                    }}
+                  >
+                    <img
+                      src={item.mainphoto || 'https://via.placeholder.com/100'}
+                      alt={item.name}
+                      style={{
+                        width: window.innerWidth < 768 ? '100px' : '140px',
+                        height: window.innerWidth < 768 ? '100px' : '140px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        flexShrink: 0,
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3>{item.name || 'Product not available'}</h3>
 
-      {item.status === 'deleted' ? (
-        <p style={{ color: 'red', fontWeight: 'bold' }}>
-          Product not available.
-        </p>
-      ) : item.status === 'paused' ? (
-        <p style={{ color: 'orange', fontWeight: 'bold' }}>
-          This product is currently paused.
-        </p>
-      ) : (
-        <>
-          <p>
-            Unit Price: {item.currency}{' '}
-            {Number(item.price).toLocaleString('en-US')}
-          </p>
-          <p>
-            Quantity:
-            <input
-              type="number"
-              min="1"
-              max={item.stock}
-              value={item.quantity}
-              onChange={(e) =>
-                handleQuantityChange(item, parseInt(e.target.value))
-              }
-              style={{ width: '60px', marginLeft: '10px' }}
-            />
-          </p>
-          {item.recortado && (
-            <p style={{ color: 'orange', fontWeight: 'bold' }}>
-              Available stock has decreased. Your quantity has been adjusted to {item.quantity}.
-            </p>
-          )}
-        </>
-      )}
+                    {item.status === 'deleted' ? (
+                      <p style={{ color: 'red', fontWeight: 'bold' }}>
+                        Product not available.
+                      </p>
+                    ) : item.status === 'paused' ? (
+                      <p style={{ color: 'orange', fontWeight: 'bold' }}>
+                        This product is currently paused.
+                      </p>
+                    ) : (
+                      <>
+                        <p>
+                          Unit Price: {item.currency}{' '}
+                          {Number(item.price).toLocaleString('en-US')}
+                        </p>
+                        <p>
+                          Quantity:
+                          <input
+                            type="number"
+                            min="1"
+                            max={item.stock}
+                            value={item.quantity}
+                            onChange={(e) =>
+                              handleQuantityChange(item, parseInt(e.target.value))
+                            }
+                            style={{ width: '60px', marginLeft: '10px' }}
+                          />
+                        </p>
+                        {item.recortado && (
+                          <p style={{ color: 'orange', fontWeight: 'bold' }}>
+                            Available stock has decreased. Your quantity has been adjusted to {item.quantity}.
+                          </p>
+                        )}
+                      </>
+                    )}
 
-      <p>
-        Subtotal: {item.currency}{' '}
-        {item.status === 'deleted'
-          ? 0
-          : (item.price * item.quantity).toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-      </p>
-    </div>
-  </div>
+                    <p>
+                      Subtotal: {item.currency}{' '}
+                      {item.status === 'deleted'
+                        ? 0
+                        : (item.price * item.quantity).toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                    </p>
+                  </div>
+                </div>
 
-  <div style={{ marginTop: '10px' }}>
-    <button
-      className="landing-button"
-      onClick={() => handleRemoveFromCart(item.id)}
-    >
-      Remove from Cart
-    </button>
-  </div>
-</div>
+                <div style={{ marginTop: '10px' }}>
+                  <button
+                    className="landing-button"
+                    onClick={() => handleRemoveFromCart(item.id)}
+                  >
+                    Remove from Cart
+                  </button>
+                </div>
+              </div>
             ))}
 
             <div style={{ marginTop: '30px' }}>

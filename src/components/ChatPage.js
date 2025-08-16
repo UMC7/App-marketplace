@@ -1,5 +1,8 @@
+// src/components/ChatPage.js
+
 import React, { useEffect, useState, useRef } from 'react';
 import supabase from '../supabase';
+import { useUnreadMessages } from '../context/UnreadMessagesContext';
 import './chat.css';
 
 function ChatPage({ offerId, receiverId, onBack }) {
@@ -11,7 +14,8 @@ function ChatPage({ offerId, receiverId, onBack }) {
   const [isMobile, setIsMobile] = useState(false);
   const fileInputRef = useRef();
 
-  // Detectar si es móvil
+  const { fetchUnreadMessages } = useUnreadMessages(); // ✅ actualizar contador global
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -21,7 +25,6 @@ function ChatPage({ offerId, receiverId, onBack }) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Marcar body cuando está en móvil fullscreen
   useEffect(() => {
     if (isMobile) {
       document.body.classList.add('chat-fullscreen-active');
@@ -31,7 +34,6 @@ function ChatPage({ offerId, receiverId, onBack }) {
     return () => document.body.classList.remove('chat-fullscreen-active');
   }, [isMobile]);
 
-  // Obtener usuario actual
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -40,7 +42,6 @@ function ChatPage({ offerId, receiverId, onBack }) {
     fetchUser();
   }, []);
 
-  // Obtener nombre del otro usuario
   useEffect(() => {
     const fetchOtherNickname = async () => {
       if (!receiverId) return;
@@ -57,14 +58,13 @@ function ChatPage({ offerId, receiverId, onBack }) {
     fetchOtherNickname();
   }, [receiverId]);
 
-  // Obtener mensajes
   useEffect(() => {
     if (!offerId || !currentUser) return;
 
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from('yacht_work_messages')
-        .select('id, sender_id, receiver_id, message, file_url, sent_at')
+        .select('id, sender_id, receiver_id, message, file_url, sent_at, read')
         .eq('offer_id', offerId)
         .or(
           `and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId}),` +
@@ -72,13 +72,28 @@ function ChatPage({ offerId, receiverId, onBack }) {
         )
         .order('sent_at', { ascending: true });
 
-      if (!error) setMessages(data);
+      if (!error) {
+        setMessages(data);
+
+        // ✅ Marcar como leídos los mensajes recibidos por el usuario actual
+        const unreadIds = data
+          .filter(msg => msg.receiver_id === currentUser.id && !msg.read)
+          .map(msg => msg.id);
+
+        if (unreadIds.length > 0) {
+          await supabase
+            .from('yacht_work_messages')
+            .update({ read: true })
+            .in('id', unreadIds);
+
+          fetchUnreadMessages(); // ✅ actualizar el contador global inmediatamente
+        }
+      }
     };
 
     fetchMessages();
-  }, [offerId, currentUser, receiverId]);
+  }, [offerId, currentUser, receiverId, fetchUnreadMessages]);
 
-  // Enviar mensaje
   const handleSend = async () => {
     if (!message && !file) return;
 
@@ -107,6 +122,7 @@ function ChatPage({ offerId, receiverId, onBack }) {
       message: message || null,
       file_url: fileUrl || null,
       sent_at: new Date().toISOString(),
+      read: false
     });
 
     if (!error) {
@@ -116,13 +132,14 @@ function ChatPage({ offerId, receiverId, onBack }) {
 
       const { data: updated } = await supabase
         .from('yacht_work_messages')
-        .select('id, sender_id, receiver_id, message, file_url, sent_at')
+        .select('id, sender_id, receiver_id, message, file_url, sent_at, read')
         .eq('offer_id', offerId)
         .or(
           `and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId}),` +
           `and(sender_id.eq.${receiverId},receiver_id.eq.${currentUser.id})`
         )
         .order('sent_at', { ascending: true });
+
       setMessages(updated);
     }
   };
