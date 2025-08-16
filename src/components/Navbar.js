@@ -297,7 +297,7 @@ function Navbar() {
         />
       </a>
       <a
-        href="https://www.facebook.com/yachtdaywork"
+        href="https://www.facebook.com/profile.php?id=61579224787364"
         target="_blank"
         rel="noopener noreferrer"
       >
