@@ -1,5 +1,3 @@
-// src/components/Navbar.js
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -37,7 +35,8 @@ function Navbar() {
     window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches
   );
 
-  // 🔹 NEW: Logo dinámico según tema (claro/oscuro)
+  const [showSocialPanel, setShowSocialPanel] = useState(false);
+
   const [logoSrc, setLogoSrc] = useState('/logos/yachtdaywork.png');
   useEffect(() => {
     const updateLogo = () => {
@@ -56,6 +55,13 @@ function Navbar() {
       return () => clearTimeout(timeout);
     }
   }, [showTouPanel]);
+
+  useEffect(() => {
+    if (showSocialPanel) {
+      const timeout = setTimeout(() => setShowSocialPanel(false), 2500);
+      return () => clearTimeout(timeout);
+    }
+  }, [showSocialPanel]);
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -182,60 +188,142 @@ function Navbar() {
         )}
       </div>
 
-      {/* BOTÓN TOU FLOTANTE EXPANDIBLE */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          right: window.innerWidth > 1024 ? '12px' : '0',
-          transform: 'translateY(-50%)',
-          background: '#68ada8',
-          color: '#fff',
-          borderRadius: '8px 0 0 8px',
-          width: showTouPanel ? '60px' : '14px',
-          height: showTouPanel ? '100px' : '44px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: showTouPanel ? 'flex-start' : 'center',
-          boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
-          cursor: 'pointer',
-          opacity: 0.95,
-          padding: showTouPanel ? '6px 0' : '0',
-          transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)'
-        }}
+      {/* BOTÓN TOU FLOTANTE EXPANDIBLE (TEMA) */}
+<div
+  style={{
+    position: 'absolute',
+    top: isMobilePortrait ? '50%' : '50%',
+    right: isMobilePortrait ? '0' : '12px',
+    transform: 'translateY(-50%)',
+    background: '#68ada8',
+    color: '#fff',
+    borderRadius: '8px 0 0 8px',
+    width: showTouPanel ? '60px' : '14px',
+    height: showTouPanel ? '100px' : '44px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: showTouPanel ? 'flex-start' : 'center',
+    boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
+    cursor: 'pointer',
+    opacity: 0.95,
+    paddingTop: showTouPanel ? (isMobilePortrait ? '24px' : '6px') : '0', // 🔹 MÁS espacio arriba en móviles
+    paddingBottom: showTouPanel ? '6px' : '0',
+    transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)',
+    zIndex: 1000,
+  }}
+  onClick={(e) => {
+    e.stopPropagation();
+    setShowTouPanel((s) => !s);
+  }}
+>
+  {showTouPanel ? (
+    <>
+      <div style={{ transform: 'scale(0.85)', marginBottom: '6px' }}>
+        <ThemeToggle />
+      </div>
+      <span
+        className="material-icons"
+        style={{ fontSize: 26, cursor: 'pointer' }}
         onClick={(e) => {
           e.stopPropagation();
-          setShowTouPanel(s => !s);
+          setShowLegalModal(true);
+          setShowTouPanel(false);
         }}
       >
-        {showTouPanel ? (
-          <>
-            <div style={{ transform: 'scale(0.85)', marginBottom: '6px' }}>
-              <ThemeToggle />
-            </div>
-            <span
-              className="material-icons"
-              style={{ fontSize: 26, cursor: 'pointer' }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowLegalModal(true);
-                setShowTouPanel(false);
-              }}
-            >
-              library_books
-            </span>
-          </>
-        ) : (
-          <div style={{
-            width: '3px',
-            height: '26px',
-            background: '#fff',
-            borderRadius: '2px',
-            marginLeft: '3px'
-          }} />
-        )}
-      </div>
+        library_books
+      </span>
+    </>
+  ) : (
+    <div
+      style={{
+        width: '3px',
+        height: '26px',
+        background: '#fff',
+        borderRadius: '2px',
+        marginLeft: '3px',
+      }}
+    />
+  )}
+</div>
+
+{/* BOTÓN FLOTANTE DE ACCESO A REDES SOCIALES */}
+<div
+  style={{
+    position: 'absolute',
+    // 📌 En móviles sigue en la izquierda, en desktop debajo del otro TOU
+    top: isMobilePortrait ? '50%' : 'calc(50% + 60px)', 
+    right: isMobilePortrait ? 'unset' : '12px',
+    left: isMobilePortrait ? '0' : 'unset',
+    transform: isMobilePortrait ? 'translateY(-50%)' : 'none',
+    background: '#68ada8',
+    color: '#fff',
+    borderRadius: isMobilePortrait ? '0 8px 8px 0' : '8px 0 0 8px',
+    width: isMobilePortrait ? (showSocialPanel ? '60px' : '14px') : (showSocialPanel ? '60px' : '14px'),
+    height: isMobilePortrait ? (showSocialPanel ? '100px' : '44px') : (showSocialPanel ? '100px' : '44px'),
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: showSocialPanel ? 'space-evenly' : 'center',
+    boxShadow: '0 2px 8px rgba(8,26,59,0.10)',
+    cursor: 'pointer',
+    opacity: 0.95,
+    paddingTop: showSocialPanel ? (isMobilePortrait ? '16px' : '10px') : '0',
+    paddingBottom: showSocialPanel ? '6px' : '0',
+    transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)',
+    zIndex: 1000,
+  }}
+  onClick={(e) => {
+    e.stopPropagation();
+    setShowSocialPanel((s) => !s);
+  }}
+>
+  {showSocialPanel ? (
+    <>
+      <a
+        href="https://www.instagram.com/yachtdaywork"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img
+          src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg"
+          alt="Instagram"
+          style={{
+            width: '30px',
+            height: '30px',
+            filter: 'invert(100%)',
+            display: 'block',
+          }}
+        />
+      </a>
+      <a
+        href="https://www.facebook.com/yachtdaywork"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img
+          src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg"
+          alt="Facebook"
+          style={{
+            width: '30px',
+            height: '30px',
+            filter: 'invert(100%)',
+            display: 'block',
+          }}
+        />
+      </a>
+    </>
+  ) : (
+    <div
+      style={{
+        width: '3px',
+        height: '26px',
+        background: '#fff',
+        borderRadius: '2px',
+      }}
+    />
+  )}
+</div>
 
       {/* === MODALES UNIFICADOS === */}
       {showOfferModal && (

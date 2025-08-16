@@ -97,6 +97,7 @@
 
 .event-card .description-text {
   text-align: justify;
+  white-space: pre-line; /* ✅ Permite saltos de línea como párrafos */
 }
 
 .event-card.expanded {
