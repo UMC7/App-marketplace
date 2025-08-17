@@ -48,17 +48,32 @@ function AuthRedirectHandler() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const type = params.get('type');
-    const access_token = params.get('access_token');
+    const { pathname, hash, search } = location;
 
-    if (type === 'recovery' && access_token) {
-      navigate(`/reset-password?${params.toString()}`, { replace: true });
+    // Supabase coloca los parámetros normalmente en el HASH (#type=recovery&access_token=...)
+    // pero algunos entornos podrían usar querystring. Leemos ambos.
+    const hashParams = new URLSearchParams((hash || '').replace(/^#/, ''));
+    const searchParams = new URLSearchParams(search || '');
+
+    const type = hashParams.get('type') || searchParams.get('type');
+    const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+
+    // Flujo de recuperación: redirige a /reset-password y preserva el hash (tokens) para que la página lo procese.
+    if (type === 'recovery' && accessToken) {
+      navigate(`/reset-password${hash || ''}`, { replace: true });
+      return;
     }
 
-    if (type === 'signup' && access_token) {
+    // Verificación de signup: también puede llegar por hash
+    if (type === 'signup' && accessToken) {
       toast.success('Your email has been successfully verified.');
       navigate('/login', { replace: true });
+      return;
+    }
+
+    // Fallback: algunos setups quedan en "/#". Redirige limpio.
+    if (pathname === '/' && hash === '#') {
+      navigate('/reset-password', { replace: true });
     }
   }, [location, navigate]);
 
