@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
+import Modal from '../components/Modal';
 
 function RegisterPage() {
   const [form, setForm] = useState({
@@ -21,6 +22,8 @@ function RegisterPage() {
 
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState('');
+  const [showEmailConfirmModal, setShowEmailConfirmModal] = useState(false);
+
   const navigate = useNavigate();
 
   const isPasswordValid = (password) => {
@@ -116,7 +119,7 @@ function RegisterPage() {
       }
 
       toast.success('Registration successful! Please check your email to confirm your account.');
-      navigate('/');
+      setShowEmailConfirmModal(true);
     } catch (err) {
       setError('Something went wrong.');
     }
@@ -148,6 +151,11 @@ function RegisterPage() {
       password === confirmPassword &&
       acceptedTerms
     );
+  };
+
+  const handleCloseEmailModal = () => {
+    setShowEmailConfirmModal(false);
+    navigate('/');
   };
 
   return (
@@ -290,6 +298,27 @@ function RegisterPage() {
           <span style={{ color: 'red' }}>*</span> Required fields
         </p>
       </div>
+
+      {showEmailConfirmModal && (
+        <Modal onClose={handleCloseEmailModal}>
+          <h3 style={{ marginTop: 0 }}>🎉 You’re almost there!</h3>
+          <p>
+            We have sent a confirmation email to <strong>{form.email || 'your email'}</strong>.
+          </p>
+          <ul style={{ margin: '8px 0 12px 18px' }}>
+            <li>Please check your <strong>Inbox</strong>.</li>
+            <li>If it is not there, look in <strong>Spam/Junk</strong> or <strong>Promotions</strong>.</li>
+            <li>Open the link to activate your account.</li>
+          </ul>
+          <button
+            className="landing-button"
+            onClick={handleCloseEmailModal}
+            style={{ width: '100%' }}
+          >
+            I will check my email
+          </button>
+        </Modal>
+      )}
     </div>
   );
 }

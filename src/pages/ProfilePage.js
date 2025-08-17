@@ -18,6 +18,11 @@ import {
   cancelPurchase,
 } from '../lib/purchaseStatus';
 
+const ALLOWED_TABS = new Set([
+  'productos','servicios','empleos','eventos',
+  'compras','ventas','eliminados','valoracion','usuario'
+]);
+
 function ProfilePage() {
   const { currentUser } = useAuth();
   const [products, setProducts] = useState([]);
@@ -82,6 +87,14 @@ const fetchServices = async () => {
 
 const navigate = useNavigate();
 const location = useLocation();
+
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const tab = params.get('tab');
+  if (tab && ALLOWED_TABS.has(tab)) {
+    setActiveTab(tab);
+  }
+}, [location.search]);
 
 useEffect(() => {
   const params = new URLSearchParams(location.search);
@@ -539,35 +552,83 @@ const deleteEvent = async (eventId) => {
   };
 
   const handleUserFormSubmit = async (e) => {
-    e.preventDefault();
-    const confirm = window.confirm('Do you want to update your user information?');
-    if (!confirm) return;
+  e.preventDefault();
+  const confirm = window.confirm('Do you want to update your user information?');
+  if (!confirm) return;
 
-    setUpdateMessage('');
-    const updates = {};
-    if (userForm.email !== currentUser.email) updates.email = userForm.email;
-    if (userForm.password) updates.password = userForm.password;
+  setUpdateMessage('');
 
-    try {
-      const { error: authError } = await supabase.auth.updateUser(updates);
-      if (authError) throw authError;
+  const wantsEmailChange = userForm.email && userForm.email !== currentUser.email;
+  const wantsPasswordChange = userForm.password && userForm.password.trim() !== '';
 
+  const wantsContactChange =
+    (userForm.phone ?? '') !== (userDetails.phone ?? '') ||
+    (userForm.altPhone ?? '') !== (userDetails.alt_phone ?? '') ||
+    (userForm.altEmail ?? '') !== (userDetails.alt_email ?? '');
+
+  const authUpdates = {};
+  if (wantsEmailChange) authUpdates.email = userForm.email.trim();
+  if (wantsPasswordChange) authUpdates.password = userForm.password;
+
+  let samePwdWarning = false;
+  let authChanged = false;
+  let contactChanged = false;
+
+  try {
+    if (wantsEmailChange || wantsPasswordChange) {
+      const { error: authError } = await supabase.auth.updateUser(authUpdates);
+
+      if (authError) {
+        const msg = (authError.message || '').toLowerCase();
+        const isSamePwd =
+          msg.includes('new password should be different') ||
+          msg.includes('new password should be different from the old password');
+
+        if (isSamePwd) {
+          samePwdWarning = true;
+          toast.info('Password must be different from the current one. We will keep your current password.');
+        } else {
+          throw authError;
+        }
+      } else {
+        authChanged = true;
+      }
+    }
+
+    if (wantsContactChange) {
       const { error: dbError } = await supabase
         .from('users')
         .update({
-          phone: userForm.phone,
-          alt_phone: userForm.altPhone,
-          alt_email: userForm.altEmail,
+          phone: userForm.phone || null,
+          alt_phone: userForm.altPhone || null,
+          alt_email: userForm.altEmail || null,
         })
         .eq('id', currentUser.id);
 
       if (dbError) throw dbError;
-      setUpdateMessage('Information updated successfully.');
-    } catch (error) {
-      console.error('Failed to update information:', error.message);
-      setUpdateMessage('Failed to update information.');
+      contactChanged = true;
     }
-  };
+
+    if (contactChanged && samePwdWarning) {
+      setUpdateMessage('Contact details updated. Password unchanged because it matches your current one.');
+    } else if (contactChanged && authChanged) {
+      setUpdateMessage('Information updated successfully.');
+    } else if (contactChanged) {
+      setUpdateMessage('Contact details updated.');
+    } else if (authChanged) {
+      setUpdateMessage('Account updated.');
+    } else if (samePwdWarning) {
+      setUpdateMessage('No changes saved. Choose a new password to update it.');
+    } else {
+      setUpdateMessage('No changes to save.');
+    }
+
+    setUserForm((prev) => ({ ...prev, password: '' }));
+  } catch (error) {
+    console.error('Failed to update information:', error.message);
+    setUpdateMessage('Failed to update information.');
+  }
+};
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -1110,7 +1171,7 @@ const refetchEvents = async () => {
     <button onClick={() => { setActiveTab('ventas'); setIsMenuOpen(false); }}>My Sales</button>
     <button onClick={() => { setActiveTab('eliminados'); setIsMenuOpen(false); }}>Deleted</button>
     <button onClick={() => { setActiveTab('valoracion'); setIsMenuOpen(false); }}>Rating</button>
-    <button onClick={() => { setActiveTab('usuario'); setIsMenuOpen(false); }}>User Details</button>
+    <button onClick={() => { navigate('/profile?tab=usuario', { replace: true }); setActiveTab('usuario'); setIsMenuOpen(false); }}>User Details</button>
   </div>
 </div>
 

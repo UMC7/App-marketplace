@@ -33,24 +33,26 @@ function LoginPage() {
   };
 
   const handlePasswordRecovery = async () => {
-    setRecoveryMessage('');
-    if (!email) {
-      setRecoveryMessage('Please enter your email address.');
-      return;
-    }
+  setRecoveryMessage('');
+  if (!email) {
+    setRecoveryMessage('Please enter your email address.');
+    return;
+  }
 
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) {
-        setRecoveryMessage(error.message);
-      } else {
-        setRecoveryMessage('Please check your inbox to reset your password.');
-      }
-    } catch (err) {
-      console.error('Failed to send recovery link:', err.message);
-      setRecoveryMessage('An unexpected error occurred while sending the link.');
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/profile?tab=usuario`
+    });
+    if (error) {
+      setRecoveryMessage(error.message);
+    } else {
+      setRecoveryMessage('We sent you a reset link. Please check your Inbox (and Spam/Promotions).');
     }
-  };
+  } catch (err) {
+    console.error('Failed to send recovery link:', err.message);
+    setRecoveryMessage('An unexpected error occurred while sending the link.');
+  }
+};
 
   const isLoginFormComplete = () => {
     return email.trim() !== '' && password !== '';

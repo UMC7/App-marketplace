@@ -236,8 +236,8 @@ function CartPage() {
                     ) : (
                       <>
                         <p>
-                          Unit Price: {item.currency}{' '}
-                          {Number(item.price).toLocaleString('en-US')}
+                          Unit Price: {(item.currency || 'USD')}{' '}
+                          {Number(item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
                         <p>
                           Quantity:
@@ -261,13 +261,11 @@ function CartPage() {
                     )}
 
                     <p>
-                      Subtotal: {item.currency}{' '}
-                      {item.status === 'deleted'
-                        ? 0
-                        : (item.price * item.quantity).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
+                      Subtotal: {(item.currency || 'USD')}{' '}
+                      {((item.status === 'deleted' ? 0 : item.price * item.quantity)).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </p>
                   </div>
                 </div>
