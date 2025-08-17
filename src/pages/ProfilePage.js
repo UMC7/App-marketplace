@@ -90,28 +90,30 @@ const location = useLocation();
 
 useEffect(() => {
   const params = new URLSearchParams(location.search);
+
+  // --- manejar ?tab= ---
   const tab = params.get('tab');
   if (tab && ALLOWED_TABS.has(tab)) {
     setActiveTab(tab);
   }
-}, [location.search]);
 
-useEffect(() => {
-  const params = new URLSearchParams(location.search);
+  // --- manejar ?refresh= ---
   const refreshTarget = params.get('refresh');
+  if (refreshTarget) {
+    const refetchMap = {
+      products: refetchProducts,
+      services: refetchServices,
+      events: refetchEvents,
+      jobs: refetchJobOffers,
+    };
+    const fn = refetchMap[refreshTarget];
+    if (typeof fn === 'function') fn();
 
-  if (refreshTarget === 'products') {
-    refetchProducts?.();
-    navigate('/profile', { replace: true });
-  } else if (refreshTarget === 'services') {
-    refetchServices?.();
-    navigate('/profile', { replace: true });
-  } else if (refreshTarget === 'events') {
-    refetchEvents?.();
-    navigate('/profile', { replace: true });
-  } else if (refreshTarget === 'jobs') {
-    refetchJobOffers?.();
-    navigate('/profile', { replace: true });
+    // Quitar sólo "refresh" y conservar "tab"
+    const next = new URLSearchParams(params);
+    next.delete('refresh');
+    const qs = next.toString();
+    navigate(qs ? `/profile?${qs}` : '/profile', { replace: true });
   }
 }, [location.search]);
 

@@ -41,7 +41,7 @@ function LoginPage() {
 
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/profile?tab=usuario`
+      redirectTo: `${window.location.origin}/profile?tab=user`
     });
     if (error) {
       setRecoveryMessage(error.message);
