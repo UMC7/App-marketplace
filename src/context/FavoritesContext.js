@@ -1,5 +1,3 @@
-// src/context/FavoritesContext.js
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import supabase from '../supabase';
 import { useAuth } from './AuthContext';
@@ -15,33 +13,14 @@ export function FavoritesProvider({ children }) {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (currentUser) {
-      fetchFavorites();
-
-      // 🔴 Suscripción en tiempo real a cambios en la tabla favorites
-      const channel = supabase
-        .channel('favorites-changes')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'favorites', filter: `user_id=eq.${currentUser.id}` },
-          () => {
-            fetchFavorites(); // refresca favoritos en cada cambio
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    } else {
-      setFavorites([]);
-      setLoading(false);
-    }
-  }, [currentUser]);
-
   const fetchFavorites = async () => {
     setLoading(true);
+
+    if (!currentUser) {
+      setFavorites([]);
+      setLoading(false);
+      return;
+    }
 
     const { data: favoriteRows, error } = await supabase
       .from('favorites')
@@ -94,6 +73,31 @@ export function FavoritesProvider({ children }) {
     setLoading(false);
   };
 
+  useEffect(() => {
+    if (currentUser) {
+      fetchFavorites();
+
+      // 🔴 Suscripción en tiempo real a cambios en la tabla favorites
+      const channel = supabase
+        .channel('favorites-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'favorites', filter: `user_id=eq.${currentUser.id}` },
+          () => {
+            fetchFavorites(); // refresca favoritos en cada cambio
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } else {
+      setFavorites([]);
+      setLoading(false);
+    }
+  }, [currentUser]);
+
   const addToFavorites = async (productId) => {
     if (!currentUser) return;
 
@@ -108,7 +112,7 @@ export function FavoritesProvider({ children }) {
       console.error('Error agregando a favoritos:', error.message);
       return;
     }
-    // No llamamos fetchFavorites porque la suscripción se encarga
+    fetchFavorites(); // ✅ Llama a la función de actualización aquí
   };
 
   const removeFromFavorites = async (productId) => {
@@ -124,7 +128,7 @@ export function FavoritesProvider({ children }) {
       console.error('Error eliminando de favoritos:', error.message);
       return;
     }
-    // No llamamos fetchFavorites porque la suscripción se encarga
+    fetchFavorites(); // ✅ Llama a la función de actualización aquí
   };
 
   return (
