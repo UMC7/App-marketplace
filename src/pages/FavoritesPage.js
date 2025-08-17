@@ -9,13 +9,13 @@ function FavoritesPage() {
 
   return (
     <div className="container">
-      <h1>Mis Productos Favoritos</h1>
+      <h1>My Favorite Products</h1>
       {!currentUser ? (
-        <p>Por favor, inicia sesión para ver tus productos favoritos.</p>
+        <p>Please sign in to view your favorite products.</p>
       ) : loading ? (
-        <p className="loading">Cargando favoritos...</p>
+        <p className="loading">Loading favorites...</p>
       ) : favorites.length === 0 ? (
-        <p className="no-products">No has añadido ningún producto a favoritos.</p>
+        <p className="no-products">You haven't added any products to favorites.</p>
       ) : (
         <div className="favorites-wrapper">
           <ProductList
