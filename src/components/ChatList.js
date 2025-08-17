@@ -14,7 +14,7 @@ function ChatList({ currentUser, onOpenChat }) {
         .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`);
 
       if (error) {
-        console.error('Error al obtener mensajes:', error);
+        console.error('Error fetching messages:', error);
         return;
       }
 
@@ -46,8 +46,8 @@ function ChatList({ currentUser, onOpenChat }) {
 
       const enrichedChats = chatArray.map(chat => ({
         ...chat,
-        nickname: usersMap[chat.user_id] || 'Usuario',
-        offerTitle: offersMap[chat.offer_id] || 'Oferta eliminada',
+        nickname: usersMap[chat.user_id] || 'User',
+        offerTitle: offersMap[chat.offer_id] || 'Deleted offer',
       }));
 
       setChatSummaries(enrichedChats);
@@ -60,7 +60,7 @@ function ChatList({ currentUser, onOpenChat }) {
     <div>
       <h3>Active Chats</h3>
       {chatSummaries.length === 0 ? (
-        <p>No hay chats por ahora.</p>
+        <p>No chats yet.</p>
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {chatSummaries.map(chat => (

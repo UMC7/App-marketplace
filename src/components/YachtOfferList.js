@@ -3,6 +3,7 @@ import supabase from '../supabase';
 import Modal from './Modal';
 import ChatPage from './ChatPage';
 import ThemeLogo from './ThemeLogo';
+import '../styles/YachtOfferList.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 
 const getRoleImage = (title) => {
@@ -881,17 +882,18 @@ const handleCopy = (text, field) => {
 )}
 
     <div className="expanded-block block7">
-      {!isOwner && currentUser && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleStartChat(offer.id, offer.user_id);
-          }}
-        >
-          Start private chat
-        </button>
-      )}
-    </div>
+  {!isOwner && currentUser && (
+    <button
+      className="start-chat-btn"
+      onClick={(e) => {
+        e.stopPropagation();
+        handleStartChat(offer.id, offer.user_id);
+      }}
+    >
+      Start private chat
+    </button>
+  )}
+</div>
   </div>
 ) : (
                           <div className={`collapsed-offer${offer.team ? ' team' : ''}`}>
@@ -1117,13 +1119,14 @@ const handleCopy = (text, field) => {
 )}
 
       {activeChat && (
-        <Modal onClose={() => setActiveChat(null)}>
-          <ChatPage
-            offerId={activeChat.offerId}
-            receiverId={activeChat.receiverId}
-          />
-        </Modal>
-      )}
+  <Modal onClose={() => setActiveChat(null)}>
+    <ChatPage
+      offerId={activeChat.offerId}
+      receiverId={activeChat.receiverId}
+      onBack={() => setActiveChat(null)} // ✅ ESTO ES LO QUE FALTABA
+    />
+  </Modal>
+)}
        <ScrollToTopButton />
     </div>
   );

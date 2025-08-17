@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './EventsPage.css';
+import ScrollToTopButton from '../components/ScrollToTopButton';
 import supabase from '../supabase';
 
 const formatDate = (dateStr) => {
@@ -275,6 +276,7 @@ function EventsPage() {
           </div>
         ))}
       </div>
+      <ScrollToTopButton />
     </div>
   );
 }

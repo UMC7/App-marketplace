@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import './YachtServicesPage.css';
+import ScrollToTopButton from '../components/ScrollToTopButton';
 import supabase from '../supabase';
 
 function YachtServicesPage() {
@@ -217,6 +218,7 @@ function YachtServicesPage() {
           ))}
         </div>
       )}
+      <ScrollToTopButton />
     </div>
   );
 }

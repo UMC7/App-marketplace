@@ -679,35 +679,6 @@ body {
   color: var(--text-dark);
 }
 
-.scroll-to-top-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  padding: 12px 16px;
-  font-size: 20px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  transition: opacity 0.3s ease-in-out, transform 0.2s ease-in-out;
-  opacity: 0;
-  transform: translateY(20px);
-  pointer-events: none;
-}
-
-.scroll-to-top-button.visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.scroll-to-top-button:hover {
-  background-color: var(--accent-color);
-}
-
 /* --- INICIO DE CORRECCIONES PARA DOE (SALARY) --- */
 
 /* Contenedor del checkbox: Asegura que sea un flex container para alinear el label */
@@ -889,28 +860,6 @@ body {
     padding: 0;
     margin: 0;
     line-height: 1;
-  }
-}
-
-@media only screen and (max-width: 768px) and (orientation: portrait) {
-  .scroll-to-top-button {
-    bottom: 16px !important;
-    right: 12px !important;
-    width: 48px !important;
-    height: 48px !important;
-    padding: 0 !important;
-    font-size: 20px !important;
-    border-radius: 50% !important;
-    z-index: 2000 !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .scroll-to-top-button.visible {
-    opacity: 1 !important;
-    transform: translateY(0) !important;
-    pointer-events: auto !important;
   }
 }
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import ProductList from '../components/ProductList';
+import ScrollToTopButton from '../components/ScrollToTopButton';
 import './HomePage.css';
 import supabase from '../supabase';
 
@@ -247,6 +248,8 @@ function HomePage() {
       ) : (
         <ProductList products={filteredProducts} />
       )}
+
+      <ScrollToTopButton />
     </div>
   );
 }

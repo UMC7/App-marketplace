@@ -347,7 +347,10 @@ function Navbar() {
             <ChatPage
               offerId={activeChat.offerId}
               receiverId={activeChat.receiverId}
-              onBack={() => setActiveChat(null)}
+              onBack={() => {
+                setActiveChat(null);
+                setShowChatList(true);
+              }}
             />
           )}
         </Modal>
