@@ -4,7 +4,7 @@ import OpenAI from "openai";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // mismas opciones que tu initialState
-const TITLES = [
+const RANKS = [
   "Captain","Captain/Engineer","Skipper","Chase Boat Captain","Relief Captain",
   "Chief Officer","2nd Officer","3rd Officer","Bosun","Deck/Engineer","Mate",
   "Lead Deckhand","Deckhand","Deck/Steward(ess)","Deck/Carpenter","Deck/Divemaster",
@@ -41,15 +41,15 @@ Do not include comments, markdown, or extra text.
 
     const schema = {
       work_environment: "Onboard|Shore-based",
-      title: "",
+      rank: "",                   // must be one of RANKS
       city: "",
       country: "",
       type: TERMS.join("|"),
       start_date: "YYYY-MM-DD or empty",
       end_date: "",
-      salary: "",                 // numeric string or ""
+      salary: "",                 
       is_doe: "true|false",
-      years_in_rank: "",          // number as string, 'Green', or ""
+      years_in_rank: "",          
       description: "",
       contact_email: "",
       contact_phone: "",
@@ -62,7 +62,7 @@ Do not include comments, markdown, or extra text.
       teammate_salary_currency: "",
       teammate_experience: "",
       flag: "",
-      yacht_size: "",             // bucket
+      yacht_size: "",             
       yacht_type: YACHT_TYPES.join("|"),
       uses: "Private|Charter|Private/Charter|",
       homeport: "",
@@ -83,9 +83,9 @@ Do not include comments, markdown, or extra text.
 - Salary: capture the numeric amount next to a currency (EUR/€ GBP/£ USD/$ AUD). Ignore numbers referring to leave days/rotation.
   If there is currency mention but NO numeric amount -> is_doe=true, salary=""; set salary_currency accordingly.
 - work_environment: "Onboard" if it's for a yacht/boat; "Shore-based" if office/yard/agency.
-- title: map the described role to one of: ${TITLES.join(", ")}. Prefer the most specific (e.g. "Deck/Steward(ess)", "Chief Officer", "2nd Steward(ess)").
+- rank: map the described role to one of: ${RANKS.join(", ")}. Prefer the most specific (e.g. "Deck/Steward(ess)", "Chief Officer", "2nd Steward(ess)"). Never leave empty.
 - yacht_size: bucket LOA meters into one of ${YACHT_BUCKETS.join(", ")} (or ${CHASE_BUCKETS.join(", ")} if clearly a Chase Boat).
-- yacht_type: one of ${YACHT_TYPES.join(", ")}.
+- yacht_type: one of ${YACHT_TYPES.join("|")}.
 - uses: map "Private", "Charter" or "Private/Charter" if present.
 - team: "Yes" ONLY if it explicitly mentions a COUPLE/PAIR role; otherwise "No".
 - liveaboard: "Share Cabin" if the text says share/sharing cabin; "Own Cabin" if said; "No" for shore-based.
@@ -108,7 +108,7 @@ Follow these rules:
 ${rules}
 
 Helper lists to normalize:
-- TITLES: ${TITLES.join(", ")}
+- RANKS: ${RANKS.join(", ")}
 - LANGUAGES: ${LANGS.join(", ")}
 - FLUENCY: ${FLU.join(", ")}
 - CURRENCIES: ${CURRENCIES.join(", ")}
@@ -130,7 +130,6 @@ ${text}
 
     let raw = completion.choices?.[0]?.message?.content?.trim() || "{}";
 
-    // Robust parsing: intenta extraer el primer bloque JSON válido
     let data;
     try {
       data = JSON.parse(raw);
@@ -145,13 +144,12 @@ ${text}
       }
     }
 
-    // Post-normalización mínima para tipos (manteniendo tu esquema)
     const coerceStr = v => (v == null ? "" : String(v));
     const coerceBool = v => (typeof v === "boolean" ? v : String(v).toLowerCase() === "true");
 
     const out = {
       work_environment: coerceStr(data.work_environment),
-      title: coerceStr(data.title),
+      rank: coerceStr(data.rank),
       city: coerceStr(data.city),
       country: coerceStr(data.country),
       type: coerceStr(data.type),
@@ -187,7 +185,6 @@ ${text}
       salary_currency: coerceStr(data.salary_currency),
     };
 
-    // Coherencia DOE ↔ salario/moneda
     if (out.is_doe) {
       out.salary = "";
       out.salary_currency = out.salary_currency || out.teammate_salary_currency || "";
