@@ -79,6 +79,7 @@ const autoFillFromText = async () => {
     return;
   }
   try {
+    // Make API call to your /api/parse-job endpoint
     const res = await fetch('/api/parse-job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -87,86 +88,50 @@ const autoFillFromText = async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Parse failed.');
 
-    // ---------- helpers ----------
-    const normalizeRankToTitles = (val) => {
-      if (!val) return '';
-      const v = String(val).trim().toLowerCase();
-      // exacto (ignoreCase)
-      let hit = titles.find(t => t.toLowerCase() === v);
-      if (hit) return hit;
-      // contiene (Lead Deckhand vs Deckhand)
-      hit = titles.find(t => t.toLowerCase().includes(v) || v.includes(t.toLowerCase()));
-      if (hit) return hit;
-      // alias comunes
-      if (v.replace(/\s+/g, '') === 'deckhand') return 'Deckhand';
-      if (v === 'bosun' || v === 'bosun/mate') return 'Bosun';
-      if (v === 'chiefstew' || v === 'chiefstewardess') return 'Chief Steward(ess)';
-      return '';
-    };
-
-    // Deducción local desde el texto si el modelo no lo trae
-    const guessRankFromText = (txt) => {
-      const ordered = [...titles].sort((a, b) => b.length - a.length); // prioriza el más largo
-      for (const t of ordered) {
-        // regex permisivo: ignora mayúsculas y espacios/hífens
-        const pat = t
-          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-          .replace(/Steward\(ess\)/i, 'Steward(?:ess)?')
-          .replace(/\s+/g, '\\s*');
-        const re = new RegExp(`\\b${pat}\\b`, 'i');
-        if (re.test(txt)) return t;
-      }
-      // ultra–fallback
-      if (/deckhand/i.test(txt)) return 'Deckhand';
-      return '';
-    };
-
-    const textSaysDOE = /\bDOE\b|depending on experience/i.test(jobText);
-
     setFormData(prev => {
-      const merged = { ...prev };
+  const merged = { ...prev };
 
-      // 1) Rank → title
-      if (!prev.title) {
-        const parsedRank = data.rank || data.title || '';
-        let canonical = normalizeRankToTitles(parsedRank);
-        if (!canonical) {
-          // si el backend no trajo/normalizó, intentamos extraer del texto pegado
-          canonical = guessRankFromText(jobText);
-        }
-        if (canonical) merged.title = canonical;
-      }
+  // helper: normaliza el rank a una opción válida del <select>
+  const normalizeTitle = (val) => {
+    if (!val) return "";
+    const v = String(val).trim().toLowerCase();
+    const hit = titles.find(t => t.toLowerCase() === v);
+    return hit || ""; // solo asigna si coincide exactamente con una opción
+  };
 
-      // 2) Rellenar SOLO campos vacíos (no pisar lo ya escrito)
-      for (const [k, v] of Object.entries(data)) {
-        if (v === null || v === undefined) continue;
-        const isEmpty =
-          merged[k] === '' ||
-          merged[k] === null ||
-          merged[k] === undefined ||
-          (typeof merged[k] === 'number' && Number.isNaN(merged[k]));
-        if (typeof merged[k] !== 'boolean' && isEmpty) merged[k] = v;
-      }
+  for (const [k, vRaw] of Object.entries(data)) {
+    if (vRaw == null) continue;
+    const v = typeof vRaw === "string" ? vRaw.trim() : vRaw;
 
-      // 3) Booleans del parser + fallbacks DOE
-      const currencyNoAmount = !data.salary && !!data.salary_currency;
-      if (data.is_asap === true) {
-        merged.is_asap = true;
-        merged.start_date = '';
-      }
+    // mapea rank -> title
+    if (k === "rank") {
+      const norm = normalizeTitle(v);
+      const isTitleEmpty =
+        !merged.title || merged.title === "" || merged.title == null;
+      if (norm && isTitleEmpty) merged.title = norm;
+      continue; // no guardes merged.rank
+    }
 
-      if (data.is_doe === true || currencyNoAmount || textSaysDOE) {
-        merged.is_doe = true;
-        merged.salary = '';
-        merged.salary_currency = '';
-        if (merged.team === 'Yes') {
-          merged.teammate_salary = '';
-          merged.teammate_salary_currency = '';
-        }
-      }
+    const isEmpty =
+      merged[k] === "" ||
+      merged[k] == null ||
+      (typeof merged[k] === "number" && Number.isNaN(merged[k]));
 
-      return merged;
-    });
+    if (isEmpty) merged[k] = v;
+  }
+
+  // coherencia DOE: si viene is_doe=true o hay moneda sin monto => DOE
+  if (data.is_doe === true || (merged.salary_currency && !merged.salary)) {
+    merged.is_doe = true;
+    merged.salary = "";
+    merged.teammate_salary = "";
+    // conserva la moneda si vino, pero deshabilita el monto
+    merged.salary_currency = merged.salary_currency || data.salary_currency || "";
+    merged.teammate_salary_currency = "";
+  }
+
+  return merged;
+});
 
     toast.success('Auto-filled from job post.');
   } catch (err) {

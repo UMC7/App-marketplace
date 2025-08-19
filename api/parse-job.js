@@ -23,11 +23,11 @@ const CURRENCIES = ["USD","EUR","GBP","AUD"];
 const LANGS = ["Arabic","Dutch","English","French","German","Greek","Italian","Mandarin","Portuguese","Russian","Spanish","Turkish","Ukrainian"];
 const FLU = ["Native","Fluent","Conversational"];
 
-// 🔧 permitir body grande y texto plano
+// permitir body grande y texto plano
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '1mb',
+      sizeLimit: "1mb",
     },
   },
 };
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Only POST allowed" });
 
   try {
-    // ✅ manejo robusto del body
+    // manejo robusto del body
     let text = "";
     if (req.headers["content-type"]?.includes("application/json")) {
       text = req.body?.text || "";
@@ -45,6 +45,18 @@ export default async function handler(req, res) {
     }
 
     if (!text) return res.status(400).json({ error: "Missing job text in { text }" });
+
+    // Pre-procesamiento para ayudar con el rank (sinónimos de Deckhand)
+    const deckhandSynonyms = ["Deckhand", "Deck Hand", "Deckie", "Deck Crew", "General Deck"];
+    let processedText = text;
+    for (const synonym of deckhandSynonyms) {
+      const regex = new RegExp(`\\b${synonym}\\b`, "i");
+      if (regex.test(processedText)) {
+        processedText = processedText.replace(regex, "Deckhand");
+        break;
+      }
+    }
+    const finalText = processedText;
 
     const today = new Date();
     const todayStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -57,15 +69,15 @@ Do not include comments, markdown, or extra text.
 
     const schema = {
       work_environment: "Onboard|Shore-based",
-      rank: "",                   // must be one of RANKS
+      rank: "", // must be one of RANKS
       city: "",
       country: "",
       type: TERMS.join("|"),
       start_date: "YYYY-MM-DD or empty",
       end_date: "",
-      salary: "",                 
+      salary: "",
       is_doe: "true|false",
-      years_in_rank: "",          
+      years_in_rank: "",
       description: "",
       contact_email: "",
       contact_phone: "",
@@ -78,7 +90,7 @@ Do not include comments, markdown, or extra text.
       teammate_salary_currency: "",
       teammate_experience: "",
       flag: "",
-      yacht_size: "",             
+      yacht_size: "",
       yacht_type: YACHT_TYPES.join("|"),
       uses: "Private|Charter|Private/Charter|",
       homeport: "",
@@ -99,7 +111,7 @@ Do not include comments, markdown, or extra text.
 - Salary: capture the numeric amount next to a currency (EUR/€ GBP/£ USD/$ AUD). Ignore numbers referring to leave days/rotation.
   If there is currency mention but NO numeric amount -> is_doe=true, salary=""; set salary_currency accordingly.
 - work_environment: "Onboard" if it's for a yacht/boat; "Shore-based" if office/yard/agency.
-- rank: map the described role to one of: ${RANKS.join(", ")}. Prefer the most specific (e.g. "Deck/Steward(ess)", "Chief Officer", "2nd Steward(ess)"). Never leave empty.
+- rank: map the described role to one of: ${RANKS.join(", ")}. Prefer the most specific (e.g. "Deck/Steward(ess)", "Chief Officer", "2nd Steward(ess)"). If no rank is found, return "Other". Never leave empty.
 - yacht_size: bucket LOA meters into one of ${YACHT_BUCKETS.join(", ")} (or ${CHASE_BUCKETS.join(", ")} if clearly a Chase Boat).
 - yacht_type: one of ${YACHT_TYPES.join("|")}.
 - uses: map "Private", "Charter" or "Private/Charter" if present.
@@ -131,9 +143,9 @@ Helper lists to normalize:
 
 JOB POST:
 ---
-${text}
+${finalText}
 ---
-`.trim();
+    `.trim();
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
