@@ -213,6 +213,12 @@ ${finalText}
       salary_currency: coerceStr(data.salary_currency),
     };
 
+    // ← compatibilidad con la UI: la UI usa "title" (rank en tu API)
+    out.title = out.rank || out.title || "";
+
+    // Si hay moneda pero no monto, asumimos DOE
+    if (out.salary_currency && !out.salary) out.is_doe = true;
+
     if (out.is_doe) {
       out.salary = "";
       out.salary_currency = out.salary_currency || out.teammate_salary_currency || "";
