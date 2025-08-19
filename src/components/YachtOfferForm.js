@@ -70,6 +70,51 @@ const yearsOptions = ['Green', 1, 2, 2.5, 3, 5];
 function YachtOfferForm({ user, onOfferPosted, initialValues, mode }) {
   const [formData, setFormData] = useState(initialValues ? { ...initialState, ...initialValues } : initialState);
   const [loading, setLoading] = useState(false);
+  const [jobText, setJobText] = useState('');
+  const [showPaste, setShowPaste] = useState(false);
+
+const autoFillFromText = async () => {
+  if (!jobText.trim()) {
+    toast.error('Paste a job post first.');
+    return;
+  }
+  try {
+    const res = await fetch('/api/parse-job', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: jobText }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Parse failed.');
+
+    // Rellena solo campos vacíos, respeta lo ya escrito a mano
+    setFormData(prev => {
+      const merged = { ...prev };
+      for (const [k, v] of Object.entries(data)) {
+        if (v === null || v === undefined) continue;
+        const isEmpty =
+          merged[k] === '' ||
+          merged[k] === null ||
+          merged[k] === undefined ||
+          (typeof merged[k] === 'number' && Number.isNaN(merged[k]));
+        if (isEmpty) merged[k] = v;
+      }
+      // Coherencia con DOE (mismo comportamiento que handleChange)
+      if (merged.is_doe) {
+        merged.salary = '';
+        merged.salary_currency = '';
+        merged.teammate_salary = '';
+        merged.teammate_salary_currency = '';
+      }
+      return merged;
+    });
+
+    toast.success('Auto-filled from job post.');
+  } catch (err) {
+    console.error(err);
+    toast.error(err.message || 'Could not parse.');
+  }
+};
   const isDayworker = formData.title === 'Dayworker';
 
   const isOnboard = formData.work_environment === 'Onboard';
@@ -259,6 +304,44 @@ const sanitizedData = {
     Job Offer Form
   </h2>
   <form onSubmit={handleSubmit}>
+
+    {/* === Paste job post (optional) === */}
+<div style={{ marginBottom: 16, borderBottom: '1px solid #eee', paddingBottom: 12 }}>
+  <button
+    type="button"
+    onClick={() => setShowPaste((v) => !v)}
+    className="btn btn-light"
+    style={{ marginBottom: 8 }}
+  >
+    {showPaste ? 'Hide paste area' : 'Paste job post (optional)'}
+  </button>
+
+  {showPaste && (
+    <div>
+      <p style={{ margin: '6px 0 8px', fontSize: 13, color: '#666' }}>
+        Paste the full job post. When you click <b>Auto-Fill Fields</b>, I will fill only empty fields and won’t overwrite values you already set.
+      </p>
+      <textarea
+        className="form-control"
+        rows={5}
+        value={jobText}
+        onChange={(e) => setJobText(e.target.value)}
+        placeholder="Paste the job post here…"
+        style={{ width: '100%' }}
+      />
+      <div>
+        <button
+          type="button"
+          onClick={autoFillFromText}
+          className="btn btn-secondary"
+          style={{ marginTop: 8 }}
+        >
+          Auto-Fill Fields
+        </button>
+      </div>
+    </div>
+  )}
+</div>
 
     {mode !== 'edit' && (
   <>
