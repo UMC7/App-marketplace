@@ -23,11 +23,27 @@ const CURRENCIES = ["USD","EUR","GBP","AUD"];
 const LANGS = ["Arabic","Dutch","English","French","German","Greek","Italian","Mandarin","Portuguese","Russian","Spanish","Turkish","Ukrainian"];
 const FLU = ["Native","Fluent","Conversational"];
 
+// 🔧 permitir body grande y texto plano
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '1mb',
+    },
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Only POST allowed" });
 
   try {
-    const text = typeof req.body === "string" ? req.body : (req.body?.text || "");
+    // ✅ manejo robusto del body
+    let text = "";
+    if (req.headers["content-type"]?.includes("application/json")) {
+      text = req.body?.text || "";
+    } else if (typeof req.body === "string") {
+      text = req.body;
+    }
+
     if (!text) return res.status(400).json({ error: "Missing job text in { text }" });
 
     const today = new Date();

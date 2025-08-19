@@ -87,9 +87,57 @@ const autoFillFromText = async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Parse failed.');
 
-    // Rellena solo campos vacíos, respeta lo ya escrito a mano
+    // ---------- helpers ----------
+    const normalizeRankToTitles = (val) => {
+      if (!val) return '';
+      const v = String(val).trim().toLowerCase();
+      // exacto (ignoreCase)
+      let hit = titles.find(t => t.toLowerCase() === v);
+      if (hit) return hit;
+      // contiene (Lead Deckhand vs Deckhand)
+      hit = titles.find(t => t.toLowerCase().includes(v) || v.includes(t.toLowerCase()));
+      if (hit) return hit;
+      // alias comunes
+      if (v.replace(/\s+/g, '') === 'deckhand') return 'Deckhand';
+      if (v === 'bosun' || v === 'bosun/mate') return 'Bosun';
+      if (v === 'chiefstew' || v === 'chiefstewardess') return 'Chief Steward(ess)';
+      return '';
+    };
+
+    // Deducción local desde el texto si el modelo no lo trae
+    const guessRankFromText = (txt) => {
+      const ordered = [...titles].sort((a, b) => b.length - a.length); // prioriza el más largo
+      for (const t of ordered) {
+        // regex permisivo: ignora mayúsculas y espacios/hífens
+        const pat = t
+          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+          .replace(/Steward\(ess\)/i, 'Steward(?:ess)?')
+          .replace(/\s+/g, '\\s*');
+        const re = new RegExp(`\\b${pat}\\b`, 'i');
+        if (re.test(txt)) return t;
+      }
+      // ultra–fallback
+      if (/deckhand/i.test(txt)) return 'Deckhand';
+      return '';
+    };
+
+    const textSaysDOE = /\bDOE\b|depending on experience/i.test(jobText);
+
     setFormData(prev => {
       const merged = { ...prev };
+
+      // 1) Rank → title
+      if (!prev.title) {
+        const parsedRank = data.rank || data.title || '';
+        let canonical = normalizeRankToTitles(parsedRank);
+        if (!canonical) {
+          // si el backend no trajo/normalizó, intentamos extraer del texto pegado
+          canonical = guessRankFromText(jobText);
+        }
+        if (canonical) merged.title = canonical;
+      }
+
+      // 2) Rellenar SOLO campos vacíos (no pisar lo ya escrito)
       for (const [k, v] of Object.entries(data)) {
         if (v === null || v === undefined) continue;
         const isEmpty =
@@ -97,15 +145,26 @@ const autoFillFromText = async () => {
           merged[k] === null ||
           merged[k] === undefined ||
           (typeof merged[k] === 'number' && Number.isNaN(merged[k]));
-        if (isEmpty) merged[k] = v;
+        if (typeof merged[k] !== 'boolean' && isEmpty) merged[k] = v;
       }
-      // Coherencia con DOE (mismo comportamiento que handleChange)
-      if (merged.is_doe) {
+
+      // 3) Booleans del parser + fallbacks DOE
+      const currencyNoAmount = !data.salary && !!data.salary_currency;
+      if (data.is_asap === true) {
+        merged.is_asap = true;
+        merged.start_date = '';
+      }
+
+      if (data.is_doe === true || currencyNoAmount || textSaysDOE) {
+        merged.is_doe = true;
         merged.salary = '';
         merged.salary_currency = '';
-        merged.teammate_salary = '';
-        merged.teammate_salary_currency = '';
+        if (merged.team === 'Yes') {
+          merged.teammate_salary = '';
+          merged.teammate_salary_currency = '';
+        }
       }
+
       return merged;
     });
 
@@ -115,6 +174,7 @@ const autoFillFromText = async () => {
     toast.error(err.message || 'Could not parse.');
   }
 };
+
   const isDayworker = formData.title === 'Dayworker';
 
   const isOnboard = formData.work_environment === 'Onboard';
