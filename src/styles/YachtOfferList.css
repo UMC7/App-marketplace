@@ -22,3 +22,27 @@
 .start-chat-btn:active {
   transform: translateY(0);
 }
+
+@media (min-width: 1024px) {
+  .top-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-xl);
+  }
+
+  .top-row > .expanded-block {
+    position: relative;
+    padding-right: var(--spacing-xxxxl);
+    margin-right: var(--spacing-xxxxl);
+  }
+
+  .top-row > .expanded-block:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 32px; /* ajusta si necesario */
+    right: 0;
+    width: 1px;
+    height: 100px; /* aproximadamente 2cm en pantalla */
+    background-color: #bca987;
+  }
+}
