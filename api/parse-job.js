@@ -53,6 +53,38 @@ const CITY_TO_COUNTRY = {
   "sydney": "Australia"
 };
 
+// Normalización de países (sinónimos -> forma canónica del select)
+const COUNTRY_SYNONYMS = {
+  "us": "United States",
+  "usa": "United States",
+  "u.s.": "United States",
+  "u.s.a.": "United States",
+  "united states of america": "United States",
+
+  "uk": "United Kingdom",
+  "u.k.": "United Kingdom",
+  "great britain": "United Kingdom",
+  "britain": "United Kingdom",
+
+  "uae": "United Arab Emirates",
+  "u.a.e.": "United Arab Emirates",
+
+  "ksa": "Saudi Arabia",
+  "kingdom of saudi arabia": "Saudi Arabia",
+
+  "british virgin islands": "BVI, UK",
+  "bvi": "BVI, UK",
+
+  "republic of korea": "South Korea",
+  "korea, south": "South Korea"
+};
+
+function normalizeCountryName(raw) {
+  if (!raw) return "";
+  const key = String(raw).trim().toLowerCase().replace(/\./g, "");
+  return COUNTRY_SYNONYMS[key] || raw;
+}
+
 // Parser simple para fechas tipo “25th of June”, “25 June”, “June 25”
 const MONTH_INDEX = {
   january:0,february:1,march:2,april:3,may:4,june:5,
@@ -98,6 +130,173 @@ function tryParseStartDateFrom(text, today) {
   }
 
   return "";
+}
+
+// Extraer LOA en metros (devuelve lista de números)
+function extractAllMeters(text) {
+  const t = text.toLowerCase();
+  const res = [];
+  const re = /\b(\d{1,3})\s*m\b/g;
+  let m;
+  while ((m = re.exec(t))) {
+    const val = parseInt(m[1], 10);
+    if (!isNaN(val)) res.push(val);
+  }
+  return res;
+}
+
+// Bucket de tamaño
+function bucketYachtSize(meters, yachtType) {
+  if (meters == null) return "";
+  if (yachtType === "Chase Boat") {
+    if (meters < 10) return "< 10m";
+    if (meters <= 15) return "10 - 15m";
+    if (meters <= 20) return "15 - 20m";
+    return "> 20m";
+  }
+  if (meters <= 30) return "0 - 30m";
+  if (meters <= 40) return "31 - 40m";
+  if (meters <= 50) return "41 - 50m";
+  if (meters <= 70) return "51 - 70m";
+  return "> 70m";
+}
+
+// Season type por regex
+function inferSeasonType(text) {
+  const t = text.toLowerCase();
+  if (/\bdual\s*-?\s*season\b/.test(t)) return "Dual Season";
+  if (/\bsingle\s*-?\s*season\b/.test(t)) return "Single Season";
+  if (/\byear\s*-?\s*round\b/.test(t)) return "Year-round";
+  return "";
+}
+
+// Years in rank por regex
+function inferYearsInRank(text) {
+  const t = text.toLowerCase();
+  if (/\b(one|1)\s+season(s)?\b/.test(t)) return "1";
+  const m = t.match(/\b(\d+(?:\.\d+)?)\s*(years?|yrs?)\b/);
+  if (m) return String(m[1]);
+  return "";
+}
+
+// DOE fallback: moneda mencionada sin monto
+function ensureDOE(text, out) {
+  const t = text.toLowerCase();
+  const hasUSD = /\b(usd|\$)\b/.test(t);
+  const hasEUR = /\b(eur|€)\b/.test(t);
+  const hasGBP = /\b(gbp|£)\b/.test(t);
+  const hasAUD = /\b(aud)\b/.test(t);
+  const hasCurrency = hasUSD || hasEUR || hasGBP || hasAUD;
+
+  const numberNearCurrency = /(?:usd|\$|eur|€|gbp|£|aud)\s*\d{3,5}|\d{3,5}\s*(?:usd|eur|gbp|aud|\$|€|£)/i.test(text);
+
+  if (!out.is_doe && !out.salary && hasCurrency && !numberNearCurrency) {
+    out.is_doe = true;
+    if (!out.salary_currency) {
+      if (hasUSD) out.salary_currency = "USD";
+      else if (hasEUR) out.salary_currency = "EUR";
+      else if (hasGBP) out.salary_currency = "GBP";
+      else if (hasAUD) out.salary_currency = "AUD";
+    }
+  }
+}
+
+// Fallback ASAP por texto
+function ensureASAP(text, out) {
+  const t = text.toLowerCase();
+  if (/\basap\b|immediate(ly)?|start\s+immediately/.test(t)) {
+    out.is_asap = true;
+    out.start_date = "";
+  }
+}
+
+/** =========================================================
+ *  Mejora: inferLanguages robusto (evita falsos positivos)
+ *  - Requiere “señal lingüística” cerca (fluent/native/required…)
+ *  - Ignora topónimos como “French Polynesia”, “English Harbour”… 
+ * ========================================================= */
+
+// Señales cercanas que indican idioma
+const LANGUAGE_TOKENS = [
+  "fluent","native","conversational","bilingual","speaker","speaking","spoken",
+  "read","write","written","verbal","communication","intermediate","advanced","basic",
+  "required","preferred","a plus","advantage","must","need","mandatory"
+];
+
+// Topónimos que contienen palabras de idiomas pero NO son idiomas
+const PLACE_SKIP = [
+  /french\s+polynesia/i,
+  /french\s+riviera/i,
+  /english\s+harbour/i,
+  /english\s+channel/i,
+  /spanish\s+wells/i,
+  /spanish\s+town/i,
+  /greek\s+islands?/i,
+  /italian\s+riviera/i,
+  /turkish\s+riviera/i
+];
+
+// Heurística de idiomas
+function inferLanguages(text, out) {
+  const lower = text.toLowerCase();
+
+  // ¿hay topónimo con la palabra del idioma?
+  const inSkipPlace = (langWord) => PLACE_SKIP.some(rx => rx.test(lower)) &&
+    new RegExp(`\\b${langWord}\\b`, "i").test(lower);
+
+  // ¿existe alguna señal dentro de ±25 chars del match del idioma?
+  function hasSignalNear(langWord) {
+    const re = new RegExp(`\\b${langWord}\\b`, "ig");
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const i = m.index;
+      const windowStart = Math.max(0, i - 25);
+      const windowEnd = Math.min(text.length, i + langWord.length + 25);
+      const window = text.slice(windowStart, windowEnd).toLowerCase();
+      if (LANGUAGE_TOKENS.some(tok => window.includes(tok))) return true;
+    }
+    return false;
+  }
+
+  // Fluencia a partir del contexto cercano
+  function inferFluency(langWord) {
+    const re = new RegExp(`\\b${langWord}\\b`, "ig");
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const i = m.index;
+      const w = text.slice(Math.max(0, i - 25), Math.min(text.length, i + langWord.length + 25)).toLowerCase();
+      if (/\bnative\b/.test(w)) return "Native";
+      if (/\bfluent\b/.test(w)) return "Fluent";
+      if (/\b(conversational|a plus|preferred)\b/.test(w)) return "Conversational";
+    }
+    return "";
+  }
+
+  function setLang(slot, lang, flu) {
+    if (slot === 1) {
+      if (!out.language_1) out.language_1 = lang;
+      if (!out.language_1_fluency && flu) out.language_1_fluency = flu;
+    } else {
+      if (!out.language_2) out.language_2 = lang;
+      if (!out.language_2_fluency && flu) out.language_2_fluency = flu;
+    }
+  }
+
+  // 1) English: exigir señal y evitar topónimos
+  if (!out.language_1 && /\benglish\b/i.test(text) && hasSignalNear("english") && !inSkipPlace("english")) {
+    setLang(1, "English", inferFluency("english"));
+  }
+
+  // 2) Otros idiomas habituales
+  const candidates = ["Italian","Spanish","French","German","Greek","Portuguese","Russian","Dutch","Turkish","Arabic"];
+  for (const lang of candidates) {
+    const lw = lang.toLowerCase();
+    if ((out.language_1 && out.language_2) || !lower.includes(lw)) continue;
+    if (inSkipPlace(lw)) continue;         // p.ej., French Polynesia
+    if (!hasSignalNear(lw)) continue;      // mención aislada sin señal -> ignorar
+    const slot = out.language_1 ? 2 : 1;
+    setLang(slot, lang, inferFluency(lw));
+  }
 }
 
 // permitir body grande y texto plano
@@ -294,11 +493,17 @@ ${finalText}
       salary_currency: coerceStr(data.salary_currency),
     };
 
-    // Coherencia DOE
+    // Coherencia DOE del modelo
     if (out.is_doe) {
       out.salary = "";
       out.salary_currency = out.salary_currency || out.teammate_salary_currency || "";
     }
+
+    // Fallback DOE si hay moneda pero no monto
+    ensureDOE(finalText, out);
+
+    // Fallback ASAP por texto (primera pasada)
+    ensureASAP(finalText, out);
 
     // Fallback de fecha si el modelo devolvió 1º del mes o nada y el texto tenía día explícito
     if (!out.start_date || /\-\d{2}\-01$/.test(out.start_date)) {
@@ -309,11 +514,52 @@ ${finalText}
       }
     }
 
-    // Fallback de país si llega vacío pero hay ciudad conocida
+    // Normalización de país y fallback por ciudad
+    if (out.country) out.country = normalizeCountryName(out.country);
     if (!out.country && out.city) {
       const guess = CITY_TO_COUNTRY[out.city.trim().toLowerCase()];
       if (guess) out.country = guess;
     }
+
+    // Fallback de season_type si viene vacío
+    if (!out.season_type) {
+      const st = inferSeasonType(finalText);
+      if (st) out.season_type = st;
+    }
+
+    // Fallback de years_in_rank si viene vacío
+    if (!out.years_in_rank) {
+      const yr = inferYearsInRank(finalText);
+      if (yr) out.years_in_rank = yr;
+    }
+
+    // === RECONCILIACIÓN de yacht_size con LOA explícito en el texto ===
+    {
+      const metersList = extractAllMeters(finalText);
+      if (metersList.length > 0) {
+        let chosen = null;
+        const isChase = (out.yacht_type === "Chase Boat") || /\bchase\s+boat\b/i.test(finalText);
+        if (isChase) {
+          // típico: "12m chase boat supporting 55m M/Y" -> para chase usamos el menor
+          chosen = Math.min(...metersList);
+        } else {
+          // yate principal: si hay varios números, usamos el mayor (60m vs 12m de chase, etc.)
+          chosen = Math.max(...metersList);
+        }
+        const bucket = bucketYachtSize(chosen, isChase ? "Chase Boat" : "Motor Yacht");
+        if (bucket && out.yacht_size !== bucket) {
+          out.yacht_size = bucket; // sobreescribe si el modelo se equivocó (p.ej. >70m en un 60m)
+        }
+      }
+    }
+
+    // Fallback de idiomas si vienen vacíos
+    if (!out.language_1 || !out.language_2) {
+      inferLanguages(finalText, out);
+    }
+
+    // Verificación ASAP final (por si algo lo pisó en el flujo)
+    ensureASAP(finalText, out);
 
     return res.status(200).json(out);
   } catch (err) {

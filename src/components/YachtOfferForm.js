@@ -73,13 +73,13 @@ function YachtOfferForm({ user, onOfferPosted, initialValues, mode }) {
   const [jobText, setJobText] = useState('');
   const [showPaste, setShowPaste] = useState(false);
 
+// YachtOfferForm.js
 const autoFillFromText = async () => {
   if (!jobText.trim()) {
     toast.error('Paste a job post first.');
     return;
   }
   try {
-    // Make API call to your /api/parse-job endpoint
     const res = await fetch('/api/parse-job', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -89,49 +89,56 @@ const autoFillFromText = async () => {
     if (!res.ok) throw new Error(data.error || 'Parse failed.');
 
     setFormData(prev => {
-  const merged = { ...prev };
+      const merged = { ...prev };
+      const normalizeTitle = (val) => {
+        if (!val) return "";
+        const v = String(val).trim().toLowerCase();
+        const hit = titles.find(t => t.toLowerCase() === v);
+        return hit || "";
+      };
 
-  // helper: normaliza el rank a una opción válida del <select>
-  const normalizeTitle = (val) => {
-    if (!val) return "";
-    const v = String(val).trim().toLowerCase();
-    const hit = titles.find(t => t.toLowerCase() === v);
-    return hit || ""; // solo asigna si coincide exactamente con una opción
-  };
+      for (const [k, vRaw] of Object.entries(data)) {
+        if (vRaw == null) continue;
+        const v = typeof vRaw === "string" ? vRaw.trim() : vRaw;
 
-  for (const [k, vRaw] of Object.entries(data)) {
-    if (vRaw == null) continue;
-    const v = typeof vRaw === "string" ? vRaw.trim() : vRaw;
+        // Manejo especial para el rank
+        if (k === "rank") {
+          const norm = normalizeTitle(v);
+          if (!merged.title) {
+            merged.title = norm;
+          }
+          continue;
+        }
 
-    // mapea rank -> title
-    if (k === "rank") {
-      const norm = normalizeTitle(v);
-      const isTitleEmpty =
-        !merged.title || merged.title === "" || merged.title == null;
-      if (norm && isTitleEmpty) merged.title = norm;
-      continue; // no guardes merged.rank
-    }
+        // Manejo especial para booleanos: siempre actualiza si el valor es diferente
+        if (k === "is_asap" || k === "is_doe") {
+          if (typeof v === "boolean" && v !== merged[k]) {
+            merged[k] = v;
+          }
+          continue;
+        }
 
-    const isEmpty =
-      merged[k] === "" ||
-      merged[k] == null ||
-      (typeof merged[k] === "number" && Number.isNaN(merged[k]));
+        // Lógica existente para no sobrescribir campos ya llenos
+        const isEmpty =
+          merged[k] === "" ||
+          merged[k] == null ||
+          (typeof merged[k] === "number" && Number.isNaN(merged[k]));
+        if (isEmpty) {
+          merged[k] = v;
+        }
+      }
 
-    if (isEmpty) merged[k] = v;
-  }
+      // Coherencia DOE
+      if (data.is_doe === true || (merged.salary_currency && !merged.salary)) {
+        merged.is_doe = true;
+        merged.salary = "";
+        merged.teammate_salary = "";
+        merged.salary_currency = merged.salary_currency || data.salary_currency || "";
+        merged.teammate_salary_currency = "";
+      }
 
-  // coherencia DOE: si viene is_doe=true o hay moneda sin monto => DOE
-  if (data.is_doe === true || (merged.salary_currency && !merged.salary)) {
-    merged.is_doe = true;
-    merged.salary = "";
-    merged.teammate_salary = "";
-    // conserva la moneda si vino, pero deshabilita el monto
-    merged.salary_currency = merged.salary_currency || data.salary_currency || "";
-    merged.teammate_salary_currency = "";
-  }
-
-  return merged;
-});
+      return merged;
+    });
 
     toast.success('Auto-filled from job post.');
   } catch (err) {
