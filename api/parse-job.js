@@ -5,25 +5,49 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // mismas opciones que tu initialState
 const RANKS = [
-  "Captain","Captain/Engineer","Skipper","Chase Boat Captain","Relief Captain",
-  "Chief Officer","2nd Officer","3rd Officer","Bosun","Deck/Engineer","Mate",
-  "Lead Deckhand","Deckhand","Deck/Steward(ess)","Deck/Carpenter","Deck/Divemaster",
-  "Dayworker","Chief Engineer","2nd Engineer","3rd Engineer","Solo Engineer","Electrician",
-  "Head Chef","Sous Chef","Solo Chef","Cook/Crew Chef","Chief Steward(ess)","2nd Steward(ess)",
-  "3rd Stewardess","Solo Steward(ess)","Junior Steward(ess)","Cook/Steward(ess)","Stew/Deck",
-  "Laundry/Steward(ess)","Stew/Masseur","Masseur","Hairdresser/Barber","Nanny","Videographer",
-  "Yoga/Pilates Instructor","Personal Trainer","Dive Instrutor","Water Sport Instrutor","Nurse","Other"
+  "Captain", "Captain/Engineer", "Skipper", "Chase Boat Captain", "Relief Captain",
+  "Chief Officer", "2nd Officer", "3rd Officer", "Bosun", "Deck/Engineer", "Mate",
+  "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster",
+  "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Electrician", "Chef",
+  "Head Chef", "Sous Chef", "Solo Chef", "Cook/Crew Chef", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
+  "3rd Stewardess", "Solo Steward(ess)", "Junior Steward(ess)", "Cook/Steward(ess)", "Stew/Deck",
+  "Laundry/Steward(ess)", "Stew/Masseur", "Masseur", "Hairdresser/Barber", "Nanny", "Videographer",
+  "Yoga/Pilates Instructor", "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
 ];
 
-const YACHT_TYPES = ["Motor Yacht","Sailing Yacht","Chase Boat","Catamaran"];
-const YACHT_BUCKETS = ["0 - 30m","31 - 40m","41 - 50m","51 - 70m","> 70m"];
-const CHASE_BUCKETS = ["< 10m","10 - 15m","15 - 20m","> 20m"];
-const TERMS = ["Rotational","Permanent","Temporary","Seasonal","Relief","Delivery","Crossing","DayWork"];
-const CURRENCIES = ["USD","EUR","GBP","AUD"];
-const LANGS = ["Arabic","Dutch","English","French","German","Greek","Italian","Mandarin","Portuguese","Russian","Spanish","Turkish","Ukrainian"];
-const FLU = ["Native","Fluent","Conversational"];
+const YACHT_TYPES = ["Motor Yacht", "Sailing Yacht", "Chase Boat", "Catamaran"];
+const YACHT_BUCKETS = ["0 - 30m", "31 - 40m", "41 - 50m", "51 - 70m", "> 70m"];
+const CHASE_BUCKETS = ["< 10m", "10 - 15m", "15 - 20m", "> 20m"];
+const TERMS = ["Rotational", "Permanent", "Temporary", "Seasonal", "Relief", "Delivery", "Crossing", "DayWork"];
+const CURRENCIES = ["USD", "EUR", "GBP", "AUD"];
+const LANGS = ["Arabic", "Dutch", "English", "French", "German", "Greek", "Italian", "Mandarin", "Portuguese", "Russian", "Spanish", "Turkish", "Ukrainian"];
+const FLU = ["Native", "Fluent", "Conversational"];
 
 // --- ayudas locales (solo si falta info del modelo) ---
+
+// Mapeo de sinónimos de rangos (nueva mejora)
+const RANK_SYNONYMS = {
+  "first engineer": "2nd Engineer",
+  "1st engineer": "2nd Engineer",
+  "assistant engineer": "2nd Engineer",
+  "enigineer": "Solo Engineer",
+  "junior engineer": "3rd Engineer",
+  "deckhand/engineer": "Deck/Engineer",
+  "stew": "Steward(ess)",
+  "stewardess": "Steward(ess)",
+  "steward": "Steward(ess)",
+  "chief stew": "Chief Steward(ess)",
+  "head stew": "Chief Steward(ess)",
+  "sole stew": "Solo Steward(ess)",
+  "second stew": "2nd Steward(ess)",
+  "third stew": "3rd Stewardess",
+  "junior stew": "Junior Steward(ess)",
+  "deck/stew": "Stew/Deck",
+  "deck/steward": "Stew/Deck",
+  "cook/stew": "Cook/Steward(ess)",
+  "stew/cook": "Cook/Steward(ess)",
+  "deckhand/stew": "Stew/Deck",
+};
 
 // Mapa básico ciudad -> país (se usa SOLO si el país viene vacío)
 const CITY_TO_COUNTRY = {
@@ -33,6 +57,7 @@ const CITY_TO_COUNTRY = {
   "antibes": "France",
   "cannes": "France",
   "nice": "France",
+  "sof": "France",
   "palma": "Spain",
   "palma de mallorca": "Spain",
   "barcelona": "Spain",
@@ -60,21 +85,17 @@ const COUNTRY_SYNONYMS = {
   "u.s.": "United States",
   "u.s.a.": "United States",
   "united states of america": "United States",
-
+  "south of france": "France",
   "uk": "United Kingdom",
   "u.k.": "United Kingdom",
   "great britain": "United Kingdom",
   "britain": "United Kingdom",
-
   "uae": "United Arab Emirates",
   "u.a.e.": "United Arab Emirates",
-
   "ksa": "Saudi Arabia",
   "kingdom of saudi arabia": "Saudi Arabia",
-
   "british virgin islands": "BVI, UK",
   "bvi": "BVI, UK",
-
   "republic of korea": "South Korea",
   "korea, south": "South Korea"
 };
@@ -87,8 +108,8 @@ function normalizeCountryName(raw) {
 
 // Parser simple para fechas tipo “25th of June”, “25 June”, “June 25”
 const MONTH_INDEX = {
-  january:0,february:1,march:2,april:3,may:4,june:5,
-  july:6,august:7,september:8,october:9,november:10,december:11
+  january: 0, february: 1, march: 2, april: 3, may: 4, june: 5,
+  july: 6, august: 7, september: 8, october: 9, november: 10, december: 11
 };
 
 function pickUpcomingYear(monthIdx, day, today) {
@@ -108,7 +129,7 @@ function tryParseStartDateFrom(text, today) {
     const day = parseInt(m[1], 10);
     const mon = MONTH_INDEX[m[3]];
     const year = pickUpcomingYear(mon, day, today);
-    return `${year}-${String(mon+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    return `${year}-${String(mon + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   }
 
   // 2) 25 June
@@ -117,7 +138,7 @@ function tryParseStartDateFrom(text, today) {
     const day = parseInt(m[1], 10);
     const mon = MONTH_INDEX[m[2]];
     const year = pickUpcomingYear(mon, day, today);
-    return `${year}-${String(mon+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    return `${year}-${String(mon + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   }
 
   // 3) June 25
@@ -126,21 +147,30 @@ function tryParseStartDateFrom(text, today) {
     const mon = MONTH_INDEX[m[1]];
     const day = parseInt(m[2], 10);
     const year = pickUpcomingYear(mon, day, today);
-    return `${year}-${String(mon+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    return `${year}-${String(mon + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   }
 
   return "";
 }
 
-// Extraer LOA en metros (devuelve lista de números)
+// Extraer LOA en metros o pies (MEJORA: ahora también convierte pies a metros)
 function extractAllMeters(text) {
   const t = text.toLowerCase();
   const res = [];
-  const re = /\b(\d{1,3})\s*m\b/g;
+
+  // Regex para metros (e.g., "60m", "55 m")
+  const reMeters = /\b(\d{1,3})\s*m\b/g;
   let m;
-  while ((m = re.exec(t))) {
+  while ((m = reMeters.exec(t))) {
     const val = parseInt(m[1], 10);
     if (!isNaN(val)) res.push(val);
+  }
+
+  // Regex para pies (e.g., "200ft", "180 feet") y conversión a metros (1 ft = 0.3048 m)
+  const reFeet = /\b(\d{2,3})\s*(ft|feet)\b/g;
+  while ((m = reFeet.exec(t))) {
+    const val = parseInt(m[1], 10);
+    if (!isNaN(val)) res.push(Math.round(val * 0.3048));
   }
   return res;
 }
@@ -173,19 +203,41 @@ function inferSeasonType(text) {
 // Years in rank por regex
 function inferYearsInRank(text) {
   const t = text.toLowerCase();
-  if (/\b(one|1)\s+season(s)?\b/.test(t)) return "1";
-  const m = t.match(/\b(\d+(?:\.\d+)?)\s*(years?|yrs?)\b/);
+  // Busca patrones como "5+ years"
+  let m = t.match(/\b(\d+)\s*\+?\s*years?\b/);
   if (m) return String(m[1]);
+  // Busca rangos como "2-3 years"
+  m = t.match(/\b(\d+)\s*\-\s*(\d+)\s*years?\b/);
+  if (m) return String(m[1]);
+  // Busca valores explícitos como "2 years" o "one season"
+  if (/\b(one|1)\s+season(s)?\b/.test(t)) return "1";
+  m = t.match(/\b(\d+(?:\.\d+)?)\s*(years?|yrs?)\b/);
+  if (m) return String(m[1]);
+  // Busca "Green" o "Proven experience"
+  if (/\bgreen\b/i.test(t)) return "Green";
+  // **Regla actualizada para incluir "experienced"**
+  if (/\b(proven|extensive|experienced)\s+experience\b|\bexperienced\b/i.test(t)) return "2.5";
   return "";
 }
 
-// DOE fallback: moneda mencionada sin monto
+// Lógica de "años en el puesto" basada en el contexto
+function updateYearsInRank(text, out) {
+  // Si el modelo de IA no extrajo nada, usamos nuestra lógica de regex
+  if (!out.years_in_rank) {
+    const yr = inferYearsInRank(text);
+    if (yr) {
+      out.years_in_rank = yr;
+    }
+  }
+}
+
+// DOE fallback (MEJORA: más precisa)
 function ensureDOE(text, out) {
   const t = text.toLowerCase();
-  const hasUSD = /\b(usd|\$)\b/.test(t);
-  const hasEUR = /\b(eur|€)\b/.test(t);
-  const hasGBP = /\b(gbp|£)\b/.test(t);
-  const hasAUD = /\b(aud)\b/.test(t);
+  const hasUSD = /\b(usd|\$)(?!\s*per)\b/.test(t);
+  const hasEUR = /\b(eur|€)(?!\s*per)\b/.test(t);
+  const hasGBP = /\b(gbp|£)(?!\s*per)\b/.test(t);
+  const hasAUD = /\b(aud)(?!\s*per)\b/.test(t);
   const hasCurrency = hasUSD || hasEUR || hasGBP || hasAUD;
 
   const numberNearCurrency = /(?:usd|\$|eur|€|gbp|£|aud)\s*\d{3,5}|\d{3,5}\s*(?:usd|eur|gbp|aud|\$|€|£)/i.test(text);
@@ -211,16 +263,16 @@ function ensureASAP(text, out) {
 }
 
 /** =========================================================
- *  Mejora: inferLanguages robusto (evita falsos positivos)
- *  - Requiere “señal lingüística” cerca (fluent/native/required…)
- *  - Ignora topónimos como “French Polynesia”, “English Harbour”… 
+ *  Mejora: inferLanguages robusto (evita falsos positivos)
+ *  - Requiere “señal lingüística” cerca (fluent/native/required…)
+ *  - Ignora topónimos como “French Polynesia”, “English Harbour”…
  * ========================================================= */
 
 // Señales cercanas que indican idioma
 const LANGUAGE_TOKENS = [
-  "fluent","native","conversational","bilingual","speaker","speaking","spoken",
-  "read","write","written","verbal","communication","intermediate","advanced","basic",
-  "required","preferred","a plus","advantage","must","need","mandatory"
+  "fluent", "native", "conversational", "bilingual", "speaker", "speaking", "spoken",
+  "read", "write", "written", "verbal", "communication", "intermediate", "advanced", "basic",
+  "required", "preferred", "a plus", "advantage", "must", "need", "mandatory"
 ];
 
 // Topónimos que contienen palabras de idiomas pero NO son idiomas
@@ -288,14 +340,43 @@ function inferLanguages(text, out) {
   }
 
   // 2) Otros idiomas habituales
-  const candidates = ["Italian","Spanish","French","German","Greek","Portuguese","Russian","Dutch","Turkish","Arabic"];
+  const candidates = ["Italian", "Spanish", "French", "German", "Greek", "Portuguese", "Russian", "Dutch", "Turkish", "Arabic"];
   for (const lang of candidates) {
     const lw = lang.toLowerCase();
     if ((out.language_1 && out.language_2) || !lower.includes(lw)) continue;
-    if (inSkipPlace(lw)) continue;         // p.ej., French Polynesia
+    if (inSkipPlace(lw)) continue;      // p.ej., French Polynesia
     if (!hasSignalNear(lw)) continue;      // mención aislada sin señal -> ignorar
     const slot = out.language_1 ? 2 : 1;
     setLang(slot, lang, inferFluency(lw));
+  }
+}
+
+// Lógica de "fluidez del idioma" basada en el contexto
+function updateLanguageFluency(text, out) {
+  const t = text.toLowerCase();
+  if (out.language_1) {
+    const langSpeakingRegex = new RegExp(`\\b${out.language_1.toLowerCase()}\\s*speaking\\b`, "i");
+    if (langSpeakingRegex.test(t)) {
+      out.language_1_fluency = "Native";
+    } else if (out.language_1_fluency === "") {
+      out.language_1_fluency = "Fluent";
+    }
+  }
+  if (out.language_2 && out.language_2_fluency === "") {
+    out.language_2_fluency = "Conversational";
+  }
+}
+
+// === NUEVA LÓGICA PARA HOMEPORT ===
+function inferHomeport(text, out) {
+  const t = text.toLowerCase();
+  const re = /\b(based\s+in|home\s+port\s+is|docked\s+in|located\s+in)\s+([a-z\s]+?)\b/;
+  const m = t.match(re);
+  if (m && m[2]) {
+    const potentialCity = m[2].trim();
+    if (potentialCity) {
+      out.homeport = potentialCity.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
   }
 }
 
@@ -319,17 +400,14 @@ export default async function handler(req, res) {
     } else if (typeof req.body === "string") {
       text = req.body;
     }
-
     if (!text) return res.status(400).json({ error: "Missing job text in { text }" });
 
-    // Pre-procesamiento para ayudar con el rank (sinónimos de Deckhand)
-    const deckhandSynonyms = ["Deckhand", "Deck Hand", "Deckie", "Deck Crew", "General Deck"];
+    // Pre-procesamiento para ayudar con el rank (sinónimos de Deckhand y rangos compuestos)
     let processedText = text;
-    for (const synonym of deckhandSynonyms) {
+    for (const [synonym, normalized] of Object.entries(RANK_SYNONYMS)) {
       const regex = new RegExp(`\\b${synonym}\\b`, "i");
       if (regex.test(processedText)) {
-        processedText = processedText.replace(regex, "Deckhand");
-        break;
+        processedText = processedText.replace(regex, normalized);
       }
     }
     const finalText = processedText;
@@ -338,8 +416,8 @@ export default async function handler(req, res) {
     const todayStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
 
     const system = `
-You are an information extractor for yacht job posts. 
-Output MUST be STRICT JSON with EXACT keys and value types matching the schema below. 
+You are an information extractor for yacht job posts.
+Output MUST be STRICT JSON with EXACT keys and value types matching the schema below.
 Do not include comments, markdown, or extra text.
     `.trim();
 
@@ -390,15 +468,16 @@ Do not include comments, markdown, or extra text.
 - Salary: capture the numeric amount next to a currency (EUR/€ GBP/£ USD/$ AUD). Ignore numbers referring to leave days/rotation.
   If there is currency mention but NO numeric amount -> is_doe=true, salary=""; set salary_currency accordingly.
 - work_environment: "Onboard" if it's for a yacht/boat; "Shore-based" if office/yard/agency.
-- rank: map the described role to one of: ${RANKS.join(", ")}. Prefer the most specific (e.g. "Deck/Steward(ess)", "Chief Officer", "2nd Steward(ess)"). If no rank is found, return "Other". Never leave empty.
+- rank: map the described role to one of: ${RANKS.join(", ")}. **If multiple roles are mentioned (e.g., "Captain or Engineer"), return the most prominent one or the first one listed.** Prefer the most specific (e.g. "Deck/Steward(ess)", "Chief Officer", "2nd Steward(ess)"). If no rank is found, return "Other". Never leave empty.
 - yacht_size: bucket LOA meters into one of ${YACHT_BUCKETS.join(", ")} (or ${CHASE_BUCKETS.join(", ")} if clearly a Chase Boat).
 - yacht_type: one of ${YACHT_TYPES.join("|")}.
 - uses: map "Private", "Charter" or "Private/Charter" if present.
 - team: "Yes" ONLY if it explicitly mentions a COUPLE/PAIR role; otherwise "No".
 - liveaboard: "Share Cabin" if the text says share/sharing cabin; "Own Cabin" if said; "No" for shore-based.
 - languages: fill language_1/_2 and *_fluency when explicit (e.g. "English / Fluent").
-- years_in_rank: lower bound from "X+ years" or first number in a range; allow "Green".
+- years_in_rank: Find the numeric value for "years in rank" or "experience" and convert it to a single number (e.g., "5+ years" -> "5", "2-3 years" -> "2", "proven experience" -> "2.5"). If the term "green" is used, return "Green".
 - city and country: infer both if possible. If only a city is stated, include the corresponding country in 'country'.
+- homeport: extract the city/port if explicitly stated, for example "homeport: Palma". If not stated, infer it from phrases like "based in".
 - description: put ALL extra, non-mapped information here (itinerary, visas, qualifications like AEC/ENG1/STCW, training, career progression, etc.).
   Do not leave essential context out of description.
 - contact_email, contact_phone: extract if present; else "".
@@ -521,6 +600,13 @@ ${finalText}
       if (guess) out.country = guess;
     }
 
+    // Nuevo Fallback para "SOF" o "South of France"
+    if (!out.country) {
+      if (/\b(sof|south of france)\b/i.test(finalText)) {
+        out.country = "France";
+      }
+    }
+
     // Fallback de season_type si viene vacío
     if (!out.season_type) {
       const st = inferSeasonType(finalText);
@@ -528,10 +614,7 @@ ${finalText}
     }
 
     // Fallback de years_in_rank si viene vacío
-    if (!out.years_in_rank) {
-      const yr = inferYearsInRank(finalText);
-      if (yr) out.years_in_rank = yr;
-    }
+    updateYearsInRank(finalText, out);
 
     // === RECONCILIACIÓN de yacht_size con LOA explícito en el texto ===
     {
@@ -557,9 +640,48 @@ ${finalText}
     if (!out.language_1 || !out.language_2) {
       inferLanguages(finalText, out);
     }
+    // Nueva lógica para la fluidez del idioma si el campo no se pudo llenar
+    updateLanguageFluency(finalText, out);
 
     // Verificación ASAP final (por si algo lo pisó en el flujo)
     ensureASAP(finalText, out);
+
+    // =========================================================
+    // LÓGICA DE LIVEABOARD CORREGIDA Y OPTIMIZADA
+    // =========================================================
+    ;{
+  const t = finalText.toLowerCase();
+
+  // 1) "No liveaboard" — manda siempre
+  const notLiveaboardRegExp =
+    /\b(?:non[-\s]?live\s*aboard|no\s+live\s*aboard|not\s+live\s*aboard|live\s+ashore|shore[-\s]?based|living\s+ashore)\b/;
+
+  if (notLiveaboardRegExp.test(t) || out.work_environment === "Shore-based") {
+    out.liveaboard = "No";
+  } else if (/\b(?:own|private)\s+cabin\b/i.test(finalText)) {
+    // 2) Expreso "Own/Private cabin"
+    out.liveaboard = "Own Cabin";
+  } else if (/\b(?:share|sharing)\s+cabin\b/i.test(finalText)) {
+    // 3) Expreso "Share/Sharing cabin"
+    out.liveaboard = "Share Cabin";
+  } else {
+    // 4) Defaults por pareja o rango
+    const mentionsCouple =
+      /\b(?:couple(?:'s)?|couples?|team\s+of\s+2|pair|couple\s+(?:role|position))\b/i.test(t);
+    const isCaptainFamily =
+      ["Captain", "Captain/Engineer", "Relief Captain", "Skipper"].includes(out.rank);
+
+    out.liveaboard = (mentionsCouple || isCaptainFamily) ? "Own Cabin" : "Share Cabin";
+  }
+}
+    // =========================================================
+
+    // === NUEVA IMPLEMENTACIÓN DE HOMEPORT ===
+    // Solo si el homeport está vacío, usamos la lógica de inferencia
+    if (!out.homeport) {
+      inferHomeport(finalText, out);
+    }
+    // ===================================
 
     return res.status(200).json(out);
   } catch (err) {
