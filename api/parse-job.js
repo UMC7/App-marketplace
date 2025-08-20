@@ -23,6 +23,83 @@ const CURRENCIES = ["USD","EUR","GBP","AUD"];
 const LANGS = ["Arabic","Dutch","English","French","German","Greek","Italian","Mandarin","Portuguese","Russian","Spanish","Turkish","Ukrainian"];
 const FLU = ["Native","Fluent","Conversational"];
 
+// --- ayudas locales (solo si falta info del modelo) ---
+
+// Mapa básico ciudad -> país (se usa SOLO si el país viene vacío)
+const CITY_TO_COUNTRY = {
+  "fort lauderdale": "United States",
+  "miami": "United States",
+  "west palm beach": "United States",
+  "antibes": "France",
+  "cannes": "France",
+  "nice": "France",
+  "palma": "Spain",
+  "palma de mallorca": "Spain",
+  "barcelona": "Spain",
+  "valencia": "Spain",
+  "monaco": "Monaco",
+  "genoa": "Italy",
+  "la spezia": "Italy",
+  "livorno": "Italy",
+  "viareggio": "Italy",
+  "athens": "Greece",
+  "athina": "Greece",
+  "split": "Croatia",
+  "tivat": "Montenegro",
+  "dubai": "United Arab Emirates",
+  "abu dhabi": "United Arab Emirates",
+  "doha": "Qatar",
+  "auckland": "New Zealand",
+  "sydney": "Australia"
+};
+
+// Parser simple para fechas tipo “25th of June”, “25 June”, “June 25”
+const MONTH_INDEX = {
+  january:0,february:1,march:2,april:3,may:4,june:5,
+  july:6,august:7,september:8,october:9,november:10,december:11
+};
+
+function pickUpcomingYear(monthIdx, day, today) {
+  const y0 = today.getFullYear();
+  const candidate = new Date(Date.UTC(y0, monthIdx, day));
+  return candidate >= new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()))
+    ? y0
+    : y0 + 1;
+}
+
+function tryParseStartDateFrom(text, today) {
+  const t = text.toLowerCase();
+
+  // 1) 25th of June
+  let m = t.match(/\b(\d{1,2})(st|nd|rd|th)?\s+of\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/);
+  if (m) {
+    const day = parseInt(m[1], 10);
+    const mon = MONTH_INDEX[m[3]];
+    const year = pickUpcomingYear(mon, day, today);
+    return `${year}-${String(mon+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+  }
+
+  // 2) 25 June
+  m = t.match(/\b(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/);
+  if (m) {
+    const day = parseInt(m[1], 10);
+    const mon = MONTH_INDEX[m[2]];
+    const year = pickUpcomingYear(mon, day, today);
+    return `${year}-${String(mon+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+  }
+
+  // 3) June 25
+  m = t.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})\b/);
+  if (m) {
+    const mon = MONTH_INDEX[m[1]];
+    const day = parseInt(m[2], 10);
+    const year = pickUpcomingYear(mon, day, today);
+    return `${year}-${String(mon+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+  }
+
+  return "";
+}
+
 // permitir body grande y texto plano
 export const config = {
   api: {
@@ -106,7 +183,10 @@ Do not include comments, markdown, or extra text.
     };
 
     const rules = `
-- TODAY = ${todayStr}. If the post only gives a MONTH (e.g. "October"), set start_date to the 1st of that month in the upcoming occurrence relative to TODAY; set is_asap=false.
+- TODAY = ${todayStr}.
+- If the text contains an explicit day (e.g., "25th of June", "25 June", "June 25"): use THAT day.
+  Only default to the 1st if the post mentions a MONTH with NO day.
+- If year is missing: choose the next upcoming occurrence relative to TODAY.
 - If ASAP/immediate/flexible: is_asap=true and start_date="".
 - Salary: capture the numeric amount next to a currency (EUR/€ GBP/£ USD/$ AUD). Ignore numbers referring to leave days/rotation.
   If there is currency mention but NO numeric amount -> is_doe=true, salary=""; set salary_currency accordingly.
@@ -119,8 +199,9 @@ Do not include comments, markdown, or extra text.
 - liveaboard: "Share Cabin" if the text says share/sharing cabin; "Own Cabin" if said; "No" for shore-based.
 - languages: fill language_1/_2 and *_fluency when explicit (e.g. "English / Fluent").
 - years_in_rank: lower bound from "X+ years" or first number in a range; allow "Green".
-- description: concise summary (itinerary + key quals + extras). DO NOT duplicate fields already mapped.
-- country vs city: if ambiguous short word and clearly a country, put into country; otherwise city.
+- city and country: infer both if possible. If only a city is stated, include the corresponding country in 'country'.
+- description: put ALL extra, non-mapped information here (itinerary, visas, qualifications like AEC/ENG1/STCW, training, career progression, etc.).
+  Do not leave essential context out of description.
 - contact_email, contact_phone: extract if present; else "".
 - Never invent data: leave as "" when not present. Keep booleans strictly true/false (no quotes in JSON).
     `.trim();
@@ -213,15 +294,25 @@ ${finalText}
       salary_currency: coerceStr(data.salary_currency),
     };
 
-    // ← compatibilidad con la UI: la UI usa "title" (rank en tu API)
-    out.title = out.rank || out.title || "";
-
-    // Si hay moneda pero no monto, asumimos DOE
-    if (out.salary_currency && !out.salary) out.is_doe = true;
-
+    // Coherencia DOE
     if (out.is_doe) {
       out.salary = "";
       out.salary_currency = out.salary_currency || out.teammate_salary_currency || "";
+    }
+
+    // Fallback de fecha si el modelo devolvió 1º del mes o nada y el texto tenía día explícito
+    if (!out.start_date || /\-\d{2}\-01$/.test(out.start_date)) {
+      const parsed = tryParseStartDateFrom(finalText, today);
+      if (parsed) {
+        out.start_date = parsed;
+        out.is_asap = false;
+      }
+    }
+
+    // Fallback de país si llega vacío pero hay ciudad conocida
+    if (!out.country && out.city) {
+      const guess = CITY_TO_COUNTRY[out.city.trim().toLowerCase()];
+      if (guess) out.country = guess;
     }
 
     return res.status(200).json(out);
