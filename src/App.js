@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -8,20 +7,15 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 
-// Contexts
 import { useAuth } from './context/AuthContext';
-
-// Components
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import CookieBanner from './components/cookies/CookieBanner';
-
-// Utils
 import { initAnalytics } from './utils/analytics';
 import { getConsent, getThemePreference } from './components/cookies/cookiesConfig';
 
-// Pages
 import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -42,6 +36,7 @@ import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage';
 import './App.css';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import AnimatedLayout from './layouts/AnimatedLayout'; // ✅ Nuevo layout
 
 function AuthRedirectHandler() {
   const location = useLocation();
@@ -49,29 +44,23 @@ function AuthRedirectHandler() {
 
   useEffect(() => {
     const { pathname, hash, search } = location;
-
-    // Supabase coloca los parámetros normalmente en el HASH (#type=recovery&access_token=...)
-    // pero algunos entornos podrían usar querystring. Leemos ambos.
     const hashParams = new URLSearchParams((hash || '').replace(/^#/, ''));
     const searchParams = new URLSearchParams(search || '');
 
     const type = hashParams.get('type') || searchParams.get('type');
     const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
 
-    // Flujo de recuperación: redirige a /reset-password y preserva el hash (tokens) para que la página lo procese.
     if (type === 'recovery' && accessToken) {
       navigate(`/reset-password${hash || ''}`, { replace: true });
       return;
     }
 
-    // Verificación de signup: también puede llegar por hash
     if (type === 'signup' && accessToken) {
       toast.success('Your email has been successfully verified.');
       navigate('/login', { replace: true });
       return;
     }
 
-    // Fallback: algunos setups quedan en "/#". Redirige limpio.
     if (pathname === '/' && hash === '#') {
       navigate('/reset-password', { replace: true });
     }
@@ -80,46 +69,13 @@ function AuthRedirectHandler() {
   return null;
 }
 
-function App() {
-  const { currentUser, loading } = useAuth();
-  const [consentLoaded, setConsentLoaded] = useState(false);
-
-  // Aplicar tema guardado antes de mostrar la app
-  useEffect(() => {
-    const savedTheme = getThemePreference();
-    if (savedTheme === 'dark') {
-      document.body.classList.add('dark-mode');
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.body.classList.remove('dark-mode');
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-  }, []);
-
-  // Inicializar Google Analytics si el consentimiento lo permite
-  useEffect(() => {
-    const storedConsent = getConsent();
-    if (storedConsent) {
-      initAnalytics();
-    }
-    setConsentLoaded(true);
-  }, []);
-
-  if (loading || !consentLoaded) {
-    return <div>Loading application...</div>;
-  }
+function AppRoutes({ currentUser }) {
+  const location = useLocation();
 
   return (
-    <Router>
-      <Navbar />
-      <AuthRedirectHandler />
-      <ToastContainer autoClose={1500} />
-
-      {/* Banner de Cookies */}
-      <CookieBanner />
-
-      <div className="main-content">
-        <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route element={<AnimatedLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/marketplace" element={<HomePage />} />
 
@@ -170,7 +126,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/admin"
             element={
@@ -179,12 +134,52 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route path="/legal" element={<LegalPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        </Route>
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
+function App() {
+  const { currentUser, loading } = useAuth();
+  const [consentLoaded, setConsentLoaded] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = getThemePreference();
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark-mode');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-mode');
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedConsent = getConsent();
+    if (storedConsent) {
+      initAnalytics();
+    }
+    setConsentLoaded(true);
+  }, []);
+
+  if (loading || !consentLoaded) {
+    return <div>Loading application...</div>;
+  }
+
+  return (
+    <Router>
+      <Navbar />
+      <AuthRedirectHandler />
+      <ToastContainer autoClose={1500} />
+      <CookieBanner />
+
+      <div className="main-content">
+        <AppRoutes currentUser={currentUser} />
       </div>
     </Router>
   );
