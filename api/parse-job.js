@@ -9,15 +9,15 @@ const RANKS = [
   "Chief Officer", "2nd Officer", "3rd Officer", "Bosun", "Deck/Engineer", "Mate",
   "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster",
   "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Electrician", "Chef",
-  "Head Chef", "Sous Chef", "Solo Chef", "Cook/Crew Chef", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
+  "Head Chef", "Sous Chef", "Solo Chef", "Cook/Crew Chef", "Crew Chef/Stew", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
   "3rd Stewardess", "Solo Steward(ess)", "Junior Steward(ess)", "Cook/Steward(ess)", "Stew/Deck",
   "Laundry/Steward(ess)", "Stew/Masseur", "Masseur", "Hairdresser/Barber", "Nanny", "Videographer",
   "Yoga/Pilates Instructor", "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
 ];
 
 const YACHT_TYPES = ["Motor Yacht", "Sailing Yacht", "Chase Boat", "Catamaran"];
-const YACHT_BUCKETS = ["0 - 30m", "31 - 40m", "41 - 50m", "51 - 70m", "> 70m"];
-const CHASE_BUCKETS = ["< 10m", "10 - 15m", "15 - 20m", "> 20m"];
+const YACHT_BUCKETS = ["0 - 30m", "31 - 40m", "41 - 50m", "51 - 70m", "71 - 100m", ">100m"];
+const CHASE_BUCKETS = ["<10m", "10 - 15m", "15 - 20m", ">20m"];
 const TERMS = ["Rotational", "Permanent", "Temporary", "Seasonal", "Relief", "Delivery", "Crossing", "DayWork"];
 const CURRENCIES = ["USD", "EUR", "GBP", "AUD"];
 const LANGS = ["Arabic", "Dutch", "English", "French", "German", "Greek", "Italian", "Mandarin", "Portuguese", "Russian", "Spanish", "Turkish", "Ukrainian"];
@@ -48,6 +48,8 @@ const RANK_SYNONYMS = {
   "stew/cook": "Cook/Steward(ess)",
   "deckhand/stew": "Stew/Deck",
   "Sole Chef": "Solo Chef",
+  "Crew Chef/Steward": "Crew Chef/Stew",
+  "Crew Chef/Stewardess": "Crew Chef/Stew",
 };
 
 // Mapa básico ciudad -> país (se usa SOLO si el país viene vacío)
@@ -180,16 +182,17 @@ function extractAllMeters(text) {
 function bucketYachtSize(meters, yachtType) {
   if (meters == null) return "";
   if (yachtType === "Chase Boat") {
-    if (meters < 10) return "< 10m";
+    if (meters < 10) return "<10m";
     if (meters <= 15) return "10 - 15m";
     if (meters <= 20) return "15 - 20m";
-    return "> 20m";
+    return ">20m";
   }
   if (meters <= 30) return "0 - 30m";
   if (meters <= 40) return "31 - 40m";
   if (meters <= 50) return "41 - 50m";
   if (meters <= 70) return "51 - 70m";
-  return "> 70m";
+  if (meters <= 100) return "71 - 100m";
+  return ">100m";
 }
 
 // Season type por regex
@@ -644,6 +647,12 @@ ${finalText}
     // Nueva lógica para la fluidez del idioma si el campo no se pudo llenar
     updateLanguageFluency(finalText, out);
 
+    // === DEFAULT: si no se mencionan idiomas, asumir English / Fluent ===
+    if (!out.language_1 && !out.language_2) {
+      out.language_1 = "English";
+      out.language_1_fluency = "Fluent";
+    }
+
     // Verificación ASAP final (por si algo lo pisó en el flujo)
     ensureASAP(finalText, out);
 
@@ -659,10 +668,10 @@ ${finalText}
 
   if (notLiveaboardRegExp.test(t) || out.work_environment === "Shore-based") {
     out.liveaboard = "No";
-  } else if (/\b(?:own|private)\s+cabin\b/i.test(finalText)) {
+  } else if (/\b(?:own|private|single|solo|individual|separate)\b(?:\s+berth)?\s*-?\s*cabins?\b/i.test(finalText)) {
     // 2) Expreso "Own/Private cabin"
     out.liveaboard = "Own Cabin";
-  } else if (/\b(?:share|sharing)\s+cabin\b/i.test(finalText)) {
+  } else if (/\b(?:share(?:s|d)?|sharing)\b(?:\s+(?:a|one|the))?\s+cabins?\b/i.test(finalText)) {
     // 3) Expreso "Share/Sharing cabin"
     out.liveaboard = "Share Cabin";
   } else {
