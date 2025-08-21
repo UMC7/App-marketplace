@@ -156,6 +156,45 @@ function tryParseStartDateFrom(text, today) {
   return "";
 }
 
+// Detecta "until/till/through/thru <fecha>" y devuelve una fecha ISO para END DATE
+function tryParseUntilEndDate(text, today) {
+  const t = text.toLowerCase();
+
+  // a) until 15th of November
+  let m = t.match(/\b(?:until|till|through|thru)\s+(\d{1,2})(st|nd|rd|th)?\s+of\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/);
+  if (m) {
+    const day = parseInt(m[1], 10);
+    const mon = MONTH_INDEX[m[3]];
+    const year = pickUpcomingYear(mon, day, today);
+    return `${year}-${String(mon + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  // b) until 15 November
+  m = t.match(/\b(?:until|till|through|thru)\s+(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/);
+  if (m) {
+    const day = parseInt(m[1], 10);
+    const mon = MONTH_INDEX[m[2]];
+    const year = pickUpcomingYear(mon, day, today);
+    return `${year}-${String(mon + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  // c) until November 15
+  m = t.match(/\b(?:until|till|through|thru)\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})\b/);
+  if (m) {
+    const mon = MONTH_INDEX[m[1]];
+    const day = parseInt(m[2], 10);
+    const year = pickUpcomingYear(mon, day, today);
+    return `${year}-${String(mon + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+
+  return "";
+}
+
+// Pista de inicio (“start/starting/from/join on/commence…”) en cualquier parte del texto
+function hasStartCue(text) {
+  return /\b(start(?:ing)?\b|from\b|join(?:ing)?\s+on\b|embark(?:ing)?\s+on\b|commenc(?:e|ing)\b)/i.test(text);
+}
+
 // Extraer LOA en metros o pies (MEJORA: ahora también convierte pies a metros)
 function extractAllMeters(text) {
   const t = text.toLowerCase();
@@ -586,23 +625,38 @@ ${finalText}
     ensureDOE(finalText, out);
 
     // Fallback ASAP por texto (primera pasada)
-    ensureASAP(finalText, out);
+ensureASAP(finalText, out);
 
-    // Fallback de fecha si el modelo devolvió 1º del mes o nada y el texto tenía día explícito
-    if (!out.start_date || /\-\d{2}\-01$/.test(out.start_date)) {
-      const parsed = tryParseStartDateFrom(finalText, today);
-      if (parsed) {
-        out.start_date = parsed;
-        out.is_asap = false;
-      }
-    }
+// --- Reconciliación específica para "until <fecha>" ---
+// Si hay "until/till/through/thru <fecha>": usarlo como end_date y asumir ASAP para start si no hay pista de inicio.
+const untilEnd = tryParseUntilEndDate(finalText, today);
+if (untilEnd) {
+  if (!out.end_date) out.end_date = untilEnd;
 
-    // Normalización de país y fallback por ciudad
-    if (out.country) out.country = normalizeCountryName(out.country);
-    if (!out.country && out.city) {
-      const guess = CITY_TO_COUNTRY[out.city.trim().toLowerCase()];
-      if (guess) out.country = guess;
-    }
+  const startEqualsEnd = !!out.start_date && out.start_date === untilEnd;
+  const hasCue = hasStartCue(finalText); // "start/starting/from/join on/commence..."
+
+  if (!hasCue || startEqualsEnd) {
+    out.start_date = "";
+    out.is_asap = true;
+  }
+}
+
+// Fallback de fecha si el modelo devolvió 1º del mes o nada y el texto tenía día explícito
+if ((!out.start_date || /\-\d{2}\-01$/.test(out.start_date)) && !untilEnd) {
+  const parsed = tryParseStartDateFrom(finalText, today);
+  if (parsed) {
+    out.start_date = parsed;
+    out.is_asap = false;
+  }
+}
+
+// Normalización de país y fallback por ciudad
+if (out.country) out.country = normalizeCountryName(out.country);
+if (!out.country && out.city) {
+  const guess = CITY_TO_COUNTRY[out.city.trim().toLowerCase()];
+  if (guess) out.country = guess;
+}
 
     // Nuevo Fallback para "SOF" o "South of France"
     if (!out.country) {

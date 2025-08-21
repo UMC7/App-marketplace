@@ -344,7 +344,7 @@ const sanitizedData = {
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
         zIndex: 9999,
         display: 'flex',
         flexDirection: 'column',
