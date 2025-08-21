@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
+import '../styles/float.css';
 
 const defaultYachtSizes = [
   "0 - 30m", "31 - 40m", "41 - 50m", "51 - 70m", "> 70m"
@@ -330,7 +331,40 @@ const sanitizedData = {
 };
 
   return (
-  <div className="container">
+  <>
+    {loading && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <img
+          src="/logos/Iniciales.png"
+          alt="Loading logo"
+          style={{ width: 100, height: 100, animation: 'float 2s infinite ease-in-out' }}
+        />
+        <p style={{
+          marginTop: 20,
+          fontSize: 18,
+          color: '#333',
+          fontWeight: 'bold',
+          fontFamily: 'sans-serif'
+        }}>
+          Almost there...
+        </p>
+      </div>
+    )}
+    
+    <div className="container">
+
     <div className="login-form">
   <h2 style={{ textAlign: 'center', color: 'var(--primary-color)', marginBottom: '20px' }}>
     Job Offer Form
@@ -913,6 +947,7 @@ const sanitizedData = {
   </form>
   </div>
   </div>
+  </>
   );
 }
 

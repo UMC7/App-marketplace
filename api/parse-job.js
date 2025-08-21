@@ -47,6 +47,7 @@ const RANK_SYNONYMS = {
   "cook/stew": "Cook/Steward(ess)",
   "stew/cook": "Cook/Steward(ess)",
   "deckhand/stew": "Stew/Deck",
+  "Sole Chef": "Solo Chef",
 };
 
 // Mapa básico ciudad -> país (se usa SOLO si el país viene vacío)
