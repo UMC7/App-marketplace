@@ -1,3 +1,9 @@
+.floating-logo {
+  width: 200px;
+  height: 200px;
+  animation: float 2s infinite ease-in-out;
+}
+
 @keyframes float {
   0% {
     transform: translateY(0px);

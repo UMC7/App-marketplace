@@ -80,6 +80,9 @@ const autoFillFromText = async () => {
     toast.error('Paste a job post first.');
     return;
   }
+
+  setLoading(true);
+
   try {
     const res = await fetch('/api/parse-job', {
       method: 'POST',
@@ -145,6 +148,8 @@ const autoFillFromText = async () => {
   } catch (err) {
     console.error(err);
     toast.error(err.message || 'Could not parse.');
+  } finally {
+    setLoading(false); // ✅ Oculta el overlay
   }
 };
 
@@ -339,7 +344,7 @@ const sanitizedData = {
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
         zIndex: 9999,
         display: 'flex',
         flexDirection: 'column',
@@ -349,14 +354,15 @@ const sanitizedData = {
         <img
           src="/logos/Iniciales.png"
           alt="Loading logo"
-          style={{ width: 100, height: 100, animation: 'float 2s infinite ease-in-out' }}
+          className="floating-logo"
         />
         <p style={{
           marginTop: 20,
-          fontSize: 18,
-          color: '#333',
-          fontWeight: 'bold',
-          fontFamily: 'sans-serif'
+          fontSize: 20,
+          color: '#ffffff',
+          fontWeight: 700,
+          fontFamily: 'sans-serif',
+          textShadow: '1px 1px 3px rgba(0, 0, 0, 0.6)',
         }}>
           Almost there...
         </p>
@@ -366,10 +372,10 @@ const sanitizedData = {
     <div className="container">
 
     <div className="login-form">
-  <h2 style={{ textAlign: 'center', color: 'var(--primary-color)', marginBottom: '20px' }}>
+    <h2 style={{ textAlign: 'center', color: 'var(--primary-color)', marginBottom: '20px' }}>
     Job Offer Form
-  </h2>
-  <form onSubmit={handleSubmit}>
+    </h2>
+    <form onSubmit={handleSubmit}>
 
     {/* === Paste job post (optional) === */}
 <div style={{ marginBottom: 16, borderBottom: '1px solid #eee', paddingBottom: 12 }}>
