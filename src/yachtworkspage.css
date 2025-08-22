@@ -694,6 +694,12 @@ body:not(.dark-mode) .filters-panel h3 {
   .collapsed-images img:only-child {
     border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
   }
+
+  .posted-timestamp-collapsed {
+    bottom: 6px !important;  /* antes era más arriba */
+    right: 10px !important;  /* un pelín hacia adentro */
+    font-size: 0.75rem;      /* opcional: un poco más pequeño */
+  }
 }
 
 /* Mobile Portrait Specific (768px and orientation portrait) */

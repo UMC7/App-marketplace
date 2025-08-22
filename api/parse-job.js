@@ -22,6 +22,7 @@ const TERMS = ["Rotational", "Permanent", "Temporary", "Seasonal", "Relief", "De
 const CURRENCIES = ["USD", "EUR", "GBP", "AUD"];
 const LANGS = ["Arabic", "Dutch", "English", "French", "German", "Greek", "Italian", "Mandarin", "Portuguese", "Russian", "Spanish", "Turkish", "Ukrainian"];
 const FLU = ["Native", "Fluent", "Conversational"];
+const PROPULSION = ["Shaft Drive", "Pod Drive", "Waterjet", "Sail Drive", "Outboard", "Stern Drive"];
 
 // --- ayudas locales (solo si falta info del modelo) ---
 
@@ -423,6 +424,77 @@ function inferHomeport(text, out) {
   }
 }
 
+// === GENDER helper (solo si el aviso lo exige explícitamente) ===
+function inferGender(text) {
+  const t = text.toLowerCase();
+  if (/\b(female|women|woman)\b/.test(t)) return "Female";
+  if (/\b(male|men|man)\b/.test(t)) return "Male";
+  return "";
+}
+
+// === VISAS helper (B1/B2, Schengen, EU passport) ===
+function inferVisas(text) {
+  const t = text.toLowerCase();
+  const res = [];
+  if (/\b(b1\s*\/\s*b2|b1b2|b1\b[^a-z0-9]*b2\b|us\s*visa)\b/.test(t)) res.push("B1/B2");
+  if (/\bschengen\b/.test(t)) res.push("Schengen");
+  // ⬇️ nuevo: “European passport / EU passport”
+  if (/\beuropean\s+passport\b|\beu\s*passport\b/.test(t)) res.push("European Passport");
+  return Array.from(new Set(res));
+}
+
+// === Itinerary → EU docs helper (Mediterranean only, non-culinary) ===
+function itineraryImpliesSchengen(text) {
+  const t = text.toLowerCase();
+
+  // matches for "Mediterranean" / "the Med" / "Med" (short form handled via context)
+  const medRe = /\b(mediterranean|the\s+med|med)\b/g;
+  const culinaryRe = /\b(cuisine|diet|food|menu|restaurant|kitchen|style)\b/;
+  const itineraryCueRe =
+    /\b(itinerary|itineraries|programmes?|programs?|season|seasons|cruising|cruise|route|schedule|charter|home\s*port|homeport|based\s+in|operat(?:e|es|ing))\b/;
+
+  const matches = [...t.matchAll(medRe)];
+  if (matches.length === 0) return false;
+
+  for (const m of matches) {
+    const i = m.index ?? 0;
+    const window = t.slice(Math.max(0, i - 40), Math.min(t.length, i + m[0].length + 40));
+    // discard culinary contexts (e.g., "Mediterranean food")
+    if (culinaryRe.test(window)) continue;
+    // require itinerary/operations context near the mention
+    if (itineraryCueRe.test(window)) return true;
+  }
+  return false;
+}
+
+// === PROPULSION helper ===
+function inferPropulsionType(text) {
+  const t = text.toLowerCase();
+
+  // Pod Drive (IPS, Azipod, Zeus)
+  if (/\b(ips|azipod|zeus\s*pods?|pod\s*drive|pods?|volvo\s*-?\s*penta)\b/.test(t)) return "Pod Drive";
+
+  // Waterjet / Jet
+  if (/\b(water\s*jet|waterjet|jet\s*drive)\b/.test(t)) return "Waterjet";
+
+  // Shaft Drive (straight shaft, twin screw)
+  if (/\b(shaft\s*drive|straight\s*shaft|twin\s*screws?|twin\s*shaft)\b/.test(t)) return "Shaft Drive";
+
+  // Sail Drive
+  if (/\b(sail\s*drive|saildrive)\b/.test(t)) return "Sail Drive";
+
+  // Outboard(s)
+  if (/\b(outboards?|o\/b)\b/.test(t)) return "Outboard";
+
+  // Stern Drive / Z-Drive / MerCruiser
+  if (/\b(stern\s*drive|sterndrive|z-?drive|mercruiser)\b/.test(t)) return "Stern Drive";
+
+  // Genérico: si menciona "jet" a secas, asumir Waterjet
+  if (/\bjets?\b/.test(t)) return "Waterjet";
+
+  return "";
+}
+
 // permitir body grande y texto plano
 export const config = {
   api: {
@@ -500,6 +572,9 @@ Do not include comments, markdown, or extra text.
       language_2: "",
       language_2_fluency: FLU.join("|") + "|",
       salary_currency: CURRENCIES.join("|") + "|",
+      gender: "Male|Female|",
+      propulsion_type: PROPULSION.join("|") + "|",
+      visas: [],
     };
 
     const rules = `
@@ -515,12 +590,15 @@ Do not include comments, markdown, or extra text.
 - yacht_size: bucket LOA meters into one of ${YACHT_BUCKETS.join(", ")} (or ${CHASE_BUCKETS.join(", ")} if clearly a Chase Boat).
 - yacht_type: one of ${YACHT_TYPES.join("|")}.
 - uses: map "Private", "Charter" or "Private/Charter" if present.
+- propulsion_type: normalize to one of [Shaft Drive, Pod Drive, Waterjet, Sail Drive, Outboard, Stern Drive] when explicitly mentioned (e.g., "IPS/Azipod/Zeus pods" => "Pod Drive"; "waterjet/jet" => "Waterjet"; "stern drive/sterndrive/z-drive" => "Stern Drive"; "twin screw/straight shaft" => "Shaft Drive"). Otherwise "".
 - team: "Yes" ONLY if it explicitly mentions a COUPLE/PAIR role; otherwise "No".
 - liveaboard: "Share Cabin" if the text says share/sharing cabin; "Own Cabin" if said; "No" for shore-based.
 - languages: fill language_1/_2 and *_fluency when explicit (e.g. "English / Fluent").
 - years_in_rank: Find the numeric value for "years in rank" or "experience" and convert it to a single number (e.g., "5+ years" -> "5", "2-3 years" -> "2", "proven experience" -> "2.5"). If the term "green" is used, return "Green".
 - city and country: infer both if possible. If only a city is stated, include the corresponding country in 'country'.
 - homeport: extract the city/port if explicitly stated, for example "homeport: Palma". If not stated, infer it from phrases like "based in".
+- gender: ONLY if the text explicitly requires it (e.g., "female only", "male required"). Otherwise, "".
+- visas: return an array with any of ["B1/B2","Schengen"] explicitly mentioned (e.g., "B1/B2 required", "valid Schengen"). If none, [].
 - description: put ALL extra, non-mapped information here (itinerary, visas, qualifications like AEC/ENG1/STCW, training, career progression, etc.).
   Do not leave essential context out of description.
 - contact_email, contact_phone: extract if present; else "".
@@ -602,6 +680,7 @@ ${finalText}
       flag: coerceStr(data.flag),
       yacht_size: coerceStr(data.yacht_size),
       yacht_type: coerceStr(data.yacht_type),
+      propulsion_type: coerceStr(data.propulsion_type),
       uses: coerceStr(data.uses),
       homeport: coerceStr(data.homeport),
       liveaboard: coerceStr(data.liveaboard),
@@ -613,6 +692,19 @@ ${finalText}
       language_2: coerceStr(data.language_2),
       language_2_fluency: coerceStr(data.language_2_fluency),
       salary_currency: coerceStr(data.salary_currency),
+      gender: coerceStr(data.gender),
+      visas: Array.isArray(data.visas)
+  ? data.visas
+      .map(v => String(v).toLowerCase())
+      .map(v => {
+        if (/\bb1\b[^a-z0-9]*\/[^a-z0-9]*\bb2\b|\bb1b2\b/.test(v)) return "B1/B2";
+        if (/\bschengen\b/.test(v)) return "Schengen";
+        if (/\beu\b[^a-z0-9]*passport|\beuropean\s+passport\b/.test(v)) return "European Passport";
+        if (/\bgreen\s*card\b|\bus\s*citizen\b/.test(v)) return "Green card or US Citizen";
+        return "";
+      })
+      .filter(Boolean)
+  : [],
     };
 
     // Coherencia DOE del modelo
@@ -746,6 +838,77 @@ if (!out.country && out.city) {
       inferHomeport(finalText, out);
     }
     // ===================================
+
+    // - Si no se menciona nada, asumir "Shaft Drive"
+    if (!out.propulsion_type) {
+      out.propulsion_type = inferPropulsionType(finalText);
+      if (!out.propulsion_type) out.propulsion_type = "Shaft Drive";
+    }
+
+// Visas fallback (si el modelo no devolvió nada)
+if (!out.visas || out.visas.length === 0) out.visas = inferVisas(finalText);
+
+// --- Gender defaults by rank (only if not specified) ---
+if (!out.gender) {
+  const femRanks = new Set([
+    'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Stewardess',
+    'Solo Steward(ess)', 'Junior Steward(ess)', 'Cook/Steward(ess)', 'Stew/Deck',
+    'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny'
+  ]);
+  const maleRanks = new Set([
+    'Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain'
+  ]);
+
+  if (femRanks.has(out.rank)) {
+    out.gender = 'Female';
+  } else if (maleRanks.has(out.rank)) {
+    out.gender = 'Male';
+    } else {
+    out.gender = '';
+  }
+}
+
+// Itinerary-based EU docs (Mediterranean → require Schengen + EU passport)
+{
+  if (itineraryImpliesSchengen(finalText)) {
+    if (!Array.isArray(out.visas)) out.visas = [];
+    if (!out.visas.includes('Schengen')) {
+      out.visas.push('Schengen');
+    }
+    if (!out.visas.includes('European Passport')) {
+    out.visas.push('European Passport');
+    }
+  }
+}
+
+// --- Visa defaults by country (only if visas not mentioned) ---
+{
+  const country = (out.country || "").trim();
+
+  // Asegurar array
+  if (!Array.isArray(out.visas)) out.visas = [];
+
+  // Si ya tenemos alguna visa detectada, no forzar defaults
+  const hasAnyVisa = out.visas.length > 0;
+
+  // Conjunto Schengen (nombres como suelen salir en tu app)
+  const SCHENGEN = new Set([
+    'Austria','Belgium','Croatia','Czechia','Czech Republic','Denmark','Estonia','Finland',
+    'France','Germany','Greece','Hungary','Iceland','Italy','Latvia','Liechtenstein',
+    'Lithuania','Luxembourg','Malta','Netherlands','Norway','Poland','Portugal',
+    'Slovakia','Slovenia','Spain','Sweden','Switzerland'
+  ]);
+
+  if (!hasAnyVisa) {
+    if (country === 'United States') {
+      // USA
+      out.visas = ['B1/B2', 'Green card or US Citizen'];
+    } else if (SCHENGEN.has(country)) {
+      // Espacio Schengen
+      out.visas = ['Schengen', 'European Passport'];
+    }
+  }
+}
 
     return res.status(200).json(out);
   } catch (err) {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
 import '../styles/float.css';
@@ -9,6 +9,14 @@ const defaultYachtSizes = [
 
 const chaseBoatSizes = [
   "<10m", "10 - 15m", "15 - 20m", ">20m"
+];
+
+const visaOptions = [
+  'Green card or US Citizen',
+  'B1/B2',
+  'C1/D',
+  'Schengen',
+  'European Passport'
 ];
 
 const initialState = {
@@ -22,6 +30,7 @@ const initialState = {
   salary: '',
   is_doe: false,
   years_in_rank: '',
+  gender: '',
   description: '',
   contact_email: '',
   contact_phone: '',
@@ -35,6 +44,7 @@ const initialState = {
   flag: '',
   yacht_size: '',
   yacht_type: '',
+  propulsion_type: '',
   uses: '',
   homeport: '',
   liveaboard: '',
@@ -47,6 +57,7 @@ const initialState = {
   language_2_fluency: '',
   salary_currency: '',
   teammate_salary_currency: '',
+  visas: [],
 };
 
 const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain', 'Chief Officer', '2nd Officer', '3rd Officer', 'Bosun', 'Deck/Engineer', 'Mate', 'Lead Deckhand', 'Deckhand', 'Deck/Steward(ess)', 'Deck/Carpenter', 'Deck/Divemaster', 'Dayworker', 'Chief Engineer', '2nd Engineer', '3rd Engineer', 'Solo Engineer', 'Electrician', 'Chef', 'Head Chef', 'Sous Chef', 'Solo Chef', 'Cook/Crew Chef', 'Crew Chef/Stew', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Stewardess', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Cook/Steward(ess)', 'Stew/Deck', 'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny', 'Videographer', 'Yoga/Pilates Instructor', 'Personal Trainer', 'Dive Instrutor', 'Water Sport Instrutor', 'Nurse', 'Other']; // ajusta según lista oficial
@@ -70,9 +81,38 @@ const yearsOptions = ['Green', 1, 2, 2.5, 3, 5];
 
 function YachtOfferForm({ user, onOfferPosted, initialValues, mode }) {
   const [formData, setFormData] = useState(initialValues ? { ...initialState, ...initialValues } : initialState);
+  // Normaliza team para edición: boolean -> 'Yes'/'No'
+useEffect(() => {
+  if (initialValues && typeof initialValues.team !== 'undefined') {
+    setFormData(prev => ({
+      ...prev,
+      team: (initialValues.team === true || initialValues.team === 'Yes') ? 'Yes' : 'No',
+    }));
+  }
+}, [initialValues]);
   const [loading, setLoading] = useState(false);
   const [jobText, setJobText] = useState('');
   const [showPaste, setShowPaste] = useState(false);
+  const [showVisas, setShowVisas] = useState(false);
+
+  // close the visas dropdown on outside click or ESC
+const visasRef = useRef(null);
+useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (visasRef.current && !visasRef.current.contains(e.target)) {
+      setShowVisas(false);
+    }
+  };
+  const handleEsc = (e) => {
+    if (e.key === 'Escape') setShowVisas(false);
+  };
+  document.addEventListener('click', handleClickOutside);
+  document.addEventListener('keydown', handleEsc);
+  return () => {
+    document.removeEventListener('click', handleClickOutside);
+    document.removeEventListener('keydown', handleEsc);
+  };
+}, []);
 
 // YachtOfferForm.js
 const autoFillFromText = async () => {
@@ -130,7 +170,7 @@ const autoFillFromText = async () => {
         if (isEmpty) {
           merged[k] = v;
         }
-      }
+        }
 
       // Coherencia DOE
       if (data.is_doe === true || (merged.salary_currency && !merged.salary)) {
@@ -195,24 +235,34 @@ const formReady = (() => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
 
-    if (name === 'salary_currency' && formData.team === 'Yes') {
-      setFormData((prev) => ({
-        ...prev,
-        teammate_salary_currency: value,
-      }));  
+    if (name === 'visas') {
+      setFormData(prev => {
+        const currentVisas = prev.visas || [];
+        const newVisas = checked
+          ? [...currentVisas, value] // Agrega la visa si está marcada
+          : currentVisas.filter(v => v !== value); // Elimina la visa si no está marcada
+        return { ...prev, visas: newVisas };
+      });
+    } else {
+      // Lógica existente para todos los demás campos
+      setFormData(prev => {
+        const newState = {
+          ...prev,
+          [name]: type === 'checkbox' ? checked : value,
+        };
+
+        if (name === 'salary_currency' && prev.team === 'Yes') {
+          newState.teammate_salary_currency = value;
+        }
+
+        if (name === 'title' && value === 'Dayworker') {
+          newState.type = 'DayWork';
+        }
+
+        return newState;
+      });
     }
-
-      if (name === 'title' && value === 'Dayworker') {
-    setFormData((prev) => ({
-      ...prev,
-      type: 'DayWork',
-    }));
-  }
   };
 
   const handleSubmit = async (e) => {
@@ -320,13 +370,16 @@ const sanitizedData = {
     language_1_fluency: sanitizedData.language_1_fluency || null,
     language_2: sanitizedData.language_2 || null,
     language_2_fluency: sanitizedData.language_2_fluency || null,
+    propulsion_type: sanitizedData.propulsion_type || null,
+    gender: sanitizedData.gender || null, // null = Any
+    visas: Array.isArray(sanitizedData.visas) ? sanitizedData.visas : [],
   }]);
 
   if (error) {
     console.error('Error posting the offer:', error);
     toast.error('Something went wrong. Please try again.');
   } else {
-    toast.error('Offer posted successfully.');
+    toast.success('Offer posted successfully.');
     setFormData(initialState);
     onOfferPosted(); // en modo creación esto puede ser una recarga o mensaje
   }
@@ -452,6 +505,18 @@ const sanitizedData = {
       ))}
     </select>
 
+    {/* 3.5. Gender Requirement (solo si Team === 'No') */}
+      {formData.team === 'No' && (
+        <>
+          <label>Gender:</label>
+          <select name="gender" value={formData.gender} onChange={handleChange}>
+            <option value="">Any</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </>
+      )}
+
 {/* 6. Salary */}
 {!formData.is_doe && (
   <>
@@ -576,6 +641,38 @@ const sanitizedData = {
   </select>
 </div>
 
+  {/* Campo Visas */}
+<label htmlFor="visas-trigger">Visa(s):</label>
+<div
+  className={`custom-multiselect ${showVisas ? 'open' : ''}`}
+  ref={visasRef}
+>
+  <button
+    type="button"
+    id="visas-trigger"
+    className="multiselect-trigger"
+    onClick={() => setShowVisas((v) => !v)}
+  >
+    {formData.visas.length > 0 ? formData.visas.join(', ') : 'Select...'}
+    <span className={`caret ${showVisas ? 'up' : ''}`} aria-hidden>▾</span>
+  </button>
+
+  <div className="multiselect-options">
+    {visaOptions.map((visa) => (
+      <label key={visa} className="form-checkbox-label">
+        <input
+          type="checkbox"
+          name="visas"
+          value={visa}
+          checked={formData.visas.includes(visa)}
+          onChange={handleChange}
+        />
+        {visa}
+      </label>
+    ))}
+  </div>
+</div>
+
     {/* 9. Tipo */}
     <label>Terms: *</label>
 <select
@@ -649,6 +746,20 @@ const sanitizedData = {
     <option key={size} value={size}>{size}</option>
   ))}
 </select>
+
+    {/* 11.5 Propulsion Type (solo para ciertos rangos) */}
+{['Captain', 'Relief Captain', 'Skipper', 'Captain/Engineer'].includes(formData.title) && (
+  <>
+    <label>Propulsion Type:</label>
+    <select name="propulsion_type" value={formData.propulsion_type} onChange={handleChange}>
+      <option value="">Select...</option>
+      <option value="Shaft Drive">Shaft Drive</option>
+      <option value="Waterjet">Waterjet</option>
+      <option value="Pod Drive">Pod Drive</option>
+      <option value="Arneson Drive">Arneson Drive</option>
+    </select>
+  </>
+)}
 
     {/* Homeport */}
     <label>Homeport:</label>

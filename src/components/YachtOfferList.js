@@ -610,14 +610,21 @@ const handleCopy = (text, field) => {
         <div className="field-value">{offer.type}</div>
       </div>
     )}
+    {/* Gender (al final del bloque 1) */}
+{!offer.team && offer.gender && (
+  <div className="field-group gender">
+    <div className="field-label">Gender</div>
+    <div className="field-value">{offer.gender}</div>
+  </div>
+)}
   </div>
 </div>
 
 
       {(offer.yacht_type ||
   (offer.yacht_size && offer.work_environment !== 'Shore-based') ||
+  offer.propulsion_type || // ← añadido
   offer.flag ||
-  offer.homeport ||
   offer.uses ||
   offer.season_type) && (
 
@@ -637,17 +644,17 @@ const handleCopy = (text, field) => {
       </div>
     )}
 
+    {offer.propulsion_type && offer.work_environment !== 'Shore-based' && (
+  <div className="field-group propulsion">
+    <div className="field-label">Propulsion</div>
+    <div className="field-value">{offer.propulsion_type}</div>
+  </div>
+)}
+
     {offer.flag && (
       <div className="field-group">
         <div className="field-label">Flag</div>
         <div className="field-value">{offer.flag}</div>
-      </div>
-    )}
-
-    {offer.homeport && (
-      <div className="field-group">
-        <div className="field-label">Homeport</div>
-        <div className="field-value">{offer.homeport}</div>
       </div>
     )}
 
@@ -698,12 +705,27 @@ const handleCopy = (text, field) => {
           <div className="field-value">{offer.language_2_fluency}</div>
         </div>
       )}
+
+      {/* Visa(s) — al final del bloque 3 */}
+      {Array.isArray(offer.visas) && offer.visas.length > 0 && (
+        <div className="field-group visas">
+          <div className="field-label">Visa(s)</div>
+          <div className="field-value">{offer.visas.join(', ')}</div>
+        </div>
+      )}
     </div>
   </div>
 )}
 
       <div className="expanded-block block4">
   <div className="field-pair">
+    {offer.homeport && (
+      <div className="field-group">
+        <div className="field-label">Homeport</div>
+        <div className="field-value">{offer.homeport}</div>
+      </div>
+    )}
+    
     {(offer.is_asap || offer.start_date) && (
       <div className="field-group">
         <div className="field-label">Start Date</div>
