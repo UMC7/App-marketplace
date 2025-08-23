@@ -180,6 +180,11 @@ const autoFillFromText = async () => {
         if (isEmpty) merged[k] = v;
       }
 
+            // ⬇️ Forzar escalado de Team si el parser detectó pareja (captain+chef, etc.)
+      if ((data.team === "Yes" || data.team === true) && merged.team !== "Yes") {
+        merged.team = "Yes";
+      }
+
       // Coherencia DOE
       if (data.is_doe === true || (merged.salary_currency && !merged.salary)) {
         merged.is_doe = true;

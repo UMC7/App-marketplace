@@ -43,14 +43,18 @@ const RANK_SYNONYMS = {
   "second stew": "2nd Steward(ess)",
   "third stew": "3rd Stewardess",
   "junior stew": "Junior Steward(ess)",
-  "deck/stew": "Stew/Deck",
-  "deck/steward": "Stew/Deck",
+  "deck/stew": "Deck/Steward(ess)",
+  "deck/steward": "Deck/Steward(ess)",
   "cook/stew": "Cook/Steward(ess)",
   "stew/cook": "Cook/Steward(ess)",
-  "deckhand/stew": "Stew/Deck",
+  "deckhand/stew": "Deck/Steward(ess)",
   "Sole Chef": "Solo Chef",
   "Crew Chef/Steward": "Crew Chef/Stew",
   "Crew Chef/Stewardess": "Crew Chef/Stew",
+  "steward/deck": "Stew/Deck",
+  "stewardess/deck": "Stew/Deck",
+  "stew/deckhand": "Stew/Deck",
+  "steward/deckhand": "Stew/Deck",
 };
 
 // Mapa básico ciudad -> país (se usa SOLO si el país viene vacío)
@@ -101,13 +105,34 @@ const COUNTRY_SYNONYMS = {
   "british virgin islands": "BVI, UK",
   "bvi": "BVI, UK",
   "republic of korea": "South Korea",
-  "korea, south": "South Korea"
+  "korea, south": "South Korea",
+  "the bahamas": "Bahamas",
+  "bahamas": "Bahamas"
 };
+
+function normalizeFlagValue(v) {
+  const m = {
+    "usa": "USA",
+    "us": "USA",
+    "united states": "USA",
+    "american": "USA",
+  };
+  const k = String(v||"").toLowerCase().trim();
+  return m[k] || v;
+}
 
 function normalizeCountryName(raw) {
   if (!raw) return "";
   const key = String(raw).trim().toLowerCase().replace(/\./g, "");
   return COUNTRY_SYNONYMS[key] || raw;
+}
+
+function appearsInText(phrase, text) {
+  if (!phrase) return false;
+  const esc = String(phrase).trim()
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\s+/g, "\\s+");
+  return new RegExp(`\\b${esc}\\b`, "i").test(String(text || ""));
 }
 
 // Parser simple para fechas tipo “25th of June”, “25 June”, “June 25”
@@ -196,12 +221,12 @@ function hasStartCue(text) {
   return /\b(start(?:ing)?\b|from\b|join(?:ing)?\s+on\b|embark(?:ing)?\s+on\b|commenc(?:e|ing)\b)/i.test(text);
 }
 
-// Extraer LOA en metros o pies (MEJORA: ahora también convierte pies a metros)
+// Extraer LOA en metros o pies (incluye ft, feet y comillas ' ’ ′)
 function extractAllMeters(text) {
   const t = text.toLowerCase();
   const res = [];
 
-  // Regex para metros (e.g., "60m", "55 m")
+  // "60m", "55 m"
   const reMeters = /\b(\d{1,3})\s*m\b/g;
   let m;
   while ((m = reMeters.exec(t))) {
@@ -209,12 +234,13 @@ function extractAllMeters(text) {
     if (!isNaN(val)) res.push(val);
   }
 
-  // Regex para pies (e.g., "200ft", "180 feet") y conversión a metros (1 ft = 0.3048 m)
-  const reFeet = /\b(\d{2,3})\s*(ft|feet)\b/g;
-  while ((m = reFeet.exec(t))) {
+  // "200ft", "180 feet", "55'", "55’", "55′"
+  const reFeet = /\b(\d{2,3})\s*(?:ft|feet|['\u2019\u2032])(?!\w)/gi;
+  while ((m = reFeet.exec(text))) {
     const val = parseInt(m[1], 10);
-    if (!isNaN(val)) res.push(Math.round(val * 0.3048));
+    if (!isNaN(val)) res.push(Math.round(val * 0.3048)); // ft → m
   }
+
   return res;
 }
 
@@ -235,12 +261,21 @@ function bucketYachtSize(meters, yachtType) {
   return ">100m";
 }
 
-// Season type por regex
 function inferSeasonType(text) {
   const t = text.toLowerCase();
+
+  // Prioridades: explícitos primero
+  if (/\byear\s*-?\s*round\b/.test(t)) return "Year-round";
   if (/\bdual\s*-?\s*season\b/.test(t)) return "Dual Season";
   if (/\bsingle\s*-?\s*season\b/.test(t)) return "Single Season";
-  if (/\byear\s*-?\s*round\b/.test(t)) return "Year-round";
+
+  // Heurística: rango de meses => Single Season
+  const MONTH = "(january|february|march|april|may|june|july|august|september|october|november|december)";
+  const SEP = "(?:-|–|—|to|through|till|until|thru)";
+  const monthRangeRe = new RegExp(`\\b${MONTH}\\b(?:\\s+\\d{4})?\\s*${SEP}\\s*\\b${MONTH}\\b(?:\\s+\\d{4})?`, "i");
+
+  if (monthRangeRe.test(t)) return "Single Season";
+
   return "";
 }
 
@@ -258,7 +293,22 @@ function inferYearsInRank(text) {
   m = t.match(/\b(\d+(?:\.\d+)?)\s*(years?|yrs?)\b/);
   if (m) return String(m[1]);
   // Busca "Green" o "Proven experience"
-  if (/\bgreen\b/i.test(t)) return "Green";
+  // "Green" solo si no es "green card" y está en contexto laboral/novato
+{
+  const re = /\bgreen\b/ig;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const window = text.slice(Math.max(0, m.index - 25), Math.min(text.length, m.index + 25)).toLowerCase();
+    // Evitar "green card", "green-card", "green  card holder", etc.
+    if (/\bcard\b/.test(window)) continue;
+
+    // Señales de contexto laboral/novato
+    if (/\b(crew|candidate|deckhand|stew|steward|engineer|chef|captain|junior|entry|new\s+to\s+yachting|first\s+season)\b/.test(window)) {
+      return "Green";
+    }
+  }
+}
+
   // **Regla actualizada para incluir "experienced"**
   if (/\b(proven|extensive|experienced)\s+experience\b|\bexperienced\b/i.test(t)) return "2.5";
   return "";
@@ -411,17 +461,27 @@ function updateLanguageFluency(text, out) {
   }
 }
 
-// === NUEVA LÓGICA PARA HOMEPORT ===
+// === NUEVA LÓGICA PARA HOMEPORT (corrige "Based in the Bahamas" => no "The") ===
 function inferHomeport(text, out) {
-  const t = text.toLowerCase();
-  const re = /\b(based\s+in|home\s+port\s+is|docked\s+in|located\s+in)\s+([a-z\s]+?)\b/;
-  const m = t.match(re);
-  if (m && m[2]) {
-    const potentialCity = m[2].trim();
-    if (potentialCity) {
-      out.homeport = potentialCity.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    }
+  const src = String(text || "");
+  const re = /\b(?:based\s+in|home\s*port\s*is|docked\s+in|located\s+in)\s+([A-Za-z][A-Za-z\s\-']{1,60})(?=[\.,;]|$)/i;
+  const m = src.match(re);
+  if (!m) return;
+
+  let place = m[1].trim().replace(/\s+/g, " ");
+  place = place.replace(/^(the)\s+/i, ""); // quita "the " inicial
+
+  const lower = place.toLowerCase();
+
+  // Si parece un país, NO lo tratamos como homeport; solo ayudamos al país si está vacío
+  if (lower === "bahamas" || lower === "the bahamas") {
+    if (!out.country) out.country = "Bahamas";
+    return;
   }
+
+  // Si llega hasta aquí, sí parece ciudad/puerto
+  const titled = place.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  out.homeport = titled;
 }
 
 // === GENDER helper (solo si el aviso lo exige explícitamente) ===
@@ -432,15 +492,117 @@ function inferGender(text) {
   return "";
 }
 
-// === VISAS helper (B1/B2, Schengen, EU passport) ===
+// === VISAS helper (B1/B2, Schengen, EU passport, US citizen/Green card) ===
 function inferVisas(text) {
   const t = text.toLowerCase();
   const res = [];
+
+  // B1/B2
   if (/\b(b1\s*\/\s*b2|b1b2|b1\b[^a-z0-9]*b2\b|us\s*visa)\b/.test(t)) res.push("B1/B2");
+
+  // Schengen
   if (/\bschengen\b/.test(t)) res.push("Schengen");
-  // ⬇️ nuevo: “European passport / EU passport”
+
+  // European / EU passport
   if (/\beuropean\s+passport\b|\beu\s*passport\b/.test(t)) res.push("European Passport");
+
+  // US citizen / Green card holder
+  if (/\bgreen\s*card\s*(holder)?\b/.test(t) || /\b(u\.?s\.?|us|usa)\s*(citizen|passport\s*holder)\b/.test(t)) {
+    res.push("Green card or US Citizen");
+  }
+
+  // "American only" → requiere autorización de trabajo USA (independiente de lo anterior)
+  if (/\bamerican\s+only\b/.test(t) || /\b(u\.?s\.?a?|us)\s+citizens?\s+only\b/.test(t)) {
+    res.push("Green card or US Citizen");
+  }
+
   return Array.from(new Set(res));
+}
+
+function inferFlag(text) {
+  const src = String(text || "");
+  // quitamos puntos para capturar U.S./U.S.A.
+  const t = src.replace(/\./g, "").toLowerCase();
+
+  // 1) Restricciones por nacionalidad (p. ej., "US citizens only due to flag")
+  if (/\bamericans?\b[\s\S]{0,12}\bonly\b/.test(t)) return "United States";
+  if (/\bus\s*citizens?\b[\s\S]{0,12}\bonly\b/.test(t)) return "United States";
+
+  // 2) US flag en orden "prefix US ... flag"
+  if (
+    /\bus[-\s]?flag(?:ged)?\b/.test(t) ||
+    /\bamerican[-\s]?flag(?:ged)?\b/.test(t) ||
+    /\b(?:us|usa|american|united\s+states)\b[\s\-]*flag(?:ged)?\b/.test(t) ||
+    /\bunder\s+(?:the\s+)?(?:us|usa|american|united\s+states)\s+flag\b/.test(t)
+  ) {
+    return "United States";
+  }
+
+  // 3) US flag en orden inverso "flag: US"
+  const sep = `[:\\-–—]?`; // :, -, –, —
+  if (new RegExp(`\\bflag(?:ged)?\\s*${sep}\\s*(?:us|usa|american|united\\s+states)\\b`).test(t)) {
+    return "United States";
+  }
+
+  // 4) Otros registros frecuentes (ambos órdenes)
+  const MAP = [
+    { re: /\bcayman(?:\s+islands?)?\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\bcayman(?:\s+islands?)?\b/, out: "Cayman Islands" },
+    { re: /\bmarshall\s+islands?\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\bmarshall\s+islands?\b/, out: "Marshall Islands" },
+    { re: /\bbahamas\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\bbahamas\b/, out: "Bahamas" },
+    { re: /\bbermuda\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\bbermuda\b/, out: "Bermuda" },
+    { re: /\bgibraltar\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\bgibraltar\b/, out: "Gibraltar" },
+    { re: /\bisle\s+of\s+man\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\bisle\s+of\s+man\b/, out: "Isle of Man" },
+    { re: /\bmalta\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\bmalta\b/, out: "Malta" },
+    { re: /\bjamaica\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\bjamaica\b/, out: "Jamaica" },
+    { re: /\bpanama\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\bpanama\b/, out: "Panama" },
+    { re: /\bcook\s+islands?\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\bcook\s+islands?\b/, out: "Cook Islands" },
+    { re: /\b(bvi|british\s+virgin\s+islands?)\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\b(bvi|british\s+virgin\s+islands?)\b/, out: "BVI, UK" },
+    { re: /\b(united\s+kingdom|uk|red\s+ensign)\b[\s\S]{0,20}\b(flag(?:ged)?|registered|registry)\b|\b(flag(?:ged)?|registered|registry)\b[\s\S]{0,20}\b(united\s+kingdom|uk|red\s+ensign)\b/, out: "United Kingdom" },
+    // orden inverso "flag: Malta" etc.
+    { re: /\bflag(?:ged)?\s*[:\-–—]?\s*malta\b/, out: "Malta" },
+    { re: /\bflag(?:ged)?\s*[:\-–—]?\s*bahamas\b/, out: "Bahamas" },
+    { re: /\bflag(?:ged)?\s*[:\-–—]?\s*cayman(?:\s+islands?)?\b/, out: "Cayman Islands" },
+    { re: /\bflag(?:ged)?\s*[:\-–—]?\s*marshall\s+islands?\b/, out: "Marshall Islands" },
+    { re: /\bflag(?:ged)?\s*[:\-–—]?\s*panama\b/, out: "Panama" },
+    { re: /\bflag(?:ged)?\s*[:\-–—]?\s*(?:uk|united\s+kingdom|red\s+ensign)\b/, out: "United Kingdom" },
+  ];
+  for (const { re, out } of MAP) {
+    if (re.test(t)) return out;
+  }
+
+  return "";
+}
+
+// === TEAM/COUPLE helper (detect Captain+Chef etc.) ===
+function detectTeamAndTeammate(text, out) {
+  const t = text.toLowerCase();
+
+  // pistas de pareja
+  const coupleCue =
+    /\b(couple|team\s*of\s*2|pair|duo|husband\s+and\s+wife)\b/;
+
+  // uniones + / & and  (con o sin espacios)
+  const join = String.raw`\s*(?:\+|\/|&|and)\s*`;
+
+  // captain + chef|cook en cualquier orden
+  const capChef = new RegExp(`\\b(captain)${join}(chef|cook)\\b`, "i");
+  const chefCap = new RegExp(`\\b(chef|cook)${join}(captain)\\b`, "i");
+
+  if (coupleCue.test(t) || capChef.test(text) || chefCap.test(text)) {
+    out.team = "Yes";
+
+    // intenta completar teammate_rank si es obvio y está vacío
+    if (!out.teammate_rank) {
+      if (/captain/i.test(out.rank)) {
+        out.teammate_rank = "Chef";
+      } else if (/(chef|cook)/i.test(out.rank)) {
+        out.teammate_rank = "Captain";
+      } else if (capChef.test(text)) {
+        // si no sabemos el principal, al menos ponemos el complemento más común
+        out.teammate_rank = "Chef";
+      }
+    }
+  }
 }
 
 // === Itinerary → EU docs helper (Mediterranean only, non-culinary) ===
@@ -495,6 +657,167 @@ function inferPropulsionType(text) {
   return "";
 }
 
+// --- Exact LOA helpers (main & tender) ---
+
+// Encuentra longitudes exactas tal cual aparecen (ft/′/feet o m) y las clasifica por contexto.
+function extractExactLengthsByContext(text) {
+  const src = String(text || "");
+  const matches = [];
+
+  // Capturas textuales en la unidad original (no convertimos en el texto)
+  const re = /(?:\b(\d{1,3})\s*(ft|feet)\b|\b(\d{1,3})\s*m\b|\b(\d{1,3})\s*['\u2019\u2032]\b)/gi;
+
+  let m;
+  while ((m = re.exec(src)) !== null) {
+    let fullTxt = m[0]; // ej. "80 ft", "24 m", "55’"
+    // Normalizamos un valor numérico en metros solo para poder comparar (sin afectar el texto)
+    let meters = null;
+    if (m[2]) { // ft/feet
+      meters = parseInt(m[1], 10) * 0.3048;
+    } else if (m[3]) { // m
+      meters = parseInt(m[3], 10);
+    } else if (m[4]) { // comilla/prime -> ft
+      meters = parseInt(m[4], 10) * 0.3048;
+    }
+
+    // Ventana de contexto para clasificar
+    const i = m.index;
+    const window = src.slice(Math.max(0, i - 60), Math.min(src.length, i + fullTxt.length + 60)).toLowerCase();
+
+    const isTender =
+      /\b(tender|chase\s*boat|chase\b|rib\b|dinghy\b|jet\s*tender|support\s*vessel|rescue\s*boat)\b/.test(window);
+
+    const isMain =
+      /\b(yacht|s\/y|m\/y|s\/v|m\/v|catamaran|sail\s*boat|sailboat|motor\s*yacht|sailing\s*yacht|loa|length\b)/.test(window) ||
+      (!isTender && /\bcharter\b/.test(window)); // “charter sailboat” como en tu ejemplo
+
+    matches.push({ text: fullTxt.trim(), meters: meters ?? 0, isTender, isMain });
+  }
+
+  // Separar y deduplicar (por texto literal)
+  const main = [];
+  const tenders = [];
+  const seen = new Set();
+
+  for (const it of matches) {
+    // Evitar números absurdos o falsos positivos
+    if (it.meters <= 0 || it.meters > 150) continue;
+
+    const key = `${it.text.toLowerCase()}|${it.isTender?'t':'m'}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    if (it.isTender) tenders.push(it);
+    else if (it.isMain) main.push(it);
+    else {
+      // Si no está claro, heurística: lo más grande suele ser el principal
+      if (it.meters >= 12) main.push(it);
+      else tenders.push(it);
+    }
+  }
+
+  // Para principal nos quedamos con la mayor (si hay varias)
+  let mainBest = null;
+  if (main.length > 0) {
+    mainBest = main.reduce((a, b) => (a.meters >= b.meters ? a : b));
+  }
+
+  // Para tender podemos tener varias: ordenamos de mayor a menor y nos quedamos con todas sus cadenas
+  const tenderList = tenders
+    .sort((a, b) => b.meters - a.meters)
+    .map(x => x.text);
+
+  return {
+    mainText: mainBest ? mainBest.text : "",
+    tenderTexts: Array.from(new Set(tenderList)), // dedup por texto
+  };
+}
+
+// Agrega líneas de LOA a Remarks si no existen ya
+function appendLoaRemarks(originalText, currentDesc, out) {
+  const desc = String(currentDesc || "").trim();
+  const { mainText, tenderTexts } = extractExactLengthsByContext(originalText);
+
+  const lines = [];
+
+  // Solo añadimos si el texto exacto no está ya en Remarks
+  const hasLine = (line) => desc.toLowerCase().includes(line.toLowerCase());
+
+  if (mainText) {
+    const line = `Main vessel LOA: ${mainText}.`;
+    if (!hasLine(line)) lines.push(line);
+  }
+
+  if (tenderTexts.length > 0) {
+    const tenderLine = `Tender: ${tenderTexts.join(" / ")}.`;
+    if (!hasLine(tenderLine)) lines.push(tenderLine);
+  }
+
+  if (lines.length === 0) return desc;
+
+  return desc
+    ? `${desc}\n\n${lines.join("\n")}`
+    : lines.join("\n");
+}
+
+// --- Añadir cues no mapeados a Remarks ---
+function appendUnmappedCues(originalText, currentDesc) {
+  const desc = String(currentDesc || "").trim();
+  const t = originalText.toLowerCase();
+  const lines = [];
+
+  // Towing experience
+  if (/\btow(?:ing)?\b.*\b(exp|experience|required)\b/.test(t) && !/towing experience required/i.test(desc)) {
+    lines.push("Towing experience required.");
+  }
+
+  if (lines.length === 0) return desc;
+  return desc ? `${desc}\n\n${lines.join("\n")}` : lines.join("\n");
+}
+
+// --- Quita redundancias de rol/equipo del description ---
+function stripRoleTeamRedundancy(desc, out) {
+  if (!desc) return "";
+  let s = String(desc);
+
+  const roles = [out.rank, out.teammate_rank]
+    .filter(Boolean)
+    .map(r => r.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const roleAlt = roles.length ? `(?:${roles.join("|")})` : null;
+
+  const coupleAlt = "(?:couple|team\\s*of\\s*2|pair|duo|husband\\s+and\\s+wife)";
+  const join = String.raw`\s*(?:\+|\/|&|and)\s*`;
+
+  const capChef = new RegExp(`\\bCaptain${join}(?:Chef|Cook)\\b`, "i");
+  const chefCap = new RegExp(`\\b(?:Chef|Cook)${join}Captain\\b`, "i");
+
+  const opener = /\b(looking\s+for|seeking|hiring|need(?:ed|ing)?|searching\s+for|require(?:s|d)?)\b/i;
+
+  s = s
+    .split(/\r?\n/)
+    .map((line) => {
+      const L = line.trim();
+      if (!L) return "";
+
+      const hasOpener = opener.test(L);
+      const hasCouple =
+        /captain\s*(?:\+|\/|&|and)\s*(?:chef|cook)/i.test(L) ||
+        /(chef|cook)\s*(?:\+|\/|&|and)\s*captain/i.test(L) ||
+        new RegExp(`\\b${coupleAlt}\\b`, "i").test(L);
+
+      const hasExplicitRole = roleAlt ? new RegExp(`\\b${roleAlt}\\b`, "i").test(L) : false;
+
+      if (hasOpener && (hasCouple || hasExplicitRole)) return "";
+      if (!hasOpener && (hasCouple || (hasExplicitRole && L.length <= 80))) return "";
+
+      return line;
+    })
+    .join("\n");
+
+  s = s.replace(capChef, "").replace(chefCap, "");
+  return s.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 // permitir body grande y texto plano
 export const config = {
   api: {
@@ -503,6 +826,44 @@ export const config = {
     },
   },
 };
+
+// --- Limpia contactos y CTA del description (remarks) ---
+function cleanDescriptionContacts(desc, out) {
+  if (!desc) return "";
+
+  let s = String(desc);
+
+  // 1) Emails (el extraído y cualquier otro)
+  if (out.contact_email) {
+    const esc = out.contact_email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    s = s.replace(new RegExp(esc, "gi"), "");
+  }
+  s = s.replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "");
+
+  // 2) Teléfonos (el extraído y patrones generales)
+  const digits = (x) => String(x || "").replace(/\D/g, "");
+  const phoneOut = digits(out.contact_phone);
+  if (phoneOut) {
+    // borra cualquier bloque con los mismos dígitos (con separadores)
+    const compactRe = new RegExp(phoneOut.split("").join("\\D*"), "g");
+    s = s.replace(compactRe, "");
+  }
+  s = s.replace(/\+?\d[\d ()\-\.]{6,}\d/g, "");
+
+  // 3) Frases de llamada a la acción (líneas completas típicas)
+  const ctaRe =
+    /(please[, ]*)?(send|drop|shoot)\s+(me\s+)?(a\s+)?(message|dm|email)\b|(?:please\s+)?(?:email|contact|reach)\s+(me\s+)?(?:at|via|on)?/i;
+
+  s = s
+    .split(/\r?\n/)
+    .map((line) => (ctaRe.test(line) ? "" : line))
+    .join("\n");
+
+  // 4) Limpieza de espacios sobrantes
+  s = s.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+
+  return s;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Only POST allowed" });
@@ -750,6 +1111,18 @@ if (!out.country && out.city) {
   if (guess) out.country = guess;
 }
 
+    // Sanitizar city si coincide con país o no aparece literalmente en el texto
+if (out.city) {
+  const cityLC = out.city.trim().toLowerCase();
+  const countryLC = (out.country || "").trim().toLowerCase();
+  if (countryLC && (cityLC === countryLC || cityLC === `the ${countryLC}`)) {
+    out.city = "";
+  } else if (!appearsInText(out.city, finalText)) {
+    // Evita ciudades alucinadas por el modelo (ej. “Nassau” si no está en el post)
+    out.city = "";
+  }
+}
+
     // Nuevo Fallback para "SOF" o "South of France"
     if (!out.country) {
       if (/\b(sof|south of france)\b/i.test(finalText)) {
@@ -830,14 +1203,26 @@ if (!out.country && out.city) {
     out.liveaboard = (mentionsCouple || isCaptainFamily) ? "Own Cabin" : "Share Cabin";
   }
 }
-    // =========================================================
 
     // === NUEVA IMPLEMENTACIÓN DE HOMEPORT ===
-    // Solo si el homeport está vacío, usamos la lógica de inferencia
     if (!out.homeport) {
       inferHomeport(finalText, out);
     }
-    // ===================================
+
+    // Validar homeport: solo si aparece en el texto y no es un país
+if (out.homeport) {
+  const hp = out.homeport.trim();
+  const hpLC = hp.toLowerCase();
+  const countryLC = (out.country || "").trim().toLowerCase();
+  const hpIsCountry =
+    hpLC === countryLC ||
+    hpLC === `the ${countryLC}` ||
+    (COUNTRY_SYNONYMS[hpLC] && COUNTRY_SYNONYMS[hpLC].toLowerCase() === countryLC);
+
+  if (hpIsCountry || !appearsInText(hp, finalText)) {
+    out.homeport = "";
+  }
+}
 
     // - Si no se menciona nada, asumir "Shaft Drive"
     if (!out.propulsion_type) {
@@ -848,10 +1233,13 @@ if (!out.country && out.city) {
 // Visas fallback (si el modelo no devolvió nada)
 if (!out.visas || out.visas.length === 0) out.visas = inferVisas(finalText);
 
+// Detectar pareja / team y completar teammate_rank cuando sea obvio
+detectTeamAndTeammate(finalText, out);
+
 // --- Gender defaults by rank (only if not specified) ---
 if (!out.gender) {
   const femRanks = new Set([
-    'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Stewardess',
+    'Deck/steward(ess)', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Stewardess',
     'Solo Steward(ess)', 'Junior Steward(ess)', 'Cook/Steward(ess)', 'Stew/Deck',
     'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny'
   ]);
@@ -910,7 +1298,25 @@ if (!out.gender) {
   }
 }
 
-    return res.status(200).json(out);
+// Si no logramos fecha de inicio explícita → ASAP por defecto
+if (!out.start_date) {
+  out.is_asap = true;
+}
+
+// Flag normalizado (del modelo y/o inferido)
+out.flag = normalizeFlagValue(out.flag);
+if (!out.flag) {
+  const f = inferFlag(finalText);
+  if (f) out.flag = normalizeFlagValue(f);
+}
+
+// Limpieza final de Remarks/description
+out.description = stripRoleTeamRedundancy(out.description, out);
+out.description = cleanDescriptionContacts(out.description || "", out);
+out.description = appendUnmappedCues(finalText, out.description);
+out.description = appendLoaRemarks(finalText, out.description, out);
+return res.status(200).json(out);
+
   } catch (err) {
     console.error("parse-job error:", err);
     return res.status(500).json({ error: err.message || "Parse error" });
