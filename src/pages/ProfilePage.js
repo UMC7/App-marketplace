@@ -82,6 +82,7 @@ const fetchServices = async () => {
     altPhone: '',
     altEmail: '',
     password: '',
+    confirmPassword: '',
   });
   const [updateMessage, setUpdateMessage] = useState('');
 
@@ -563,6 +564,22 @@ const deleteEvent = async (eventId) => {
   const wantsEmailChange = userForm.email && userForm.email !== currentUser.email;
   const wantsPasswordChange = userForm.password && userForm.password.trim() !== '';
 
+if (wantsPasswordChange) {
+  if (userForm.password !== userForm.confirmPassword) {
+    const msg = 'Passwords do not match.';
+    toast.error(msg);
+    setUpdateMessage(msg);
+    return;
+  }
+  const strongPwd = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+  if (!strongPwd.test(userForm.password)) {
+    const ruleMsg = 'Password must be at least 8 characters and include one uppercase letter, one lowercase letter, one number, and one special character.';
+    toast.error(ruleMsg);
+    setUpdateMessage(ruleMsg);
+    return;
+  }
+}
+
   const wantsContactChange =
     (userForm.phone ?? '') !== (userDetails.phone ?? '') ||
     (userForm.altPhone ?? '') !== (userDetails.alt_phone ?? '') ||
@@ -625,7 +642,7 @@ const deleteEvent = async (eventId) => {
       setUpdateMessage('No changes to save.');
     }
 
-    setUserForm((prev) => ({ ...prev, password: '' }));
+    setUserForm((prev) => ({ ...prev, password: '', confirmPassword: '' }));
   } catch (error) {
     console.error('Failed to update information:', error.message);
     setUpdateMessage('Failed to update information.');
@@ -1043,6 +1060,15 @@ case 'compras':
 
         <label htmlFor="password">Password</label>
         <input id="password" type="password" name="password" value={userForm.password} onChange={handleUserFormChange} />
+
+        <label htmlFor="confirmPassword">Confirm Password</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          name="confirmPassword"
+          value={userForm.confirmPassword}
+          onChange={handleUserFormChange}
+        />
 
         <button type="submit">Update Information</button>
         {updateMessage && <p style={{ marginTop: '10px', color: '#007700' }}>{updateMessage}</p>}
