@@ -15,7 +15,9 @@ function RegisterPage() {
     lastName: '',
     birthYear: '',
     nickname: '',
+    phoneCode: '',
     phone: '',
+    altPhoneCode: '',
     altPhone: '',
     altEmail: '',
   });
@@ -36,6 +38,8 @@ function RegisterPage() {
     );
   };
 
+  const isNumeric = (value) => /^\d+$/.test(value);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -48,7 +52,6 @@ function RegisterPage() {
       return;
     }
 
-    // 🔒 Validación de contraseña segura
     const password = form.password;
     const passwordRequirements = [];
 
@@ -73,12 +76,21 @@ function RegisterPage() {
       return;
     }
 
+    if (!isNumeric(form.phoneCode)) {
+      setError('Country code must contain only numbers.');
+      return;
+    }
+
+    if (form.altPhoneCode && !isNumeric(form.altPhoneCode)) {
+      setError('Alternative country code must contain only numbers.');
+      return;
+    }
+
     if (!acceptedTerms) {
       setError('You must accept the Terms of Use and Privacy Policy.');
       return;
     }
 
-    // 🔒 Validar que el nickname no esté en uso
     const { data: existingNickname, error: nicknameError } = await supabase
       .from('users')
       .select('id')
@@ -95,6 +107,9 @@ function RegisterPage() {
     }
 
     try {
+      const fullAltPhone =
+        form.altPhone && form.altPhoneCode ? `+${form.altPhoneCode}${form.altPhone}` : null;
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
@@ -104,8 +119,9 @@ function RegisterPage() {
             last_name: form.lastName,
             birth_year: parseInt(form.birthYear),
             nickname: form.nickname,
-            phone: form.phone,
-            alt_phone: form.altPhone || null,
+            phone_code: form.phoneCode,
+            phone_number: form.phone,
+            alt_phone: fullAltPhone,
             alt_email: form.altEmail || null,
             accepted_terms: true,
             updated_at: new Date().toISOString(),
@@ -133,6 +149,7 @@ function RegisterPage() {
       lastName,
       birthYear,
       nickname,
+      phoneCode,
       phone,
       email,
       password,
@@ -144,6 +161,8 @@ function RegisterPage() {
       lastName.trim() &&
       birthYear &&
       nickname.trim() &&
+      phoneCode.trim() &&
+      isNumeric(phoneCode) &&
       phone.trim() &&
       email.trim() &&
       password &&
@@ -156,6 +175,16 @@ function RegisterPage() {
   const handleCloseEmailModal = () => {
     setShowEmailConfirmModal(false);
     navigate('/');
+  };
+
+  const plusInputStyle = {
+    width: '40px',
+    textAlign: 'center',
+    background: '#1e1e1e',
+    border: '1px solid #555',
+    borderRadius: '4px',
+    color: '#fff',
+    fontWeight: 'bold',
   };
 
   return (
@@ -193,10 +222,40 @@ function RegisterPage() {
         <label>
           Primary Phone <span style={{ color: 'red' }}>*</span>
         </label>
-        <input name="phone" placeholder="Primary Phone" onChange={handleChange} required />
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input type="text" value="+" disabled style={plusInputStyle} />
+          <input
+            name="phoneCode"
+            placeholder="Code"
+            onChange={handleChange}
+            style={{ width: '70px' }}
+            required
+          />
+          <input
+            name="phone"
+            placeholder="Primary Phone"
+            onChange={handleChange}
+            style={{ flex: 1 }}
+            required
+          />
+        </div>
 
         <label>Alternative Phone (optional)</label>
-        <input name="altPhone" placeholder="Alternative Phone" onChange={handleChange} />
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input type="text" value="+" disabled style={plusInputStyle} />
+          <input
+            name="altPhoneCode"
+            placeholder="Code"
+            onChange={handleChange}
+            style={{ width: '70px' }}
+          />
+          <input
+            name="altPhone"
+            placeholder="Alternative Phone"
+            onChange={handleChange}
+            style={{ flex: 1 }}
+          />
+        </div>
 
         <label>
           Primary Email <span style={{ color: 'red' }}>*</span>

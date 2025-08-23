@@ -12,6 +12,8 @@ import EditServiceModal from '../components/EditServiceModal';
 import EditJobModal from '../components/EditJobModal';
 import EditEventModal from '../components/EditEventModal';
 import './ProfilePage.css';
+import { formatPhoneNumber } from '../utils/formatPhone';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import {
   confirmPurchase,
   reportProblem,
@@ -79,7 +81,9 @@ const fetchServices = async () => {
     email: '',
     nickname: '',
     phone: '',
+    phoneCode: '',
     altPhone: '',
+    altPhoneCode: '',
     altEmail: '',
     password: '',
     confirmPassword: '',
@@ -289,14 +293,31 @@ setAverageRating(avgRating);
 
         if (userError) throw userError;
         setUserDetails(userData);
-        setUserForm((prev) => ({
-          ...prev,
-          email: currentUser.email,
-          nickname: userData.nickname || '',
-          phone: userData.phone || '',
-          altPhone: userData.alt_phone || '',
-          altEmail: userData.alt_email || '',
-        }));
+        const splitPhone = (fullPhone) => {
+  if (!fullPhone) return { code: '', number: '' };
+
+  const parsed = parsePhoneNumberFromString(fullPhone);
+  if (!parsed) return { code: '', number: fullPhone };
+
+  return {
+    code: parsed.countryCallingCode,
+    number: parsed.nationalNumber,
+  };
+};
+
+const main = splitPhone(userData.phone);
+const alt = splitPhone(userData.alt_phone);
+
+setUserForm((prev) => ({
+  ...prev,
+  email: currentUser.email,
+  nickname: userData.nickname || '',
+  phone: main.number,
+  phoneCode: main.code,
+  altPhone: alt.number,
+  altPhoneCode: alt.code,
+  altEmail: userData.alt_email || '',
+}));
     
         if (eventError) {
   console.error('Failed to load events:', eventError.message);
@@ -615,13 +636,16 @@ if (wantsPasswordChange) {
     }
 
     if (wantsContactChange) {
-      const { error: dbError } = await supabase
-        .from('users')
-        .update({
-          phone: userForm.phone || null,
-          alt_phone: userForm.altPhone || null,
-          alt_email: userForm.altEmail || null,
-        })
+      const fullPhone = userForm.phone && userForm.phoneCode ? `+${userForm.phoneCode}${userForm.phone}` : null;
+      const fullAltPhone = userForm.altPhone && userForm.altPhoneCode ? `+${userForm.altPhoneCode}${userForm.altPhone}` : null;
+
+  const { error: dbError } = await supabase
+    .from('users')
+    .update({
+      phone: fullPhone,
+      alt_phone: fullAltPhone,
+      alt_email: userForm.altEmail || null,
+    })
         .eq('id', currentUser.id);
 
       if (dbError) throw dbError;
@@ -1046,11 +1070,71 @@ case 'compras':
         <div className="static-info"><strong>Date of Birth:</strong> {userDetails.birth_year || ''}</div>
         <div className="static-info"><strong>Nickname:</strong> {userDetails.nickname || ''}</div>
 
-        <label htmlFor="phone">Main Phone</label>
-        <input id="phone" name="phone" value={userForm.phone} onChange={handleUserFormChange} />
+        <label>Main Phone</label>
+<div style={{ display: 'flex', gap: '8px' }}>
+  <input
+    type="text"
+    value="+"
+    disabled
+    style={{
+      width: '40px',
+      textAlign: 'center',
+      background: '#1e1e1e',
+      border: '1px solid #555',
+      borderRadius: '4px',
+      color: '#fff',
+      fontWeight: 'bold',
+    }}
+  />
+  <input
+    name="phoneCode"
+    placeholder="Code"
+    value={userForm.phoneCode}
+    onChange={handleUserFormChange}
+    style={{ width: '70px' }}
+    required
+  />
+  <input
+    name="phone"
+    placeholder="Phone Number"
+    value={userForm.phone}
+    onChange={handleUserFormChange}
+    style={{ flex: 1 }}
+    required
+  />
+</div>
 
-        <label htmlFor="altPhone">Alternative Phone</label>
-        <input id="altPhone" name="altPhone" value={userForm.altPhone} onChange={handleUserFormChange} />
+        <label>Alternative Phone</label>
+<div style={{ display: 'flex', gap: '8px' }}>
+  <input
+    type="text"
+    value="+"
+    disabled
+    style={{
+      width: '40px',
+      textAlign: 'center',
+      background: '#1e1e1e',
+      border: '1px solid #555',
+      borderRadius: '4px',
+      color: '#fff',
+      fontWeight: 'bold',
+    }}
+  />
+  <input
+    name="altPhoneCode"
+    placeholder="Code"
+    value={userForm.altPhoneCode}
+    onChange={handleUserFormChange}
+    style={{ width: '70px' }}
+  />
+  <input
+    name="altPhone"
+    placeholder="Alternative Number"
+    value={userForm.altPhone}
+    onChange={handleUserFormChange}
+    style={{ flex: 1 }}
+  />
+</div>
 
         <label htmlFor="email">Main Email</label>
         <input id="email" name="email" value={userForm.email} onChange={handleUserFormChange} />
