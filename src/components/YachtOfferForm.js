@@ -134,6 +134,7 @@ const autoFillFromText = async () => {
 
     setFormData(prev => {
       const merged = { ...prev };
+
       const normalizeTitle = (val) => {
         if (!val) return "";
         const v = String(val).trim().toLowerCase();
@@ -141,36 +142,43 @@ const autoFillFromText = async () => {
         return hit || "";
       };
 
-      for (const [k, vRaw] of Object.entries(data)) {
+      // Recorremos con defensiva
+      for (const [k, vRaw] of Object.entries(data || {})) {
         if (vRaw == null) continue;
-        const v = typeof vRaw === "string" ? vRaw.trim() : vRaw;
+        const v = (typeof vRaw === "string") ? vRaw.trim() : vRaw;
 
-        // Manejo especial para el rank
+        // rank → title
         if (k === "rank") {
           const norm = normalizeTitle(v);
-          if (!merged.title) {
-            merged.title = norm;
-          }
+          if (!merged.title) merged.title = norm;
           continue;
         }
 
-        // Manejo especial para booleanos: siempre actualiza si el valor es diferente
+        // booleanos
         if (k === "is_asap" || k === "is_doe") {
-          if (typeof v === "boolean" && v !== merged[k]) {
-            merged[k] = v;
+          if (typeof v === "boolean" && v !== merged[k]) merged[k] = v;
+          continue;
+        }
+
+        // visas (array): solo escribir si está vacío en el form
+        if (k === "visas") {
+          const arr = Array.isArray(v) ? v : [];
+          if (!Array.isArray(merged.visas) || merged.visas.length === 0) {
+            merged.visas = arr;
           }
           continue;
         }
 
-        // Lógica existente para no sobrescribir campos ya llenos
+        // regla general: no sobreescribir si ya hay valor
+        const cur = merged[k];
         const isEmpty =
-          merged[k] === "" ||
-          merged[k] == null ||
-          (typeof merged[k] === "number" && Number.isNaN(merged[k]));
-        if (isEmpty) {
-          merged[k] = v;
-        }
-        }
+          cur === "" ||
+          cur == null ||
+          (Array.isArray(cur) && cur.length === 0) ||
+          (typeof cur === "number" && Number.isNaN(cur));
+
+        if (isEmpty) merged[k] = v;
+      }
 
       // Coherencia DOE
       if (data.is_doe === true || (merged.salary_currency && !merged.salary)) {
@@ -189,7 +197,7 @@ const autoFillFromText = async () => {
     console.error(err);
     toast.error(err.message || 'Could not parse.');
   } finally {
-    setLoading(false); // ✅ Oculta el overlay
+    setLoading(false);
   }
 };
 
