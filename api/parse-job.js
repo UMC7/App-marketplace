@@ -10,7 +10,7 @@ const RANKS = [
   "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster",
   "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Electrician", "Chef",
   "Head Chef", "Sous Chef", "Solo Chef", "Cook/Crew Chef", "Crew Chef/Stew", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
-  "3rd Stewardess", "Solo Steward(ess)", "Junior Steward(ess)", "Cook/Steward(ess)", "Stew/Deck",
+  "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Cook/Steward(ess)", "Stew/Deck",
   "Laundry/Steward(ess)", "Stew/Masseur", "Masseur", "Hairdresser/Barber", "Nanny", "Videographer",
   "Yoga/Pilates Instructor", "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
 ];
@@ -38,10 +38,22 @@ const RANK_SYNONYMS = {
   "stewardess": "Steward(ess)",
   "steward": "Steward(ess)",
   "chief stew": "Chief Steward(ess)",
+  "chief steward": "Chief Steward(ess)",
+  "chief stewardess": "Chief Steward(ess)",
   "head stew": "Chief Steward(ess)",
   "sole stew": "Solo Steward(ess)",
   "second stew": "2nd Steward(ess)",
-  "third stew": "3rd Stewardess",
+  "second steward": "2nd Steward(ess)",
+  "second stewardess": "2nd Steward(ess)",
+  "2nd stew": "2nd Steward(ess)",
+  "2nd steward": "2nd Steward(ess)",
+  "2nd stewardess": "2nd Steward(ess)",
+  "third stew": "3rd Steward(ess)",
+  "third steward": "3rd Steward(ess)",
+  "third stewardess": "3rd Steward(ess)",
+  "3rd stew": "3rd Steward(ess)",
+  "3rd steward": "3rd Steward(ess)",
+  "3rd stewardess": "3rd Steward(ess)",
   "junior stew": "Junior Steward(ess)",
   "deck/stew": "Deck/Steward(ess)",
   "deck/steward": "Deck/Steward(ess)",
@@ -55,6 +67,14 @@ const RANK_SYNONYMS = {
   "stewardess/deck": "Stew/Deck",
   "stew/deckhand": "Stew/Deck",
   "steward/deckhand": "Stew/Deck",
+  "stew/chef": "Cook/Steward(ess)",
+  "chef/stew": "Cook/Steward(ess)",
+  "fourth stew": "4th Steward(ess)",
+  "fourth steward": "4th Steward(ess)",
+  "fourth stewardess": "4th Steward(ess)",
+  "4th steward": "4th Steward(ess)",
+  "4th stewardess": "4th Steward(ess)",
+  "4th stew": "4th Steward(ess)",
 };
 
 // Mapa básico ciudad -> país (se usa SOLO si el país viene vacío)
@@ -573,43 +593,35 @@ function inferFlag(text) {
   return "";
 }
 
-// === TEAM/COUPLE helper (detect Captain+Chef etc.) ===
 function detectTeamAndTeammate(text, out) {
   const t = text.toLowerCase();
 
-  // pistas de pareja
   const coupleCue =
     /\b(couple|team\s*of\s*2|pair|duo|husband\s+and\s+wife)\b/;
 
-  // uniones + / & and  (con o sin espacios)
   const join = String.raw`\s*(?:\+|\/|&|and)\s*`;
 
-  // captain + chef|cook en cualquier orden
   const capChef = new RegExp(`\\b(captain)${join}(chef|cook)\\b`, "i");
   const chefCap = new RegExp(`\\b(chef|cook)${join}(captain)\\b`, "i");
 
   if (coupleCue.test(t) || capChef.test(text) || chefCap.test(text)) {
     out.team = "Yes";
 
-    // intenta completar teammate_rank si es obvio y está vacío
     if (!out.teammate_rank) {
       if (/captain/i.test(out.rank)) {
         out.teammate_rank = "Chef";
       } else if (/(chef|cook)/i.test(out.rank)) {
         out.teammate_rank = "Captain";
       } else if (capChef.test(text)) {
-        // si no sabemos el principal, al menos ponemos el complemento más común
         out.teammate_rank = "Chef";
       }
     }
   }
 }
 
-// === Itinerary → EU docs helper (Mediterranean only, non-culinary) ===
 function itineraryImpliesSchengen(text) {
   const t = text.toLowerCase();
 
-  // matches for "Mediterranean" / "the Med" / "Med" (short form handled via context)
   const medRe = /\b(mediterranean|the\s+med|med)\b/g;
   const culinaryRe = /\b(cuisine|diet|food|menu|restaurant|kitchen|style)\b/;
   const itineraryCueRe =
@@ -621,66 +633,59 @@ function itineraryImpliesSchengen(text) {
   for (const m of matches) {
     const i = m.index ?? 0;
     const window = t.slice(Math.max(0, i - 40), Math.min(t.length, i + m[0].length + 40));
-    // discard culinary contexts (e.g., "Mediterranean food")
     if (culinaryRe.test(window)) continue;
-    // require itinerary/operations context near the mention
     if (itineraryCueRe.test(window)) return true;
   }
   return false;
 }
 
-// === PROPULSION helper ===
+function detectSalaryPeriod(text){
+  const t = String(text || "").toLowerCase();
+  if (/\b(per\s*day|a\s*day|daily|\/\s*day)\b/.test(t)) return 'day';
+  if (/\b(per\s*week|a\s*week|weekly|\/\s*week|\/\s*wk|wkly|pw)\b/.test(t)) return 'week';
+  if (/\b(per\s*hour|an?\s*hour|hourly|\/\s*hour|\/\s*hr)\b/.test(t)) return 'hour';
+  if (/\b(per\s*month|a\s*month|monthly|\/\s*month|\/\s*mo)\b/.test(t)) return 'month';
+  return '';
+}
+
 function inferPropulsionType(text) {
   const t = text.toLowerCase();
 
-  // Pod Drive (IPS, Azipod, Zeus)
   if (/\b(ips|azipod|zeus\s*pods?|pod\s*drive|pods?|volvo\s*-?\s*penta)\b/.test(t)) return "Pod Drive";
 
-  // Waterjet / Jet
   if (/\b(water\s*jet|waterjet|jet\s*drive)\b/.test(t)) return "Waterjet";
 
-  // Shaft Drive (straight shaft, twin screw)
   if (/\b(shaft\s*drive|straight\s*shaft|twin\s*screws?|twin\s*shaft)\b/.test(t)) return "Shaft Drive";
 
-  // Sail Drive
   if (/\b(sail\s*drive|saildrive)\b/.test(t)) return "Sail Drive";
 
-  // Outboard(s)
   if (/\b(outboards?|o\/b)\b/.test(t)) return "Outboard";
 
-  // Stern Drive / Z-Drive / MerCruiser
   if (/\b(stern\s*drive|sterndrive|z-?drive|mercruiser)\b/.test(t)) return "Stern Drive";
 
-  // Genérico: si menciona "jet" a secas, asumir Waterjet
   if (/\bjets?\b/.test(t)) return "Waterjet";
 
   return "";
 }
 
-// --- Exact LOA helpers (main & tender) ---
-
-// Encuentra longitudes exactas tal cual aparecen (ft/′/feet o m) y las clasifica por contexto.
 function extractExactLengthsByContext(text) {
   const src = String(text || "");
   const matches = [];
 
-  // Capturas textuales en la unidad original (no convertimos en el texto)
   const re = /(?:\b(\d{1,3})\s*(ft|feet)\b|\b(\d{1,3})\s*m\b|\b(\d{1,3})\s*['\u2019\u2032]\b)/gi;
 
   let m;
   while ((m = re.exec(src)) !== null) {
-    let fullTxt = m[0]; // ej. "80 ft", "24 m", "55’"
-    // Normalizamos un valor numérico en metros solo para poder comparar (sin afectar el texto)
+    let fullTxt = m[0];
     let meters = null;
-    if (m[2]) { // ft/feet
+    if (m[2]) {
       meters = parseInt(m[1], 10) * 0.3048;
-    } else if (m[3]) { // m
+    } else if (m[3]) {
       meters = parseInt(m[3], 10);
-    } else if (m[4]) { // comilla/prime -> ft
+    } else if (m[4]) {
       meters = parseInt(m[4], 10) * 0.3048;
     }
 
-    // Ventana de contexto para clasificar
     const i = m.index;
     const window = src.slice(Math.max(0, i - 60), Math.min(src.length, i + fullTxt.length + 60)).toLowerCase();
 
@@ -689,18 +694,16 @@ function extractExactLengthsByContext(text) {
 
     const isMain =
       /\b(yacht|s\/y|m\/y|s\/v|m\/v|catamaran|sail\s*boat|sailboat|motor\s*yacht|sailing\s*yacht|loa|length\b)/.test(window) ||
-      (!isTender && /\bcharter\b/.test(window)); // “charter sailboat” como en tu ejemplo
+      (!isTender && /\bcharter\b/.test(window));
 
     matches.push({ text: fullTxt.trim(), meters: meters ?? 0, isTender, isMain });
   }
 
-  // Separar y deduplicar (por texto literal)
   const main = [];
   const tenders = [];
   const seen = new Set();
 
   for (const it of matches) {
-    // Evitar números absurdos o falsos positivos
     if (it.meters <= 0 || it.meters > 150) continue;
 
     const key = `${it.text.toLowerCase()}|${it.isTender?'t':'m'}`;
@@ -710,37 +713,32 @@ function extractExactLengthsByContext(text) {
     if (it.isTender) tenders.push(it);
     else if (it.isMain) main.push(it);
     else {
-      // Si no está claro, heurística: lo más grande suele ser el principal
       if (it.meters >= 12) main.push(it);
       else tenders.push(it);
     }
   }
 
-  // Para principal nos quedamos con la mayor (si hay varias)
   let mainBest = null;
   if (main.length > 0) {
     mainBest = main.reduce((a, b) => (a.meters >= b.meters ? a : b));
   }
 
-  // Para tender podemos tener varias: ordenamos de mayor a menor y nos quedamos con todas sus cadenas
   const tenderList = tenders
     .sort((a, b) => b.meters - a.meters)
     .map(x => x.text);
 
   return {
     mainText: mainBest ? mainBest.text : "",
-    tenderTexts: Array.from(new Set(tenderList)), // dedup por texto
+    tenderTexts: Array.from(new Set(tenderList)),
   };
 }
 
-// Agrega líneas de LOA a Remarks si no existen ya
 function appendLoaRemarks(originalText, currentDesc, out) {
   const desc = String(currentDesc || "").trim();
   const { mainText, tenderTexts } = extractExactLengthsByContext(originalText);
 
   const lines = [];
 
-  // Solo añadimos si el texto exacto no está ya en Remarks
   const hasLine = (line) => desc.toLowerCase().includes(line.toLowerCase());
 
   if (mainText) {
@@ -760,13 +758,11 @@ function appendLoaRemarks(originalText, currentDesc, out) {
     : lines.join("\n");
 }
 
-// --- Añadir cues no mapeados a Remarks ---
 function appendUnmappedCues(originalText, currentDesc) {
   const desc = String(currentDesc || "").trim();
   const t = originalText.toLowerCase();
   const lines = [];
 
-  // Towing experience
   if (/\btow(?:ing)?\b.*\b(exp|experience|required)\b/.test(t) && !/towing experience required/i.test(desc)) {
     lines.push("Towing experience required.");
   }
@@ -775,7 +771,6 @@ function appendUnmappedCues(originalText, currentDesc) {
   return desc ? `${desc}\n\n${lines.join("\n")}` : lines.join("\n");
 }
 
-// --- Quita redundancias de rol/equipo del description ---
 function stripRoleTeamRedundancy(desc, out) {
   if (!desc) return "";
   let s = String(desc);
@@ -818,7 +813,6 @@ function stripRoleTeamRedundancy(desc, out) {
   return s.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
-// permitir body grande y texto plano
 export const config = {
   api: {
     bodyParser: {
@@ -827,30 +821,26 @@ export const config = {
   },
 };
 
-// --- Limpia contactos y CTA del description (remarks) ---
 function cleanDescriptionContacts(desc, out) {
   if (!desc) return "";
 
   let s = String(desc);
 
-  // 1) Emails (el extraído y cualquier otro)
   if (out.contact_email) {
     const esc = out.contact_email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     s = s.replace(new RegExp(esc, "gi"), "");
   }
   s = s.replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "");
 
-  // 2) Teléfonos (el extraído y patrones generales)
   const digits = (x) => String(x || "").replace(/\D/g, "");
   const phoneOut = digits(out.contact_phone);
   if (phoneOut) {
-    // borra cualquier bloque con los mismos dígitos (con separadores)
+
     const compactRe = new RegExp(phoneOut.split("").join("\\D*"), "g");
     s = s.replace(compactRe, "");
   }
   s = s.replace(/\+?\d[\d ()\-\.]{6,}\d/g, "");
 
-  // 3) Frases de llamada a la acción (líneas completas típicas)
   const ctaRe =
     /(please[, ]*)?(send|drop|shoot)\s+(me\s+)?(a\s+)?(message|dm|email)\b|(?:please\s+)?(?:email|contact|reach)\s+(me\s+)?(?:at|via|on)?/i;
 
@@ -859,10 +849,94 @@ function cleanDescriptionContacts(desc, out) {
     .map((line) => (ctaRe.test(line) ? "" : line))
     .join("\n");
 
-  // 4) Limpieza de espacios sobrantes
   s = s.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 
   return s;
+}
+
+function escapeReg(s){ return String(s||"").replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+const WB = { before: '(?:^|[^A-Za-z0-9_])', after: '(?=$|[^A-Za-z0-9_])' };
+
+function buildRankRegex(rank){
+  if(!rank) return null;
+  const rankLc = String(rank).toLowerCase();
+  const alts = [rank];
+  for (const [syn, norm] of Object.entries(RANK_SYNONYMS)) {
+    if (String(norm).toLowerCase() === rankLc) alts.push(syn);
+  }
+  const alt = alts
+    .map(a => escapeReg(a).replace(/Steward\\\(ess\\\)/i, 'Steward\\(ess\\)'))
+    .join('|');
+  return new RegExp(`${WB.before}(?:${alt})${WB.after}`, 'ig');
+}
+
+function dedupeRemarksAgainstFields(originalText, desc, out) {
+  if (!desc) return "";
+  let s = String(desc);
+
+  const rxRank = buildRankRegex(out.rank);
+
+  if (rxRank) s = s.replace(rxRank, '');
+
+  const TYPE_PATTERNS = {
+    'Catamaran': [/\bcatamarans?\b/gi],
+    'Motor Yacht': [/\bmotor\s*yachts?\b/gi, /\bm\/y\b/gi],
+    'Sailing Yacht': [/\bsailing\s*yachts?\b/gi, /\bs\/y\b/gi, /\bsail\s*boats?\b/gi, /\bsailboats?\b/gi],
+    'Chase Boat': [/\bchase\s*boats?\b/gi]
+  };
+  if (out.yacht_type && TYPE_PATTERNS[out.yacht_type]) {
+    for (const rx of TYPE_PATTERNS[out.yacht_type]) s = s.replace(rx, '');
+  }
+
+  const LIVE = {
+    'Own Cabin': [/\b(single|own|private|separate)\s+cabin\b/gi],
+    'Share Cabin': [/\b(share(?:d)?|sharing)\s+cabin\b/gi],
+    'No': [/\b(no\s+live\s*aboard|live\s*ashore)\b/gi],
+  };
+  if (out.liveaboard && LIVE[out.liveaboard]) {
+    for (const rx of LIVE[out.liveaboard]) s = s.replace(rx, '');
+  }
+
+  if (/Main vessel LOA:/i.test(s)) {
+    s = s.split(/\r?\n/).map(line => {
+      if (/^\s*(Main vessel LOA:|Tender:)/i.test(line)) return line; // conservar
+      return line
+        .replace(/\b\d{1,3}\s*m\b/gi, '')
+        .replace(/\b\d{2,3}\s*(?:ft|feet|['\u2019\u2032])\b/gi, '');
+    }).join('\n');
+  }
+
+  {
+    const period = detectSalaryPeriod(originalText);
+    if (out.is_doe || out.salary || out.salary_currency) {
+      const removeSalaryText = (period === 'month' || period === '');
+      if (removeSalaryText) {
+        s = s
+          .replace(/\b(?:€|eur|\$|usd|£|gbp|aud)\s*\d[\d,\.]*(?:\s*(?:per|\/)\s*(?:day|week|month|mo|wk|hour|hr))?/gi, '')
+          .replace(/\b\d[\d,\.]*\s*(?:€|eur|usd|\$|£|gbp|aud)\s*(?:per|\/)?\s*(?:day|week|month|mo|wk|hour|hr)?/gi, '');
+      }
+    }
+  }
+
+  // 7) “based in <city>” / “<city> based” si ya tenemos city
+  if (out.city) {
+    const c = escapeReg(out.city);
+    s = s
+      .replace(new RegExp(`${WB.before}based\\s+in\\s+${c}${WB.after}`, 'ig'), '')
+      .replace(new RegExp(`${WB.before}${c}\\s+based(?:\\s+only)?${WB.after}`, 'ig'), '');
+  }
+
+  // 8) Limpieza final
+  s = s
+    .replace(/[ \t]+/g, ' ')
+    .replace(/ ?([.,;:]) ?/g, '$1 ')
+    .replace(/\s{2,}/g, ' ')
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(Boolean)
+    .join('\n');
+
+  return s.trim();
 }
 
 export default async function handler(req, res) {
@@ -878,15 +952,27 @@ export default async function handler(req, res) {
     }
     if (!text) return res.status(400).json({ error: "Missing job text in { text }" });
 
-    // Pre-procesamiento para ayudar con el rank (sinónimos de Deckhand y rangos compuestos)
-    let processedText = text;
-    for (const [synonym, normalized] of Object.entries(RANK_SYNONYMS)) {
-      const regex = new RegExp(`\\b${synonym}\\b`, "i");
-      if (regex.test(processedText)) {
-        processedText = processedText.replace(regex, normalized);
-      }
-    }
-    const finalText = processedText;
+    // Pre-procesamiento para ayudar con el rank (compuestos primero)
+let processedText = text;
+
+// 0) Combos que deben ganar a palabras sueltas
+const COMBOS = [
+  [/\bstew\s*[/&+]\s*chef\b/i, 'Cook/Steward(ess)'],
+  [/\bchef\s*[/&+]\s*stew\b/i, 'Cook/Steward(ess)'],
+  [/\bdeck\s*[/&+]\s*stew(?:ard(?:ess)?)?\b/i, 'Deck/Steward(ess)'],
+  [/\bstew(?:ard(?:ess)?)?\s*[/&+]\s*deck(?:hand)?\b/i, 'Stew/Deck'],
+];
+for (const [rx, norm] of COMBOS) processedText = processedText.replace(rx, norm);
+
+// 1) Luego sinónimos, priorizando los largos (para que “stew/chef” gane a “stew”)
+const entries = Object.entries(RANK_SYNONYMS).sort((a, b) => b[0].length - a[0].length);
+for (const [synonym, normalized] of entries) {
+  const safe = synonym.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const rx = new RegExp(`\\b${safe}\\b`, 'ig');
+  processedText = processedText.replace(rx, normalized);
+}
+
+const finalText = processedText;
 
     const today = new Date();
     const todayStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -1068,20 +1154,15 @@ ${finalText}
   : [],
     };
 
-    // Coherencia DOE del modelo
     if (out.is_doe) {
       out.salary = "";
       out.salary_currency = out.salary_currency || out.teammate_salary_currency || "";
     }
 
-    // Fallback DOE si hay moneda pero no monto
     ensureDOE(finalText, out);
 
-    // Fallback ASAP por texto (primera pasada)
 ensureASAP(finalText, out);
 
-// --- Reconciliación específica para "until <fecha>" ---
-// Si hay "until/till/through/thru <fecha>": usarlo como end_date y asumir ASAP para start si no hay pista de inicio.
 const untilEnd = tryParseUntilEndDate(finalText, today);
 if (untilEnd) {
   if (!out.end_date) out.end_date = untilEnd;
@@ -1095,7 +1176,6 @@ if (untilEnd) {
   }
 }
 
-// Fallback de fecha si el modelo devolvió 1º del mes o nada y el texto tenía día explícito
 if ((!out.start_date || /\-\d{2}\-01$/.test(out.start_date)) && !untilEnd) {
   const parsed = tryParseStartDateFrom(finalText, today);
   if (parsed) {
@@ -1104,97 +1184,79 @@ if ((!out.start_date || /\-\d{2}\-01$/.test(out.start_date)) && !untilEnd) {
   }
 }
 
-// Normalización de país y fallback por ciudad
 if (out.country) out.country = normalizeCountryName(out.country);
 if (!out.country && out.city) {
   const guess = CITY_TO_COUNTRY[out.city.trim().toLowerCase()];
   if (guess) out.country = guess;
 }
 
-    // Sanitizar city si coincide con país o no aparece literalmente en el texto
 if (out.city) {
   const cityLC = out.city.trim().toLowerCase();
   const countryLC = (out.country || "").trim().toLowerCase();
   if (countryLC && (cityLC === countryLC || cityLC === `the ${countryLC}`)) {
     out.city = "";
   } else if (!appearsInText(out.city, finalText)) {
-    // Evita ciudades alucinadas por el modelo (ej. “Nassau” si no está en el post)
     out.city = "";
   }
 }
 
-    // Nuevo Fallback para "SOF" o "South of France"
     if (!out.country) {
       if (/\b(sof|south of france)\b/i.test(finalText)) {
         out.country = "France";
       }
     }
 
-    // Fallback de season_type si viene vacío
     if (!out.season_type) {
       const st = inferSeasonType(finalText);
       if (st) out.season_type = st;
     }
 
-    // Fallback de years_in_rank si viene vacío
     updateYearsInRank(finalText, out);
 
-    // === RECONCILIACIÓN de yacht_size con LOA explícito en el texto ===
     {
-      const metersList = extractAllMeters(finalText);
-      if (metersList.length > 0) {
-        let chosen = null;
-        const isChase = (out.yacht_type === "Chase Boat") || /\bchase\s+boat\b/i.test(finalText);
-        if (isChase) {
-          // típico: "12m chase boat supporting 55m M/Y" -> para chase usamos el menor
-          chosen = Math.min(...metersList);
-        } else {
-          // yate principal: si hay varios números, usamos el mayor (60m vs 12m de chase, etc.)
-          chosen = Math.max(...metersList);
-        }
-        const bucket = bucketYachtSize(chosen, isChase ? "Chase Boat" : "Motor Yacht");
-        if (bucket && out.yacht_size !== bucket) {
-          out.yacht_size = bucket; // sobreescribe si el modelo se equivocó (p.ej. >70m en un 60m)
-        }
-      }
+  const metersList = extractAllMeters(finalText);
+  if (metersList.length > 0) {
+    let chosen = null;
+    const isChase = (out.yacht_type === "Chase Boat") || /\bchase\s+boat\b/i.test(finalText);
+
+    if (isChase) {
+      chosen = Math.min(...metersList);
+    } else {
+      chosen = Math.max(...metersList);
     }
 
-    // Fallback de idiomas si vienen vacíos
+    const bucket = bucketYachtSize(chosen, isChase ? "Chase Boat" : "Motor Yacht");
+    if (bucket && out.yacht_size !== bucket) {
+      out.yacht_size = bucket;
+    }
+  }
+}
+
     if (!out.language_1 || !out.language_2) {
       inferLanguages(finalText, out);
     }
-    // Nueva lógica para la fluidez del idioma si el campo no se pudo llenar
     updateLanguageFluency(finalText, out);
 
-    // === DEFAULT: si no se mencionan idiomas, asumir English / Fluent ===
     if (!out.language_1 && !out.language_2) {
       out.language_1 = "English";
       out.language_1_fluency = "Fluent";
     }
 
-    // Verificación ASAP final (por si algo lo pisó en el flujo)
     ensureASAP(finalText, out);
 
-    // =========================================================
-    // LÓGICA DE LIVEABOARD CORREGIDA Y OPTIMIZADA
-    // =========================================================
     ;{
   const t = finalText.toLowerCase();
 
-  // 1) "No liveaboard" — manda siempre
   const notLiveaboardRegExp =
     /\b(?:non[-\s]?live\s*aboard|no\s+live\s*aboard|not\s+live\s*aboard|live\s+ashore|shore[-\s]?based|living\s+ashore)\b/;
 
   if (notLiveaboardRegExp.test(t) || out.work_environment === "Shore-based") {
     out.liveaboard = "No";
   } else if (/\b(?:own|private|single|solo|individual|separate)\b(?:\s+berth)?\s*-?\s*cabins?\b/i.test(finalText)) {
-    // 2) Expreso "Own/Private cabin"
     out.liveaboard = "Own Cabin";
   } else if (/\b(?:share(?:s|d)?|sharing)\b(?:\s+(?:a|one|the))?\s+cabins?\b/i.test(finalText)) {
-    // 3) Expreso "Share/Sharing cabin"
     out.liveaboard = "Share Cabin";
   } else {
-    // 4) Defaults por pareja o rango
     const mentionsCouple =
       /\b(?:couple(?:'s)?|couples?|team\s+of\s+2|pair|couple\s+(?:role|position))\b/i.test(t);
     const isCaptainFamily =
@@ -1204,12 +1266,10 @@ if (out.city) {
   }
 }
 
-    // === NUEVA IMPLEMENTACIÓN DE HOMEPORT ===
     if (!out.homeport) {
       inferHomeport(finalText, out);
     }
 
-    // Validar homeport: solo si aparece en el texto y no es un país
 if (out.homeport) {
   const hp = out.homeport.trim();
   const hpLC = hp.toLowerCase();
@@ -1224,23 +1284,19 @@ if (out.homeport) {
   }
 }
 
-    // - Si no se menciona nada, asumir "Shaft Drive"
     if (!out.propulsion_type) {
       out.propulsion_type = inferPropulsionType(finalText);
       if (!out.propulsion_type) out.propulsion_type = "Shaft Drive";
     }
 
-// Visas fallback (si el modelo no devolvió nada)
 if (!out.visas || out.visas.length === 0) out.visas = inferVisas(finalText);
 
-// Detectar pareja / team y completar teammate_rank cuando sea obvio
 detectTeamAndTeammate(finalText, out);
 
-// --- Gender defaults by rank (only if not specified) ---
 if (!out.gender) {
   const femRanks = new Set([
-    'Deck/steward(ess)', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Stewardess',
-    'Solo Steward(ess)', 'Junior Steward(ess)', 'Cook/Steward(ess)', 'Stew/Deck',
+    'Deck/Steward(ess)', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Steward(ess)',
+    '4th Steward(ess)', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Cook/Steward(ess)', 'Stew/Deck',
     'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny'
   ]);
   const maleRanks = new Set([
@@ -1256,7 +1312,6 @@ if (!out.gender) {
   }
 }
 
-// Itinerary-based EU docs (Mediterranean → require Schengen + EU passport)
 {
   if (itineraryImpliesSchengen(finalText)) {
     if (!Array.isArray(out.visas)) out.visas = [];
@@ -1269,17 +1324,13 @@ if (!out.gender) {
   }
 }
 
-// --- Visa defaults by country (only if visas not mentioned) ---
 {
   const country = (out.country || "").trim();
 
-  // Asegurar array
   if (!Array.isArray(out.visas)) out.visas = [];
 
-  // Si ya tenemos alguna visa detectada, no forzar defaults
   const hasAnyVisa = out.visas.length > 0;
 
-  // Conjunto Schengen (nombres como suelen salir en tu app)
   const SCHENGEN = new Set([
     'Austria','Belgium','Croatia','Czechia','Czech Republic','Denmark','Estonia','Finland',
     'France','Germany','Greece','Hungary','Iceland','Italy','Latvia','Liechtenstein',
@@ -1289,32 +1340,30 @@ if (!out.gender) {
 
   if (!hasAnyVisa) {
     if (country === 'United States') {
-      // USA
       out.visas = ['B1/B2', 'Green card or US Citizen'];
     } else if (SCHENGEN.has(country)) {
-      // Espacio Schengen
       out.visas = ['Schengen', 'European Passport'];
     }
   }
 }
 
-// Si no logramos fecha de inicio explícita → ASAP por defecto
 if (!out.start_date) {
   out.is_asap = true;
 }
 
-// Flag normalizado (del modelo y/o inferido)
 out.flag = normalizeFlagValue(out.flag);
 if (!out.flag) {
   const f = inferFlag(finalText);
   if (f) out.flag = normalizeFlagValue(f);
 }
 
-// Limpieza final de Remarks/description
 out.description = stripRoleTeamRedundancy(out.description, out);
 out.description = cleanDescriptionContacts(out.description || "", out);
 out.description = appendUnmappedCues(finalText, out.description);
 out.description = appendLoaRemarks(finalText, out.description, out);
+
+out.description = dedupeRemarksAgainstFields(finalText, out.description, out);
+
 return res.status(200).json(out);
 
   } catch (err) {
