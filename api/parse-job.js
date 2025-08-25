@@ -504,6 +504,28 @@ function inferHomeport(text, out) {
   out.homeport = titled;
 }
 
+function inferHolidays(text) {
+  if (!text) return '';
+  const t = String(text).replace(/\s+/g, ' ');
+
+  const m = t.match(/(\d{1,3})\s*(\+)?\s*days?\s*(?:of\s+)?(?:leave|holiday|holidays|off)[^.\n]*?(?:p\/?a|per\s*annum|pa|per\s*year|a\s*year)?/i);
+  if (m) {
+    const num = m[1];
+    const plus = m[2] ? '+' : '';
+    const hasPA = /p\/?a|per\s*annum|pa|per\s*year|a\s*year/i.test(m[0]);
+    return `${num}${plus} days${hasPA ? ' PA' : ''}`;
+  }
+
+  const m2 = t.match(/(\d{1,3})\s*(\+)?\s*days?\s*(?:of\s+)?(?:leave|holiday|holidays|off)\b/i);
+  if (m2) {
+    const num = m2[1];
+    const plus = m2[2] ? '+' : '';
+    return `${num}${plus} days`;
+  }
+
+  return '';
+}
+
 // === GENDER helper (solo si el aviso lo exige explícitamente) ===
 function inferGender(text) {
   const t = text.toLowerCase();
@@ -758,17 +780,66 @@ function appendLoaRemarks(originalText, currentDesc, out) {
     : lines.join("\n");
 }
 
-function appendUnmappedCues(originalText, currentDesc) {
+function appendUnmappedCues(originalText, currentDesc, out) {
   const desc = String(currentDesc || "").trim();
-  const t = originalText.toLowerCase();
+  const t = String(originalText || "").replace(/\s+/g, " ");
+
   const lines = [];
 
-  if (/\btow(?:ing)?\b.*\b(exp|experience|required)\b/.test(t) && !/towing experience required/i.test(desc)) {
-    lines.push("Towing experience required.");
+  // Itinerary: acepta "Mediterranean/Med" y "Caribbean/Carib", con (summer)/(winter) si aparecen
+  const hasMed = /\b(mediterranean|the\s+med|med)\b/i.test(t);
+  const hasCarib = /\b(caribbean|carib)\b/i.test(t);
+  if (hasMed && hasCarib) {
+    const summer = /summer/i.test(t) ? " (summer)" : "";
+    const winter = /winter/i.test(t) ? " (winter)" : "";
+    lines.push(`Itinerary: Mediterranean${summer} → Caribbean${winter}.`);
   }
 
-  if (lines.length === 0) return desc;
-  return desc ? `${desc}\n\n${lines.join("\n")}` : lines.join("\n");
+  // Owner usage: "~8 months/year onboard"
+  const owner = t.match(/owner[^.\n]*?(\d{1,2})\s*(?:months?|mos?)\s*(?:of\s+the\s+year)?[^.\n]*?(?:on\s*board|onboard)/i);
+  if (owner) lines.push(`Owner usage: ~${owner[1]} months/year onboard.`);
+
+  // Crew: "Total of 8 crew (mixed nationality)"
+  const crew = t.match(/(?:total\s+of\s+)?(\d{1,2})\s+crew\b/i);
+  if (crew) {
+    const mixed = /mixed\s+nationalit/i.test(t) ? " (mixed nationality)" : "";
+    lines.push(`Crew: ${crew[1]}${mixed}.`);
+  }
+
+  // Policy: non-smoking
+  if (/non[-\s]?smoking/i.test(t)) lines.push("Policy: Non-smoking vessel.");
+
+  // Cuisine: Mediterranean
+  if (/mediterranean\s+cuisine/i.test(t)) lines.push("Cuisine: Mediterranean cuisine.");
+
+  // Contract: MLC SEA
+  if (/mlc\s*sea/i.test(t)) lines.push("Contract: Standard MLC SEA.");
+
+  // --- Filtro: jamás repetir en Remarks lo que ya llenó campos del form ---
+  const blockers = [
+    out.holidays,                                 // leave
+    out.flag,                                     // flag
+    out.start_date || (out.is_asap ? "ASAP" : ""),// start
+    out.salary,                                   // salary
+    out.is_doe ? "DOE" : "",                      // DOE
+    out.uses,                                     // Private/Charter
+    out.yacht_size                                // LOA bucket
+  ]
+  .filter(Boolean)
+  .map(s => String(s).toLowerCase());
+
+  const filtered = lines.filter(line => {
+    const L = line.toLowerCase();
+    // Nunca incluir encabezados prohibidos
+    if (/^language:/i.test(line)) return false;
+    if (/^salary:/i.test(line)) return false;
+    // Si la línea contiene un token ya usado en un campo, fuera
+    return !blockers.some(tok => tok && L.includes(String(tok).toLowerCase()));
+  });
+
+  if (!filtered.length) return desc || "";
+  const joiner = desc ? "\n\n" : "";
+  return desc + joiner + filtered.join("\n");
 }
 
 function stripRoleTeamRedundancy(desc, out) {
@@ -1357,11 +1428,15 @@ if (!out.flag) {
   if (f) out.flag = normalizeFlagValue(f);
 }
 
+if (!out.holidays || !out.holidays.trim()) {
+  const h = inferHolidays(finalText);
+  if (h) out.holidays = h;
+}
+
 out.description = stripRoleTeamRedundancy(out.description, out);
 out.description = cleanDescriptionContacts(out.description || "", out);
-out.description = appendUnmappedCues(finalText, out.description);
+out.description = appendUnmappedCues(finalText, out.description, out);
 out.description = appendLoaRemarks(finalText, out.description, out);
-
 out.description = dedupeRemarksAgainstFields(finalText, out.description, out);
 
 return res.status(200).json(out);
