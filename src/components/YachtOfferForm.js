@@ -223,7 +223,6 @@ const formReady = (() => {
       !formData.yacht_type ||
       !formData.yacht_size ||
       (!formData.start_date && !formData.is_asap) ||
-      !formData.city ||
       !formData.country ||
       (formData.team === 'Yes' && (!formData.teammate_rank || (!formData.teammate_salary && !formData.is_doe)))
     ) return false;
@@ -297,7 +296,6 @@ if (isOnboard) {
     !formData.yacht_type ||
     !formData.yacht_size ||
     (!formData.start_date && !formData.is_asap) ||
-    !formData.city ||
     !formData.country ||
     (formData.team === 'Yes' && (!formData.teammate_rank || (!formData.teammate_salary && !formData.is_doe)))
   ) {
@@ -828,7 +826,7 @@ const sanitizedData = {
     />
 
     {/* Holidays */}
-    <label>Holidays (Days per month):</label>
+    <label>Holidays (Days per year):</label>
     <input
       type="number"
       step="0.1"
@@ -839,8 +837,8 @@ const sanitizedData = {
     />
 
     {/* 15. Ciudad */}
-    <label>City: *</label>
-    <input name="city" value={formData.city} onChange={handleChange} required />
+    <label>City:</label>
+    <input name="city" value={formData.city} onChange={handleChange} />
 
     {/* 16. País */}
     <label>Country: *</label>

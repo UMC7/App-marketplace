@@ -751,7 +751,7 @@ const handleCopy = (text, field) => {
 
     {offer.holidays && (
       <div className="field-group">
-        <div className="field-label">Holidays</div>
+        <div className="field-label">Holidays per year</div>
         <div className="field-value">{offer.holidays}</div>
       </div>
     )}

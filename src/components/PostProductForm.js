@@ -256,7 +256,7 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
             onBusyChange={setUploading}
           />
           <small style={{ display: 'block', margin: '6px 0 12px', color: '#666' }}>
-            Tip: The first image will be the cover. You can change it with ★, reorder with ⟵ ⟶, or remove with ✕.
+            The image marked with ★ will be the cover.
           </small>
 
           <button
