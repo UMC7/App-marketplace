@@ -1,8 +1,9 @@
+// src/components/PostProductForm.js
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import ImageUploader from '../components/ImageUploader';
+import UnifiedImageUploader from '../components/UnifiedImageUploader';
 
 const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect = null }) => {
   const [uploading, setUploading] = useState(false);
@@ -18,10 +19,17 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
   const [condition, setCondition] = useState('');
-  const [photos, setPhotos] = useState([]);
+
+  // imágenes unificadas
   const [mainPhoto, setMainPhoto] = useState('');
+  const [photos, setPhotos] = useState([]);
+
+  // auth
   const [ownerId, setOwnerId] = useState(null);
   const [ownerEmail, setOwnerEmail] = useState('');
+
+  // categorías dinámicas
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     if (mode === 'edit' && initialValues) {
@@ -30,29 +38,31 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
       setCurrency(initialValues.currency || '');
       setPrice(initialValues.price?.toString() || '');
       setQuantity(initialValues.quantity || 1);
-      setCategoryId(initialValues.categoryId || '');
+      const catId = initialValues.categoryId ?? initialValues.category_id;
+      setCategoryId(catId ? String(catId) : '');
       setCity(initialValues.city || '');
       setCountry(initialValues.country || '');
       setCondition(initialValues.condition || '');
-      setMainPhoto(initialValues.mainPhoto || '');
-      setPhotos(initialValues.photos || []);
+      const cover = initialValues.mainPhoto || initialValues.mainphoto || '';
+      setMainPhoto(cover || '');
+      setPhotos(Array.isArray(initialValues.photos) ? initialValues.photos : []);
     }
   }, [initialValues, mode]);
 
   const countries = [
-    "Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "Aruba", "Australia", "Bahamas", "Bahrain", "Barbados",
-    "Belgium", "Belize", "Bonaire", "Brazil", "Brunei", "Bulgaria", "BVI, UK", "Cambodia", "Canada", "Cape Verde",
-    "Chile", "China", "Colombia", "Costa Rica", "Croatia", "Cuba", "Curacao", "Cyprus", "Denmark", "Dominica",
-    "Dominican Republic", "Ecuador", "Egypt", "Estonia", "Fiji", "Finland", "France", "Germany",
-    "Greece", "Grenada", "Guatemala", "Honduras", "India", "Indonesia", "Ireland", "Israel",
-    "Italy", "Jamaica", "Japan", "Kiribati", "Kuwait", "Latvia", "Libya", "Lithuania", "Madagascar",
-    "Malaysia", "Maldives", "Malta", "Marshall Islands", "Mauritius", "Mexico", "Micronesia",
-    "Monaco", "Montenegro", "Morocco", "Myanmar", "Netherlands", "New Zealand", "Nicaragua",
-    "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Saint Kitts and Nevis",
-    "Saint Lucia", "Saint Maarten", "Saint Vincent and the Grenadines", "Samoa", "Saudi Arabia", "Seychelles",
-    "Singapore", "Solomon Islands", "South Africa", "South Korea", "Spain", "Sweden", "Taiwan",
-    "Thailand", "Trinidad and Tobago", "Tunisia", "Turkey", "United Arab Emirates", "United Kingdom",
-    "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"
+    "Albania","Anguilla","Antigua and Barbuda","Argentina","Aruba","Australia","Bahamas","Bahrain","Barbados",
+    "Belgium","Belize","Bonaire","Brazil","Brunei","Bulgaria","BVI, UK","Cambodia","Canada","Cape Verde",
+    "Chile","China","Colombia","Costa Rica","Croatia","Cuba","Curacao","Cyprus","Denmark","Dominica",
+    "Dominican Republic","Ecuador","Egypt","Estonia","Fiji","Finland","France","Germany",
+    "Greece","Grenada","Guatemala","Honduras","India","Indonesia","Ireland","Israel",
+    "Italy","Jamaica","Japan","Kiribati","Kuwait","Latvia","Libya","Lithuania","Madagascar",
+    "Malaysia","Maldives","Malta","Marshall Islands","Mauritius","Mexico","Micronesia",
+    "Monaco","Montenegro","Morocco","Myanmar","Netherlands","New Zealand","Nicaragua",
+    "Norway","Panama","Peru","Philippines","Poland","Portugal","Qatar","Saint Kitts and Nevis",
+    "Saint Lucia","Saint Maarten","Saint Vincent and the Grenadines","Samoa","Saudi Arabia","Seychelles",
+    "Singapore","Solomon Islands","South Africa","South Korea","Spain","Sweden","Taiwan",
+    "Thailand","Trinidad and Tobago","Tunisia","Turkey","United Arab Emirates","United Kingdom",
+    "United States","Uruguay","Vanuatu","Venezuela","Vietnam"
   ];
 
   const conditions = ["New", "Second-hand", "Refurbished"];
@@ -65,72 +75,58 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
         toast.error('Please log in first.');
         return;
       }
-
       setOwnerId(authData.user.id);
       setOwnerEmail(authData.user.email);
     };
-
     fetchUser();
   }, []);
 
-  // Subida de la foto principal
-  const handleMainPhotoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('module', 'market');
 
-    const fileName = `main-${Date.now()}-${file.name}`;
-    const filePath = `${fileName}`;
-
-    try {
-      setUploading(true);
-
-      const { data, error } = await supabase.storage
-        .from('products')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-
-      if (error || !data?.path) {
-        throw new Error(error?.message || 'Photo upload failed.');
+      if (error) {
+        console.error('Failed to load categories:', error.message);
+        return;
       }
-
-      const { publicUrl } = supabase
-        .storage
-        .from('products')
-        .getPublicUrl(data.path).data;
-
-      setMainPhoto(publicUrl);
-      console.log("Main photo uploaded successfully:", publicUrl);
-    } catch (error) {
-      console.error("Failed to upload the main photo:", error.message);
-      toast.error("Failed to upload the main photo.");
-    } finally {
-      setUploading(false);
-    }
-  };
+      const sorted = (data || []).sort((a, b) => a.name.localeCompare(b.name));
+      setCategories(sorted);
+    };
+    fetchCategories();
+  }, []);
 
   // Enviar formulario (create o edit)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validación rápida
+    if (!categoryId || !city || !country || !condition) {
+      toast.error('Please fill in all required fields.');
+      return;
+    }
+
+    // Asegurar coherencia de imágenes (ya no recibimos 'blob:' del uploader)
+    const all = Array.from(new Set([mainPhoto, ...photos].filter(Boolean)));
+    const cover = all[0] || '';
+    const gallery = all.slice(1);
+
     // UPDATE PRODUCT
     if (mode === 'edit' && initialValues.id) {
       try {
-        // Filtro para que mainPhoto nunca esté en photos
-        const filteredPhotos = photos.filter((url) => url && url !== mainPhoto);
-
         const { error } = await supabase
           .from('products')
           .update({
             name,
             description,
-            price: parseFloat(price),
+            price: parseFloat(price || 0),
             currency,
             quantity: parseInt(quantity, 10),
             category_id: parseInt(categoryId, 10),
-            photos: filteredPhotos,
-            mainphoto: mainPhoto,
+            photos: gallery,
+            mainphoto: cover,
             city,
             country,
             condition,
@@ -141,7 +137,11 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
           toast.error('Error updating the product.');
         } else {
           toast.success('Product updated successfully');
-          if (onSubmitRedirect) navigate(onSubmitRedirect);
+          // 🔸 cerrar modal o navegar
+          if (onSubmitRedirect) {
+            if (typeof onSubmitRedirect === 'function') onSubmitRedirect();
+            else navigate(onSubmitRedirect);
+          }
         }
       } catch (error) {
         toast.error('Unexpected error during update.');
@@ -150,32 +150,21 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
       return;
     }
 
-    // Validación rápida para campos requeridos
-    if (!categoryId || !mainPhoto || !city || !country || !condition) {
-      toast.error('Please fill in all required fields.');
-      return;
-    }
-
-    console.log("Additional photos uploaded:", photos);
-
     // CREATE PRODUCT
     try {
-      // Filtro para que mainPhoto nunca esté en photos
-      const filteredPhotos = photos.filter((url) => url && url !== mainPhoto);
-
       const { data, error } = await supabase
         .from('products')
         .insert([{
           name,
           description,
-          price: parseFloat(price),
+          price: parseFloat(price || 0),
           currency,
           quantity: parseInt(quantity, 10),
           category_id: parseInt(categoryId, 10),
           owner: ownerId,
           owneremail: ownerEmail,
-          photos: filteredPhotos,
-          mainphoto: mainPhoto,
+          photos: gallery,
+          mainphoto: cover,
           city,
           country,
           condition,
@@ -186,19 +175,16 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
         console.error("Failed to save the product:", error.message);
         toast.error(`Failed to save the product: ${error.message}`);
       } else if (data && data.length > 0) {
-        console.log('The product was saved successfully:', data);
         toast.success('The product was saved successfully');
-        if (onSubmitRedirect) navigate(onSubmitRedirect);
-        setName('');
-        setDescription('');
-        setPrice('');
-        setQuantity(1);
-        setCategoryId('');
-        setPhotos([]);
-        setMainPhoto('');
-        setCity('');
-        setCountry('');
-        setCondition('');
+        // 🔸 cerrar modal o navegar
+        if (onSubmitRedirect) {
+          if (typeof onSubmitRedirect === 'function') onSubmitRedirect();
+          else navigate(onSubmitRedirect);
+        }
+        // reset
+        setName(''); setDescription(''); setPrice(''); setQuantity(1);
+        setCategoryId(''); setPhotos([]); setMainPhoto(''); setCity('');
+        setCountry(''); setCondition('');
       } else {
         toast.error('Unexpected error occurred while saving the product.');
       }
@@ -237,20 +223,17 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
           <label>Category:</label>
           <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
             <option value="">Select a category</option>
-              <option value="16">Boats and Watercrafts</option>
-              <option value="1">Deck</option>
-              <option value="2">Engineering</option>
-              <option value="4">Galley</option>
-              <option value="5">Interior</option>
-              <option value="3">Navigation</option>
-              <option value="6">Others</option>
-              <option value="15">Paints & Antifouling</option>
+            {categories.map((c) => (
+              <option key={c.id} value={String(c.id)}>
+                {c.name}
+              </option>
+            ))}
           </select>
 
-          <label>City:</label>
+          <label>Location - City:</label>
           <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
 
-          <label>Country:</label>
+          <label>Location - Country:</label>
           <select value={country} onChange={(e) => setCountry(e.target.value)} required>
             <option value="">Select a country</option>
             {countries.map((pais, idx) => (
@@ -266,20 +249,15 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
             ))}
           </select>
 
-          <label>Additional photos:</label>
-          <ImageUploader onUpload={(urls) => setPhotos(urls)} />
-
-          <label>Main Photo:</label>
-          {mainPhoto && (
-            <div style={{ marginBottom: '10px' }}>
-              <img
-                src={mainPhoto}
-                alt="Main"
-                style={{ width: '100%', maxWidth: '300px', borderRadius: '8px' }}
-              />
-            </div>
-          )}
-          <input type="file" accept="image/*" onChange={handleMainPhotoUpload} />
+          <label>Photos (cover + gallery):</label>
+          <UnifiedImageUploader
+            value={{ cover: mainPhoto, gallery: photos }}
+            onChange={({ cover, gallery }) => { setMainPhoto(cover); setPhotos(gallery); }}
+            onBusyChange={setUploading}
+          />
+          <small style={{ display: 'block', margin: '6px 0 12px', color: '#666' }}>
+            Tip: The first image will be the cover. You can change it with ★, reorder with ⟵ ⟶, or remove with ✕.
+          </small>
 
           <button
             type="submit"
@@ -292,7 +270,6 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
                 ? 'Update Product'
                 : 'Save Product'}
           </button>
-
         </form>
       </div>
     </div>
