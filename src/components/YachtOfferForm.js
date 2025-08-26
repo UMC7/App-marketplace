@@ -437,13 +437,13 @@ const sanitizedData = {
     className="btn btn-light"
     style={{ marginBottom: 8 }}
   >
-    {showPaste ? 'Hide paste area' : 'Paste job post (optional)'}
+    {showPaste ? 'Hide Smart Paste' : 'Smart Paste (Optional)'}
   </button>
 
   {showPaste && (
     <div>
       <p style={{ margin: '6px 0 8px', fontSize: 13, color: '#666' }}>
-        Paste the full job post. When you click <b>Auto-Fill Fields</b>, I will fill only empty fields and won’t overwrite values you already set.
+        Paste the job text. <b>Smart Paste</b> will automatically fill the form fields for you.
       </p>
       <textarea
         className="form-control"
