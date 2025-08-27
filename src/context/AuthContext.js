@@ -1,3 +1,4 @@
+// src/context/AuthContext.js
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import supabase from '../supabase';
 
@@ -6,6 +7,46 @@ const AuthContext = createContext();
 export const useAuth = () => {
   return useContext(AuthContext);
 };
+
+// Sube el "pending_avatar" guardado en localStorage y actualiza users.avatar_url
+async function uploadPendingAvatarIfAny(user) {
+  try {
+    const raw = localStorage.getItem('pending_avatar');
+    if (!raw) return;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed?.dataUrl) return;
+
+    // DataURL -> Blob
+    const res = await fetch(parsed.dataUrl);
+    const blob = await res.blob();
+
+    // Ruta debe empezar con {auth.uid} para cumplir las policies
+    const fileName = `avatar_${Date.now()}.webp`;
+    const path = `${user.id}/${fileName}`;
+
+    const { error: upErr } = await supabase
+      .storage
+      .from('avatars')
+      .upload(path, blob, { upsert: true, contentType: blob.type || 'image/webp' });
+    if (upErr) throw upErr;
+
+    const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+    const avatarUrl = pub?.publicUrl;
+    if (!avatarUrl) throw new Error('No public URL from storage');
+
+    // Guarda en tu tabla public.users
+    const { error: dbErr } = await supabase
+      .from('users')
+      .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+      .eq('id', user.id);
+    if (dbErr) throw dbErr;
+
+    localStorage.removeItem('pending_avatar');
+  } catch (e) {
+    console.error('uploadPendingAvatarIfAny error:', e);
+  }
+}
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
@@ -148,6 +189,48 @@ export function AuthProvider({ children }) {
       authListener?.subscription?.unsubscribe();
     };
   }, []);
+
+  // Subir "pending avatar" al tener usuario con id (una vez por sesión)
+  useEffect(() => {
+    const u = currentUser;
+    if (!u?.id) return;
+    uploadPendingAvatarIfAny(u);
+  }, [currentUser?.id]);
+
+  // 🔄 Escucha en tiempo real cambios en la fila del usuario (incluye avatar_url) y
+  // actualiza currentUser.app_metadata sin recargar.
+  useEffect(() => {
+    const userId = currentUser?.id;
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`user_${userId}_changes`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'users', filter: `id=eq.${userId}` },
+        (payload) => {
+          const row = payload.new || payload.old;
+          if (!row) return;
+
+          // Merge de los campos del perfil dentro de app_metadata
+          setCurrentUser((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              app_metadata: {
+                ...prev.app_metadata,
+                ...row,
+              },
+            };
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser?.id]);
 
   return (
     <AuthContext.Provider value={{ currentUser, loading }}>

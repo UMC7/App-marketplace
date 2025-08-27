@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
 import Modal from '../components/Modal';
+import Avatar from '../components/Avatar';
 
 function RegisterPage() {
   const [form, setForm] = useState({
@@ -22,6 +23,8 @@ function RegisterPage() {
     altEmail: '',
   });
 
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState('');
   const [showEmailConfirmModal, setShowEmailConfirmModal] = useState(false);
@@ -43,6 +46,37 @@ function RegisterPage() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
+  const handleAvatarChange = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const okTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!okTypes.includes(file.type)) {
+    toast.error('Invalid image type. Use JPG, PNG, or WEBP.');
+    e.target.value = '';
+    return;
+  }
+  const maxBytes = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxBytes) {
+    toast.error('Image too large. Max 5MB.');
+    e.target.value = '';
+    return;
+  }
+
+  if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+  setAvatarFile(file);
+  const url = URL.createObjectURL(file);
+  setAvatarPreviewUrl(url);
+};
+
+const clearAvatar = () => {
+  setAvatarFile(null);
+  if (avatarPreviewUrl) URL.revokeObjectURL(avatarPreviewUrl);
+  setAvatarPreviewUrl(null);
+  const input = document.getElementById('avatar-input');
+  if (input) input.value = '';
+};
 
   const handleRegister = async () => {
     setError('');
@@ -105,6 +139,24 @@ function RegisterPage() {
       setError('Nickname already taken. Please choose another.');
       return;
     }
+
+    // Persist pending avatar locally (to upload after email confirmation)
+try {
+  if (avatarFile) {
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        localStorage.setItem(
+          'pending_avatar',
+          JSON.stringify({ type: 'dataurl', dataUrl: fr.result, ts: Date.now() })
+        );
+      } catch {}
+    };
+    fr.readAsDataURL(avatarFile);
+  } else {
+    localStorage.removeItem('pending_avatar');
+  }
+} catch {}
 
     try {
       const fullAltPhone =
@@ -192,6 +244,34 @@ function RegisterPage() {
       <div className="login-form">
         <h2>User Registration</h2>
 
+<label>Profile Photo (optional)</label>
+<div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
+  <Avatar
+    nickname={form.nickname || 'User'}
+    srcUrl={avatarPreviewUrl}
+    size="xl"
+  />
+  <div>
+    <input
+      id="avatar-input"
+      type="file"
+      accept="image/png,image/jpeg,image/webp"
+      onChange={handleAvatarChange}
+    />
+    {avatarPreviewUrl && (
+      <div style={{ marginTop: 6 }}>
+        <button type="button" onClick={clearAvatar}>
+          Remove photo
+        </button>
+      </div>
+    )}
+    {!avatarPreviewUrl && (
+      <p style={{ fontSize: '0.85rem', margin: '6px 0 0 0' }}>
+        If you don’t add a photo, we’ll use your nickname inside a circle.
+      </p>
+    )}
+  </div>
+</div>
         <label>
           Name <span style={{ color: 'red' }}>*</span>
         </label>

@@ -11,6 +11,7 @@ import EditProductModal from '../components/EditProductModal';
 import EditServiceModal from '../components/EditServiceModal';
 import EditJobModal from '../components/EditJobModal';
 import EditEventModal from '../components/EditEventModal';
+import Avatar from '../components/Avatar';
 import './ProfilePage.css';
 import { formatPhoneNumber } from '../utils/formatPhone';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
@@ -89,6 +90,15 @@ const fetchServices = async () => {
     confirmPassword: '',
   });
   const [updateMessage, setUpdateMessage] = useState('');
+
+const [localAvatarUrl, setLocalAvatarUrl] = useState(
+  currentUser?.app_metadata?.avatar_url || null
+);
+const nickname = userDetails?.nickname || currentUser?.app_metadata?.nickname || 'User';
+
+useEffect(() => {
+  setLocalAvatarUrl(currentUser?.app_metadata?.avatar_url || null);
+}, [currentUser?.app_metadata?.avatar_url]);
 
 const navigate = useNavigate();
 const location = useLocation();
@@ -567,6 +577,95 @@ const deleteEvent = async (eventId) => {
     toast.error('Event deleted successfully.');
   } catch (error) {
     toast.error('Could not delete the event.');
+  }
+};
+
+// Extrae la ruta interna del bucket desde la URL pública
+const extractPathFromPublicUrl = (url) => {
+  if (!url) return null;
+  const m = url.match(/\/object\/public\/avatars\/(.+)$/);
+  return m ? m[1] : null; // ej: `${user.id}/avatar_123.webp`
+};
+
+const handleRemoveAvatar = async () => {
+  try {
+    // 1) Borrar del Storage si conocemos la ruta
+    const path = extractPathFromPublicUrl(localAvatarUrl);
+    if (path) {
+      const { error: delErr } = await supabase.storage.from('avatars').remove([path]);
+      if (delErr) console.warn('No se pudo borrar del storage (continuo):', delErr.message);
+    }
+
+    // 2) Poner avatar_url = NULL en BD
+    const { error: dbErr } = await supabase
+      .from('users')
+      .update({ avatar_url: null, updated_at: new Date().toISOString() })
+      .eq('id', currentUser.id);
+
+    if (dbErr) {
+      toast.error('Could not delete the photo.');
+      return;
+    }
+
+    // 3) Refrescar UI local
+    setLocalAvatarUrl(null);
+    toast.success('Photo removed. We will use your nickname inside a circle.');
+  } catch (e) {
+    console.error(e);
+    toast.error('An error occurred while removing the photo.');
+  }
+};
+
+const handleChangeAvatar = async (e) => {
+  try {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const okTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!okTypes.includes(file.type)) {
+      toast.error('Formato inválido. Usa JPG, PNG o WEBP.');
+      e.target.value = '';
+      return;
+    }
+    const maxBytes = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxBytes) {
+      toast.error('Imagen muy grande. Máx 5MB.');
+      e.target.value = '';
+      return;
+    }
+
+    // Construir ruta: {auth.uid}/avatar_timestamp.ext
+    const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+    const path = `${currentUser.id}/avatar_${Date.now()}.${ext}`;
+
+    // Subir al bucket
+    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+    if (upErr) throw upErr;
+
+    // URL pública
+    const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+    const avatarUrl = pub?.publicUrl;
+    if (!avatarUrl) throw new Error('No se pudo obtener la URL pública.');
+
+    // Guardar en BD
+    const { error: dbErr } = await supabase
+      .from('users')
+      .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+      .eq('id', currentUser.id);
+    if (dbErr) throw dbErr;
+
+    // Refrescar UI
+    setLocalAvatarUrl(avatarUrl);
+    toast.success('Foto actualizada.');
+  } catch (err) {
+    console.error(err);
+    toast.error('No se pudo cambiar la foto.');
+  } finally {
+    // limpiar input para permitir volver a seleccionar el mismo archivo si se desea
+    if (e?.target) e.target.value = '';
   }
 };
 
@@ -1064,6 +1163,30 @@ case 'compras':
   return (
     <div className="user-info-form">
       <h2>User Information</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '12px 0 20px' }}>
+  <Avatar nickname={nickname} srcUrl={localAvatarUrl} size="xl" />
+  <div>
+    <button type="button" onClick={handleRemoveAvatar} disabled={!localAvatarUrl}>
+      Remove photo
+    </button>
+    <div style={{ marginTop: 6 }}>
+  <label htmlFor="avatar-upload-input" style={{ display: 'inline-block', marginRight: 8 }}>
+    Change photo:
+  </label>
+  <input
+    id="avatar-upload-input"
+    type="file"
+    accept="image/png,image/jpeg,image/webp"
+    onChange={handleChangeAvatar}
+  />
+</div>
+    {!localAvatarUrl && (
+      <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem' }}>
+        No photo: your nickname will be shown inside a circle.
+      </p>
+    )}
+  </div>
+</div>
       <form onSubmit={handleUserFormSubmit}>
         <div className="static-info"><strong>Name:</strong> {userDetails.first_name || ''}</div>
         <div className="static-info"><strong>Last Name:</strong> {userDetails.last_name || ''}</div>
