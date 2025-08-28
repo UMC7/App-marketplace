@@ -654,11 +654,15 @@ useEffect(() => {
       </div>
     )}
 
-    {offer.propulsion_type && offer.work_environment !== 'Shore-based' && (
-  <div className="field-group propulsion">
-    <div className="field-label">Propulsion</div>
-    <div className="field-value">{offer.propulsion_type}</div>
-  </div>
+    {offer.propulsion_type &&
+  offer.work_environment !== 'Shore-based' &&
+  ['captain', 'relief captain', 'skipper', 'captain/engineer'].some(t =>
+    (offer.title || '').toLowerCase().includes(t)
+  ) && (
+    <div className="field-group propulsion">
+      <div className="field-label">Propulsion</div>
+      <div className="field-value">{offer.propulsion_type}</div>
+    </div>
 )}
 
     {offer.flag && (
