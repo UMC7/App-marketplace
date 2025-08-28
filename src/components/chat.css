@@ -45,6 +45,35 @@
   background-color: #f7f9fb;
 }
 
+/* ── NUEVO: fila que contiene avatar + burbuja ── */
+.chat-message-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.chat-message-row.own {
+  flex-direction: row-reverse; /* avatar a la derecha para tus mensajes */
+}
+
+/* ── NUEVO: contenedor del avatar circular ── */
+.chat-message-avatar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  line-height: 0;
+  border-radius: 50%;
+  overflow: hidden; /* por si el avatar es SVG, recorta al círculo */
+}
+.chat-message-avatar img,
+.chat-message-avatar svg {
+  width: 32px;
+  height: 32px;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Burbujas existentes (sin cambios) */
 .chat-message.own {
   align-self: flex-end;
   background-color: #e4e6eb;

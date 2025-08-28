@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import supabase from '../supabase';
 import { useUnreadMessages } from '../context/UnreadMessagesContext';
 import './chat.css';
+import Avatar from './Avatar'; // ← usamos el avatar
 
 function ChatPage({ offerId, receiverId, onBack }) {
   const [messages, setMessages] = useState([]);
@@ -13,6 +14,10 @@ function ChatPage({ offerId, receiverId, onBack }) {
   const [otherNickname, setOtherNickname] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const fileInputRef = useRef();
+
+  // Avatares (nuevo)
+  const [otherAvatar, setOtherAvatar] = useState(null);
+  const [myAvatar, setMyAvatar] = useState(null);
 
   const { fetchUnreadMessages } = useUnreadMessages(); // ✅ actualizar contador global
 
@@ -37,25 +42,35 @@ function ChatPage({ offerId, receiverId, onBack }) {
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) setCurrentUser(user);
+      if (user) {
+        setCurrentUser(user);
+        // traer mi avatar_url
+        const { data: me } = await supabase
+          .from('users')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .single();
+        setMyAvatar(me?.avatar_url || null);
+      }
     };
     fetchUser();
   }, []);
 
   useEffect(() => {
-    const fetchOtherNickname = async () => {
+    const fetchOtherProfile = async () => {
       if (!receiverId) return;
       const { data, error } = await supabase
         .from('users')
-        .select('nickname')
+        .select('nickname, avatar_url')
         .eq('id', receiverId)
         .single();
 
       if (!error && data) {
-        setOtherNickname(data.nickname);
+        setOtherNickname(data.nickname || 'User');
+        setOtherAvatar(data.avatar_url || null);
       }
     };
-    fetchOtherNickname();
+    fetchOtherProfile();
   }, [receiverId]);
 
   useEffect(() => {
@@ -151,15 +166,39 @@ function ChatPage({ offerId, receiverId, onBack }) {
       {messages.map((msg) => {
         const isOwnMessage = msg.sender_id === currentUser.id;
         return (
-          <div key={msg.id} className={`chat-message ${isOwnMessage ? 'own' : 'other'}`}>
-            <div className="chat-message-sender">{isOwnMessage ? 'You' : otherNickname}</div>
-            {msg.message && <p className="chat-message-text">{msg.message}</p>}
-            {msg.file_url && (
-              <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="chat-file-link">
-                📎 View file
-              </a>
+          <div key={msg.id} className={`chat-message-row ${isOwnMessage ? 'own' : 'other'}`}>
+            {/* Avatar circular al lado del mensaje */}
+            {!isOwnMessage ? (
+              <div className="chat-message-avatar">
+                <Avatar
+                  nickname={otherNickname || 'User'}
+                  srcUrl={otherAvatar || null}
+                  size={32}
+                  shape="circle"
+                />
+              </div>
+            ) : (
+              <div className="chat-message-avatar">
+                <Avatar
+                  nickname={'You'}
+                  srcUrl={myAvatar || null}
+                  size={32}
+                  shape="circle"
+                />
+              </div>
             )}
-            <div className="chat-message-time">{new Date(msg.sent_at).toLocaleString()}</div>
+
+            {/* Burbuja de mensaje (tu CSS existente sigue aplicando) */}
+            <div className={`chat-message ${isOwnMessage ? 'own' : 'other'}`}>
+              <div className="chat-message-sender">{isOwnMessage ? 'You' : otherNickname}</div>
+              {msg.message && <p className="chat-message-text">{msg.message}</p>}
+              {msg.file_url && (
+                <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="chat-file-link">
+                  📎 View file
+                </a>
+              )}
+              <div className="chat-message-time">{new Date(msg.sent_at).toLocaleString()}</div>
+            </div>
           </div>
         );
       })}
