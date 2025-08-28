@@ -1,6 +1,22 @@
 // src/components/Avatar.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+/**
+ * Avatar
+ * - Si `srcUrl` carga -> muestra foto.
+ * - Si no -> muestra SVG con el nickname completo.
+ *
+ * Props:
+ *  - nickname: string
+ *  - srcUrl?: string | null
+ *  - size?: "sm" | "md" | "lg" | "xl" | number  (default: "md")
+ *  - className?: string
+ *  - style?: React.CSSProperties
+ *  - bgColor?: string
+ *  - textColor?: string
+ *  - shape?: "circle" | "square" (default: "circle")  ← NUEVO
+ *  - radius?: number | string (radio para square, default: 10) ← NUEVO
+ */
 export default function Avatar({
   nickname = "",
   srcUrl = null,
@@ -9,6 +25,8 @@ export default function Avatar({
   style = {},
   bgColor,
   textColor,
+  shape = "circle",
+  radius = 10,
 }) {
   // --- Size in pixels ---
   const px = useMemo(() => {
@@ -58,7 +76,7 @@ export default function Avatar({
   const autoText = useMemo(() => chooseTextColor(chosenBg), [chosenBg]);
   const chosenText = textColor || autoText;
 
-  // --- Hooks MUST be at top-level (no returns before this) ---
+  // --- Hooks at top-level ---
   const [imgOk, setImgOk] = useState(Boolean(srcUrl));
   useEffect(() => {
     setImgOk(Boolean(srcUrl));
@@ -119,7 +137,10 @@ export default function Avatar({
         const w1 = a?.getComputedTextLength ? a.getComputedTextLength() : 0;
         const w2 = b?.getComputedTextLength ? b.getComputedTextLength() : 0;
         const hTotal = f * 2 * 1.05;
-        if ((w1 <= maxWidth && w2 <= maxWidth && hTotal <= maxHeightDouble) || f <= minFont) {
+        if (
+          (w1 <= maxWidth && w2 <= maxWidth && hTotal <= maxHeightDouble) ||
+          f <= minFont
+        ) {
           if (w1 > maxWidth || w2 > maxWidth || hTotal > maxHeightDouble) {
             setFontSize(minFont);
           }
@@ -141,7 +162,6 @@ export default function Avatar({
         const h = f;
         if ((w <= maxWidth && h <= maxHeightSingle) || f <= minFont) {
           if (w > maxWidth || h > maxHeightSingle) {
-            // single-line no cabió -> probar dos líneas si se puede
             if (split) {
               stepTwo(startFont);
             } else {
@@ -160,7 +180,15 @@ export default function Avatar({
     return () => {
       cancelled = true;
     };
-  }, [nickname, px, showPhoto]); // rehacer ajuste al cambiar nickname/tamaño o si deja de haber foto
+  }, [nickname, px, showPhoto]);
+
+  // --- Border radius helper for container (img/svg) ---
+  const containerBorderRadius =
+    shape === "circle"
+      ? "50%"
+      : typeof radius === "number"
+      ? `${radius}px`
+      : radius || 0;
 
   // --- Render ---
   return showPhoto ? (
@@ -174,7 +202,7 @@ export default function Avatar({
       style={{
         width: px,
         height: px,
-        borderRadius: "50%",
+        borderRadius: containerBorderRadius,
         objectFit: "cover",
         display: "inline-block",
         ...style,
@@ -187,10 +215,23 @@ export default function Avatar({
       role="img"
       aria-label={`Avatar of ${nickname}`}
       className={className}
-      style={{ display: "inline-block", borderRadius: "50%", ...style }}
+      style={{ display: "inline-block", borderRadius: containerBorderRadius, ...style }}
       viewBox={`0 0 ${px} ${px}`}
     >
-      <circle cx={px / 2} cy={px / 2} r={px / 2} fill={chosenBg} />
+      {shape === "circle" ? (
+        <circle cx={px / 2} cy={px / 2} r={px / 2} fill={chosenBg} />
+      ) : (
+        <rect
+          x="0"
+          y="0"
+          width={px}
+          height={px}
+          rx={typeof radius === "number" ? radius : 10}
+          ry={typeof radius === "number" ? radius : 10}
+          fill={chosenBg}
+        />
+      )}
+
       {twoLines ? (
         <>
           <text

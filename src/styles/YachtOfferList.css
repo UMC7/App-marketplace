@@ -46,3 +46,48 @@
     background-color: #bca987;
   }
 }
+
+/* Desktop: Recruiter tile alignment (no afecta móviles) */
+@media (min-width: 1024px) {
+  /* Asegura fila horizontal y centrado vertical de los tiles de la izquierda */
+  .collapsed-images {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;            /* mismo espacio que entre logos departamentales */
+  }
+
+  /* Tile del recruiter: sin fondo ni bordes; solo label + avatar */
+  .recruiter-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+  }
+
+    .recruiter-label {
+    position: relative;
+    top: 4px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-muted, #b3b3b3);
+  }
+
+  .recruiter-avatar-wrap {
+    line-height: 0;
+  }
+  .recruiter-avatar-wrap img,
+  .recruiter-avatar-wrap svg {
+    width: 96px;
+    height: 96px;
+    border-radius: 12px;
+    display: block;
+  }
+}

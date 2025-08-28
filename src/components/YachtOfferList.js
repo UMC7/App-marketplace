@@ -3,6 +3,7 @@ import supabase from '../supabase';
 import Modal from './Modal';
 import ChatPage from './ChatPage';
 import ThemeLogo from './ThemeLogo';
+import Avatar from '../components/Avatar';
 import '../styles/YachtOfferList.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 
@@ -60,6 +61,7 @@ function YachtOfferList({
 }) {
 
   const [authors, setAuthors] = useState({});
+  const [authorAvatars, setAuthorAvatars] = useState({});
   const [expandedOfferId, setExpandedOfferId] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
   const [expandedWeeks, setExpandedWeeks] = useState({});
@@ -166,17 +168,20 @@ const handleCopy = (text, field) => {
 
       const { data, error } = await supabase
         .from('users')
-        .select('id, nickname')
+        .select('id, nickname, avatar_url')
         .in('id', userIds);
 
       if (error) {
         console.error('Error al obtener usuarios:', error);
       } else {
         const map = {};
+        const avatarMap = {};
         data.forEach((u) => {
           map[u.id] = u.nickname;
+          avatarMap[u.id] = u.avatar_url || null;
         });
         setAuthors(map);
+        setAuthorAvatars(avatarMap);
       }
     };
 
@@ -918,9 +923,9 @@ const handleCopy = (text, field) => {
 </div>
   </div>
 ) : (
-                          <div className={`collapsed-offer${offer.team ? ' team' : ''}`}>
-                            <div className="collapsed-images">
-                              <ThemeLogo
+<div className={`collapsed-offer${offer.team ? ' team' : ''}`}>
+<div className="collapsed-images">
+  <ThemeLogo
   light={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
   dark={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebasedDM' : getRoleImage(offer.title) + 'DM'}.png`}
   alt="role"
@@ -935,9 +940,30 @@ const handleCopy = (text, field) => {
     className="role-icon"
   />
 )}
-                            </div>
-                            <div className="collapsed-info-row">
-                              {isMobile ? (
+{!isMobile && (
+  <div className="recruiter-tile">
+    <div className="recruiter-label">RECRUITER</div>
+    <div className="recruiter-avatar-wrap">
+      <Avatar
+        nickname={authors[offer.user_id] || 'User'}
+        srcUrl={authorAvatars[offer.user_id] || null}
+        size={96}
+        shape="square"
+        radius={0}
+        style={{
+        borderTopLeftRadius: 0,
+        borderBottomLeftRadius: 0,
+        borderTopRightRadius: 0,
+        borderBottomRightRadius: 12,
+        display: 'block'
+      }}
+    />
+    </div>
+  </div>
+)}
+</div>
+<div className="collapsed-info-row">
+  {isMobile ? (
 
   <div className="collapsed-column collapsed-primary">
     {/* Rank */}
