@@ -139,9 +139,14 @@ const handleCopy = (text, field) => {
         subscription.unsubscribe();
       }
     };
-  }, []); // Se ejecuta solo una vez al montar el componente
+  }, []);
 
   const isMobile = window.innerWidth <= 768;
+  
+const [showAvatarMobile, setShowAvatarMobile] = useState(false);
+useEffect(() => {
+  if (!isMobile) return; const id = setInterval(() => setShowAvatarMobile(v => !v), 3500); return () => clearInterval(id);
+}, [isMobile]);
 
   const handleStartChat = (offerId, employerId) => {
     setActiveChat({ offerId, receiverId: employerId });
@@ -925,25 +930,44 @@ const handleCopy = (text, field) => {
 ) : (
 <div className={`collapsed-offer${offer.team ? ' team' : ''}`}>
 <div className="collapsed-images">
-  <ThemeLogo
-  light={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
-  dark={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebasedDM' : getRoleImage(offer.title) + 'DM'}.png`}
-  alt="role"
-  className="role-icon"
-/>
-
-{offer.team && offer.teammate_rank && (
-  <ThemeLogo
-    light={`/logos/roles/${getRoleImage(offer.teammate_rank)}.png`}
-    dark={`/logos/roles/${getRoleImage(offer.teammate_rank)}DM.png`}
-    alt="teammate role"
-    className="role-icon"
-  />
-)}
-{!isMobile && (
-  <div className="recruiter-tile">
-    <div className="recruiter-label">RECRUITER</div>
-    <div className="recruiter-avatar-wrap">
+  {isMobile ? (
+    offer.team ? (
+      showAvatarMobile ? (
+        <div className="mobile-team-avatar role-icon">
+          <Avatar
+            nickname={authors[offer.user_id] || 'User'}
+            srcUrl={authorAvatars[offer.user_id] || null}
+            size={96}
+            shape="square"
+            radius={0}
+            style={{
+            width: '100%',
+            height: '100%',
+            display: 'block'
+          }}
+        />
+        </div>
+      ) : (
+        <>
+          <ThemeLogo
+            light={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
+            dark={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebasedDM' : getRoleImage(offer.title) + 'DM'}.png`}
+            alt="role"
+            className="role-icon"
+          />
+          {offer.team && offer.teammate_rank && (
+            <ThemeLogo
+              light={`/logos/roles/${getRoleImage(offer.teammate_rank)}.png`}
+              dark={`/logos/roles/${getRoleImage(offer.teammate_rank)}DM.png`}
+              alt="teammate role"
+              className="role-icon"
+            />
+          )}
+        </>
+      )
+    ) : (
+    showAvatarMobile ? (
+    <div className="mobile-avatar-slot role-icon">
       <Avatar
         nickname={authors[offer.user_id] || 'User'}
         srcUrl={authorAvatars[offer.user_id] || null}
@@ -951,16 +975,63 @@ const handleCopy = (text, field) => {
         shape="square"
         radius={0}
         style={{
-        borderTopLeftRadius: 0,
-        borderBottomLeftRadius: 0,
-        borderTopRightRadius: 0,
-        borderBottomRightRadius: 12,
+        width: '100%',
+        height: '100%',
         display: 'block'
       }}
     />
     </div>
-  </div>
-)}
+      ) : (
+        <ThemeLogo
+          light={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
+          dark={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebasedDM' : getRoleImage(offer.title) + 'DM'}.png`}
+          alt="role"
+          className="role-icon"
+        />
+      )
+    )
+  ) : (
+    /* ─────────── DESKTOP: sin cambios ─────────── */
+    <>
+      <ThemeLogo
+        light={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
+        dark={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebasedDM' : getRoleImage(offer.title) + 'DM'}.png`}
+        alt="role"
+        className="role-icon"
+      />
+
+      {offer.team && offer.teammate_rank && (
+        <ThemeLogo
+          light={`/logos/roles/${getRoleImage(offer.teammate_rank)}.png`}
+          dark={`/logos/roles/${getRoleImage(offer.teammate_rank)}DM.png`}
+          alt="teammate role"
+          className="role-icon"
+        />
+      )}
+
+      {!isMobile && (
+        <div className="recruiter-tile">
+          <div className="recruiter-label">RECRUITER</div>
+          <div className="recruiter-avatar-wrap">
+            <Avatar
+              nickname={authors[offer.user_id] || 'User'}
+              srcUrl={authorAvatars[offer.user_id] || null}
+              size={96}
+              shape="square"
+              radius={0}
+              style={{
+                borderTopLeftRadius: 0,
+                borderBottomLeftRadius: 0,
+                borderTopRightRadius: 0,
+                borderBottomRightRadius: 12,
+                display: 'block'
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  )}
 </div>
 <div className="collapsed-info-row">
   {isMobile ? (

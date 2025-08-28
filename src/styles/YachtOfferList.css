@@ -39,24 +39,21 @@
   .top-row > .expanded-block:not(:last-child)::after {
     content: "";
     position: absolute;
-    top: 32px; /* ajusta si necesario */
+    top: 32px;
     right: 0;
     width: 1px;
-    height: 100px; /* aproximadamente 2cm en pantalla */
+    height: 100px;
     background-color: #bca987;
   }
 }
 
-/* Desktop: Recruiter tile alignment (no afecta móviles) */
 @media (min-width: 1024px) {
-  /* Asegura fila horizontal y centrado vertical de los tiles de la izquierda */
   .collapsed-images {
     display: flex;
     align-items: flex-end;
-    gap: 16px;            /* mismo espacio que entre logos departamentales */
+    gap: 16px;
   }
 
-  /* Tile del recruiter: sin fondo ni bordes; solo label + avatar */
   .recruiter-tile {
     display: flex;
     flex-direction: column;
@@ -88,6 +85,30 @@
     width: 96px;
     height: 96px;
     border-radius: 12px;
+    display: block;
+  }
+}
+
+/* Móvil: el avatar debe copiar la forma del logo (externas redondeadas, internas rectas) */
+@media (max-width: 768px) {
+  /* Estos wrappers ya existen en el JSX solo cuando se muestra el avatar */
+  .mobile-avatar-slot.role-icon,
+  .mobile-team-avatar.role-icon {
+    /* mismo tamaño que el logo por la clase role-icon */
+    overflow: hidden;                /* ← recorta IMG/SVG interno */
+    border-top-left-radius: 12px;    /* ajusta al radio exacto de tu logo si es distinto */
+    border-bottom-left-radius: 12px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  /* Asegura que el Avatar rellene el wrapper sin márgenes */
+  .mobile-avatar-slot.role-icon img,
+  .mobile-avatar-slot.role-icon svg,
+  .mobile-team-avatar.role-icon img,
+  .mobile-team-avatar.role-icon svg {
+    width: 100%;
+    height: 100%;
     display: block;
   }
 }
