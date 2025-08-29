@@ -62,19 +62,22 @@ const initialState = {
 
 const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain', 'Chief Officer', '2nd Officer', '3rd Officer', 'Bosun', 'Deck/Engineer', 'Mate', 'Lead Deckhand', 'Deckhand', 'Deck/Steward(ess)', 'Deck/Carpenter', 'Deck/Divemaster', 'Dayworker', 'Chief Engineer', '2nd Engineer', '3rd Engineer', 'Solo Engineer', 'Electrician', 'Chef', 'Head Chef', 'Sous Chef', 'Solo Chef', 'Cook/Crew Chef', 'Crew Chef/Stew', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Steward(ess)', '4th Steward(ess)', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Cook/Steward(ess)', 'Stew/Deck', 'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny', 'Videographer', 'Yoga/Pilates Instructor', 'Personal Trainer', 'Dive Instrutor', 'Water Sport Instrutor', 'Nurse', 'Other']; // ajusta según lista oficial
 
-const countries = ["Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "Aruba", "Australia", "Bahamas", "Bahrain", "Barbados",
-    "Belgium", "Belize", "Bonaire", "Brazil", "Brunei", "Bulgaria", "BVI, UK", "Cambodia", "Canada", "Cape Verde",
-    "Chile", "China", "Colombia", "Costa Rica", "Croatia", "Cuba", "Curacao", "Cyprus", "Denmark", "Dominica",
-    "Dominican Republic", "Ecuador", "Egypt", "Estonia", "Fiji", "Finland", "France", "Germany",
-    "Greece", "Grenada", "Guatemala", "Honduras", "India", "Indonesia", "Ireland", "Israel",
-    "Italy", "Jamaica", "Japan", "Kiribati", "Kuwait", "Latvia", "Libya", "Lithuania", "Madagascar",
-    "Malaysia", "Maldives", "Malta", "Marshall Islands", "Mauritius", "Mexico", "Micronesia",
-    "Monaco", "Montenegro", "Morocco", "Myanmar", "Netherlands", "New Zealand", "Nicaragua",
-    "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Saint Kitts and Nevis",
-    "Saint Lucia", "Saint Maarten", "Saint Vincent and the Grenadines", "Samoa", "Saudi Arabia", "Seychelles",
-    "Singapore", "Solomon Islands", "South Africa", "South Korea", "Spain", "Sweden", "Taiwan",
-    "Thailand", "Trinidad and Tobago", "Tunisia", "Turkey", "United Arab Emirates", "United Kingdom",
-    "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"];
+const countries = [
+  // 🌐 Countries
+  "Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "Aruba", "Australia", "Bahamas", "Bahrain", "Barbados",
+  "Belgium", "Belize", "Bonaire", "Brazil", "Brunei", "Bulgaria", "BVI, UK", "Cambodia", "Canada", "Cape Verde",
+  "Chile", "China", "Colombia", "Costa Rica", "Croatia", "Cuba", "Curacao", "Cyprus", "Denmark", "Dominica",
+  "Dominican Republic", "Ecuador", "Egypt", "Estonia", "Fiji", "Finland", "France", "Germany",
+  "Greece", "Grenada", "Guatemala", "Honduras", "India", "Indonesia", "Ireland", "Israel",
+  "Italy", "Jamaica", "Japan", "Kiribati", "Kuwait", "Latvia", "Libya", "Lithuania", "Madagascar",
+  "Malaysia", "Maldives", "Malta", "Marshall Islands", "Mauritius", "Mexico", "Micronesia",
+  "Monaco", "Montenegro", "Morocco", "Myanmar", "Netherlands", "New Zealand", "Nicaragua",
+  "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Saint Kitts and Nevis",
+  "Saint Lucia", "Saint Maarten", "Saint Vincent and the Grenadines", "Samoa", "Saudi Arabia", "Seychelles",
+  "Singapore", "Solomon Islands", "South Africa", "South Korea", "Spain", "Sweden", "Taiwan",
+  "Thailand", "Trinidad and Tobago", "Tunisia", "Turkey", "United Arab Emirates", "United Kingdom",
+  "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"
+];
 
 const types = ['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Crossing', 'DayWork'];
 const yearsOptions = ['Green', 1, 2, 2.5, 3, 5];
@@ -246,36 +249,47 @@ const formReady = (() => {
   formData.title === 'Chase Boat Captain' ? chaseBoatSizes : defaultYachtSizes;
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const { name, value, type, checked } = e.target;
 
-    if (name === 'visas') {
-      setFormData(prev => {
-        const currentVisas = prev.visas || [];
-        const newVisas = checked
-          ? [...currentVisas, value] // Agrega la visa si está marcada
-          : currentVisas.filter(v => v !== value); // Elimina la visa si no está marcada
-        return { ...prev, visas: newVisas };
-      });
-    } else {
-      // Lógica existente para todos los demás campos
-      setFormData(prev => {
-        const newState = {
-          ...prev,
-          [name]: type === 'checkbox' ? checked : value,
-        };
+  if (name === 'visas') {
+    setFormData(prev => {
+      const currentVisas = prev.visas || [];
+      const newVisas = checked
+        ? [...currentVisas, value] // Agrega la visa si está marcada
+        : currentVisas.filter(v => v !== value); // Elimina la visa si no está marcada
+      return { ...prev, visas: newVisas };
+    });
+  } else {
+    setFormData(prev => {
+      const newState = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      };
 
-        if (name === 'salary_currency' && prev.team === 'Yes') {
-          newState.teammate_salary_currency = value;
-        }
+      // 🔹 Si cambia salary_currency y hay team
+      if (name === 'salary_currency' && prev.team === 'Yes') {
+        newState.teammate_salary_currency = value;
+      }
 
-        if (name === 'title' && value === 'Dayworker') {
-          newState.type = 'DayWork';
-        }
+      // 🔹 Si selecciona Dayworker → autoasigna DayWork
+      if (name === 'title' && value === 'Dayworker') {
+        newState.type = 'DayWork';
+      }
 
-        return newState;
-      });
-    }
-  };
+      // 🔹 Si marca ASAP → limpiar fecha
+      if (name === 'is_asap') {
+        newState.start_date = checked ? '' : prev.start_date;
+      }
+
+      // 🔹 Si cambia Start Date → desmarcar ASAP
+      if (name === 'start_date' && value) {
+        newState.is_asap = false;
+      }
+
+      return newState;
+    });
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -791,7 +805,6 @@ const sanitizedData = {
     </select>
 
     {/* 13. Fecha de Inicio */}
-   {/* Start Date */}
 <label>Start Date: *</label>
 <input
   type="date"
@@ -840,12 +853,31 @@ const sanitizedData = {
     <label>City:</label>
     <input name="city" value={formData.city} onChange={handleChange} />
 
-    {/* 16. País */}
-    <label>Country: *</label>
-    <select name="country" value={formData.country} onChange={handleChange} required>
-      <option value="">Select...</option>
-      {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-    </select>
+    {/* 16. Country/Region */}
+<label>Country/Region: *</label>
+<select
+  name="country"
+  value={formData.country}
+  onChange={handleChange}
+  required
+>
+  <option value="">Select...</option>
+
+  <optgroup label="Regions">
+    <option value="Asia">Asia</option>
+    <option value="Baltic">Baltic</option>
+    <option value="Caribbean">Caribbean</option>
+    <option value="Mediterranean">Mediterranean</option>
+    <option value="North Sea">North Sea</option>
+    <option value="Pacific">Pacific</option>
+  </optgroup>
+
+  <optgroup label="Countries">
+    {countries.map((c) => (
+      <option key={c} value={c}>{c}</option>
+    ))}
+  </optgroup>
+</select>
 
     {/* 17. Email de contacto */}
     <label>Contact Email:</label>
