@@ -23,6 +23,7 @@ const CURRENCIES = ["USD", "EUR", "GBP", "AUD"];
 const LANGS = ["Arabic", "Dutch", "English", "French", "German", "Greek", "Italian", "Mandarin", "Portuguese", "Russian", "Spanish", "Turkish", "Ukrainian"];
 const FLU = ["Native", "Fluent", "Conversational"];
 const PROPULSION = ["Shaft Drive", "Pod Drive", "Waterjet", "Sail Drive", "Outboard", "Stern Drive"];
+const YEARS_BUCKETS = ['Green','1','2','2.5','3','5'];
 
 // --- ayudas locales (solo si falta info del modelo) ---
 
@@ -139,6 +140,37 @@ function normalizeFlagValue(v) {
   };
   const k = String(v||"").toLowerCase().trim();
   return m[k] || v;
+}
+
+function normalizeYearsBucket(v) {
+  const s = String(v || '').trim();
+  if (!s) return '';
+
+  // Mantén "Green" tal cual
+  if (/^green$/i.test(s)) return 'Green';
+
+  // Extrae primer número (sirve para "10", "10+", "2.5", "2-3", etc.)
+  const m = s.match(/\d+(\.\d+)?/);
+  if (!m) return '';
+
+  const n = parseFloat(m[0]);
+  if (isNaN(n)) return '';
+
+  // Buckets disponibles en el formulario
+  const numericBuckets = YEARS_BUCKETS.filter(x => /^\d+$/.test(x)).map(Number).sort((a,b)=>a-b); // [1,2,3,4,5]
+  const maxNumeric = numericBuckets.length ? numericBuckets[numericBuckets.length - 1] : 0;
+  const overflowBucket = YEARS_BUCKETS.find(x => /^>\s*\d+$/.test(x)); // ">5" si existe
+  const overflowCap = overflowBucket ? parseInt(overflowBucket.replace(/[^\d]/g,''),10) : null;
+
+  // Si hay bucket de overflow y la experiencia excede el máximo → usa el overflow
+  if (overflowBucket && n > (overflowCap ?? maxNumeric)) {
+    return overflowBucket;
+  }
+
+  // Sin overflow: clamp al máximo numérico
+  const rounded = Math.ceil(n);     // 2.5 → 3, 5.0 → 5
+  const clamped = Math.min(Math.max(rounded, numericBuckets[0] || 1), maxNumeric || rounded);
+  return String(clamped);
 }
 
 function normalizeCountryName(raw) {
@@ -299,6 +331,39 @@ function inferSeasonType(text) {
   return "";
 }
 
+function detectExplicitType(text) {
+  const t = String(text || "").toLowerCase();
+
+  // DayWork / Dayworker
+  if (/\bday\s*work(?:ers?)?\b/.test(t) || /\bday-?worker(?:s)?\b/.test(t)) return "DayWork";
+
+  // Relief
+  if (/\b(relief|maternity\s+cover|temp(?:orary)?\s+cover)\b/.test(t)) return "Relief";
+
+  // Temporary
+  if (/\b(temp|temporary|freelance|short[-\s]*term)\b/.test(t)) return "Temporary";
+  if (/\bcontract\s+(?:until|till|through|thru)\b/.test(t)) return "Temporary";
+
+  // Seasonal
+  if (/\bseasonal\b/.test(t)) return "Seasonal";
+  if (/\bfor\s+the\s+season\b/.test(t)) return "Seasonal";
+  if (/\b(until|till|through|thru)\s+(the\s+)?end\s+of\s+the?\s*season\b/.test(t)) return "Seasonal";
+  if (/\b(summer|winter)\s+season\b/.test(t)) return "Seasonal";
+
+  // Rotational
+  if (/\brotat(?:ion|ional)\b/.test(t)) return "Rotational";
+  if (/\b(equal\s*time|hitch)\b/.test(t)) return "Rotational";
+  if (/\b(\d{1,2})\s*[:/]\s*(\d{1,2})\s*(?:w|wk|week|weeks|mo|month|months)?\b/.test(t)) return "Rotational";
+  if (/\b(\d+)\s*(?:weeks?|w|wk)\s*on\s*(\d+)\s*(?:weeks?|w|wk)\s*off\b/.test(t)) return "Rotational";
+  if (/\b(\d+)\s*(?:months?|mo)\s*on\s*(\d+)\s*(?:months?|mo)\s*off\b/.test(t)) return "Rotational";
+
+  // Delivery / Crossing
+  if (/\bdelivery\b/.test(t)) return "Delivery";
+  if (/\bcrossings?\b/.test(t)) return "Crossing";
+
+  return "";
+}
+
 // Years in rank por regex
 function inferYearsInRank(text) {
   const t = text.toLowerCase();
@@ -319,24 +384,19 @@ function inferYearsInRank(text) {
   let m;
   while ((m = re.exec(text)) !== null) {
     const window = text.slice(Math.max(0, m.index - 25), Math.min(text.length, m.index + 25)).toLowerCase();
-    // Evitar "green card", "green-card", "green  card holder", etc.
     if (/\bcard\b/.test(window)) continue;
 
-    // Señales de contexto laboral/novato
     if (/\b(crew|candidate|deckhand|stew|steward|engineer|chef|captain|junior|entry|new\s+to\s+yachting|first\s+season)\b/.test(window)) {
       return "Green";
     }
   }
 }
 
-  // **Regla actualizada para incluir "experienced"**
   if (/\b(proven|extensive|experienced)\s+experience\b|\bexperienced\b/i.test(t)) return "2.5";
   return "";
 }
 
-// Lógica de "años en el puesto" basada en el contexto
 function updateYearsInRank(text, out) {
-  // Si el modelo de IA no extrajo nada, usamos nuestra lógica de regex
   if (!out.years_in_rank) {
     const yr = inferYearsInRank(text);
     if (yr) {
@@ -345,7 +405,6 @@ function updateYearsInRank(text, out) {
   }
 }
 
-// DOE fallback (MEJORA: más precisa)
 function ensureDOE(text, out) {
   const t = text.toLowerCase();
   const hasUSD = /\b(usd|\$)(?!\s*per)\b/.test(t);
@@ -367,7 +426,6 @@ function ensureDOE(text, out) {
   }
 }
 
-// Fallback ASAP por texto
 function ensureASAP(text, out) {
   const t = text.toLowerCase();
   if (/\basap\b|immediate(ly)?|start\s+immediately/.test(t)) {
@@ -376,20 +434,12 @@ function ensureASAP(text, out) {
   }
 }
 
-/** =========================================================
- *  Mejora: inferLanguages robusto (evita falsos positivos)
- *  - Requiere “señal lingüística” cerca (fluent/native/required…)
- *  - Ignora topónimos como “French Polynesia”, “English Harbour”…
- * ========================================================= */
-
-// Señales cercanas que indican idioma
 const LANGUAGE_TOKENS = [
   "fluent", "native", "conversational", "bilingual", "speaker", "speaking", "spoken",
   "read", "write", "written", "verbal", "communication", "intermediate", "advanced", "basic",
   "required", "preferred", "a plus", "advantage", "must", "need", "mandatory"
 ];
 
-// Topónimos que contienen palabras de idiomas pero NO son idiomas
 const PLACE_SKIP = [
   /french\s+polynesia/i,
   /french\s+riviera/i,
@@ -402,15 +452,12 @@ const PLACE_SKIP = [
   /turkish\s+riviera/i
 ];
 
-// Heurística de idiomas
 function inferLanguages(text, out) {
   const lower = text.toLowerCase();
 
-  // ¿hay topónimo con la palabra del idioma?
   const inSkipPlace = (langWord) => PLACE_SKIP.some(rx => rx.test(lower)) &&
     new RegExp(`\\b${langWord}\\b`, "i").test(lower);
 
-  // ¿existe alguna señal dentro de ±25 chars del match del idioma?
   function hasSignalNear(langWord) {
     const re = new RegExp(`\\b${langWord}\\b`, "ig");
     let m;
@@ -424,7 +471,6 @@ function inferLanguages(text, out) {
     return false;
   }
 
-  // Fluencia a partir del contexto cercano
   function inferFluency(langWord) {
     const re = new RegExp(`\\b${langWord}\\b`, "ig");
     let m;
@@ -448,24 +494,21 @@ function inferLanguages(text, out) {
     }
   }
 
-  // 1) English: exigir señal y evitar topónimos
   if (!out.language_1 && /\benglish\b/i.test(text) && hasSignalNear("english") && !inSkipPlace("english")) {
     setLang(1, "English", inferFluency("english"));
   }
 
-  // 2) Otros idiomas habituales
   const candidates = ["Italian", "Spanish", "French", "German", "Greek", "Portuguese", "Russian", "Dutch", "Turkish", "Arabic"];
   for (const lang of candidates) {
     const lw = lang.toLowerCase();
     if ((out.language_1 && out.language_2) || !lower.includes(lw)) continue;
-    if (inSkipPlace(lw)) continue;      // p.ej., French Polynesia
-    if (!hasSignalNear(lw)) continue;      // mención aislada sin señal -> ignorar
+    if (inSkipPlace(lw)) continue;
+    if (!hasSignalNear(lw)) continue;
     const slot = out.language_1 ? 2 : 1;
     setLang(slot, lang, inferFluency(lw));
   }
 }
 
-// Lógica de "fluidez del idioma" basada en el contexto
 function updateLanguageFluency(text, out) {
   const t = text.toLowerCase();
   if (out.language_1) {
@@ -481,7 +524,6 @@ function updateLanguageFluency(text, out) {
   }
 }
 
-// === NUEVA LÓGICA PARA HOMEPORT (corrige "Based in the Bahamas" => no "The") ===
 function inferHomeport(text, out) {
   const src = String(text || "");
   const re = /\b(?:based\s+in|home\s*port\s*is|docked\s+in|located\s+in)\s+([A-Za-z][A-Za-z\s\-']{1,60})(?=[\.,;]|$)/i;
@@ -489,44 +531,38 @@ function inferHomeport(text, out) {
   if (!m) return;
 
   let place = m[1].trim().replace(/\s+/g, " ");
-  place = place.replace(/^(the)\s+/i, ""); // quita "the " inicial
+  place = place.replace(/^(the)\s+/i, "");
 
   const lower = place.toLowerCase();
 
-  // Si parece un país, NO lo tratamos como homeport; solo ayudamos al país si está vacío
   if (lower === "bahamas" || lower === "the bahamas") {
     if (!out.country) out.country = "Bahamas";
     return;
   }
 
-  // Si llega hasta aquí, sí parece ciudad/puerto
   const titled = place.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
   out.homeport = titled;
 }
 
 function inferHolidays(text) {
   if (!text) return '';
-  const t = String(text).replace(/\s+/g, ' ');
 
-  const m = t.match(/(\d{1,3})\s*(\+)?\s*days?\s*(?:of\s+)?(?:leave|holiday|holidays|off)[^.\n]*?(?:p\/?a|per\s*annum|pa|per\s*year|a\s*year)?/i);
-  if (m) {
-    const num = m[1];
-    const plus = m[2] ? '+' : '';
-    const hasPA = /p\/?a|per\s*annum|pa|per\s*year|a\s*year/i.test(m[0]);
-    return `${num}${plus} days${hasPA ? ' PA' : ''}`;
+  const t = String(text).replace(/\s+/g, ' ').toLowerCase();
+
+  let m = t.match(/(\d{1,3})\s*\+?\s*days?\s*(?:of\s+)?(?:leave|holiday|holidays|off)\b/i);
+
+  if (!m) {
+    m = t.match(/\b(?:leave|holidays?|days\s*off)\b[^0-9]{0,30}(\d{1,3})\s*\+?\s*days?\b/i);
   }
 
-  const m2 = t.match(/(\d{1,3})\s*(\+)?\s*days?\s*(?:of\s+)?(?:leave|holiday|holidays|off)\b/i);
-  if (m2) {
-    const num = m2[1];
-    const plus = m2[2] ? '+' : '';
-    return `${num}${plus} days`;
-  }
+  if (!m) return '';
 
-  return '';
+  const n = m[1];
+  const pa = /(p\/?a|per\s*annum|pa|per\s*year|a\s*year)/i.test(m[0]) ? ' PA' : ''; // Revisa si hay "per annum"
+
+  return `${n} days${pa}`;
 }
 
-// === GENDER helper (solo si el aviso lo exige explícitamente) ===
 function inferGender(text) {
   const t = text.toLowerCase();
   if (/\b(female|women|woman)\b/.test(t)) return "Female";
@@ -616,27 +652,33 @@ function inferFlag(text) {
 }
 
 function detectTeamAndTeammate(text, out) {
-  const t = text.toLowerCase();
+  const t = String(text || "").toLowerCase();
 
-  const coupleCue =
-    /\b(couple|team\s*of\s*2|pair|duo|husband\s+and\s+wife)\b/;
+  const header = t.match(/looking\s*for\s*(?:team|couple)\s*[:\-]?\s*(yes|no)\b/);
+  if (header) {
+    out.team = header[1].toLowerCase() === "yes" ? "Yes" : "No";
+    if (out.team === "No") return;
+  }
+
+  if (/\bno\s+(?:couple|couples|teams?)\b/.test(t) ||
+      /\bnot\s+looking\s+for\s+(?:a\s+)?(?:couple|team)\b/.test(t)) {
+    out.team = "No";
+    return;
+  }
+
+  const coupleCue = /\b(team\s*of\s*2|pair|duo|husband\s+and\s+wife|couple\s+(?:role|position|positions?|required|wanted|preferred))\b/i;
 
   const join = String.raw`\s*(?:\+|\/|&|and)\s*`;
-
   const capChef = new RegExp(`\\b(captain)${join}(chef|cook)\\b`, "i");
   const chefCap = new RegExp(`\\b(chef|cook)${join}(captain)\\b`, "i");
 
-  if (coupleCue.test(t) || capChef.test(text) || chefCap.test(text)) {
+  if (coupleCue.test(text) || capChef.test(text) || chefCap.test(text)) {
     out.team = "Yes";
 
     if (!out.teammate_rank) {
-      if (/captain/i.test(out.rank)) {
-        out.teammate_rank = "Chef";
-      } else if (/(chef|cook)/i.test(out.rank)) {
-        out.teammate_rank = "Captain";
-      } else if (capChef.test(text)) {
-        out.teammate_rank = "Chef";
-      }
+      if (/captain/i.test(out.rank)) out.teammate_rank = "Chef";
+      else if (/(chef|cook)/i.test(out.rank)) out.teammate_rank = "Captain";
+      else if (capChef.test(text)) out.teammate_rank = "Chef";
     }
   }
 }
@@ -661,15 +703,6 @@ function itineraryImpliesSchengen(text) {
   return false;
 }
 
-function detectSalaryPeriod(text){
-  const t = String(text || "").toLowerCase();
-  if (/\b(per\s*day|a\s*day|daily|\/\s*day)\b/.test(t)) return 'day';
-  if (/\b(per\s*week|a\s*week|weekly|\/\s*week|\/\s*wk|wkly|pw)\b/.test(t)) return 'week';
-  if (/\b(per\s*hour|an?\s*hour|hourly|\/\s*hour|\/\s*hr)\b/.test(t)) return 'hour';
-  if (/\b(per\s*month|a\s*month|monthly|\/\s*month|\/\s*mo)\b/.test(t)) return 'month';
-  return '';
-}
-
 function inferPropulsionType(text) {
   const t = text.toLowerCase();
 
@@ -690,200 +723,6 @@ function inferPropulsionType(text) {
   return "";
 }
 
-function extractExactLengthsByContext(text) {
-  const src = String(text || "");
-  const matches = [];
-
-  const re = /(?:\b(\d{1,3})\s*(ft|feet)\b|\b(\d{1,3})\s*m\b|\b(\d{1,3})\s*['\u2019\u2032]\b)/gi;
-
-  let m;
-  while ((m = re.exec(src)) !== null) {
-    let fullTxt = m[0];
-    let meters = null;
-    if (m[2]) {
-      meters = parseInt(m[1], 10) * 0.3048;
-    } else if (m[3]) {
-      meters = parseInt(m[3], 10);
-    } else if (m[4]) {
-      meters = parseInt(m[4], 10) * 0.3048;
-    }
-
-    const i = m.index;
-    const window = src.slice(Math.max(0, i - 60), Math.min(src.length, i + fullTxt.length + 60)).toLowerCase();
-
-    const isTender =
-      /\b(tender|chase\s*boat|chase\b|rib\b|dinghy\b|jet\s*tender|support\s*vessel|rescue\s*boat)\b/.test(window);
-
-    const isMain =
-      /\b(yacht|s\/y|m\/y|s\/v|m\/v|catamaran|sail\s*boat|sailboat|motor\s*yacht|sailing\s*yacht|loa|length\b)/.test(window) ||
-      (!isTender && /\bcharter\b/.test(window));
-
-    matches.push({ text: fullTxt.trim(), meters: meters ?? 0, isTender, isMain });
-  }
-
-  const main = [];
-  const tenders = [];
-  const seen = new Set();
-
-  for (const it of matches) {
-    if (it.meters <= 0 || it.meters > 150) continue;
-
-    const key = `${it.text.toLowerCase()}|${it.isTender?'t':'m'}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    if (it.isTender) tenders.push(it);
-    else if (it.isMain) main.push(it);
-    else {
-      if (it.meters >= 12) main.push(it);
-      else tenders.push(it);
-    }
-  }
-
-  let mainBest = null;
-  if (main.length > 0) {
-    mainBest = main.reduce((a, b) => (a.meters >= b.meters ? a : b));
-  }
-
-  const tenderList = tenders
-    .sort((a, b) => b.meters - a.meters)
-    .map(x => x.text);
-
-  return {
-    mainText: mainBest ? mainBest.text : "",
-    tenderTexts: Array.from(new Set(tenderList)),
-  };
-}
-
-function appendLoaRemarks(originalText, currentDesc, out) {
-  const desc = String(currentDesc || "").trim();
-  const { mainText, tenderTexts } = extractExactLengthsByContext(originalText);
-
-  const lines = [];
-
-  const hasLine = (line) => desc.toLowerCase().includes(line.toLowerCase());
-
-  if (mainText) {
-    const line = `Main vessel LOA: ${mainText}.`;
-    if (!hasLine(line)) lines.push(line);
-  }
-
-  if (tenderTexts.length > 0) {
-    const tenderLine = `Tender: ${tenderTexts.join(" / ")}.`;
-    if (!hasLine(tenderLine)) lines.push(tenderLine);
-  }
-
-  if (lines.length === 0) return desc;
-
-  return desc
-    ? `${desc}\n\n${lines.join("\n")}`
-    : lines.join("\n");
-}
-
-function appendUnmappedCues(originalText, currentDesc, out) {
-  const desc = String(currentDesc || "").trim();
-  const t = String(originalText || "").replace(/\s+/g, " ");
-
-  const lines = [];
-
-  // Itinerary: acepta "Mediterranean/Med" y "Caribbean/Carib", con (summer)/(winter) si aparecen
-  const hasMed = /\b(mediterranean|the\s+med|med)\b/i.test(t);
-  const hasCarib = /\b(caribbean|carib)\b/i.test(t);
-  if (hasMed && hasCarib) {
-    const summer = /summer/i.test(t) ? " (summer)" : "";
-    const winter = /winter/i.test(t) ? " (winter)" : "";
-    lines.push(`Itinerary: Mediterranean${summer} → Caribbean${winter}.`);
-  }
-
-  // Owner usage: "~8 months/year onboard"
-  const owner = t.match(/owner[^.\n]*?(\d{1,2})\s*(?:months?|mos?)\s*(?:of\s+the\s+year)?[^.\n]*?(?:on\s*board|onboard)/i);
-  if (owner) lines.push(`Owner usage: ~${owner[1]} months/year onboard.`);
-
-  // Crew: "Total of 8 crew (mixed nationality)"
-  const crew = t.match(/(?:total\s+of\s+)?(\d{1,2})\s+crew\b/i);
-  if (crew) {
-    const mixed = /mixed\s+nationalit/i.test(t) ? " (mixed nationality)" : "";
-    lines.push(`Crew: ${crew[1]}${mixed}.`);
-  }
-
-  // Policy: non-smoking
-  if (/non[-\s]?smoking/i.test(t)) lines.push("Policy: Non-smoking vessel.");
-
-  // Cuisine: Mediterranean
-  if (/mediterranean\s+cuisine/i.test(t)) lines.push("Cuisine: Mediterranean cuisine.");
-
-  // Contract: MLC SEA
-  if (/mlc\s*sea/i.test(t)) lines.push("Contract: Standard MLC SEA.");
-
-  // --- Filtro: jamás repetir en Remarks lo que ya llenó campos del form ---
-  const blockers = [
-    out.holidays,                                 // leave
-    out.flag,                                     // flag
-    out.start_date || (out.is_asap ? "ASAP" : ""),// start
-    out.salary,                                   // salary
-    out.is_doe ? "DOE" : "",                      // DOE
-    out.uses,                                     // Private/Charter
-    out.yacht_size                                // LOA bucket
-  ]
-  .filter(Boolean)
-  .map(s => String(s).toLowerCase());
-
-  const filtered = lines.filter(line => {
-    const L = line.toLowerCase();
-    // Nunca incluir encabezados prohibidos
-    if (/^language:/i.test(line)) return false;
-    if (/^salary:/i.test(line)) return false;
-    // Si la línea contiene un token ya usado en un campo, fuera
-    return !blockers.some(tok => tok && L.includes(String(tok).toLowerCase()));
-  });
-
-  if (!filtered.length) return desc || "";
-  const joiner = desc ? "\n\n" : "";
-  return desc + joiner + filtered.join("\n");
-}
-
-function stripRoleTeamRedundancy(desc, out) {
-  if (!desc) return "";
-  let s = String(desc);
-
-  const roles = [out.rank, out.teammate_rank]
-    .filter(Boolean)
-    .map(r => r.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  const roleAlt = roles.length ? `(?:${roles.join("|")})` : null;
-
-  const coupleAlt = "(?:couple|team\\s*of\\s*2|pair|duo|husband\\s+and\\s+wife)";
-  const join = String.raw`\s*(?:\+|\/|&|and)\s*`;
-
-  const capChef = new RegExp(`\\bCaptain${join}(?:Chef|Cook)\\b`, "i");
-  const chefCap = new RegExp(`\\b(?:Chef|Cook)${join}Captain\\b`, "i");
-
-  const opener = /\b(looking\s+for|seeking|hiring|need(?:ed|ing)?|searching\s+for|require(?:s|d)?)\b/i;
-
-  s = s
-    .split(/\r?\n/)
-    .map((line) => {
-      const L = line.trim();
-      if (!L) return "";
-
-      const hasOpener = opener.test(L);
-      const hasCouple =
-        /captain\s*(?:\+|\/|&|and)\s*(?:chef|cook)/i.test(L) ||
-        /(chef|cook)\s*(?:\+|\/|&|and)\s*captain/i.test(L) ||
-        new RegExp(`\\b${coupleAlt}\\b`, "i").test(L);
-
-      const hasExplicitRole = roleAlt ? new RegExp(`\\b${roleAlt}\\b`, "i").test(L) : false;
-
-      if (hasOpener && (hasCouple || hasExplicitRole)) return "";
-      if (!hasOpener && (hasCouple || (hasExplicitRole && L.length <= 80))) return "";
-
-      return line;
-    })
-    .join("\n");
-
-  s = s.replace(capChef, "").replace(chefCap, "");
-  return s.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
-}
-
 export const config = {
   api: {
     bodyParser: {
@@ -891,39 +730,6 @@ export const config = {
     },
   },
 };
-
-function cleanDescriptionContacts(desc, out) {
-  if (!desc) return "";
-
-  let s = String(desc);
-
-  if (out.contact_email) {
-    const esc = out.contact_email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    s = s.replace(new RegExp(esc, "gi"), "");
-  }
-  s = s.replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "");
-
-  const digits = (x) => String(x || "").replace(/\D/g, "");
-  const phoneOut = digits(out.contact_phone);
-  if (phoneOut) {
-
-    const compactRe = new RegExp(phoneOut.split("").join("\\D*"), "g");
-    s = s.replace(compactRe, "");
-  }
-  s = s.replace(/\+?\d[\d ()\-\.]{6,}\d/g, "");
-
-  const ctaRe =
-    /(please[, ]*)?(send|drop|shoot)\s+(me\s+)?(a\s+)?(message|dm|email)\b|(?:please\s+)?(?:email|contact|reach)\s+(me\s+)?(?:at|via|on)?/i;
-
-  s = s
-    .split(/\r?\n/)
-    .map((line) => (ctaRe.test(line) ? "" : line))
-    .join("\n");
-
-  s = s.replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
-
-  return s;
-}
 
 function escapeReg(s){ return String(s||"").replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 const WB = { before: '(?:^|[^A-Za-z0-9_])', after: '(?=$|[^A-Za-z0-9_])' };
@@ -941,80 +747,195 @@ function buildRankRegex(rank){
   return new RegExp(`${WB.before}(?:${alt})${WB.after}`, 'ig');
 }
 
-function dedupeRemarksAgainstFields(originalText, desc, out) {
-  if (!desc) return "";
-  let s = String(desc);
+function stripContactsAndCTAs(s) {
+  let t = String(s || '');
+  t = t.replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '');
+  t = t.replace(/\+?\d[\d ()\-\.]{6,}\d/g, '');
+  t = t.replace(/(?:please\s+)?(?:email|contact|reach)\s+(?:me\s+)?(?:at|via|on)?\s*/ig, '');
+  t = t.replace(/(please[, ]*)?(send|drop|shoot)\s+(me\s+)?(a\s+)?(message|dm|email)\b/ig, '');
+  return t;
+}
+
+function buildFieldPatterns(out) {
+  const pats = [];
 
   const rxRank = buildRankRegex(out.rank);
+  if (rxRank) pats.push(new RegExp(rxRank.source, 'i'));
 
-  if (rxRank) s = s.replace(rxRank, '');
+  pats.push(/\b(motor\s*yacht|sailing\s*yacht|catamaran|chase\s*boat|m\/y|s\/y|s\/v|m\/v)\b/i);
 
-  const TYPE_PATTERNS = {
-    'Catamaran': [/\bcatamarans?\b/gi],
-    'Motor Yacht': [/\bmotor\s*yachts?\b/gi, /\bm\/y\b/gi],
-    'Sailing Yacht': [/\bsailing\s*yachts?\b/gi, /\bs\/y\b/gi, /\bsail\s*boats?\b/gi, /\bsailboats?\b/gi],
-    'Chase Boat': [/\bchase\s*boats?\b/gi]
-  };
-  if (out.yacht_type && TYPE_PATTERNS[out.yacht_type]) {
-    for (const rx of TYPE_PATTERNS[out.yacht_type]) s = s.replace(rx, '');
+  pats.push(/\b\d{1,3}(?:\.\d+)?\s*(?:m(?:etres?|eters?)?|ft|feet|['’′])\+?\b/i);
+
+  if (out.uses) {
+    if (/private/i.test(out.uses)) pats.push(/\bprivate\b/i);
+    if (/charter/i.test(out.uses)) pats.push(/\bcharter\b/i);
   }
 
-  const LIVE = {
-    'Own Cabin': [/\b(single|own|private|separate)\s+cabin\b/gi],
-    'Share Cabin': [/\b(share(?:d)?|sharing)\s+cabin\b/gi],
-    'No': [/\b(no\s+live\s*aboard|live\s*ashore)\b/gi],
-  };
-  if (out.liveaboard && LIVE[out.liveaboard]) {
-    for (const rx of LIVE[out.liveaboard]) s = s.replace(rx, '');
+  if (out.type) pats.push(new RegExp(`\\b${escapeReg(out.type)}\\b`, 'i'));
+  pats.push(/\btemp(?:orary)?\b/i, /\bseasonal\b/i, /\brotation(?:al)?\b/i, /\brelief\b/i, /\bdelivery\b/i, /\bcrossing\b/i, /\bday\s*work\b/i);
+
+  if (out.season_type) pats.push(new RegExp(`\\b${escapeReg(out.season_type)}\\b`, 'i'));
+  pats.push(/\bdual[-\s]*season\b/i, /\bsingle[-\s]*season\b/i, /\byear[-\s]*round\b/i);
+
+  pats.push(/\b(asap|immediate(?:ly)?|start(?:ing)?|join(?:ing)?\s+on)\b/i);
+
+  pats.push(/\b(?:€|eur|usd|\$|£|gbp|aud)\s*\d/i, /(?:per|\/)\s*(?:day|week|month|hour|hr|wk|mo)\b/i, /\bDOE\b/i);
+
+  pats.push(/\b(own|private|single|separate|share(?:d)?|sharing)\s+cabin\b/i, /\blive\s*(?:a)?board|live\s+ashore|shore[-\s]?based\b/i);
+
+  pats.push(/\b(couple|team\s*of\s*2|pair|duo|captain\s*(?:\/|&|\+)\s*(?:chef|cook)|(?:chef|cook)\s*(?:\/|&|\+)\s*captain)\b/i);
+
+  pats.push(/\b(b1\s*\/\s*b2|b1b2|schengen|green\s*card|eu\s*passport|us\s*citizen)\b/i);
+
+  pats.push(/\b(english|spanish|french|italian|german|greek|portuguese|russian|dutch|turkish|arabic)\b/i);
+
+  pats.push(/\b(flag(?:ged)?|registry|registered|under\s+.*\s+flag)\b/i);
+
+  pats.push(/\b(based\s+in|home\s*port|homeport|docked\s+in|located\s+in)\b/i);
+  if (out.city)    pats.push(new RegExp(`\\b${escapeReg(out.city)}\\b`, 'i'));
+  if (out.country) pats.push(new RegExp(`\\b${escapeReg(out.country)}\\b`, 'i'));
+
+  pats.push(/\b(Shaft\s*Drive|Pod\s*Drive|Waterjet|Sail\s*Drive|Outboard|Stern\s*Drive|IPS|Azipod|Zeus)\b/i);
+
+  if (out.salary_currency) pats.push(new RegExp(`\\b${escapeReg(out.salary_currency)}\\b`, 'i'));
+
+  return pats;
+}
+
+function extractLOAExact(text) {
+  const src = String(text || "");
+  const items = [];
+
+const re = /(?:\b(\d{1,3}(?:\.\d+)?)\s*(ft|feet)\+?\b|\b(\d{1,3}(?:\.\d+)?)\s*m(?:etres?|eters?)?\+?\b|\b(\d{1,3}(?:\.\d+)?)\s*['’′]\+?\b)/gi;
+  let m;
+  while ((m = re.exec(src)) !== null) {
+    const fullTxt = m[0].trim();
+    let meters = null;
+    if (m[2]) { // ft/feet
+      meters = parseInt(m[1], 10) * 0.3048;
+    } else if (m[3]) { // m
+      meters = parseInt(m[3], 10);
+    } else if (m[4]) { // '
+      meters = parseInt(m[4], 10) * 0.3048;
+    }
+    if (!meters || isNaN(meters)) continue;
+
+    const i = m.index;
+    const window = src.slice(Math.max(0, i - 60), Math.min(src.length, i + fullTxt.length + 60)).toLowerCase();
+
+    const isTender = /\b(tender|chase\s*boat|chase\b|rib\b|dinghy\b|jet\s*tender|support\s*vessel|rescue\s*boat)\b/.test(window);
+    const isMain = /\b(yacht|s\/y|m\/y|s\/v|m\/v|catamaran|sail\s*boat|sailboat|motor\s*yacht|sailing\s*yacht|loa|length\b)\b/.test(window)
+                 || (!isTender && /\bcharter\b/.test(window));
+
+    if (meters <= 0 || meters > 200) continue;
+    items.push({ text: fullTxt, meters, isTender, isMain });
   }
 
-  if (/Main vessel LOA:/i.test(s)) {
-    s = s.split(/\r?\n/).map(line => {
-      if (/^\s*(Main vessel LOA:|Tender:)/i.test(line)) return line; // conservar
-      return line
-        .replace(/\b\d{1,3}\s*m\b/gi, '')
-        .replace(/\b\d{2,3}\s*(?:ft|feet|['\u2019\u2032])\b/gi, '');
-    }).join('\n');
+  const seen = new Set();
+  const main = [];
+  const tenders = [];
+  for (const it of items) {
+    const key = `${it.text.toLowerCase()}|${it.isTender ? "t" : "m"}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (it.isTender) tenders.push(it);
+    else if (it.isMain) main.push(it);
+    else {
+      (it.meters >= 12 ? main : tenders).push(it);
+    }
   }
 
-  {
-    const period = detectSalaryPeriod(originalText);
-    if (out.is_doe || out.salary || out.salary_currency) {
-      const removeSalaryText = (period === 'month' || period === '');
-      if (removeSalaryText) {
-        s = s
-          .replace(/\b(?:€|eur|\$|usd|£|gbp|aud)\s*\d[\d,\.]*(?:\s*(?:per|\/)\s*(?:day|week|month|mo|wk|hour|hr))?/gi, '')
-          .replace(/\b\d[\d,\.]*\s*(?:€|eur|usd|\$|£|gbp|aud)\s*(?:per|\/)?\s*(?:day|week|month|mo|wk|hour|hr)?/gi, '');
+  let mainText = "";
+  if (main.length) {
+    const best = main.reduce((a, b) => (a.meters >= b.meters ? a : b));
+    mainText = best.text;
+  }
+
+  const tenderTexts = Array.from(
+    new Set(tenders.sort((a, b) => b.meters - a.meters).map(x => x.text))
+  );
+
+  const lines = [];
+  if (mainText) lines.push(`Main vessel LOA: ${mainText}.`);
+  if (tenderTexts.length) lines.push(`Tender: ${tenderTexts.join(" / ")}.`);
+  return lines;
+}
+
+function generateRemarks(originalText, out) {
+  const full = String(originalText || '').replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim();
+  const loaLines = extractLOAExact(originalText);
+
+  if (!full) return loaLines.join('\n');
+
+  const segs = full
+    .split(/\n+/)
+    .flatMap(p => p.split(/(?<=[.!?])\s+(?=[A-Z0-9])/))
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const pats = buildFieldPatterns(out);
+
+  const patsGlobal = pats.map(rx => new RegExp(rx.source, rx.flags.includes('i') ? 'ig' : (rx.flags + 'g')));
+
+  const kept = [];
+  for (const s0 of segs) {
+
+    const s1 = stripContactsAndCTAs(s0).trim();
+    if (!s1) continue;
+
+    let matchCount = 0;
+    for (const rx of pats) {
+      if (rx.test(s1)) matchCount++;
+    }
+
+    let cleaned = s1;
+    for (const rx of patsGlobal) {
+      cleaned = cleaned.replace(rx, '');
+    }
+
+    cleaned = cleaned
+      .replace(/\s{2,}/g, ' ')
+      .replace(/ ?([,;:]) ?/g, '$1 ')
+      .replace(/\s*\.\s*\.\s*\.+/g, '…')
+      .replace(/[(){}\[\]]/g, '')
+      .replace(/\s+([.!?])/g, '$1')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+
+    const origLen = s1.replace(/\s+/g, '').length;
+    const leftLen = cleaned.replace(/\s+/g, '').length;
+    const words = cleaned.split(/\s+/).filter(Boolean).length;
+
+    if (matchCount >= 3 && leftLen / Math.max(1, origLen) < 0.5) continue;
+
+    if (words < 5 || cleaned.length < 25) continue;
+
+    kept.push(cleaned);
+  }
+
+  if (kept.length === 0) {
+    for (const s of segs) {
+      if (/\b(require(?:s|ments?)?|responsibilit(?:y|ies)|duties|ideal\s+candidate|skills?|profile|competenc(?:e|es)|background|experience)\b/i.test(s)) {
+        let c = s;
+        for (const rx of patsGlobal) c = c.replace(rx, '');
+        c = stripContactsAndCTAs(c).replace(/\s{2,}/g, ' ').trim();
+        if (c.split(/\s+/).length >= 5 && c.length >= 25) kept.push(c);
       }
     }
   }
 
-  // 7) “based in <city>” / “<city> based” si ya tenemos city
-  if (out.city) {
-    const c = escapeReg(out.city);
-    s = s
-      .replace(new RegExp(`${WB.before}based\\s+in\\s+${c}${WB.after}`, 'ig'), '')
-      .replace(new RegExp(`${WB.before}${c}\\s+based(?:\\s+only)?${WB.after}`, 'ig'), '');
+  const uniq = Array.from(new Set(kept.map(x => x.toLowerCase()))).map(lc => kept.find(x => x.toLowerCase() === lc));
+  for (const line of loaLines) {
+    if (!uniq.some(b => b.toLowerCase() === line.toLowerCase())) uniq.push(line);
   }
 
-  // 8) Limpieza final
-  s = s
-    .replace(/[ \t]+/g, ' ')
-    .replace(/ ?([.,;:]) ?/g, '$1 ')
-    .replace(/\s{2,}/g, ' ')
-    .split(/\r?\n/)
-    .map(l => l.trim())
-    .filter(Boolean)
-    .join('\n');
-
-  return s.trim();
+  return uniq.join('\n');
 }
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Only POST allowed" });
 
   try {
-    // manejo robusto del body
     let text = "";
     if (req.headers["content-type"]?.includes("application/json")) {
       text = req.body?.text || "";
@@ -1023,10 +944,8 @@ export default async function handler(req, res) {
     }
     if (!text) return res.status(400).json({ error: "Missing job text in { text }" });
 
-    // Pre-procesamiento para ayudar con el rank (compuestos primero)
 let processedText = text;
 
-// 0) Combos que deben ganar a palabras sueltas
 const COMBOS = [
   [/\bstew\s*[/&+]\s*chef\b/i, 'Cook/Steward(ess)'],
   [/\bchef\s*[/&+]\s*stew\b/i, 'Cook/Steward(ess)'],
@@ -1035,7 +954,6 @@ const COMBOS = [
 ];
 for (const [rx, norm] of COMBOS) processedText = processedText.replace(rx, norm);
 
-// 1) Luego sinónimos, priorizando los largos (para que “stew/chef” gane a “stew”)
 const entries = Object.entries(RANK_SYNONYMS).sort((a, b) => b[0].length - a[0].length);
 for (const [synonym, normalized] of entries) {
   const safe = synonym.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1283,6 +1201,7 @@ if (out.city) {
     }
 
     updateYearsInRank(finalText, out);
+    out.years_in_rank = normalizeYearsBucket(out.years_in_rank);
 
     {
   const metersList = extractAllMeters(finalText);
@@ -1313,28 +1232,25 @@ if (out.city) {
       out.language_1_fluency = "Fluent";
     }
 
-    ensureASAP(finalText, out);
-
     ;{
   const t = finalText.toLowerCase();
 
   const notLiveaboardRegExp =
-    /\b(?:non[-\s]?live\s*aboard|no\s+live\s*aboard|not\s+live\s*aboard|live\s+ashore|shore[-\s]?based|living\s+ashore)\b/;
+  /\b(?:non[-\s]*live\s*aboard|no\s+live\s*aboard|not\s+live\s*aboard|live\s+ashore|living\s+ashore)\b/i;
 
-  if (notLiveaboardRegExp.test(t) || out.work_environment === "Shore-based") {
-    out.liveaboard = "No";
-  } else if (/\b(?:own|private|single|solo|individual|separate)\b(?:\s+berth)?\s*-?\s*cabins?\b/i.test(finalText)) {
-    out.liveaboard = "Own Cabin";
-  } else if (/\b(?:share(?:s|d)?|sharing)\b(?:\s+(?:a|one|the))?\s+cabins?\b/i.test(finalText)) {
-    out.liveaboard = "Share Cabin";
-  } else {
-    const mentionsCouple =
-      /\b(?:couple(?:'s)?|couples?|team\s+of\s+2|pair|couple\s+(?:role|position))\b/i.test(t);
-    const isCaptainFamily =
-      ["Captain", "Captain/Engineer", "Relief Captain", "Skipper"].includes(out.rank);
-
-    out.liveaboard = (mentionsCouple || isCaptainFamily) ? "Own Cabin" : "Share Cabin";
-  }
+  if (out.work_environment === "Shore-based") {
+  out.liveaboard = "No";
+} else if (notLiveaboardRegExp.test(t)) {
+  out.liveaboard = "No";
+} else if (/\b(?:own|private|single|solo|individual|separate)\b(?:\s+berth)?\s*-?\s*cabins?\b/i.test(finalText)) {
+  out.liveaboard = "Own Cabin";
+} else if (/\b(?:share(?:s|d)?|sharing)\b(?:\s+(?:a|one|the))?\s+cabins?\b/i.test(finalText)) {
+  out.liveaboard = "Share Cabin";
+} else {
+  const mentionsCouple = /\b(?:couple(?:'s)?|couples?|team\s+of\s+2|pair|couple\s+(?:role|position))\b/i.test(t);
+  const isCaptainFamily = ["Captain","Captain/Engineer","Relief Captain","Skipper"].includes(out.rank);
+  out.liveaboard = (mentionsCouple || isCaptainFamily) ? "Own Cabin" : "Share Cabin";
+}
 }
 
     if (!out.homeport) {
@@ -1428,16 +1344,29 @@ if (!out.flag) {
   if (f) out.flag = normalizeFlagValue(f);
 }
 
-if (!out.holidays || !out.holidays.trim()) {
+{
   const h = inferHolidays(finalText);
   if (h) out.holidays = h;
 }
 
-out.description = stripRoleTeamRedundancy(out.description, out);
-out.description = cleanDescriptionContacts(out.description || "", out);
-out.description = appendUnmappedCues(finalText, out.description, out);
-out.description = appendLoaRemarks(finalText, out.description, out);
-out.description = dedupeRemarksAgainstFields(finalText, out.description, out);
+{
+  const explicit = detectExplicitType(finalText);
+  if (out.rank === "Dayworker") {
+    out.type = "DayWork";
+  } else if (explicit) {
+    out.type = explicit;
+  } else {
+    out.type = "Permanent";
+  }
+}
+
+if (out.start_date && out.start_date.trim()) {
+  out.is_asap = false;
+} else if (out.is_asap) {
+  out.start_date = "";
+}
+
+out.description = generateRemarks(finalText, out);
 
 return res.status(200).json(out);
 
