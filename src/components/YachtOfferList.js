@@ -6,6 +6,7 @@ import ThemeLogo from './ThemeLogo';
 import Avatar from '../components/Avatar';
 import '../styles/YachtOfferList.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
+import MatchBorder from '../components/MatchBorder';
 
 const getRoleImage = (title) => {
   if (!title) return 'others';
@@ -57,8 +58,29 @@ function YachtOfferList({
   toggleRegionCountries,
   regionOrder,
   countriesByRegion,
-  showFilters
+  showFilters,
+  preferences,
+  setPreferences
 }) {
+
+const safePrefs = {
+  positions: [],
+  terms: [],
+  countries: [],
+  minSalary: '',
+  selectedRegion: null,
+  ...(preferences || {}),
+};
+
+const hasCompletePrefs = Boolean(
+  (safePrefs.positions?.length > 0) &&
+  (safePrefs.terms?.length > 0) &&
+  (
+    (typeof safePrefs.selectedRegion === 'string' && safePrefs.selectedRegion.length > 0) ||
+    (safePrefs.countries?.length > 0)
+  ) &&
+  (safePrefs.minSalary !== '' && safePrefs.minSalary !== null && safePrefs.minSalary !== undefined)
+);
 
   const [authors, setAuthors] = useState({});
   const [authorAvatars, setAuthorAvatars] = useState({});
@@ -67,7 +89,180 @@ function YachtOfferList({
   const [expandedWeeks, setExpandedWeeks] = useState({});
   const [expandedDays, setExpandedDays] = useState({});
   const [copiedField, setCopiedField] = useState(null);
-  const setFiltersVisible = setShowFilters; // alias interno para claridad
+  const setFiltersVisible = setShowFilters;
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+const RANKS = [
+  "Captain", "Captain/Engineer", "Skipper", "Chase Boat Captain", "Relief Captain",
+  "Chief Officer", "2nd Officer", "3rd Officer", "Bosun", "Deck/Engineer", "Mate",
+  "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster",
+  "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Electrician", "Chef",
+  "Head Chef", "Sous Chef", "Solo Chef", "Cook/Crew Chef", "Crew Chef/Stew", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
+  "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Cook/Steward(ess)", "Stew/Deck",
+  "Laundry/Steward(ess)", "Stew/Masseur", "Masseur", "Hairdresser/Barber", "Nanny", "Videographer", "Yoga/Pilates Instructor",
+  "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
+];
+
+// Terms existentes (coinciden con Filters)
+const TERMS = ['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Crossing', 'DayWork'];
+
+// Limitar a 3 ítems por campo (positions, terms, countries)
+const togglePrefMulti = (key, value) => {
+  setPreferences(prev => {
+    const arr = prev[key] || [];
+    const exists = arr.includes(value);
+    if (exists) {
+      return { ...prev, [key]: arr.filter(v => v !== value) };
+    }
+    if (arr.length >= 3) {
+      // tope de 3: no agregar más
+      return prev;
+    }
+    return { ...prev, [key]: [...arr, value] };
+  });
+};
+
+// Salary mínimo deseado
+const setPrefMinSalary = (val) => {
+  setPreferences(prev => ({ ...prev, minSalary: val }));
+};
+
+// Reset total de preferencias
+const clearPreferences = () => {
+  setPreferences({
+    positions: [],
+    terms: [],
+    countries: [],
+    minSalary: '',
+    selectedRegion: null,
+  });
+};
+
+// Alternar región (exclusiva)
+const handleToggleRegion = (region) => {
+  const isActive = safePrefs.selectedRegion === region;
+  if (isActive) {
+    // quitar región → volver a modo por país
+    setPreferences(prev => ({ ...prev, selectedRegion: null, countries: [] }));
+  } else {
+    const list = countriesByRegion[region] || [];
+    setPreferences(prev => ({ ...prev, selectedRegion: region, countries: list }));
+  }
+};
+
+const toggleCountryPreference = (country) => {
+  if (safePrefs.selectedRegion) return;
+  setPreferences(prev => {
+    const arr = prev.countries || [];
+    const exists = arr.includes(country);
+    if (exists) return { ...prev, countries: arr.filter(c => c !== country) };
+    if (arr.length >= 3) return prev;
+    return { ...prev, countries: [...arr, country] };
+  });
+};
+
+const PREF_LS_KEY = currentUser?.id ? `job_prefs_user_${currentUser.id}` : null;
+
+useEffect(() => {
+  const load = async () => {
+    if (!currentUser?.id) {
+      setPrefsLoaded(true);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('job_preferences')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      if (!error && data && data.job_preferences) {
+        setPreferences(prev => ({ ...prev, ...data.job_preferences }));
+        try { if (PREF_LS_KEY) localStorage.setItem(PREF_LS_KEY, JSON.stringify(data.job_preferences)); } catch {}
+      } else {
+        // fallback: localStorage
+        let usedLocal = false;
+        if (PREF_LS_KEY) {
+          const raw = localStorage.getItem(PREF_LS_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            setPreferences(prev => ({ ...prev, ...parsed }));
+            usedLocal = true;
+          }
+        }
+        // si no había fila en DB, sembrar una vacía para futuros upserts
+        await supabase
+  .from('settings')
+  .upsert(
+    {
+      user_id: currentUser.id,
+      job_preferences: usedLocal && PREF_LS_KEY
+        ? JSON.parse(localStorage.getItem(PREF_LS_KEY) || '{}')
+        : {},
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id' }
+  );
+      }
+    } catch (e) {
+      // si hay error, usa localStorage
+      if (PREF_LS_KEY) {
+        const raw = localStorage.getItem(PREF_LS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          setPreferences(prev => ({ ...prev, ...parsed }));
+        }
+      }
+    } finally {
+      setPrefsLoaded(true);
+    }
+  };
+
+  load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [currentUser?.id]);
+
+// Guardar cada cambio (debounce ligero) → Supabase y localStorage
+// Guardar cada cambio → primero localStorage, luego DB (update; si no existe, insert)
+useEffect(() => {
+  if (!currentUser?.id) return;
+  if (!prefsLoaded) return;
+
+  const t = setTimeout(async () => {
+    // 1) LocalStorage siempre
+    if (PREF_LS_KEY) {
+      try { localStorage.setItem(PREF_LS_KEY, JSON.stringify(preferences)); } catch {}
+    }
+
+    // 2) DB: intenta UPDATE y si no afectó filas, INSERT
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .update({
+          job_preferences: preferences,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', currentUser.id)
+        .select('user_id'); // <- para saber si actualizó filas
+
+      if (error) throw error;
+
+      // Si no había fila (data vacío), inserta
+      if (!data || data.length === 0) {
+        await supabase.from('settings').insert({
+          user_id: currentUser.id,
+          job_preferences: preferences,
+          updated_at: new Date().toISOString(),
+        });
+      }
+    } catch (e) {
+      console.error('Persist prefs failed:', e);
+    }
+  }, 300);
+
+  return () => clearTimeout(t);
+}, [preferences, currentUser?.id, prefsLoaded, PREF_LS_KEY]);
 
 const handleCopy = (text, field) => {
   navigator.clipboard.writeText(text);
@@ -310,7 +505,6 @@ useEffect(() => {
 
       {showFilters && (
         <div className={`filter-body expanded`}>
-
           <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
   <h3 style={{ gridColumn: '1 / -1' }}>Job Filters</h3>
 
@@ -482,8 +676,16 @@ useEffect(() => {
 
   {/* Clear Filters (full width) */}
   <button
-  className="clear-filters"                       // ← añade esta clase
-  style={{ gridColumn: '1 / -1', marginBottom: '10px' }}
+  className="clear-filters"
+  style={{
+    gridColumn: '1 / -1',
+    margin: '10px 0',
+    width: '100%',
+    display: 'block',
+    padding: '14px 16px',
+    borderRadius: '10px',
+    fontWeight: 600,
+  }}
   onClick={() => setFilters({
     rank: '',
     city: '',
@@ -501,8 +703,196 @@ useEffect(() => {
   Clear All Filters
 </button>
 </div>
+</div>
+)}
+
+{/* ======================= Job Preferences (independiente) ======================= */}
+{currentUser && (
+  <>
+    {/* Toggle para desktop */}
+    {!isMobile && (
+      <h3
+        className="filter-toggle"
+        onClick={() => setShowPreferences(prev => !prev)}
+        style={{ cursor: 'pointer' }}
+      >
+        {showPreferences ? '▼ Job Preferences' : '► Job Preferences'}
+      </h3>
+    )}
+
+    {/* Toggle para mobile */}
+    {isMobile && (
+      <button
+        className="navbar-toggle"
+        onClick={() => setShowPreferences(prev => !prev)}
+      >
+        ☰ Job Preferences
+      </button>
+    )}
+
+    {showPreferences && (
+      <div className={`filter-body expanded`}>
+        <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
+          <h3 style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8 }}>
+  Job Preferences
+  <span style={{
+    fontSize: 12,
+    padding: '2px 8px',
+    borderRadius: 999,
+    background: hasCompletePrefs ? '#e6ffed' : '#fff5f5',
+    color: hasCompletePrefs ? '#067d3f' : '#a40000',
+    border: `1px solid ${hasCompletePrefs ? '#a9e6bc' : '#f0b3b3'}`
+  }}>
+    {hasCompletePrefs ? 'Ready' : 'Complete required fields'}
+  </span>
+</h3>
+
+          {/* Positions (max 3) */}
+<details style={{ gridColumn: '1 / -1' }}>
+  <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>
+    Preferred Positions
+  </summary>
+  <div className="prefs-scroll positions-grid" style={{ marginTop: '8px' }}>
+    {RANKS.map((rank) => {
+      const selected = safePrefs.positions.includes(rank);
+      const atCap = !selected && safePrefs.positions.length >= 3;
+      return (
+        <label
+          key={rank}
+          className="filter-checkbox-label prefs-item"
+          style={{ opacity: atCap ? 0.55 : 1 }}
+        >
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => togglePrefMulti('positions', rank)}
+            disabled={atCap}
+          />
+          {rank}
+        </label>
+      );
+    })}
+  </div>
+</details>
+
+          {/* Terms (max 3) */}
+          <details style={{ gridColumn: '1 / -1' }}>
+            <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>
+              Preferred Terms
+            </summary>
+            <div style={{ marginTop: '8px' }}>
+              {TERMS.map((term) => {
+                const selected = safePrefs.terms.includes(term);
+                const atCap = !selected && safePrefs.terms.length >= 3;
+                return (
+                  <label key={term} className="filter-checkbox-label" style={{ opacity: atCap ? 0.55 : 1 }}>
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => togglePrefMulti('terms', term)}
+                      disabled={atCap}
+                    />
+                    {term}
+                  </label>
+                );
+              })}
+            </div>
+          </details>
+
+          {/* Countries (max 3) */}
+          <details style={{ gridColumn: '1 / -1' }}>
+  <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>
+    Preferred Countries or Region
+  </summary>
+
+  <div style={{ marginTop: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+    {regionOrder.map((region) => {
+      const list = countriesByRegion[region] || [];
+      const regionActive = safePrefs.selectedRegion === region;
+      const anyRegionActive = !!safePrefs.selectedRegion;
+      const disabledByRegion = anyRegionActive && !regionActive; // si hay otra región activa, este grupo queda "gris"
+
+      return (
+        <details key={region} style={{ marginBottom: '12px', opacity: disabledByRegion ? 0.6 : 1 }}>
+          <summary
+            style={{ cursor: 'pointer', fontWeight: 'bold', userSelect: 'none' }}
+          >
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              {/* ✅ Checkbox para seleccionar TODA la región */}
+              <input
+                type="checkbox"
+                checked={regionActive}
+                onClick={(e) => e.stopPropagation()} // no colapsar el details al hacer click
+                onChange={() => handleToggleRegion(region)}
+              />
+              {region}
+            </span>
+          </summary>
+
+          <div style={{ marginLeft: '20px', marginTop: '8px' }}>
+            {list.map((country) => {
+              const selected = safePrefs.countries.includes(country);
+              const atCap = !selected && safePrefs.countries.length >= 3 && !anyRegionActive;
+
+              return (
+                <label
+                  key={country}
+                  className="filter-checkbox-label"
+                  style={{ opacity: (anyRegionActive || atCap) ? 0.55 : 1 }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => toggleCountryPreference(country)}
+                    disabled={anyRegionActive || atCap} // si hay región activa, deshabilitar países
+                  />
+                  {country}
+                </label>
+              );
+            })}
+          </div>
+        </details>
+      );
+    })}
+  </div>
+</details>
+
+          {/* Minimum Salary */}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label className="filter-checkbox-label" style={{ justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 'bold' }}>Minimum Salary</span>
+              <input
+                type="number"
+                className="search-input"
+                placeholder="e.g. 3000"
+                value={safePrefs.minSalary || ''}
+                onChange={(e) => setPrefMinSalary(e.target.value)}
+                style={{ maxWidth: 200 }}
+              />
+            </label>
+          </div>
+          {/* Clear Preferences */}
+          <button
+  className="clear-filters"
+  style={{
+    gridColumn: '1 / -1',
+    margin: '10px 0',
+    width: '100%',
+    display: 'block',
+    padding: '14px 16px',
+    borderRadius: '10px',
+    fontWeight: 600,
+  }}
+  onClick={clearPreferences}
+>
+  Clear Preferences
+</button>
         </div>
-      )}
+      </div>
+    )}
+  </>
+)}
+{/* =================== /Job Preferences =================== */}
 
       {Object.entries(groupedOffers).map(([weekGroup, dates]) => (
         <div key={weekGroup} style={{ marginBottom: '30px' }}>
@@ -533,7 +923,9 @@ useEffect(() => {
                     const isOwner = currentUser?.id === offer.user_id;
                     const isExpanded = expandedOfferId === offer.id;
                     const authorNickname = authors[offer.user_id] || 'Usuario';
-
+                    const primaryScore = Number(String(offer.match_primary_score).replace('%','')) || 0;
+                    const teammateScore = Number(String(offer.match_teammate_score).replace('%','')) || 0;
+ console.log('Offer:', offer.id, 'primaryScore:', primaryScore, 'teammateScore:', teammateScore);
                     return (
                       <div
                         key={offer.id}
@@ -953,21 +1345,26 @@ useEffect(() => {
         </div>
       ) : (
         <>
-          <ThemeLogo
-            light={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
-            dark={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebasedDM' : getRoleImage(offer.title) + 'DM'}.png`}
-            alt="role"
-            className="role-icon"
-          />
-          {offer.team && offer.teammate_rank && (
-            <ThemeLogo
-              light={`/logos/roles/${getRoleImage(offer.teammate_rank)}.png`}
-              dark={`/logos/roles/${getRoleImage(offer.teammate_rank)}DM.png`}
-              alt="teammate role"
-              className="role-icon"
-            />
-          )}
-        </>
+  <MatchBorder score={primaryScore}>
+    <ThemeLogo
+      light={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
+      dark={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebasedDM' : getRoleImage(offer.title) + 'DM'}.png`}
+      alt="role"
+      className="role-icon"
+    />
+  </MatchBorder>
+
+  {offer.team && offer.teammate_rank && (
+    <MatchBorder score={teammateScore}>
+      <ThemeLogo
+        light={`/logos/roles/${getRoleImage(offer.teammate_rank)}.png`}
+        dark={`/logos/roles/${getRoleImage(offer.teammate_rank)}DM.png`}
+        alt="teammate role"
+        className="role-icon"
+      />
+    </MatchBorder>
+  )}
+</>
       )
     ) : (
     showAvatarMobile ? (
@@ -986,56 +1383,61 @@ useEffect(() => {
     />
     </div>
       ) : (
-        <ThemeLogo
-          light={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
-          dark={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebasedDM' : getRoleImage(offer.title) + 'DM'}.png`}
-          alt="role"
-          className="role-icon"
-        />
-      )
-    )
-  ) : (
-    /* ─────────── DESKTOP: sin cambios ─────────── */
-    <>
+        <MatchBorder score={primaryScore}>
       <ThemeLogo
         light={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
         dark={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebasedDM' : getRoleImage(offer.title) + 'DM'}.png`}
         alt="role"
         className="role-icon"
       />
+    </MatchBorder>
+  )
+)
+  ) : (
+  <>
+    <MatchBorder score={primaryScore}>
+      <ThemeLogo
+        light={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebased' : getRoleImage(offer.title)}.png`}
+        dark={`/logos/roles/${offer.work_environment === 'Shore-based' ? 'shorebasedDM' : getRoleImage(offer.title) + 'DM'}.png`}
+        alt="role"
+        className="role-icon"
+      />
+    </MatchBorder>
 
-      {offer.team && offer.teammate_rank && (
+    {offer.team && offer.teammate_rank && (
+      <MatchBorder score={teammateScore}>
         <ThemeLogo
           light={`/logos/roles/${getRoleImage(offer.teammate_rank)}.png`}
           dark={`/logos/roles/${getRoleImage(offer.teammate_rank)}DM.png`}
           alt="teammate role"
           className="role-icon"
         />
-      )}
+      </MatchBorder>
+    )}
 
-      {!isMobile && (
-        <div className="recruiter-tile">
-          <div className="recruiter-label">RECRUITER</div>
-          <div className="recruiter-avatar-wrap">
-            <Avatar
-              nickname={authors[offer.user_id] || 'User'}
-              srcUrl={authorAvatars[offer.user_id] || null}
-              size={96}
-              shape="square"
-              radius={0}
-              style={{
-                borderTopLeftRadius: 0,
-                borderBottomLeftRadius: 0,
-                borderTopRightRadius: 0,
-                borderBottomRightRadius: 12,
-                display: 'block'
-              }}
-            />
-          </div>
+    {!isMobile && (
+      <div className="recruiter-tile">
+        <div className="recruiter-label">RECRUITER</div>
+        <div className="recruiter-avatar-wrap">
+          <Avatar
+            nickname={authors[offer.user_id] || 'User'}
+            srcUrl={authorAvatars[offer.user_id] || null}
+            size={96}
+            shape="square"
+            radius={0}
+            style={{
+              borderTopLeftRadius: 0,
+              borderBottomLeftRadius: 0,
+              borderTopRightRadius: 0,
+              borderBottomRightRadius: 12,
+              display: 'block'
+            }}
+          />
         </div>
-      )}
-    </>
-  )}
+      </div>
+    )}
+  </>
+)}
 </div>
 <div className="collapsed-info-row">
   {isMobile ? (

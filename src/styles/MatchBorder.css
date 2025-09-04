@@ -1,0 +1,39 @@
+/* src/styles/MatchBorder.css */
+.match-border {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 4px;
+  transition: box-shadow 0.3s ease, border 0.3s ease;
+  box-sizing: border-box;
+  position: relative; /* necesario para el ::after */
+  z-index: 1;
+}
+
+/* ✅ LIGHT por defecto (aunque NO exista data-theme="light") */
+.match-border.high-match {
+  border: 3px solid #1f7a1f !important;                 /* borde más grueso */
+}
+.match-border.high-match::after {
+  content: "";
+  position: absolute;
+  inset: -3px;                                          /* halo visible fuera del borde */
+  border-radius: inherit;
+  box-shadow: 0 0 12px 4px rgba(31, 122, 31, 0.60);     /* halo más grande y difuso */
+  pointer-events: none;
+}
+
+/* 🌙 DARK: cubre body.dark-mode y data-theme="dark" */
+body.dark-mode .match-border.high-match,
+html[data-theme="dark"] .match-border.high-match {
+  border: 2px solid #28a745 !important;
+}
+body.dark-mode .match-border.high-match::after,
+html[data-theme="dark"] .match-border.high-match::after {
+  box-shadow: 0 0 10px 3px rgba(40, 167, 69, 0.60);
+}
+
+/* Por si usas data-theme="light", también queda cubierto */
+html[data-theme="light"] .match-border.high-match { border-color: #1f7a1f !important; }
+html[data-theme="light"] .match-border.high-match::after { box-shadow: 0 0 12px 4px rgba(31,122,31,0.60); }
