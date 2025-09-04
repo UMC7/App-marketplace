@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import supabase from '../supabase';
 import Modal from './Modal';
 import ChatPage from './ChatPage';
@@ -65,8 +65,36 @@ function YachtOfferList({
   setOpenPanel,
 }) {
 
+// Acordeón exclusivo controlado por el padre (si ya lo tienes, NO lo dupliques)
 const isPrefsOpen = openPanel === 'prefs';
 const togglePrefs = () => setOpenPanel(prev => (prev === 'prefs' ? null : 'prefs'));
+
+// Refs a los contenedores de los paneles
+const filtersRef = useRef(null);
+const prefsRef   = useRef(null);
+
+// Cerrar si se hace click fuera de los paneles y fuera de los toggles
+useEffect(() => {
+  const handleClickOutside = (e) => {
+    // Ignorar clicks sobre los toggles (desktop y móvil)
+    if (e.target.closest('.filter-toggle, .prefs-toggle, .navbar-toggle')) return;
+
+    const clickedInsideFilters = filtersRef.current?.contains(e.target);
+    const clickedInsidePrefs   = prefsRef.current?.contains(e.target);
+
+    if (!clickedInsideFilters && !clickedInsidePrefs) {
+      setOpenPanel(null); // colapsar todo
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  document.addEventListener('touchstart', handleClickOutside);
+
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+    document.removeEventListener('touchstart', handleClickOutside);
+  };
+}, [setOpenPanel]);
 
 const safePrefs = {
   positions: [],
@@ -90,6 +118,18 @@ const hasCompletePrefs = Boolean(
   const [authors, setAuthors] = useState({});
   const [authorAvatars, setAuthorAvatars] = useState({});
   const [expandedOfferId, setExpandedOfferId] = useState(null);
+  // Ref de cada tarjeta para poder hacer scroll al abrirla
+const cardRefs = useRef({});
+const SCROLL_OFFSET = 12; // separa un poco del borde superior
+
+useEffect(() => {
+  if (!expandedOfferId) return;
+  const el = cardRefs.current[expandedOfferId];
+  if (!el) return;
+  const top = el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+  window.scrollTo({ top, behavior: 'smooth' });
+}, [expandedOfferId]);
+
   const [activeChat, setActiveChat] = useState(null);
   const [expandedWeeks, setExpandedWeeks] = useState({});
   const [expandedDays, setExpandedDays] = useState({});
@@ -492,7 +532,7 @@ useEffect(() => {
     <div>
 
       {showFilters && (
-        <div className={`filter-body expanded`}>
+        <div ref={filtersRef} className={`filter-body expanded`}>
           <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
   <h3 style={{ gridColumn: '1 / -1' }}>Job Filters</h3>
 
@@ -708,7 +748,7 @@ useEffect(() => {
     )}
 
     {isPrefsOpen && (
-      <div className={`filter-body expanded`}>
+      <div ref={prefsRef} className={`filter-body expanded`}>
         <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
           <h3 style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8 }}>
             Job Preferences
@@ -905,6 +945,7 @@ useEffect(() => {
                     return (
                       <div
                         key={offer.id}
+                        ref={(el) => { if (el) cardRefs.current[offer.id] = el; }}
                         onClick={() => toggleExpanded(offer.id)}
                         className={`offer-card ${isExpanded ? 'expanded' : ''} ${markedOffers.includes(offer.id) ? 'marked' : ''}`}
                       >
