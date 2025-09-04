@@ -46,8 +46,26 @@ const regionOrder = [
 function YachtWorksPage() {
   const [offers, setOffers] = useState([]);
   const [user, setUser] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 820);
+
+  // -------- Acordeón exclusivo --------
+  // 'filters' | 'prefs' | null
+  const [openPanel, setOpenPanel] = useState(null);
+  const togglePanel = (panel) => {
+    setOpenPanel((prev) => (prev === panel ? null : panel));
+  };
+  const isFiltersOpen = openPanel === 'filters';
+  const isPrefsOpen  = openPanel === 'prefs';
+
+  // Compatibilidad para hijos que esperaban booleano/actualizador de filtros
+  const setShowFilters = (next) => {
+    if (typeof next === 'function') {
+      const resolved = next(isFiltersOpen);
+      setOpenPanel(resolved ? 'filters' : null);
+    } else {
+      setOpenPanel(next ? 'filters' : null);
+    }
+  };
 
   // country como array
   const [filters, setFilters] = useState({
@@ -153,7 +171,6 @@ function YachtWorksPage() {
     });
   }, [offers, filters, user]);
 
-  // ---------- Prefs completas requeridas para calcular match ----------
   const prefsReady = useMemo(() => {
     const posOK = (preferences.positions || []).length > 0;
     const termOK = (preferences.terms || []).length > 0;
@@ -165,7 +182,6 @@ function YachtWorksPage() {
     return posOK && termOK && geoOK && salOK;
   }, [preferences]);
 
-  // ---------- Score con DOE “pasa salario” ----------
   const scoredOffers = useMemo(() => {
     const posMatch = (title, list = []) => {
       const t = String(title || '').toLowerCase();
@@ -178,17 +194,16 @@ function YachtWorksPage() {
         return { ...o, match_primary_score: 0, match_teammate_score: 0 };
       }
 
-      const pPos = pct(posMatch(o.title, preferences.positions)); // 40%
+      const pPos = pct(posMatch(o.title, preferences.positions));
 
       const pCountry = pct(
         (preferences.countries || []).some(
           c => String(o.country || '').toLowerCase() === String(c || '').toLowerCase()
         )
-      ); // 30%
+      );
 
       const pTerm = pct((preferences.terms || []).includes(String(o.type || ''))); // 20%
 
-      // 10% salario — DOE cuenta como “pasa” si el candidato definió minSalary
       const wantsMin = preferences.minSalary !== '' && preferences.minSalary !== null && preferences.minSalary !== undefined;
       const isDOE = !!o.is_doe;
       const salaryNum = Number(o.salary || 0);
@@ -196,7 +211,6 @@ function YachtWorksPage() {
 
       const primaryScore = Math.round(100 * (0.4*pPos + 0.3*pCountry + 0.2*pTerm + 0.1*pPay));
 
-      // teammate (si aplica)
       const tPos = pct(posMatch(o.teammate_rank, preferences.positions));
       const teammateScore = o.team && o.teammate_rank
         ? Math.round(100 * (0.6*tPos + 0.3*pCountry + 0.1*pTerm))
@@ -217,7 +231,7 @@ function YachtWorksPage() {
         ...prev,
         [key]: current.includes(value)
           ? current.filter((v) => v !== value)
-          : [...current, value],
+          : [...prev[key], value],
       };
     });
   };
@@ -243,19 +257,32 @@ function YachtWorksPage() {
       </div>
 
       {!isMobile && (
-        <h3
-          className="filter-toggle"
-          onClick={() => setShowFilters(prev => !prev)}
-          style={{ cursor: 'pointer' }}
+        <div
+          className="filters-prefs-row"
+          style={{ display: 'flex', gap: '24px', alignItems: 'center' }}
         >
-          {showFilters ? '▼ Filters' : '► Filters'}
-        </h3>
+          <h3
+            className="filter-toggle"
+            onClick={() => togglePanel('filters')}
+            style={{ cursor: 'pointer', margin: 0 }}
+          >
+            {isFiltersOpen ? '▼ Filters' : '► Filters'}
+          </h3>
+
+          <h3
+            className="prefs-toggle"
+            onClick={() => togglePanel('prefs')}
+            style={{ cursor: 'pointer', margin: 0 }}
+          >
+            {isPrefsOpen ? '▼ Job Preferences' : '► Job Preferences'}
+          </h3>
+        </div>
       )}
 
       {isMobile && (
         <button
           className="navbar-toggle"
-          onClick={() => setShowFilters((prev) => !prev)}
+          onClick={() => togglePanel('filters')}
         >
           ☰ Filters
         </button>
@@ -266,14 +293,20 @@ function YachtWorksPage() {
         currentUser={user}
         filters={filters}
         setFilters={setFilters}
+
         setShowFilters={setShowFilters}
+        showFilters={isFiltersOpen}
+
+        openPanel={openPanel}
+        setOpenPanel={setOpenPanel}
+
         toggleMultiSelect={toggleMultiSelect}
         toggleRegionCountries={toggleRegionCountries}
         regionOrder={regionOrder}
         countriesByRegion={countriesByRegion}
-        showFilters={showFilters}
         preferences={preferences}
         setPreferences={setPreferences}
+        isMobile={isMobile}
       />
     </div>
   );

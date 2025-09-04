@@ -60,8 +60,13 @@ function YachtOfferList({
   countriesByRegion,
   showFilters,
   preferences,
-  setPreferences
+  setPreferences,
+  openPanel,
+  setOpenPanel,
 }) {
+
+const isPrefsOpen = openPanel === 'prefs';
+const togglePrefs = () => setOpenPanel(prev => (prev === 'prefs' ? null : 'prefs'));
 
 const safePrefs = {
   positions: [],
@@ -90,7 +95,6 @@ const hasCompletePrefs = Boolean(
   const [expandedDays, setExpandedDays] = useState({});
   const [copiedField, setCopiedField] = useState(null);
   const setFiltersVisible = setShowFilters;
-  const [showPreferences, setShowPreferences] = useState(false);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
 
 const RANKS = [
@@ -104,10 +108,8 @@ const RANKS = [
   "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
 ];
 
-// Terms existentes (coinciden con Filters)
 const TERMS = ['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Crossing', 'DayWork'];
 
-// Limitar a 3 ítems por campo (positions, terms, countries)
 const togglePrefMulti = (key, value) => {
   setPreferences(prev => {
     const arr = prev[key] || [];
@@ -116,19 +118,17 @@ const togglePrefMulti = (key, value) => {
       return { ...prev, [key]: arr.filter(v => v !== value) };
     }
     if (arr.length >= 3) {
-      // tope de 3: no agregar más
+
       return prev;
     }
     return { ...prev, [key]: [...arr, value] };
   });
 };
 
-// Salary mínimo deseado
 const setPrefMinSalary = (val) => {
   setPreferences(prev => ({ ...prev, minSalary: val }));
 };
 
-// Reset total de preferencias
 const clearPreferences = () => {
   setPreferences({
     positions: [],
@@ -139,11 +139,10 @@ const clearPreferences = () => {
   });
 };
 
-// Alternar región (exclusiva)
 const handleToggleRegion = (region) => {
   const isActive = safePrefs.selectedRegion === region;
   if (isActive) {
-    // quitar región → volver a modo por país
+
     setPreferences(prev => ({ ...prev, selectedRegion: null, countries: [] }));
   } else {
     const list = countriesByRegion[region] || [];
@@ -181,7 +180,7 @@ useEffect(() => {
         setPreferences(prev => ({ ...prev, ...data.job_preferences }));
         try { if (PREF_LS_KEY) localStorage.setItem(PREF_LS_KEY, JSON.stringify(data.job_preferences)); } catch {}
       } else {
-        // fallback: localStorage
+
         let usedLocal = false;
         if (PREF_LS_KEY) {
           const raw = localStorage.getItem(PREF_LS_KEY);
@@ -191,7 +190,7 @@ useEffect(() => {
             usedLocal = true;
           }
         }
-        // si no había fila en DB, sembrar una vacía para futuros upserts
+
         await supabase
   .from('settings')
   .upsert(
@@ -206,7 +205,6 @@ useEffect(() => {
   );
       }
     } catch (e) {
-      // si hay error, usa localStorage
       if (PREF_LS_KEY) {
         const raw = localStorage.getItem(PREF_LS_KEY);
         if (raw) {
@@ -220,22 +218,17 @@ useEffect(() => {
   };
 
   load();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [currentUser?.id]);
 
-// Guardar cada cambio (debounce ligero) → Supabase y localStorage
-// Guardar cada cambio → primero localStorage, luego DB (update; si no existe, insert)
 useEffect(() => {
   if (!currentUser?.id) return;
   if (!prefsLoaded) return;
 
   const t = setTimeout(async () => {
-    // 1) LocalStorage siempre
     if (PREF_LS_KEY) {
       try { localStorage.setItem(PREF_LS_KEY, JSON.stringify(preferences)); } catch {}
     }
 
-    // 2) DB: intenta UPDATE y si no afectó filas, INSERT
     try {
       const { data, error } = await supabase
         .from('settings')
@@ -244,11 +237,10 @@ useEffect(() => {
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', currentUser.id)
-        .select('user_id'); // <- para saber si actualizó filas
+        .select('user_id');
 
       if (error) throw error;
 
-      // Si no había fila (data vacío), inserta
       if (!data || data.length === 0) {
         await supabase.from('settings').insert({
           user_id: currentUser.id,
@@ -285,8 +277,6 @@ const handleCopy = (text, field) => {
     return [];
   });
 
-  // Función para marcar/desmarcar ofertas:
-  // Solo guarda en localStorage si hay un usuario logueado.
   const toggleMark = (offerId) => {
     setMarkedOffers(prevMarked => {
       const updated = prevMarked.includes(offerId)
@@ -316,9 +306,9 @@ const handleCopy = (text, field) => {
         setMarkedOffers([]);
       }
     } else {
-      setMarkedOffers([]); // Limpia las marcas si no hay usuario o se cerró sesión
+      setMarkedOffers([]);
     }
-  }, [currentUser]); // Depende de `currentUser` para reaccionar a cambios de sesión
+  }, [currentUser]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -390,8 +380,8 @@ useEffect(() => {
 
   const getMonday = (date) => {
     const d = new Date(date);
-    const day = d.getDay(); // 0 (domingo) a 6 (sábado)
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // si es domingo, ir al lunes anterior
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(d.setDate(diff));
   };
 
@@ -445,7 +435,6 @@ useEffect(() => {
     return;
   }
 
-  // Detectar si hay filtros activos
   const hasFilters =
     filters.rank ||
     filters.city ||
@@ -460,7 +449,6 @@ useEffect(() => {
     filters.selectedOnly;
 
   if (hasFilters) {
-    // 🔹 Con filtros: expandir todas las semanas y días con resultados
     const newExpandedWeeks = {};
     const newExpandedDays = {};
 
@@ -706,74 +694,63 @@ useEffect(() => {
 </div>
 )}
 
-{/* ======================= Job Preferences (independiente) ======================= */}
+{/* ======================= Job Preferences (controlado por openPanel) ======================= */}
 {currentUser && (
   <>
-    {/* Toggle para desktop */}
-    {!isMobile && (
-      <h3
-        className="filter-toggle"
-        onClick={() => setShowPreferences(prev => !prev)}
-        style={{ cursor: 'pointer' }}
-      >
-        {showPreferences ? '▼ Job Preferences' : '► Job Preferences'}
-      </h3>
-    )}
-
-    {/* Toggle para mobile */}
+    {/* Toggle SOLO para mobile. En desktop el título vive en YachtWorksPage */}
     {isMobile && (
       <button
         className="navbar-toggle"
-        onClick={() => setShowPreferences(prev => !prev)}
+        onClick={togglePrefs}
       >
         ☰ Job Preferences
       </button>
     )}
 
-    {showPreferences && (
+    {isPrefsOpen && (
       <div className={`filter-body expanded`}>
         <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
           <h3 style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8 }}>
-  Job Preferences
-  <span style={{
-    fontSize: 12,
-    padding: '2px 8px',
-    borderRadius: 999,
-    background: hasCompletePrefs ? '#e6ffed' : '#fff5f5',
-    color: hasCompletePrefs ? '#067d3f' : '#a40000',
-    border: `1px solid ${hasCompletePrefs ? '#a9e6bc' : '#f0b3b3'}`
-  }}>
-    {hasCompletePrefs ? 'Ready' : 'Complete required fields'}
-  </span>
-</h3>
+            Job Preferences
+            <span style={{
+              fontSize: 12,
+              padding: '2px 8px',
+              borderRadius: 999,
+              background: hasCompletePrefs ? '#e6ffed' : '#fff5f5',
+              color: hasCompletePrefs ? '#067d3f' : '#a40000',
+              border: `1px solid ${hasCompletePrefs ? '#a9e6bc' : '#f0b3b3'}`
+            }}>
+              {hasCompletePrefs ? 'Ready' : 'Complete required fields'}
+            </span>
+          </h3>
 
           {/* Positions (max 3) */}
-<details style={{ gridColumn: '1 / -1' }}>
-  <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>
-    Preferred Positions
-  </summary>
-  <div className="prefs-scroll positions-grid" style={{ marginTop: '8px' }}>
-    {RANKS.map((rank) => {
-      const selected = safePrefs.positions.includes(rank);
-      const atCap = !selected && safePrefs.positions.length >= 3;
-      return (
-        <label
-          key={rank}
-          className="filter-checkbox-label prefs-item"
-          style={{ opacity: atCap ? 0.55 : 1 }}
-        >
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={() => togglePrefMulti('positions', rank)}
-            disabled={atCap}
-          />
-          {rank}
-        </label>
-      );
-    })}
-  </div>
-</details>
+          <details style={{ gridColumn: '1 / -1' }}>
+            <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>
+              Preferred Positions
+            </summary>
+            <div className="prefs-scroll positions-grid" style={{ marginTop: '8px' }}>
+              {RANKS.map((rank) => {
+                const selected = safePrefs.positions.includes(rank);
+                const atCap = !selected && safePrefs.positions.length >= 3;
+                return (
+                  <label
+                    key={rank}
+                    className="filter-checkbox-label prefs-item"
+                    style={{ opacity: atCap ? 0.55 : 1 }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => togglePrefMulti('positions', rank)}
+                      disabled={atCap}
+                    />
+                    {rank}
+                  </label>
+                );
+              })}
+            </div>
+          </details>
 
           {/* Terms (max 3) */}
           <details style={{ gridColumn: '1 / -1' }}>
@@ -801,61 +778,59 @@ useEffect(() => {
 
           {/* Countries (max 3) */}
           <details style={{ gridColumn: '1 / -1' }}>
-  <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>
-    Preferred Countries or Region
-  </summary>
+            <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>
+              Preferred Countries or Region
+            </summary>
 
-  <div style={{ marginTop: '8px', maxHeight: '300px', overflowY: 'auto' }}>
-    {regionOrder.map((region) => {
-      const list = countriesByRegion[region] || [];
-      const regionActive = safePrefs.selectedRegion === region;
-      const anyRegionActive = !!safePrefs.selectedRegion;
-      const disabledByRegion = anyRegionActive && !regionActive; // si hay otra región activa, este grupo queda "gris"
+            <div style={{ marginTop: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+              {regionOrder.map((region) => {
+                const list = countriesByRegion[region] || [];
+                const regionActive = safePrefs.selectedRegion === region;
+                const anyRegionActive = !!safePrefs.selectedRegion;
 
-      return (
-        <details key={region} style={{ marginBottom: '12px', opacity: disabledByRegion ? 0.6 : 1 }}>
-          <summary
-            style={{ cursor: 'pointer', fontWeight: 'bold', userSelect: 'none' }}
-          >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              {/* ✅ Checkbox para seleccionar TODA la región */}
-              <input
-                type="checkbox"
-                checked={regionActive}
-                onClick={(e) => e.stopPropagation()} // no colapsar el details al hacer click
-                onChange={() => handleToggleRegion(region)}
-              />
-              {region}
-            </span>
-          </summary>
+                return (
+                  <details key={region} style={{ marginBottom: '12px', opacity: anyRegionActive && !regionActive ? 0.6 : 1 }}>
+                    <summary
+                      style={{ cursor: 'pointer', fontWeight: 'bold', userSelect: 'none' }}
+                    >
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                        <input
+                          type="checkbox"
+                          checked={regionActive}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={() => handleToggleRegion(region)}
+                        />
+                        {region}
+                      </span>
+                    </summary>
 
-          <div style={{ marginLeft: '20px', marginTop: '8px' }}>
-            {list.map((country) => {
-              const selected = safePrefs.countries.includes(country);
-              const atCap = !selected && safePrefs.countries.length >= 3 && !anyRegionActive;
+                    <div style={{ marginLeft: '20px', marginTop: '8px' }}>
+                      {list.map((country) => {
+                        const selected = safePrefs.countries.includes(country);
+                        const atCap = !selected && safePrefs.countries.length >= 3 && !anyRegionActive;
 
-              return (
-                <label
-                  key={country}
-                  className="filter-checkbox-label"
-                  style={{ opacity: (anyRegionActive || atCap) ? 0.55 : 1 }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected}
-                    onChange={() => toggleCountryPreference(country)}
-                    disabled={anyRegionActive || atCap} // si hay región activa, deshabilitar países
-                  />
-                  {country}
-                </label>
-              );
-            })}
-          </div>
-        </details>
-      );
-    })}
-  </div>
-</details>
+                        return (
+                          <label
+                            key={country}
+                            className="filter-checkbox-label"
+                            style={{ opacity: (anyRegionActive || atCap) ? 0.55 : 1 }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={() => toggleCountryPreference(country)}
+                              disabled={anyRegionActive || atCap}
+                            />
+                            {country}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </details>
+                );
+              })}
+            </div>
+          </details>
 
           {/* Minimum Salary */}
           <div style={{ gridColumn: '1 / -1' }}>
@@ -871,22 +846,23 @@ useEffect(() => {
               />
             </label>
           </div>
+
           {/* Clear Preferences */}
           <button
-  className="clear-filters"
-  style={{
-    gridColumn: '1 / -1',
-    margin: '10px 0',
-    width: '100%',
-    display: 'block',
-    padding: '14px 16px',
-    borderRadius: '10px',
-    fontWeight: 600,
-  }}
-  onClick={clearPreferences}
->
-  Clear Preferences
-</button>
+            className="clear-filters"
+            style={{
+              gridColumn: '1 / -1',
+              margin: '10px 0',
+              width: '100%',
+              display: 'block',
+              padding: '14px 16px',
+              borderRadius: '10px',
+              fontWeight: 600,
+            }}
+            onClick={clearPreferences}
+          >
+            Clear Preferences
+          </button>
         </div>
       </div>
     )}
