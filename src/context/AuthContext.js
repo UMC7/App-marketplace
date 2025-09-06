@@ -1,7 +1,6 @@
 // src/context/AuthContext.js
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import supabase from '../supabase';
-import { enablePushForUser } from "../notifications";
 
 const AuthContext = createContext();
 
@@ -198,17 +197,8 @@ export function AuthProvider({ children }) {
     uploadPendingAvatarIfAny(u);
   }, [currentUser?.id]);
 
-  // Habilitar notificaciones push para el usuario autenticado
-useEffect(() => {
-  if (!currentUser?.id) return;
-
-  enablePushForUser(currentUser).catch((err) => {
-    console.warn("Notificaciones no habilitadas:", err.message);
-  });
-}, [currentUser?.id]);
-
-  // 🔄 Escucha en tiempo real cambios en la fila del usuario (incluye avatar_url) y
-  // actualiza currentUser.app_metadata sin recargar.
+  // 🔄 Escucha en tiempo real cambios en la fila del usuario (incluye avatar_url)
+  // y actualiza currentUser.app_metadata sin recargar.
   useEffect(() => {
     const userId = currentUser?.id;
     if (!userId) return;
