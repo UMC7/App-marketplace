@@ -33,19 +33,20 @@ export default async function handler(req, res) {
   }
 
   // Obtenemos los datos necesarios desde el cuerpo de la petición
-  const { deviceToken, title, body } = req.body;
+  const { title, body } = req.body;
 
   // Verificamos que los parámetros esenciales estén presentes
-  if (!deviceToken || !title || !body) {
-    return res.status(400).json({ error: 'Faltan parámetros: deviceToken, title o body.' });
+  if (!title || !body) {
+    return res.status(400).json({ error: 'Faltan parámetros: title o body.' });
   }
 
+  // Enviamos SIEMPRE al topic "yachtdaywork"
   const message = {
     notification: {
       title: title,
       body: body,
     },
-    token: deviceToken,
+    topic: "yachtdaywork"
   };
 
   try {
