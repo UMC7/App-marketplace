@@ -1,19 +1,18 @@
 import admin from 'firebase-admin';
 
-// Lee el contenido JSON de la variable de entorno
-const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+// Obtén los valores de las nuevas variables de entorno
+const serviceAccount = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+};
 
-// Si la variable no está configurada, lanza un error claro
-if (!serviceAccountString) {
-  throw new Error('La variable de entorno FIREBASE_SERVICE_ACCOUNT_KEY no está configurada.');
+// Si alguna variable no está configurada, lanza un error claro
+if (!serviceAccount.projectId || !serviceAccount.clientEmail || !serviceAccount.privateKey) {
+  throw new Error('Las variables de entorno de Firebase no están configuradas correctamente.');
 }
 
 try {
-  // 🟢 CORRECCIÓN CLAVE: Reemplaza los caracteres de salto de línea
-  // por saltos de línea reales para que el JSON se pueda analizar.
-  const sanitizedServiceAccountString = serviceAccountString.replace(/\\n/g, '\n');
-  const serviceAccount = JSON.parse(sanitizedServiceAccountString);
-  
   // Inicializa el SDK de Firebase Admin solo una vez
   if (!admin.apps.length) {
     admin.initializeApp({
@@ -25,14 +24,18 @@ try {
   throw new Error('Error al inicializar Firebase Admin SDK: ' + error.message);
 }
 
+// ----------------------------------------------------
 // Lógica para manejar la petición de la API
+// ----------------------------------------------------
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
+  // Obtenemos los datos necesarios desde el cuerpo de la petición
   const { deviceToken, title, body } = req.body;
 
+  // Verificamos que los parámetros esenciales estén presentes
   if (!deviceToken || !title || !body) {
     return res.status(400).json({ error: 'Faltan parámetros: deviceToken, title o body.' });
   }
@@ -46,6 +49,7 @@ export default async function handler(req, res) {
   };
 
   try {
+    // Intentamos enviar la notificación con Firebase Cloud Messaging
     const response = await admin.messaging().send(message);
     console.log('Notificación enviada con éxito:', response);
     return res.status(200).json({ success: true, messageId: response });
