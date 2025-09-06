@@ -3,23 +3,31 @@ import admin from 'firebase-admin';
 // Lee el contenido JSON de la variable de entorno
 const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
 
+// Si la variable no está configurada, lanza un error claro
 if (!serviceAccountString) {
   throw new Error('La variable de entorno FIREBASE_SERVICE_ACCOUNT_KEY no está configurada.');
 }
 
 try {
-  const serviceAccount = JSON.parse(serviceAccountString);
-
+  // 🟢 CORRECCIÓN CLAVE:
+  // Reemplaza los caracteres de salto de línea que Vercel añade al string.
+  const sanitizedServiceAccountString = serviceAccountString.replace(/\\n/g, '\n');
+  const serviceAccount = JSON.parse(sanitizedServiceAccountString);
+  
+  // Inicializa el SDK de Firebase Admin solo una vez
   if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
   }
 } catch (error) {
-  throw new Error('Error al parsear el JSON de la variable de entorno: ' + error.message);
+  console.error('🛑 FIREBASE INIT ERROR:', error);
+  throw new Error('Error al inicializar Firebase Admin SDK: ' + error.message);
 }
 
-// Esta es la función de Vercel que se ejecuta cuando se invoca el endpoint
+// ----------------------------------------------------
+// Lógica para manejar la petición de la API
+// ----------------------------------------------------
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
@@ -28,6 +36,7 @@ export default async function handler(req, res) {
   // Obtenemos los datos necesarios desde el cuerpo de la petición
   const { deviceToken, title, body } = req.body;
 
+  // Verificamos que los parámetros esenciales estén presentes
   if (!deviceToken || !title || !body) {
     return res.status(400).json({ error: 'Faltan parámetros: deviceToken, title o body.' });
   }
@@ -41,6 +50,7 @@ export default async function handler(req, res) {
   };
 
   try {
+    // Intentamos enviar la notificación con Firebase Cloud Messaging
     const response = await admin.messaging().send(message);
     console.log('Notificación enviada con éxito:', response);
     return res.status(200).json({ success: true, messageId: response });
