@@ -1,5 +1,5 @@
 // src/components/NotificationBell.jsx
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import supabase from "../supabase";
 import { useAuth } from "../context/AuthContext";
 
@@ -10,6 +10,9 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState([]);
+
+  const btnRef = useRef(null);
+  const popRef = useRef(null);
 
   // Carga inicial
   useEffect(() => {
@@ -34,7 +37,7 @@ export default function NotificationBell() {
     })();
   }, [userId]);
 
-  // Realtime: nuevas notificaciones y cambios de leído
+  // Realtime
   useEffect(() => {
     if (!userId) return;
 
@@ -81,12 +84,30 @@ export default function NotificationBell() {
     }
   };
 
+  // Cerrar con click fuera y ESC
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (btnRef.current?.contains(e.target)) return;
+      if (popRef.current?.contains(e.target)) return;
+      setOpen(false);
+    };
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   if (!userId) return null;
 
   return (
     <div style={{ position: "relative", display: "inline-flex" }}>
-      {/* Botón con EXACTA estructura de tus iconos vecinos */}
+      {/* MISMO patrón que los demás iconos */}
       <button
+        ref={btnRef}
         onClick={() => setOpen((v) => !v)}
         className="alerts-icon-text"
         aria-label="Alerts"
@@ -97,12 +118,14 @@ export default function NotificationBell() {
         <small>Alerts</small>
       </button>
 
+      {/* Dropdown pegado al botón */}
       {open && (
         <div
+          ref={popRef}
           style={{
             position: "absolute",
             right: 0,
-            top: 44,
+            top: 44,                 // justo bajo el botón
             width: 320,
             maxWidth: "90vw",
             maxHeight: 420,
@@ -112,7 +135,7 @@ export default function NotificationBell() {
             borderRadius: 12,
             overflow: "hidden",
             boxShadow: "var(--notif-shadow, 0 10px 25px rgba(0,0,0,.15))",
-            zIndex: 9999,
+            zIndex: 10000,           // por encima del navbar
           }}
         >
           <div
@@ -143,7 +166,9 @@ export default function NotificationBell() {
 
           <ul style={{ listStyle: "none", margin: 0, padding: 0, maxHeight: 360, overflowY: "auto" }}>
             {items.length === 0 ? (
-              <li style={{ padding: 14, fontSize: 13, color: "var(--notif-muted, #6b7280)" }}>No notifications</li>
+              <li style={{ padding: 14, fontSize: 13, color: "var(--notif-muted, #6b7280)" }}>
+                No notifications
+              </li>
             ) : (
               items.map((n) => (
                 <li

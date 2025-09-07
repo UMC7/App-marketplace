@@ -13,6 +13,8 @@ import ChatList from './ChatList';
 import ChatPage from './ChatPage';
 import Modal from './Modal';
 import ThemeToggle from './ThemeToggle';
+import NotificationBell from './NotificationBell';
+import NotificationsPanel from './NotificationsPanel';
 import '../navbar.css';
 
 function Navbar() {
@@ -32,6 +34,8 @@ function Navbar() {
   const [activeChat, setActiveChat] = useState(null);
   const [showTouPanel, setShowTouPanel] = useState(false);
   const [showLegalModal, setShowLegalModal] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifUnread, setNotifUnread] = useState(0);
   const menuRef = useRef();
 
   const [isMobilePortrait, setIsMobilePortrait] = useState(
@@ -87,6 +91,50 @@ function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+  const userId = currentUser?.id;
+  if (!userId) return;
+
+  let isMounted = true;
+
+  const load = async () => {
+    const { count } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_read', false);
+
+    if (isMounted) setNotifUnread(count ?? 0);
+  };
+
+  load();
+
+  const ch = supabase
+    .channel(`notif_count_${userId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      () => setNotifUnread((c) => c + 1)
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      (payload) => {
+        if (payload?.old?.is_read === false && payload?.new?.is_read === true) {
+          setNotifUnread((c) => Math.max(0, c - 1));
+        } else if (payload?.old?.is_read === true && payload?.new?.is_read === false) {
+          setNotifUnread((c) => c + 1);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    isMounted = false;
+    supabase.removeChannel(ch);
+  };
+}, [currentUser?.id]);
 
   if (loading) return null;
 
@@ -152,10 +200,7 @@ function Navbar() {
             </button>
 
             {/* Alerts (idéntico estilo, entre Chats y Favorites) */}
-            <button onClick={() => { setIsMenuOpen(false); }} className="alerts-icon-text">
-              <span className="material-icons">notifications_none</span>
-              <small>Alerts</small>
-            </button>
+            <NotificationBell />
 
             <button onClick={() => { navigate('/favorites'); setIsMenuOpen(false); }} className="favorites-icon-text">
               {favorites.length > 0 && <span className="favorites-badge">{favorites.length}</span>}
@@ -410,6 +455,18 @@ function Navbar() {
         </Modal>
       )}
 
+      {showLegalModal && (
+        <Modal onClose={() => setShowLegalModal(false)}>
+          {/* ... */}
+        </Modal>
+      )}
+
+      {showNotifications && (
+        <Modal onClose={() => setShowNotifications(false)}>
+          <NotificationsPanel />
+        </Modal>
+      )}
+
       {/* Menú inferior móvil */}
       {isMobilePortrait && (
         <div className="navbar-bottom">
@@ -436,7 +493,10 @@ function Navbar() {
               </button>
 
               {/* Alerts (móvil, entre Chats y Favorites) */}
-              <button className="nav-icon-button" onClick={() => {}}>
+              <button className="nav-icon-button" onClick={() => setShowNotifications(true)}>
+                {notifUnread > 0 && (
+                  <span className="chat-badge">{notifUnread > 99 ? '99+' : notifUnread}</span>
+                )}
                 <span className="material-icons">notifications_none</span>
                 <small>Alerts</small>
               </button>
