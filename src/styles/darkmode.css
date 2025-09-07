@@ -395,6 +395,15 @@ body.dark-mode .navbar-links button.logout-icon-text {
   gap: 4px;
 }
 
+/* Fix: icono Alerts sin fondo en modo oscuro (desktop) */
+body.dark-mode .navbar-links button.alerts-icon-text,
+body.dark-mode .navbar-links button.alerts-icon-text:hover,
+body.dark-mode .navbar-links button.alerts-icon-text:focus {
+  background-color: transparent !important;
+  color: var(--text-color) !important;
+  border: none !important;
+}
+
 /* =========================
    MODO OSCURO - Tarjetas de perfil
    ========================= */

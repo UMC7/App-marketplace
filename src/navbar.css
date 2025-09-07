@@ -121,7 +121,8 @@
 .chats-icon-text,
 .post-icon-text,
 .login-icon-text,
-.register-icon-text {
+.register-icon-text,
+.alerts-icon-text {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -145,7 +146,8 @@
 .chats-icon-text .material-icons,
 .post-icon-text .material-icons,
 .login-icon-text .material-icons,
-.register-icon-text .material-icons {
+.register-icon-text .material-icons,
+.alerts-icon-text .material-icons {
   font-size: 30px;
   line-height: 1;
 }

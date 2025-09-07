@@ -150,6 +150,13 @@ function Navbar() {
               <span className="material-icons">chat_bubble_outline</span>
               <small>Chats</small>
             </button>
+
+            {/* Alerts (idéntico estilo, entre Chats y Favorites) */}
+            <button onClick={() => { setIsMenuOpen(false); }} className="alerts-icon-text">
+              <span className="material-icons">notifications_none</span>
+              <small>Alerts</small>
+            </button>
+
             <button onClick={() => { navigate('/favorites'); setIsMenuOpen(false); }} className="favorites-icon-text">
               {favorites.length > 0 && <span className="favorites-badge">{favorites.length}</span>}
               <span className="material-icons">favorite_border</span>
@@ -427,6 +434,13 @@ function Navbar() {
                 <span className="material-icons">chat_bubble_outline</span>
                 <small>Chats</small>
               </button>
+
+              {/* Alerts (móvil, entre Chats y Favorites) */}
+              <button className="nav-icon-button" onClick={() => {}}>
+                <span className="material-icons">notifications_none</span>
+                <small>Alerts</small>
+              </button>
+
               <button className="nav-icon-button" onClick={() => navigate('/favorites')}>
                 {favorites.length > 0 && <span className="favorites-badge">{favorites.length}</span>}
                 <span className="material-icons">favorite_border</span>
