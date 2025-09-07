@@ -76,20 +76,15 @@ export default function NotificationsPanel() {
 
   return (
     <div style={{ minWidth: 280, maxWidth: 520 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
+      <div className="notif-modal-head">
+        <h3 className="notif-modal-title">
           Notifications{badge ? ` (${badge})` : ""}
         </h3>
         <button
+          type="button"
           onClick={markAllAsRead}
           disabled={!badge}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: badge ? "#2563eb" : "#999",
-            fontSize: 14,
-            cursor: badge ? "pointer" : "default"
-          }}
+          className="notif-action-pill"
         >
           Mark all as read
         </button>

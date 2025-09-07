@@ -679,3 +679,69 @@
 .notif-item-title{ font-weight: 600; font-size: 13px; }
 .notif-item-body { font-size: 13px; margin-top: 2px; }
 .notif-item-time { font-size: 11px; opacity: .8; margin-top: 4px; }
+
+/* Dark mode tokens for Notifications (afecta desktop y móvil) */
+[data-theme='dark']{
+  --notif-bg: #1f2937;          /* fondo panel */
+  --notif-text: #e5e7eb;        /* texto principal */
+  --notif-border: #374151;      /* borde */
+  --notif-shadow: 0 10px 30px rgba(0,0,0,.45);
+  --notif-unread: #0b1220;      /* fondo item no leído */
+  --notif-muted: #9ca3af;       /* textos secundarios/fecha */
+}
+
+/* ===== Notifications modal header (title centered + small pill) ===== */
+.notif-modal-head{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* izq | botón | der, título queda en el centro */
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--notif-border, #e5e7eb);
+}
+
+.notif-modal-title{
+  grid-column: 2;
+  justify-self: center;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Botón “Mark all as read” con buen contraste (turquesa + texto blanco) */
+.notif-action-pill{
+  grid-column: 3;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600;
+  line-height: 1 !important;
+  border-radius: 9999px !important;
+  background: var(--accent-color, #68ada8) !important;      /* turquesa */
+  color: #ffffff !important;                                 /* texto blanco */
+  border: 1px solid rgba(0,0,0,.18) !important;
+  text-shadow: 0 1px 1px rgba(0,0,0,.25);                    /* mejora legibilidad */
+  cursor: pointer;
+  transition: transform .12s ease, filter .12s ease, opacity .12s ease;
+}
+.notif-action-pill:hover:not(:disabled){
+  transform: translateY(-1px);
+  filter: brightness(0.95);
+}
+.notif-action-pill:disabled{
+  opacity: .55;
+  cursor: default;
+}
+
+/* Dark mode: mantener el mismo contraste */
+[data-theme='dark'] .notif-modal-head{
+  border-bottom-color: #374151;
+}
+[data-theme='dark'] .notif-action-pill{
+  background: var(--accent-color, #68ada8) !important;
+  border-color: rgba(0,0,0,.18) !important;
+  color: #ffffff !important;
+}
