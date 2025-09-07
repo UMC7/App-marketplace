@@ -1,6 +1,7 @@
 // src/context/AuthContext.js
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import supabase from '../supabase';
+import { registerFCM } from '../notifications/registerFCM';
 
 const AuthContext = createContext();
 
@@ -195,6 +196,13 @@ export function AuthProvider({ children }) {
     const u = currentUser;
     if (!u?.id) return;
     uploadPendingAvatarIfAny(u);
+  }, [currentUser?.id]);
+
+  // === FCM: registrar/actualizar token cuando hay usuario autenticado ===
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!currentUser?.id) return;
+    registerFCM(currentUser);
   }, [currentUser?.id]);
 
   // 🔄 Escucha en tiempo real cambios en la fila del usuario (incluye avatar_url)
