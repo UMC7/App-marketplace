@@ -152,6 +152,11 @@
   line-height: 1;
 }
 
+.alerts-icon-text .chat-badge {
+  top: -3px !important;
+  right: 10px;
+}
+
 .cart-badge,
 .chat-badge {
   position: absolute;
