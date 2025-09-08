@@ -35,7 +35,6 @@ const getRoleImage = (title) => {
   if (lowerTitle.includes('nurse')) return 'nurse';
   if (lowerTitle.includes('dayworker')) return 'dayworker';
 
-  // Categoría Others explícita
   if ([
     'videographer',
     'yoga/pilates instructor',
@@ -65,25 +64,22 @@ function YachtOfferList({
   setOpenPanel,
 }) {
 
-// Acordeón exclusivo controlado por el padre (si ya lo tienes, NO lo dupliques)
 const isPrefsOpen = openPanel === 'prefs';
 const togglePrefs = () => setOpenPanel(prev => (prev === 'prefs' ? null : 'prefs'));
 
-// Refs a los contenedores de los paneles
 const filtersRef = useRef(null);
 const prefsRef   = useRef(null);
 
-// Cerrar si se hace click fuera de los paneles y fuera de los toggles
 useEffect(() => {
   const handleClickOutside = (e) => {
-    // Ignorar clicks sobre los toggles (desktop y móvil)
+
     if (e.target.closest('.filter-toggle, .prefs-toggle, .navbar-toggle')) return;
 
     const clickedInsideFilters = filtersRef.current?.contains(e.target);
     const clickedInsidePrefs   = prefsRef.current?.contains(e.target);
 
     if (!clickedInsideFilters && !clickedInsidePrefs) {
-      setOpenPanel(null); // colapsar todo
+      setOpenPanel(null);
     }
   };
 
@@ -118,9 +114,10 @@ const hasCompletePrefs = Boolean(
   const [authors, setAuthors] = useState({});
   const [authorAvatars, setAuthorAvatars] = useState({});
   const [expandedOfferId, setExpandedOfferId] = useState(null);
-  // Ref de cada tarjeta para poder hacer scroll al abrirla
-const cardRefs = useRef({});
-const SCROLL_OFFSET = 12; // separa un poco del borde superior
+  const [openJobId, setOpenJobId] = useState(null);
+  const [openHandled, setOpenHandled] = useState(false);
+  const cardRefs = useRef({});
+  const SCROLL_OFFSET = 12;
 
 useEffect(() => {
   if (!expandedOfferId) return;
@@ -129,6 +126,55 @@ useEffect(() => {
   const top = el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
   window.scrollTo({ top, behavior: 'smooth' });
 }, [expandedOfferId]);
+
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('open');
+  if (q) setOpenJobId(q);
+}, []);
+
+useEffect(() => {
+  if (!openJobId || openHandled || !offers?.length) return;
+
+  const target = offers.find((o) => String(o.id) === String(openJobId));
+  if (!target) return;
+
+  const weekMonday = getMonday(new Date(target.created_at)).toDateString();
+  const thisMonday = getMonday(new Date()).toDateString();
+  const lastMonday = getMonday(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).toDateString();
+
+  const weekGroup =
+    weekMonday === thisMonday
+      ? 'This week'
+      : weekMonday === lastMonday
+      ? 'Last week'
+      : new Date(weekMonday).toLocaleDateString('en-US', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        });
+
+  const dayGroup = new Date(target.created_at).toLocaleDateString('en-US', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+
+  setExpandedWeeks((prev) => ({ ...prev, [weekGroup]: true }));
+  setExpandedDays((prev) => ({ ...prev, [dayGroup]: true }));
+  setExpandedOfferId(target.id);
+
+  setTimeout(() => {
+    const el = cardRefs.current[target.id] || document.getElementById(`offer-${target.id}`);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  }, 50);
+
+  setOpenHandled(true);
+}, [openJobId, openHandled, offers]);
 
   const [activeChat, setActiveChat] = useState(null);
   const [expandedWeeks, setExpandedWeeks] = useState({});
@@ -945,6 +991,7 @@ useEffect(() => {
                     return (
                       <div
                         key={offer.id}
+                        id={`offer-${offer.id}`}
                         ref={(el) => { if (el) cardRefs.current[offer.id] = el; }}
                         onClick={() => toggleExpanded(offer.id)}
                         className={`offer-card ${isExpanded ? 'expanded' : ''} ${markedOffers.includes(offer.id) ? 'marked' : ''}`}
@@ -1042,7 +1089,7 @@ useEffect(() => {
 
       {(offer.yacht_type ||
   (offer.yacht_size && offer.work_environment !== 'Shore-based') ||
-  offer.propulsion_type || // ← añadido
+  offer.propulsion_type ||
   offer.flag ||
   offer.uses ||
   offer.season_type) && (

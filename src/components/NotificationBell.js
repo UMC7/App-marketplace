@@ -1,5 +1,6 @@
-// src/components/NotificationBell.jsx
+// src/components/NotificationBell.js
 import { useEffect, useState, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import supabase from "../supabase";
 import { useAuth } from "../context/AuthContext";
 
@@ -13,6 +14,48 @@ export default function NotificationBell() {
 
   const btnRef = useRef(null);
   const popRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Helper: parse n.data (puede venir como objeto o string JSON)
+  const parseData = (raw) => {
+    if (!raw) return null;
+    if (typeof raw === "object") return raw;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  };
+
+  // Click en item: navegar si hay deep link a SeaJobs (con fallback duro)
+  const handleItemClick = (e, n) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const d = parseData(n.data);
+    const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs";
+    const jobId = d?.job_id || d?.query?.open;
+    if (!targetIsSeaJobs || !jobId) return;
+
+    const url = `/seajobs?open=${encodeURIComponent(jobId)}`;
+
+    // Cierra dropdown primero para evitar interferencias del layout
+    setOpen(false);
+
+    // Navegación SPA
+    try {
+      navigate(url);
+    } catch (_) {
+      // ignore
+    }
+
+    // Fallback: si la URL no cambió, fuerza navegación
+    setTimeout(() => {
+      const now = window.location.pathname + window.location.search;
+      if (now !== url) window.location.assign(url);
+    }, 0);
+  };
 
   // Carga inicial
   useEffect(() => {
@@ -105,10 +148,15 @@ export default function NotificationBell() {
 
   return (
     <div style={{ position: "relative", display: "inline-flex" }}>
-      {/* MISMO patrón que los demás iconos */}
+      {/* Botón campana */}
       <button
         ref={btnRef}
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          // Evita burbujeo a contenedores con <Link to="/">
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
         className="alerts-icon-text"
         aria-label="Alerts"
         style={{ position: "relative", background: "transparent", border: "none", color: "inherit" }}
@@ -122,6 +170,10 @@ export default function NotificationBell() {
       {open && (
         <div
           ref={popRef}
+          // Bloquea clicks internos para que no suban al header (evita redirecciones a landing)
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
           style={{
             position: "absolute",
             right: 0,
@@ -173,11 +225,14 @@ export default function NotificationBell() {
               items.map((n) => (
                 <li
                   key={n.id}
+                  onClick={(e) => handleItemClick(e, n)}
                   style={{
                     padding: "10px 12px",
                     borderBottom: "1px solid var(--notif-border, #e5e7eb)",
                     background: n.is_read ? "transparent" : "var(--notif-unread, #eff6ff)",
+                    cursor: "pointer",
                   }}
+                  title={n.title || "Notification"}
                 >
                   <div style={{ fontWeight: 600, fontSize: 13 }}>{n.title || "Notification"}</div>
                   {n.body && <div style={{ fontSize: 13, marginTop: 2 }}>{n.body}</div>}

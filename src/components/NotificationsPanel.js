@@ -2,13 +2,48 @@
 import React, { useEffect, useMemo, useState } from "react";
 import supabase from "../supabase";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-export default function NotificationsPanel() {
+export default function NotificationsPanel({ onClose }) {
   const { currentUser } = useAuth();
   const userId = currentUser?.id;
+  const navigate = useNavigate();
 
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState([]);
+
+  // Helper: parse n.data (puede venir como objeto o string JSON)
+  const parseData = (raw) => {
+    if (!raw) return null;
+    if (typeof raw === "object") return raw;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  };
+
+  // Navegar a SeaJobs si la notificación trae deep link (cerrando modal y con fallback)
+  const handleItemClick = (n) => {
+    const d = parseData(n.data);
+    const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs";
+    const jobId = d?.job_id || d?.query?.open;
+    if (!targetIsSeaJobs || !jobId) return;
+
+    const url = `/seajobs?open=${encodeURIComponent(jobId)}`;
+
+    // Cierra el modal si el padre pasó el callback
+    if (typeof onClose === "function") onClose();
+
+    // Navegación SPA
+    try { navigate(url); } catch {}
+
+    // Fallback duro si por cualquier razón no cambia la URL
+    setTimeout(() => {
+      const now = window.location.pathname + window.location.search;
+      if (now !== url) window.location.assign(url);
+    }, 0);
+  };
 
   // Carga inicial
   useEffect(() => {
@@ -97,11 +132,14 @@ export default function NotificationsPanel() {
           {items.map((n) => (
             <li
               key={n.id}
+              onClick={() => handleItemClick(n)}
               style={{
                 padding: "10px 8px",
                 borderBottom: "1px solid rgba(0,0,0,0.08)",
-                background: n.is_read ? "transparent" : "rgba(37,99,235,0.08)"
+                background: n.is_read ? "transparent" : "rgba(37,99,235,0.08)",
+                cursor: "pointer"
               }}
+              title={n.title || "Notification"}
             >
               <div style={{ fontWeight: 600 }}>{n.title || "Notification"}</div>
               {n.body && <div style={{ fontSize: 14, marginTop: 2 }}>{n.body}</div>}
