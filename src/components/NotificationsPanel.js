@@ -4,7 +4,7 @@ import supabase from "../supabase";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-export default function NotificationsPanel({ onClose }) {
+export default function NotificationsPanel({ onClose, onReadOne }) {
   const { currentUser } = useAuth();
   const userId = currentUser?.id;
   const navigate = useNavigate();
@@ -12,7 +12,6 @@ export default function NotificationsPanel({ onClose }) {
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState([]);
 
-  // Helper: parse n.data (puede venir como objeto o string JSON)
   const parseData = (raw) => {
     if (!raw) return null;
     if (typeof raw === "object") return raw;
@@ -23,30 +22,34 @@ export default function NotificationsPanel({ onClose }) {
     }
   };
 
-  // Navegar a SeaJobs si la notificación trae deep link (cerrando modal y con fallback)
-  const handleItemClick = (n) => {
-    const d = parseData(n.data);
-    const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs" || d?.path === "/yacht-works";
-    const jobId = d?.job_id || d?.query?.open;
-    if (!targetIsSeaJobs || !jobId) return;
+const handleItemClick = async (n) => {
+  const d = parseData(n.data);
+  const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs" || d?.path === "/yacht-works";
+  const jobId = d?.job_id || d?.query?.open;
+  if (!targetIsSeaJobs || !jobId) return;
 
-    const basePath = d?.path || "/yacht-works";
-    const url = `${basePath}?open=${encodeURIComponent(jobId)}`;
+  if (n.is_read === false) {
+    setItems((p) => p.map((i) => (i.id === n.id ? { ...i, is_read: true } : i)));
+    setUnread((c) => Math.max(0, c - 1));
+    if (typeof onReadOne === "function") onReadOne();
+  }
 
-    // Cierra el modal si el padre pasó el callback
-    if (typeof onClose === "function") onClose();
+  try {
+    await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
+  } catch {}
 
-    // Navegación SPA
-    try { navigate(url); } catch {}
+  const basePath = d?.path || "/yacht-works";
+  const url = `${basePath}?open=${encodeURIComponent(jobId)}`;
 
-    // Fallback duro si por cualquier razón no cambia la URL
-    setTimeout(() => {
-      const now = window.location.pathname + window.location.search;
-      if (now !== url) window.location.assign(url);
-    }, 0);
-  };
+  if (typeof onClose === "function") onClose();
+  try { navigate(url); } catch {}
 
-  // Carga inicial
+  setTimeout(() => {
+    const now = window.location.pathname + window.location.search;
+    if (now !== url) window.location.assign(url);
+  }, 0);
+};
+
   useEffect(() => {
     if (!userId) return;
     (async () => {
@@ -68,7 +71,6 @@ export default function NotificationsPanel({ onClose }) {
     })();
   }, [userId]);
 
-  // Realtime
   useEffect(() => {
     if (!userId) return;
     const ch = supabase

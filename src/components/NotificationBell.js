@@ -27,38 +27,38 @@ export default function NotificationBell() {
     }
   };
 
-  // Click en item: navegar si hay deep link a SeaJobs (con fallback duro)
-  const handleItemClick = (e, n) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    const d = parseData(n.data);
-    const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs" || d?.path === "/yacht-works";
-    const jobId = d?.job_id || d?.query?.open;
-    if (!targetIsSeaJobs || !jobId) return;
+const handleItemClick = async (e, n) => {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const d = parseData(n.data);
+  const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs" || d?.path === "/yacht-works";
+  const jobId = d?.job_id || d?.query?.open;
+  if (!targetIsSeaJobs || !jobId) return;
 
-    const basePath = d?.path || "/yacht-works";
-    const url = `${basePath}?open=${encodeURIComponent(jobId)}`;
+  if (n.is_read === false) {
+    setItems((prev) => prev.map((i) => (i.id === n.id ? { ...i, is_read: true } : i)));
+    setUnread((c) => Math.max(0, c - 1));
+  }
 
-    // Cierra dropdown primero para evitar interferencias del layout
-    setOpen(false);
+  try {
+    await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
+  } catch {}
 
-    // Navegación SPA
-    try {
-      navigate(url);
-    } catch (_) {
-      // ignore
-    }
+  const basePath = d?.path || "/yacht-works";
+  const url = `${basePath}?open=${encodeURIComponent(jobId)}`;
 
-    // Fallback: si la URL no cambió, fuerza navegación
-    setTimeout(() => {
-      const now = window.location.pathname + window.location.search;
-      if (now !== url) window.location.assign(url);
-    }, 0);
-  };
+  setOpen(false);
 
-  // Carga inicial
+  try { navigate(url); } catch {}
+
+  setTimeout(() => {
+    const now = window.location.pathname + window.location.search;
+    if (now !== url) window.location.assign(url);
+  }, 0);
+};
+
   useEffect(() => {
     if (!userId) return;
 

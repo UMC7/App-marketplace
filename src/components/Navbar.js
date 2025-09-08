@@ -98,15 +98,18 @@ function Navbar() {
 
   let isMounted = true;
 
-  const load = async () => {
-    const { count } = await supabase
-      .from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('is_read', false);
+  const recount = async () => {
+  const { count } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
+  if (isMounted) setNotifUnread(count ?? 0);
+};
 
-    if (isMounted) setNotifUnread(count ?? 0);
-  };
+  const load = async () => {
+  await recount();
+};
 
   load();
 
@@ -115,7 +118,10 @@ function Navbar() {
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
-      () => setNotifUnread((c) => c + 1)
+      () => {
+        setNotifUnread((c) => c + 1);
+        setTimeout(recount, 400); // ← INSERTA ESTA LÍNEA JUSTO AQUÍ
+      }
     )
     .on(
       'postgres_changes',
@@ -126,12 +132,17 @@ function Navbar() {
         } else if (payload?.old?.is_read === true && payload?.new?.is_read === false) {
           setNotifUnread((c) => c + 1);
         }
+
+        setTimeout(recount, 400);
       }
     )
     .subscribe();
 
+  const poll = setInterval(recount, 30000);
+
   return () => {
     isMounted = false;
+    clearInterval(poll);
     supabase.removeChannel(ch);
   };
 }, [currentUser?.id]);
@@ -463,7 +474,10 @@ function Navbar() {
 
       {showNotifications && (
         <Modal onClose={() => setShowNotifications(false)}>
-          <NotificationsPanel onClose={() => setShowNotifications(false)} />
+          <NotificationsPanel
+            onClose={() => setShowNotifications(false)}
+            onReadOne={() => setNotifUnread((c) => Math.max(0, c - 1))}
+          />
         </Modal>
       )}
 
