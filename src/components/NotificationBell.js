@@ -34,11 +34,12 @@ export default function NotificationBell() {
       e.stopPropagation();
     }
     const d = parseData(n.data);
-    const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs";
+    const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs" || d?.path === "/yacht-works";
     const jobId = d?.job_id || d?.query?.open;
     if (!targetIsSeaJobs || !jobId) return;
 
-    const url = `/seajobs?open=${encodeURIComponent(jobId)}`;
+    const basePath = d?.path || "/yacht-works";
+    const url = `${basePath}?open=${encodeURIComponent(jobId)}`;
 
     // Cierra dropdown primero para evitar interferencias del layout
     setOpen(false);
