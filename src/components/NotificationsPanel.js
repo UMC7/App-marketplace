@@ -129,7 +129,9 @@ const handleItemClick = async (n) => {
       </div>
 
       {items.length === 0 ? (
-        <div style={{ padding: "12px 0", color: "#666" }}>No notifications yet.</div>
+        <div style={{ padding: "12px 0", color: "var(--notif-muted, #6b7280)" }}>
+          No notifications yet.
+        </div>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0, maxHeight: 420, overflowY: "auto" }}>
           {items.map((n) => (
@@ -138,8 +140,9 @@ const handleItemClick = async (n) => {
               onClick={() => handleItemClick(n)}
               style={{
                 padding: "10px 8px",
-                borderBottom: "1px solid rgba(0,0,0,0.08)",
-                background: n.is_read ? "transparent" : "rgba(37,99,235,0.08)",
+                borderBottom: "1px solid var(--notif-border, #3a3a3a)",
+                background: n.is_read ? "transparent" : "var(--notif-unread, rgba(104,173,168,0.34))",
+                boxShadow: n.is_read ? "none" : "inset 4px 0 0 0 var(--accent-color)", // misma barra que desktop
                 cursor: "pointer"
               }}
               title={n.title || "Notification"}

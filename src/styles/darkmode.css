@@ -712,3 +712,14 @@ body.dark-mode .danger-btn:hover {
     accent-color: var(--primary-color);
   }
 }
+
+/* === Notifications: forzar paleta en DARK MODE (afecta dropdown de desktop) === */
+body.dark-mode {
+  --notif-bg: var(--navbar-bg-color);
+  --notif-text: var(--text-color);
+  --notif-border: var(--border-color);
+  --notif-muted: var(--text-muted);
+  --notif-shadow: 0 12px 28px rgba(0,0,0,.55);
+  --notif-unread: rgba(104, 173, 168, 0.34);
+  --accent-color: var(--primary-color);
+}

@@ -207,7 +207,7 @@ const handleItemClick = async (e, n) => {
               style={{
                 background: "transparent",
                 border: "none",
-                color: unread === 0 ? "var(--notif-muted, #6b7280)" : "#2563eb",
+                color: unread === 0 ? "var(--notif-muted, #6b7280)" : "var(--primary-color)",
                 fontSize: 12,
                 cursor: unread === 0 ? "default" : "pointer",
               }}
@@ -229,9 +229,10 @@ const handleItemClick = async (e, n) => {
                   onClick={(e) => handleItemClick(e, n)}
                   style={{
                     padding: "10px 12px",
-                    borderBottom: "1px solid var(--notif-border, #e5e7eb)",
-                    background: n.is_read ? "transparent" : "var(--notif-unread, #eff6ff)",
-                    cursor: "pointer",
+  borderBottom: "1px solid var(--notif-border, #3a3a3a)",
+  background: n.is_read ? "transparent" : "var(--notif-unread, rgba(104,173,168,0.28))",
+  boxShadow: n.is_read ? "none" : "inset 4px 0 0 0 var(--accent-color)", // ← barra turquesa
+  cursor: "pointer",
                   }}
                   title={n.title || "Notification"}
                 >
