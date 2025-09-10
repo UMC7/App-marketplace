@@ -50,6 +50,9 @@ function EventsPage() {
   const [availableCountries, setAvailableCountries] = useState([]);
   const [availableMonths, setAvailableMonths] = useState([]);
 
+  // Guardamos el aspect ratio natural por evento (id -> ratio)
+  const [imageRatios, setImageRatios] = useState({});
+
   useEffect(() => {
     const fetchEvents = async () => {
       const { data, error } = await supabase
@@ -67,7 +70,7 @@ function EventsPage() {
         const countries = [...new Set((data || []).map((e) => e.country))];
         setAvailableCountries(countries);
 
-        // Extraer meses únicos en formato 'YYYY-MM'
+        // Meses únicos 'YYYY-MM'
         const monthsSet = new Set();
         (data || []).forEach(e => {
           if (e.start_date) {
@@ -78,7 +81,6 @@ function EventsPage() {
           }
         });
 
-        // Ordenar y guardar como array
         const sortedMonths = Array.from(monthsSet).sort();
         setAvailableMonths(sortedMonths);
       }
@@ -114,7 +116,7 @@ function EventsPage() {
   };
 
   const formatMonthLabel = (value) => {
-    const [year, month] = value.split('-');
+    const [year] = value.split('-');
     const date = new Date(`${value}-01`);
     return `${date.toLocaleString('en-US', { month: 'long' })} ${year}`;
   };
@@ -127,14 +129,17 @@ function EventsPage() {
     return <p style={{ padding: '20px' }}>No events available.</p>;
   }
 
+  // Umbrales de decisión
+  const LETTERBOX_THRESHOLD = 1.7; // ≥1.7 consideramos "banner" (mostrar contain + blur en colapsado)
+
   return (
     <div className="container">
       <div className="module-header-wrapper">
         <div className="module-header-row">
-        <h1>SeaEvents</h1>
-        <span>Explore all events shared by the community.</span>
+          <h1>SeaEvents</h1>
+          <span>Explore all events shared by the community.</span>
+        </div>
       </div>
-    </div>
 
       <h3
         className="filter-toggle"
@@ -197,84 +202,209 @@ function EventsPage() {
       )}
 
       <div className="responsive-grid">
-        {filteredEvents.map((event) => (
-          <div
-            key={event.id}
-            className={`event-card ${expandedEventId === event.id ? 'expanded' : ''}`}
-            onClick={() => toggleExpand(event.id)}
-          >
-            {event.status !== 'active' && (
-              <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%) rotate(-45deg)',
-                backgroundColor: 'rgba(255,0,0,0.7)',
-                color: 'white',
-                padding: '10px 50px',
-                fontSize: '1.2em',
-                fontWeight: 'bold',
-                textAlign: 'center',
-                pointerEvents: 'none',
-                zIndex: 2,
-              }}>
-                {event.status === 'cancelled' ? 'CANCELLED' : 'POSTPONED'}
+        {filteredEvents.map((event) => {
+          const isExpanded = expandedEventId === event.id;
+          const ratio = imageRatios[event.id]; // w / h
+          const isPortrait = typeof ratio === 'number' ? ratio < 1 : false;
+          const isLetterboxBanner = typeof ratio === 'number' ? ratio >= LETTERBOX_THRESHOLD : false;
+
+          // En expandido + retrato: crecer para mostrar la imagen completa
+          const wrapStyle = isExpanded && isPortrait
+            ? { height: 'auto' }
+            : undefined; // colapsado/otros: usa el alto fijo del CSS
+
+          // En colapsado:
+          //  - retrato => cover (llena sin barras, lo recortado se verá al expandir)
+          //  - banner muy ancho => contain (sin recorte) y mostramos blur detrás
+          //  - resto => cover
+          const collapsedFit = isPortrait ? 'cover' : (isLetterboxBanner ? 'contain' : 'cover');
+
+          const imgStyle = isExpanded && isPortrait
+            ? { width: '100%', height: 'auto', display: 'block' } // mostrar completa
+            : { width: '100%', height: '100%', objectFit: collapsedFit, objectPosition: isPortrait ? 'top center' : 'center', display: 'block' };
+
+          return (
+            <div
+              key={event.id}
+              className={`event-card ${isExpanded ? 'expanded' : ''}`}
+              onClick={() => toggleExpand(event.id)}
+            >
+              {event.status !== 'active' && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%) rotate(-45deg)',
+                    backgroundColor: 'rgba(255,0,0,0.7)',
+                    color: 'white',
+                    padding: '10px 50px',
+                    fontSize: '1.2em',
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    pointerEvents: 'none',
+                    zIndex: 2,
+                  }}
+                >
+                  {event.status === 'cancelled' ? 'CANCELLED' : 'POSTPONED'}
+                </div>
+              )}
+
+              <div className="event-image-wrap" style={wrapStyle}>
+                {/* Fondo difuso solo si estamos en colapsado y es banner muy ancho */}
+                {(!isExpanded && isLetterboxBanner) && (
+                  <img
+                    src={event.mainphoto || 'https://via.placeholder.com/250'}
+                    alt=""
+                    aria-hidden="true"
+                    className="event-image-blur"
+                    loading="lazy"
+                  />
+                )}
+
+                <img
+                  src={event.mainphoto || 'https://via.placeholder.com/250'}
+                  alt={event.event_name}
+                  className="event-image"
+                  loading="lazy"
+                  style={imgStyle}
+                  onLoad={(e) => {
+                    const img = e.currentTarget;
+                    const r = img.naturalWidth / img.naturalHeight;
+                    setImageRatios((prev) => (prev[event.id] ? prev : { ...prev, [event.id]: r }));
+                  }}
+                />
               </div>
-            )}
 
-            <img
-              src={event.mainphoto || 'https://via.placeholder.com/250'}
-              alt={event.event_name}
-              style={{ width: '100%', height: '150px', objectFit: 'cover' }}
-            />
+              <h3>{event.event_name}</h3>
 
-            <h3>{event.event_name}</h3>
+              {event.city && (
+                <p>
+                  <strong>City:</strong> {event.city}
+                </p>
+              )}
+              {event.country && (
+                <p>
+                  <strong>Country:</strong> {event.country}
+                </p>
+              )}
+              {event.start_date && (
+                <p>
+                  <strong>Date:</strong>{' '}
+                  {formatDateRange(
+                    event.start_date,
+                    event.end_date,
+                    event.is_single_day
+                  )}
+                </p>
+              )}
 
-            {event.city && <p><strong>City:</strong> {event.city}</p>}
-            {event.country && <p><strong>Country:</strong> {event.country}</p>}
-            {event.start_date && (
-              <p>
-                <strong>Date:</strong>{' '}
-                {formatDateRange(event.start_date, event.end_date, event.is_single_day)}
-              </p>
-            )}
+              {isExpanded && (
+                <div className="event-details">
+                  {event.description && (
+                    <p className="description-text">
+                      <strong>Description:</strong> {event.description}
+                    </p>
+                  )}
 
-            {expandedEventId === event.id && (
-              <div className="event-details">
-                {event.description && <p className="description-text"><strong>Description:</strong> {event.description}</p>}
+                  {event.start_time && (
+                    <p>
+                      <strong>Start Time:</strong> {formatTime(event.start_time)}
+                    </p>
+                  )}
+                  {event.end_time && (
+                    <p>
+                      <strong>End Time:</strong> {formatTime(event.end_time)}
+                    </p>
+                  )}
 
-                {event.start_time && <p><strong>Start Time:</strong> {formatTime(event.start_time)}</p>}
-                {event.end_time && <p><strong>End Time:</strong> {formatTime(event.end_time)}</p>}
+                  {event.location_details && (
+                    <p>
+                      <strong>Location:</strong> {event.location_details}
+                    </p>
+                  )}
 
-                {event.location_details && (
-                  <p><strong>Location:</strong> {event.location_details}</p>
-                )}
+                  {event.is_free ? (
+                    <p>
+                      <strong>Participation:</strong> Free admission
+                    </p>
+                  ) : (
+                    event.cost && (
+                      <p>
+                        <strong>Cost:</strong> {event.cost} {event.currency}
+                      </p>
+                    )
+                  )}
 
-                {event.is_free
-                  ? <p><strong>Participation:</strong> Free admission</p>
-                  : event.cost && <p><strong>Cost:</strong> {event.cost} {event.currency}</p>
-                }
+                  {event.contact_email && (
+                    <p>
+                      <strong>Email:</strong> {event.contact_email}
+                    </p>
+                  )}
+                  {event.contact_phone && (
+                    <p>
+                      <strong>Phone:</strong> {event.contact_phone}
+                    </p>
+                  )}
+                  {event.alt_phone && (
+                    <p>
+                      <strong>Alternative Phone:</strong> {event.alt_phone}
+                    </p>
+                  )}
 
-                {event.contact_email && <p><strong>Email:</strong> {event.contact_email}</p>}
-                {event.contact_phone && <p><strong>Phone:</strong> {event.contact_phone}</p>}
-                {event.alt_phone && <p><strong>Alternative Phone:</strong> {event.alt_phone}</p>}
-
-                {event.website && (
-                  <p><strong>Web:</strong> <a href={event.website} target="_blank" rel="noopener noreferrer">{event.website}</a></p>
-                )}
-                {event.facebook_url && (
-                  <p><strong>Facebook:</strong> <a href={event.facebook_url} target="_blank" rel="noopener noreferrer">{event.facebook_url}</a></p>
-                )}
-                {event.instagram_url && (
-                  <p><strong>Instagram:</strong> <a href={event.instagram_url} target="_blank" rel="noopener noreferrer">{event.instagram_url}</a></p>
-                )}
-                {event.whatsapp_number && (
-                  <p><strong>WhatsApp:</strong> <a href={`https://wa.me/${event.whatsapp_number}`} target="_blank" rel="noopener noreferrer">{event.whatsapp_number}</a></p>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+                  {event.website && (
+                    <p>
+                      <strong>Web:</strong>{' '}
+                      <a
+                        href={event.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {event.website}
+                      </a>
+                    </p>
+                  )}
+                  {event.facebook_url && (
+                    <p>
+                      <strong>Facebook:</strong>{' '}
+                      <a
+                        href={event.facebook_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {event.facebook_url}
+                      </a>
+                    </p>
+                  )}
+                  {event.instagram_url && (
+                    <p>
+                      <strong>Instagram:</strong>{' '}
+                      <a
+                        href={event.instagram_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {event.instagram_url}
+                      </a>
+                    </p>
+                  )}
+                  {event.whatsapp_number && (
+                    <p>
+                      <strong>WhatsApp:</strong>{' '}
+                      <a
+                        href={`https://wa.me/${event.whatsapp_number}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {event.whatsapp_number}
+                      </a>
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
       <ScrollToTopButton />
     </div>

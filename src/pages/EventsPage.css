@@ -74,7 +74,7 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
-  align-items: stretch; /* 🔹 Evita centrar todo el contenido */
+  align-items: stretch;
   width: 100%;
   min-height: 320px;
   max-width: 360px;
@@ -97,9 +97,47 @@
 
 .event-card .description-text {
   text-align: justify;
-  white-space: pre-line; /* ✅ Permite saltos de línea como párrafos */
+  white-space: pre-line; /* saltos de línea como párrafos */
 }
 
 .event-card.expanded {
   min-height: 450px;
+}
+
+/* ===== Cabecera de imagen ===== */
+/* Altura fija en colapsado (se puede ajustar los breakpoints a tu gusto) */
+.event-image-wrap{
+  position: relative;
+  width: 100%;
+  height: 220px;               /* base desktop */
+  overflow: hidden;
+  border-radius: 8px;
+  background: #0b1020;         /* fallback */
+}
+
+@media (max-width: 640px){
+  .event-image-wrap{ height: 260px; }  /* más alto en móvil */
+}
+@media (min-width: 1024px){
+  .event-image-wrap{ height: 180px; }  /* más bajo en desktop grande */
+}
+
+/* Fondo difuso para rellenar bandas en banners muy anchos */
+.event-image-blur{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(18px) brightness(0.85);
+  transform: scale(1.08);      /* evita bordes del blur */
+  opacity: 1;
+}
+
+/* Imagen principal; el object-fit/position se define inline según el caso */
+.event-image{
+  position: relative;
+  z-index: 1;
+  display: block;
+  border-radius: 8px;
 }
