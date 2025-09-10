@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './EventsPage.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import supabase from '../supabase';
@@ -50,8 +50,11 @@ function EventsPage() {
   const [availableCountries, setAvailableCountries] = useState([]);
   const [availableMonths, setAvailableMonths] = useState([]);
 
-  // Guardamos el aspect ratio natural por evento (id -> ratio)
+  // Aspect ratio natural por imagen (id -> w/h)
   const [imageRatios, setImageRatios] = useState({});
+  // Aspect ratio del contenedor colapsado (id -> w/h)
+  const [containerRatios, setContainerRatios] = useState({});
+  const wrapRefs = useRef({}); // id -> DOM node
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -59,7 +62,7 @@ function EventsPage() {
         .from('events')
         .select('*')
         .in('status', ['active', 'cancelled', 'postponed'])
-        .order('created_at', { ascending: false });
+        .order('start_date', { ascending: true });
 
       if (error) {
         console.error('Error loading events:', error.message);
@@ -80,7 +83,6 @@ function EventsPage() {
             monthsSet.add(`${year}-${month}`);
           }
         });
-
         const sortedMonths = Array.from(monthsSet).sort();
         setAvailableMonths(sortedMonths);
       }
@@ -111,6 +113,43 @@ function EventsPage() {
     setFilteredEvents(filtered);
   }, [searchDate, selectedCountry, selectedCity, events]);
 
+  // Medir ratios del contenedor colapsado (ancho/alto actual)
+  useEffect(() => {
+    const measure = () => {
+      const next = {};
+      filteredEvents.forEach((e) => {
+        const el = wrapRefs.current[e.id];
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            next[e.id] = rect.width / rect.height;
+          }
+        }
+      });
+      if (Object.keys(next).length) {
+        setContainerRatios(prev => ({ ...prev, ...next }));
+      }
+    };
+
+    // Medir al montar y cuando cambian las tarjetas
+    measure();
+
+    // Observar cambios de tamaño por responsivo
+    let ro;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => measure());
+      Object.values(wrapRefs.current).forEach((el) => el && ro.observe(el));
+    } else {
+      // Fallback
+      window.addEventListener('resize', measure);
+    }
+
+    return () => {
+      if (ro) ro.disconnect();
+      else window.removeEventListener('resize', measure);
+    };
+  }, [filteredEvents, showFilters]);
+
   const toggleExpand = (eventId) => {
     setExpandedEventId((prevId) => (prevId === eventId ? null : eventId));
   };
@@ -129,8 +168,8 @@ function EventsPage() {
     return <p style={{ padding: '20px' }}>No events available.</p>;
   }
 
-  // Umbrales de decisión
-  const LETTERBOX_THRESHOLD = 1.7; // ≥1.7 consideramos "banner" (mostrar contain + blur en colapsado)
+  // Margen para comparar contra el contenedor (evita parpadeos en límites)
+  const RATIO_MARGIN = 0.05; // 5%
 
   return (
     <div className="container">
@@ -204,24 +243,38 @@ function EventsPage() {
       <div className="responsive-grid">
         {filteredEvents.map((event) => {
           const isExpanded = expandedEventId === event.id;
-          const ratio = imageRatios[event.id]; // w / h
-          const isPortrait = typeof ratio === 'number' ? ratio < 1 : false;
-          const isLetterboxBanner = typeof ratio === 'number' ? ratio >= LETTERBOX_THRESHOLD : false;
+          const imgRatio = imageRatios[event.id];       // w/h
+          const contRatio = containerRatios[event.id];  // w/h (colapsado)
+          const hasRatios = typeof imgRatio === 'number' && typeof contRatio === 'number';
+
+          const isPortrait = hasRatios ? imgRatio < 1 : false;
+
+          // Decidir cuándo usar contain + blur (sin recortes) vs cover
+          // Usamos contain+blur cuando la imagen es significativamente distinta
+          // al contenedor en cualquiera de los dos sentidos, pero nunca para retratos.
+          const muchWider = hasRatios && imgRatio > contRatio * (1 + RATIO_MARGIN);
+          const muchNarrower = hasRatios && imgRatio < contRatio * (1 - RATIO_MARGIN);
+          const useContainBlur = hasRatios && !isPortrait && (muchWider || muchNarrower);
 
           // En expandido + retrato: crecer para mostrar la imagen completa
-          const wrapStyle = isExpanded && isPortrait
-            ? { height: 'auto' }
-            : undefined; // colapsado/otros: usa el alto fijo del CSS
+          const wrapStyle = isExpanded && isPortrait ? { height: 'auto' } : undefined;
 
-          // En colapsado:
-          //  - retrato => cover (llena sin barras, lo recortado se verá al expandir)
-          //  - banner muy ancho => contain (sin recorte) y mostramos blur detrás
-          //  - resto => cover
-          const collapsedFit = isPortrait ? 'cover' : (isLetterboxBanner ? 'contain' : 'cover');
+          // Colapsado:
+          // - retrato => cover (sin barras; lo recortado se ve al expandir)
+          // - paisajes con desajuste notable => contain + blur (evita sobre-zoom y huecos)
+          // - resto => cover
+          const collapsedFit = useContainBlur ? 'contain' : 'cover';
+          const objectPosition = isPortrait ? 'top center' : 'center';
 
           const imgStyle = isExpanded && isPortrait
             ? { width: '100%', height: 'auto', display: 'block' } // mostrar completa
-            : { width: '100%', height: '100%', objectFit: collapsedFit, objectPosition: isPortrait ? 'top center' : 'center', display: 'block' };
+            : {
+                width: '100%',
+                height: '100%',
+                objectFit: collapsedFit,
+                objectPosition,
+                display: 'block',
+              };
 
           return (
             <div
@@ -250,9 +303,13 @@ function EventsPage() {
                 </div>
               )}
 
-              <div className="event-image-wrap" style={wrapStyle}>
-                {/* Fondo difuso solo si estamos en colapsado y es banner muy ancho */}
-                {(!isExpanded && isLetterboxBanner) && (
+              <div
+                className="event-image-wrap"
+                style={wrapStyle}
+                ref={(el) => { wrapRefs.current[event.id] = el; }}
+              >
+                {/* Fondo difuso solo si estamos en colapsado y la imagen requiere contain */}
+                {(!isExpanded && useContainBlur) && (
                   <img
                     src={event.mainphoto || 'https://via.placeholder.com/250'}
                     alt=""
@@ -271,7 +328,9 @@ function EventsPage() {
                   onLoad={(e) => {
                     const img = e.currentTarget;
                     const r = img.naturalWidth / img.naturalHeight;
-                    setImageRatios((prev) => (prev[event.id] ? prev : { ...prev, [event.id]: r }));
+                    setImageRatios((prev) =>
+                      prev[event.id] ? prev : { ...prev, [event.id]: r }
+                    );
                   }}
                 />
               </div>

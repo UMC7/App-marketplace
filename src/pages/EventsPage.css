@@ -104,8 +104,7 @@
   min-height: 450px;
 }
 
-/* ===== Cabecera de imagen ===== */
-/* Altura fija en colapsado (se puede ajustar los breakpoints a tu gusto) */
+/* ===== Cabecera de imagen (altura fija en colapsado) ===== */
 .event-image-wrap{
   position: relative;
   width: 100%;
@@ -134,7 +133,7 @@
   opacity: 1;
 }
 
-/* Imagen principal; el object-fit/position se define inline según el caso */
+/* Imagen principal; tamaño y object-fit se aplican inline según el caso */
 .event-image{
   position: relative;
   z-index: 1;
