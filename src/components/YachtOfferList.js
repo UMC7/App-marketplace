@@ -806,7 +806,7 @@ useEffect(() => {
               color: hasCompletePrefs ? '#067d3f' : '#a40000',
               border: `1px solid ${hasCompletePrefs ? '#a9e6bc' : '#f0b3b3'}`
             }}>
-              {hasCompletePrefs ? 'Ready' : 'Complete required fields'}
+              {hasCompletePrefs ? 'Ready' : 'Complete all fields'}
             </span>
           </h3>
 
