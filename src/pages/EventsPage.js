@@ -181,6 +181,12 @@ function EventsPage() {
   const getShareUrl = (eventId) =>
     `${window.location.origin}/api/event-og?event=${encodeURIComponent(eventId)}`;
 
+  const getShareData = (event) => ({
+    title: event.event_name || 'SeaEvents',
+    text: `${event.event_name}${event.city ? ' · ' + event.city : ''} — ${formatDateRange(event.start_date, event.end_date, event.is_single_day)}`,
+    url: getShareUrl(event.id),
+  });
+
   const handleCopyLink = async (eventId) => {
     const shareUrl = getShareUrl(eventId);
     try {
@@ -198,10 +204,25 @@ function EventsPage() {
   };
 
   const handleWhatsApp = (event) => {
-    const shareUrl = getShareUrl(event.id);
-    const msg = `🎉 ${event.event_name} — ${event.city ? event.city + ' · ' : ''}${formatDateRange(event.start_date, event.end_date, event.is_single_day)}\n${shareUrl}`;
+    const data = getShareData(event);
+    const msg = `🎉 ${data.text}\n${data.url}`;
     const wa = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
     window.open(wa, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShare = async (event, e) => {
+    e.stopPropagation();
+    const data = getShareData(event);
+    if (navigator.share) {
+      try {
+        await navigator.share(data);
+      } catch (err) {
+        // Ignorar AbortError cuando el usuario cierra la hoja nativa
+        if (err && err.name !== 'AbortError') {
+          console.error('Share failed', err);
+        }
+      }
+    }
   };
 
   const toggleExpand = (eventId) => {
@@ -237,6 +258,19 @@ function EventsPage() {
 
   // Margen para comparar contra el contenedor (evita parpadeos en límites)
   const RATIO_MARGIN = 0.05; // 5%
+
+  const supportsWebShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+  // estilos inline mínimos para no tocar tu CSS global
+  const iconBarStyle = { display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 };
+  const roundBtn = {
+    width: 44, height: 44, borderRadius: '9999px', border: '1px solid rgba(0,0,0,0.1)',
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    background: '#fff', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,.06)'
+  };
+  const waBtn = { ...roundBtn, background: '#25D366', border: 'none' };
+  const iconImg = { width: 22, height: 22, display: 'block' };
+  const shareIcon = { fontSize: 22, color: '#111' };
 
   return (
     <div className="container">
@@ -426,25 +460,42 @@ function EventsPage() {
                 </p>
               )}
 
-              {/* Barra de compartir solo cuando está expandida (no rompe el layout móvil/desktop) */}
+              {/* Barra de compartir solo cuando está expandida */}
               {isExpanded && (
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 }}>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); handleWhatsApp(event); }}
-                    style={{ padding: '8px 12px', borderRadius: 8, background: '#25D366', color: '#fff', border: 'none', cursor: 'pointer' }}
-                    aria-label="Share on WhatsApp"
-                  >
-                    Share WhatsApp
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); handleCopyLink(event.id); }}
-                    style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ccc', background: '#fff', cursor: 'pointer' }}
-                    aria-label="Copy share link"
-                  >
-                    Copy Link
-                  </button>
+                <div style={iconBarStyle} onClick={(e) => e.stopPropagation()}>
+                  {supportsWebShare ? (
+                    <button
+                      type="button"
+                      onClick={(e) => handleShare(event, e)}
+                      style={roundBtn}
+                      aria-label="Share"
+                      title="Share"
+                    >
+                      {/* Material Icons ya está cargado en index.html */}
+                      <span className="material-icons" style={shareIcon}>ios_share</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleWhatsApp(event); }}
+                        style={waBtn}
+                        aria-label="Share on WhatsApp"
+                        title="Share on WhatsApp"
+                      >
+                        <img src="/icons/whatsapp.svg" alt="" style={iconImg} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleCopyLink(event.id); }}
+                        style={roundBtn}
+                        aria-label="Copy share link"
+                        title="Copy link"
+                      >
+                        <img src="/icons/link.svg" alt="" style={iconImg} />
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
 
