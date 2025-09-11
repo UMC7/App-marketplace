@@ -1,19 +1,6 @@
-// Vercel Serverless Function: devuelve HTML con metas Open Graph/Twitter
-// para que WhatsApp/FB/Telegram muestren la vista previa del evento.
-// Uso: https://TU-DOMINIO/api/event-og?event=<id>  (o ?slug=<slug>)
-//
-// Recomendado: comparte este endpoint como link público.
-// Para humanos, incluimos un meta refresh que redirige a /events?event=<id>
+// api/event-og.js
+// Serverless OG/preview para eventos (Vercel). Compatible con ESM usando import dinámico.
 
-const { createClient } = require('@supabase/supabase-js');
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Helpers
 const escapeHtml = (str = '') =>
   String(str)
     .replace(/&/g, '&amp;')
@@ -29,6 +16,19 @@ const absoluteUrl = (maybeUrl, origin) => {
 
 module.exports = async (req, res) => {
   try {
+    // ⬇️ ESM: importar supabase-js dinámicamente
+    const { createClient } = await import('@supabase/supabase-js');
+
+    const SUPABASE_URL =
+      process.env.SUPABASE_URL ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      process.env.REACT_APP_SUPABASE_URL;
+
+    const SUPABASE_ANON_KEY =
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.REACT_APP_SUPABASE_ANON_KEY;
+
     const { event: idOrSlug, slug } = req.query;
     const identifier = slug || idOrSlug;
 
@@ -36,47 +36,46 @@ module.exports = async (req, res) => {
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const origin = `${proto}://${host}`;
 
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      console.error('Missing Supabase env vars');
+      const fallback = `${origin}/events${identifier ? `?event=${encodeURIComponent(identifier)}` : ''}`;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res
+        .status(200)
+        .send(`<!doctype html><meta http-equiv="refresh" content="0; url=${fallback}">`);
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     let event = null;
-
     if (identifier) {
-      // buscar por id (uuid) o por slug
-      let query = supabase.from('events').select(`
-        id,event_name,description,mainphoto,start_date,end_date,city,country,status
-      `).limit(1);
+      let query = supabase
+        .from('events')
+        .select('id,event_name,description,mainphoto,start_date,end_date,city,country,status')
+        .limit(1);
 
-      if (/^[0-9a-f-]{16,}$/i.test(identifier)) {
-        query = query.eq('id', identifier);
-      } else {
-        query = query.eq('slug', identifier);
-      }
+      if (/^[0-9a-f-]{16,}$/i.test(identifier)) query = query.eq('id', identifier);
+      else query = query.eq('slug', identifier);
 
       const { data, error } = await query.single();
       if (!error && data) event = data;
+      else if (error) console.error('Supabase error:', error);
     }
 
-    // Fallback si no hay evento
     const title = event ? event.event_name : 'SeaEvents | YachtDayWork';
-    const cityCountry = event
-      ? [event.city, event.country].filter(Boolean).join(', ')
-      : '';
+    const cityCountry = event ? [event.city, event.country].filter(Boolean).join(', ') : '';
     const dateRange = event?.start_date
       ? new Date(event.start_date).toLocaleDateString('es-ES', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
+          day: '2-digit', month: 'short', year: 'numeric',
         })
       : '';
-
     const description = event
       ? `${cityCountry}${cityCountry && dateRange ? ' · ' : ''}${dateRange}`
       : 'Explora eventos compartidos por la comunidad náutica.';
 
-    const image = absoluteUrl(
-      event?.mainphoto || '/yacht-og-fallback.jpg',
-      origin
-    );
+    const image = absoluteUrl(event?.mainphoto || '/logo512.png', origin);
 
-    // Donde queremos que “aterricen” los humanos
+    // A dónde se redirige a humanos (SPA)
     const canonical = event
       ? `${origin}/events?event=${encodeURIComponent(event.id)}`
       : `${origin}/events`;
@@ -89,7 +88,6 @@ module.exports = async (req, res) => {
 <link rel="canonical" href="${canonical}">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="${escapeHtml(title)}">
 <meta property="og:description" content="${escapeHtml(description)}">
@@ -98,13 +96,11 @@ module.exports = async (req, res) => {
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
-<!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${escapeHtml(title)}">
 <meta name="twitter:description" content="${escapeHtml(description)}">
 <meta name="twitter:image" content="${image}">
 
-<!-- Redirige a la experiencia SPA para humanos -->
 <meta http-equiv="refresh" content="0; url=${canonical}">
 <style>
   body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;padding:24px}
@@ -124,10 +120,12 @@ module.exports = async (req, res) => {
 </html>`;
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.status(200).send(html);
+    return res.status(200).send(html);
   } catch (err) {
-    // Fallback simple
+    console.error('event-og crash:', err);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.status(200).send(`<!doctype html><meta http-equiv="refresh" content="0; url=/events">`);
+    return res
+      .status(200)
+      .send(`<!doctype html><meta http-equiv="refresh" content="0; url=/events">`);
   }
 };
