@@ -6,5 +6,11 @@
       "destination": "https://www.yachtdaywork.com/$1",
       "permanent": true
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/e/:id",
+      "destination": "/api/event-og?event=:id"
+    }
   ]
 }

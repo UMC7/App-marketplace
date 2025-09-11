@@ -54,7 +54,8 @@ function EventsPage() {
   const [imageRatios, setImageRatios] = useState({});
   // Aspect ratio del contenedor colapsado (id -> w/h)
   const [containerRatios, setContainerRatios] = useState({});
-  const wrapRefs = useRef({}); // id -> DOM node
+  const wrapRefs = useRef({}); // id -> DOM node de la imagen
+  const cardRefs = useRef({}); // id -> DOM node de la tarjeta
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -150,8 +151,74 @@ function EventsPage() {
     };
   }, [filteredEvents, showFilters]);
 
+  // Deep link: expandir automáticamente si viene ?event=<id>
+  useEffect(() => {
+    if (loading) return;
+    const params = new URLSearchParams(window.location.search);
+    const targetId = params.get('event');
+    if (targetId) {
+      setExpandedEventId(targetId);
+      // scroll suave a la tarjeta
+      setTimeout(() => {
+        const el = cardRefs.current[targetId];
+        if (el && typeof el.scrollIntoView === 'function') {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 0);
+    }
+  }, [loading]);
+
+  const updateUrlParam = (eventIdOrNull) => {
+    const url = new URL(window.location.href);
+    if (eventIdOrNull) {
+      url.searchParams.set('event', eventIdOrNull);
+    } else {
+      url.searchParams.delete('event');
+    }
+    window.history.replaceState({}, '', url.toString());
+  };
+
+  const getShareUrl = (eventId) =>
+    `${window.location.origin}/api/event-og?event=${encodeURIComponent(eventId)}`;
+
+  const handleCopyLink = async (eventId) => {
+    const shareUrl = getShareUrl(eventId);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('Link copied!');
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = shareUrl;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      alert('Link copied!');
+    }
+  };
+
+  const handleWhatsApp = (event) => {
+    const shareUrl = getShareUrl(event.id);
+    const msg = `🎉 ${event.event_name} — ${event.city ? event.city + ' · ' : ''}${formatDateRange(event.start_date, event.end_date, event.is_single_day)}\n${shareUrl}`;
+    const wa = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    window.open(wa, '_blank', 'noopener,noreferrer');
+  };
+
   const toggleExpand = (eventId) => {
-    setExpandedEventId((prevId) => (prevId === eventId ? null : eventId));
+    setExpandedEventId((prevId) => {
+      const next = prevId === eventId ? null : eventId;
+      updateUrlParam(next);
+      // si expandimos, hacer scroll a la tarjeta
+      if (next) {
+        const el = cardRefs.current[next];
+        if (el && typeof el.scrollIntoView === 'function') {
+          setTimeout(() => {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 0);
+        }
+      }
+      return next;
+    });
   };
 
   const formatMonthLabel = (value) => {
@@ -281,6 +348,7 @@ function EventsPage() {
               key={event.id}
               className={`event-card ${isExpanded ? 'expanded' : ''}`}
               onClick={() => toggleExpand(event.id)}
+              ref={(el) => { cardRefs.current[event.id] = el; }}
             >
               {event.status !== 'active' && (
                 <div
@@ -358,6 +426,28 @@ function EventsPage() {
                 </p>
               )}
 
+              {/* Barra de compartir solo cuando está expandida (no rompe el layout móvil/desktop) */}
+              {isExpanded && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 }}>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleWhatsApp(event); }}
+                    style={{ padding: '8px 12px', borderRadius: 8, background: '#25D366', color: '#fff', border: 'none', cursor: 'pointer' }}
+                    aria-label="Share on WhatsApp"
+                  >
+                    Share WhatsApp
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleCopyLink(event.id); }}
+                    style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ccc', background: '#fff', cursor: 'pointer' }}
+                    aria-label="Copy share link"
+                  >
+                    Copy Link
+                  </button>
+                </div>
+              )}
+
               {isExpanded && (
                 <div className="event-details">
                   {event.description && (
@@ -418,6 +508,7 @@ function EventsPage() {
                         href={event.website}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         {event.website}
                       </a>
@@ -430,6 +521,7 @@ function EventsPage() {
                         href={event.facebook_url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         {event.facebook_url}
                       </a>
@@ -442,6 +534,7 @@ function EventsPage() {
                         href={event.instagram_url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         {event.instagram_url}
                       </a>
@@ -454,6 +547,7 @@ function EventsPage() {
                         href={`https://wa.me/${event.whatsapp_number}`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         {event.whatsapp_number}
                       </a>

@@ -38,6 +38,9 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AnimatedLayout from './layouts/AnimatedLayout'; // ✅ Nuevo layout
 
+// ✅ NUEVO: detalle de evento (para deep links o uso futuro)
+import EventDetail from './pages/EventDetail';
+
 function AuthRedirectHandler() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -92,7 +95,13 @@ function AppRoutes({ currentUser }) {
           <Route path="/yacht-services" element={<YachtServicesPage />} />
           <Route path="/yacht-services/post-product" element={<PostProduct />} />
           <Route path="/yacht-works" element={<YachtWorksPage />} />
+
+          {/* Listado de eventos */}
           <Route path="/events" element={<EventsPage />} />
+
+          {/* ✅ NUEVO: rutas de detalle por ID o slug, por si quieres usarlas/compartir */}
+          <Route path="/event/:id" element={<EventDetail />} />
+          <Route path="/events/:id" element={<EventDetail />} />
 
           <Route
             path="/profile"
