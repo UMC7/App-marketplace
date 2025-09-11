@@ -49,7 +49,6 @@
   }
 }
 
-/* Grilla con tamaño fijo */
 .responsive-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -65,7 +64,6 @@
   }
 }
 
-/* Tarjeta de evento */
 .event-card {
   background-color: #fff;
   border-radius: 10px;
@@ -104,7 +102,6 @@
   min-height: 450px;
 }
 
-/* ===== Cabecera de imagen (altura fija en colapsado) ===== */
 .event-image-wrap{
   position: relative;
   width: 100%;
@@ -121,7 +118,6 @@
   .event-image-wrap{ height: 180px; }  /* más bajo en desktop grande */
 }
 
-/* Fondo difuso para rellenar bandas en banners muy anchos */
 .event-image-blur{
   position: absolute;
   inset: 0;
@@ -133,10 +129,80 @@
   opacity: 1;
 }
 
-/* Imagen principal; tamaño y object-fit se aplican inline según el caso */
 .event-image{
   position: relative;
   z-index: 1;
   display: block;
   border-radius: 8px;
+}
+
+.filters-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.filters-container .category-select,
+.filters-container .search-input,
+.filters-container .clear-filters-btn {
+  width: 100%;
+  height: 44px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.clear-filters-btn {
+  border: 1px solid #d1d5db;         /* gris-300 */
+  background: #ffffff;
+  color: #111827;                    /* gris-900 */
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.clear-filters-btn:hover:not(:disabled) {
+  background: #f3f4f6;               /* gris-100 */
+}
+
+.clear-filters-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+:root[data-theme="dark"] .clear-filters-btn {
+  background: #1f2937;               /* gris-800 */
+  color: #e5e7eb;                    /* gris-200 */
+  border-color: #374151;             /* gris-700 */
+}
+
+:root[data-theme="dark"] .clear-filters-btn:hover:not(:disabled) {
+  background: #111827;               /* gris-900 */
+}
+
+@media (min-width: 640px) {
+  .filters-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .filters-container {
+    grid-template-columns: repeat(4, 1fr);
+    align-items: stretch;
+  }
+
+  .filters-container .clear-filters-btn {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  :root[data-theme="light"] .filters-panel .clear-filters-btn,
+  :root:not([data-theme="dark"]) .filters-panel .clear-filters-btn {
+    background-color: #0b1b36;   /* azul como SeaJobs */
+    color: #ffffff;
+    border-color: #0b1b36;
+  }
+  :root[data-theme="light"] .filters-panel .clear-filters-btn:hover:not(:disabled),
+  :root:not([data-theme="dark"]) .filters-panel .clear-filters-btn:hover:not(:disabled) {
+    filter: brightness(1.06);
+  }
 }

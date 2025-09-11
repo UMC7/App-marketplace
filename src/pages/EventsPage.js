@@ -272,6 +272,15 @@ function EventsPage() {
   const iconImg = { width: 22, height: 22, display: 'block' };
   const shareIcon = { fontSize: 22, color: '#111' };
 
+  // ✅ Clear filters
+  const clearFilters = () => {
+    setSearchDate('');
+    setSelectedCountry('');
+    setSelectedCity('');
+    setFilteredEvents(events);
+  };
+  const hasActiveFilters = Boolean(searchDate || selectedCountry || selectedCity);
+
   return (
     <div className="container">
       <div className="module-header-wrapper">
@@ -337,6 +346,18 @@ function EventsPage() {
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
             />
+
+            {/* ✅ Clear Filters button (columna 4) */}
+            <button
+              type="button"
+              className="category-select clear-filters-btn"
+              onClick={clearFilters}
+              disabled={!hasActiveFilters}
+              title="Clear all filters"
+              aria-label="Clear all filters"
+            >
+              Clear filters
+            </button>
           </div>
         </div>
       )}
