@@ -6,6 +6,9 @@ function unique(arr) {
   return Array.from(new Set(arr.filter(Boolean)));
 }
 
+// Límite máximo total (portada + galería)
+const MAX_IMAGES = 5;
+
 // --- util: compresión/redimensión sin dependencias ---
 async function compressImage(file, { maxW = 1600, maxH = 1600, quality = 0.8 } = {}) {
   const readToImage = (blob) =>
@@ -91,18 +94,28 @@ const UnifiedImageUploader = ({
 
   const uploadFiles = useCallback(async (fileList) => {
     if (!fileList || fileList.length === 0) return;
+
+    // Enforce max images total
+    const currentCount = images.length; // incluye portada + galería actuales
+    const remaining = Math.max(0, MAX_IMAGES - currentCount);
+    if (remaining <= 0) {
+      alert(`You can upload up to ${MAX_IMAGES} images.`);
+      return;
+    }
+
     setBusy(true);
     try {
-      const files = Array.from(fileList).filter(f => f.type?.startsWith('image/'));
+      // Filtrar imágenes y respetar el tope restante
+      const incoming = Array.from(fileList).filter(f => f.type?.startsWith('image/')).slice(0, remaining);
 
       // 1) Previews locales inmediatas
-      const localPreviews = files.map(f => URL.createObjectURL(f));
+      const localPreviews = incoming.map(f => URL.createObjectURL(f));
       setImages(prev => unique([...prev, ...localPreviews]));
       if (!cover && localPreviews[0]) setCover(localPreviews[0]);
 
       // 2) Subir (con compresión) y reemplazar preview por URL pública
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      for (let i = 0; i < incoming.length; i++) {
+        const file = incoming[i];
         let toUpload = file;
         try { toUpload = await compressImage(file); } catch {}
 

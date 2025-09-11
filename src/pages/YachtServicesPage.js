@@ -5,6 +5,11 @@ import './YachtServicesPage.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import supabase from '../supabase';
 
+// Carrusel (mismo paquete que ya usas en ProductDetailPage)
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+
 function YachtServicesPage() {
   const [services, setServices] = useState([]);
   const [filteredServices, setFilteredServices] = useState([]);
@@ -93,14 +98,29 @@ function YachtServicesPage() {
     return <p style={{ padding: '20px' }}>Loading services...</p>;
   }
 
+  // Carrusel: autoplay, sin flechas ni dots
+  const sliderSettings = {
+    dots: false,
+    arrows: false,
+    infinite: true,
+    speed: 400,
+    autoplay: true,
+    autoplaySpeed: 2500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    pauseOnHover: true,
+    swipe: true,
+    adaptiveHeight: true,
+  };
+
   return (
     <div className="container">
       <div className="module-header-wrapper">
-      <div className="module-header-row">
-        <h1>SeaServices</h1>
-        <span>Discover Professional Yacht Services</span>
+        <div className="module-header-row">
+          <h1>SeaServices</h1>
+          <span>Discover Professional Yacht Services</span>
+        </div>
       </div>
-    </div>
 
       <h3
         className="filter-toggle"
@@ -175,47 +195,92 @@ function YachtServicesPage() {
         <p style={{ padding: '20px' }}>No services match your filters.</p>
       ) : (
         <div className="responsive-grid">
-          {filteredServices.map((service) => (
-            <div
-              key={service.id}
-              className={`yacht-card ${expandedServiceId === service.id ? 'expanded' : ''}`}
-              onClick={() => toggleExpand(service.id)}
-            >
-              <img
-                src={service.mainphoto || 'https://via.placeholder.com/250'}
-                alt={service.company_name}
-                style={{ width: '100%', height: '150px', objectFit: 'contain', backgroundColor: '#fff' }}
-              />
-              <h3>{service.company_name}</h3>
-              <p><strong>City:</strong> {service.city}</p>
-              <p><strong>Country:</strong> {service.country}</p>
-              <p><strong>Category:</strong> {service.categories?.name || 'Uncategorized'}</p>
+          {filteredServices.map((service) => {
+            // Normalizar galería (array o string JSON)
+            let gallery = [];
+            if (Array.isArray(service.photos)) {
+              gallery = service.photos;
+            } else if (typeof service.photos === 'string') {
+              const s = service.photos.trim();
+              if (s.startsWith('[')) {
+                try { gallery = JSON.parse(s) || []; } catch { gallery = []; }
+              }
+            }
+            const allImages = [service.mainphoto, ...gallery].filter(Boolean).slice(0, 5);
+            const coverOrPlaceholder = allImages[0] || 'https://via.placeholder.com/250';
 
-              {expandedServiceId === service.id && (
-                <div style={{ marginTop: '10px', fontSize: '0.9em' }}>
-                  <p className="description"><strong>Description:</strong> {service.description}</p>
-                  <p><strong>Email:</strong> {service.contact_email}</p>
-                  <p><strong>Phone:</strong> {service.contact_phone}</p>
-                  <p><strong>Alternative Phone:</strong> {service.alt_phone}</p>
-                  {service.website && (
-                    <p><strong>Web:</strong> <a href={service.website} target="_blank" rel="noopener noreferrer">{service.website}</a></p>
-                  )}
-                  {service.facebook_url && (
-                    <p><strong>Facebook:</strong> <a href={service.facebook_url} target="_blank" rel="noopener noreferrer">{service.facebook_url}</a></p>
-                  )}
-                  {service.instagram_url && (
-                    <p><strong>Instagram:</strong> <a href={service.instagram_url} target="_blank" rel="noopener noreferrer">{service.instagram_url}</a></p>
-                  )}
-                  {service.linkedin_url && (
-                    <p><strong>LinkedIn:</strong> <a href={service.linkedin_url} target="_blank" rel="noopener noreferrer">{service.linkedin_url}</a></p>
-                  )}
-                  {service.whatsapp_number && (
-                    <p><strong>WhatsApp:</strong> <a href={`https://wa.me/${service.whatsapp_number}`} target="_blank" rel="noopener noreferrer">{service.whatsapp_number}</a></p>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+            return (
+              <div
+                key={service.id}
+                className={`yacht-card ${expandedServiceId === service.id ? 'expanded' : ''}`}
+                onClick={() => toggleExpand(service.id)}
+              >
+                {/* Si está colapsada: solo una imagen (la principal) */}
+                {expandedServiceId !== service.id && (
+                  <img
+                    src={coverOrPlaceholder}
+                    alt={service.company_name}
+                    style={{ width: '100%', height: '150px', objectFit: 'contain', backgroundColor: '#fff' }}
+                  />
+                )}
+
+                {/* Si está expandida: el carrusel ocupa el mismo bloque visual */}
+                {expandedServiceId === service.id && allImages.length > 0 && (
+                  <div
+                    style={{ marginBottom: 8 }}
+                    onClick={(e) => e.stopPropagation()} // evitar colapsar al tocar el carrusel
+                  >
+                    <Slider {...sliderSettings}>
+                      {allImages.map((url, i) => (
+                        <div key={url + i}>
+                          <img
+                            src={url}
+                            alt=""
+                            style={{
+                              width: '100%',
+                              height: 220,
+                              objectFit: 'contain',
+                              backgroundColor: '#fff',
+                              borderRadius: 8,
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </Slider>
+                  </div>
+                )}
+
+                <h3>{service.company_name}</h3>
+                <p><strong>City:</strong> {service.city}</p>
+                <p><strong>Country:</strong> {service.country}</p>
+                <p><strong>Category:</strong> {service.categories?.name || 'Uncategorized'}</p>
+
+                {expandedServiceId === service.id && (
+                  <div style={{ marginTop: '10px', fontSize: '0.9em' }}>
+                    <p className="description"><strong>Description:</strong> {service.description}</p>
+                    <p><strong>Email:</strong> {service.contact_email}</p>
+                    <p><strong>Phone:</strong> {service.contact_phone}</p>
+                    <p><strong>Alternative Phone:</strong> {service.alt_phone}</p>
+                    {service.website && (
+                      <p><strong>Web:</strong> <a href={service.website} target="_blank" rel="noopener noreferrer">{service.website}</a></p>
+                    )}
+                    {service.facebook_url && (
+                      <p><strong>Facebook:</strong> <a href={service.facebook_url} target="_blank" rel="noopener noreferrer">{service.facebook_url}</a></p>
+                    )}
+                    {service.instagram_url && (
+                      <p><strong>Instagram:</strong> <a href={service.instagram_url} target="_blank" rel="noopener noreferrer">{service.instagram_url}</a></p>
+                    )}
+                    {service.linkedin_url && (
+                      <p><strong>LinkedIn:</strong> <a href={service.linkedin_url} target="_blank" rel="noopener noreferrer">{service.linkedin_url}</a></p>
+                    )}
+                    {service.whatsapp_number && (
+                      <p><strong>WhatsApp:</strong> <a href={`https://wa.me/${service.whatsapp_number}`} target="_blank" rel="noopener noreferrer">{service.whatsapp_number}</a></p>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
       <ScrollToTopButton />
