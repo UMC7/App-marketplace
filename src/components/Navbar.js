@@ -466,12 +466,6 @@ function Navbar() {
         </Modal>
       )}
 
-      {showLegalModal && (
-        <Modal onClose={() => setShowLegalModal(false)}>
-          {/* ... */}
-        </Modal>
-      )}
-
       {showNotifications && (
         <Modal onClose={() => setShowNotifications(false)}>
           <NotificationsPanel
