@@ -17,6 +17,8 @@ const BUCKET = 'cv-docs';
 
 const pad2 = (n) => String(n).padStart(2, '0');
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+const BASE_A4_WIDTH  = 900;                 // ancho lógico usado en CSS
+const BASE_A4_HEIGHT = Math.round(BASE_A4_WIDTH * (297 / 210)); // mantiene proporción A4
 
 function calcAge(month, year) {
   const m = parseInt(month, 10);
@@ -236,30 +238,46 @@ export default function PublicProfileView() {
   const a4Ref = useRef(null);
   const introRef = useRef(null);
   const [metaTop, setMetaTop] = useState(null);
+  const [pageScale, setPageScale] = useState(1);
+  const wrapRef = useRef(null);
 
   useLayoutEffect(() => {
     function measure() {
+      const container = wrapRef.current;
+      const availW = Math.max(
+        320,
+        Math.min(
+          window.innerWidth || 0,
+          container ? container.clientWidth : (window.innerWidth || 0)
+        )
+      );
+      let s = availW / BASE_A4_WIDTH;              // encajar por ancho
+      s = clamp(s, 0.42, 1);                       // límites de seguridad
+      setPageScale(s);
+
       const page = a4Ref.current;
       const intro = introRef.current;
-      if (!page) return;
-
-      const pageRect = page.getBoundingClientRect();
-
-      if (intro) {
+      if (page && intro) {
+        const pageRect  = page.getBoundingClientRect();
         const introRect = intro.getBoundingClientRect();
         setMetaTop(introRect.bottom - pageRect.top);
       }
+
       const vh = window.innerHeight || document.documentElement.clientHeight || 0;
-      const fits = pageRect.height + 24 <= vh;
+      const scaledHeight = BASE_A4_HEIGHT * s;
+      const fits = scaledHeight + 24 <= vh;
       setTwoUp(fits);
     }
 
     measure();
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    window.addEventListener('orientationchange', measure);
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('orientationchange', measure);
+    };
   }, []);
 
-  /* ----- Carga (mock/real) ----- */
   useEffect(() => {
     let cancelled = false;
 
@@ -774,203 +792,258 @@ export default function PublicProfileView() {
       </div>
 
       {/* Páginas A4 (contenido envuelto en .ppv-pageInner para escalar solo en pantalla) */}
-      <main className="ppv-body">
+      <main className="ppv-body" ref={wrapRef}>
         <div
           className={`ppv-pages ${twoUp ? 'ppv-twoUp' : 'ppv-stacked'}`}
           role="region"
           aria-label="CV pages"
         >
           {/* Página 1 */}
-          <div className="ppv-a4Page" role="region" aria-label="CV first page" ref={a4Ref}>
-            <div className="ppv-pageInner">
-              {heroSrc && (
-                <aside className="ppv-a4Photo" aria-label="Profile photo">
-                  <img
-                    className="ppv-photoImg"
-                    src={heroSrc}
-                    alt={`${displayName} main`}
-                    loading="lazy"
-                  />
-                </aside>
-              )}
+          <div
+            className="ppv-pageSizer"
+            style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale)}px` }}
+          >
+            <div
+              className="ppv-a4Page"
+              role="region"
+              aria-label="CV first page"
+              ref={a4Ref}
+              style={{
+                width: BASE_A4_WIDTH,
+                height: BASE_A4_HEIGHT,
+                position: 'relative',
+                left: '50%',
+                transform: `translateX(-50%) scale(${pageScale})`,
+                transformOrigin: 'top center',
+                margin: '12px 0'
+              }}
+            >
+              <div className="ppv-pageInner">
+                {heroSrc && (
+                  <aside className="ppv-a4Photo" aria-label="Profile photo">
+                    <img
+                      className="ppv-photoImg"
+                      src={heroSrc}
+                      alt={`${displayName} main`}
+                      loading="lazy"
+                    />
+                  </aside>
+                )}
 
-              <section
-                className="ppv-a4Intro"
-                aria-label="Intro"
-                ref={introRef}
-                style={{ zIndex: 2 }}
-              >
-                <div className="ppv-introInner">
-                  <div className="ppv-introName">{displayName}</div>
-                  {rankText && <div className="ppv-introRank">{rankText}</div>}
-                </div>
-              </section>
-
-              {/* ⬇️ ANCLA: SUMMARY */}
-              <section
-                id="ppv-summary"
-                className="ppv-a4Meta"
-                style={{
-                  position: 'absolute',
-                  top: metaTop != null ? metaTop : 'calc(50% / 4)',
-                  left: 0,
-                  right: '33.333%',
-                  height: 'auto',
-                  padding: 12,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 12,
-                  zIndex: 1,
-                }}
-                aria-label="Basic info and short summary"
-              >
-                <div
-                  className="ppv-metaGrid"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: 30,
-                    width: '100%',
-                    maxWidth: 720,
-                    margin: '0 auto',
-                    textAlign: 'center',
-                    alignItems: 'start',
-                  }}
+                <section
+                  className="ppv-a4Intro"
+                  aria-label="Intro"
+                  ref={introRef}
+                  style={{ zIndex: 2 }}
                 >
-                  <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
-                    <div className="ppv-metaLabel" style={metaLabelStyle}>AGE</div>
-                    <div className="ppv-metaValue" style={metaValueStyle}>
-                      {(showAge && age != null) ? age : '—'}
-                    </div>
+                  <div className="ppv-introInner">
+                    <div className="ppv-introName">{displayName}</div>
+                    {rankText && <div className="ppv-introRank">{rankText}</div>}
                   </div>
+                </section>
 
-                  <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
-                    <div className="ppv-metaLabel" style={metaLabelStyle}>NATIONALITY</div>
-                    <div className="ppv-metaValue" style={metaValueStyle}>
-                      {nationalityText || '—'}
-                    </div>
-                  </div>
-
-                  <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
-                    <div className="ppv-metaLabel" style={metaLabelStyle}>CURRENT LOCATION</div>
-                    <div className="ppv-metaValue" style={metaValueStyle}>
-                      {currentLocationText || '—'}
-                    </div>
-                  </div>
-
-                  <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
-                    <div className="ppv-metaLabel" style={metaLabelStyle}>AVAILABILITY</div>
-                    <div className="ppv-metaValue" style={metaValueStyle}>
-                      {profile?.availability || '—'}
-                    </div>
-                  </div>
-
-                  <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
-                    <div className="ppv-metaLabel" style={metaLabelStyle}>YACHTING EXPERIENCE</div>
-                    <div className="ppv-metaValue" style={metaValueStyle}>
-                      {yachtingMonths == null ? '—' : formatYachtingExperienceLabel(yachtingMonths)}
-                    </div>
-                  </div>
-
-                  <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
-                    <div className="ppv-metaLabel" style={metaLabelStyle}>STATUS</div>
-                    <div className="ppv-metaValue" style={metaValueStyle}>
-                      {employmentStatus || '—'}
-                    </div>
-                  </div>
-                </div>
-
-                <div
+                {/* ⬇️ ANCLA: SUMMARY */}
+                <section
+                  id="ppv-summary"
+                  className="ppv-a4Meta"
                   style={{
-                    width: '100%',
-                    maxWidth: 720,
-                    margin: '0 auto',
-                    paddingTop: 12,
-                    borderTop: '1px solid rgba(0,0,0,.12)',
-                    color: '#0b1220',
-                    textAlign: 'left',
+                    position: 'absolute',
+                    top: metaTop != null ? metaTop : 'calc(50% / 4)',
+                    left: 0,
+                    right: '33.333%',
+                    height: 'auto',
+                    padding: 12,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                    zIndex: 1,
                   }}
+                  aria-label="Basic info and short summary"
                 >
                   <div
-                    className="ppv-a4Title"
-                    role="heading"
-                    aria-level={2}
-                  >
-                    SHORT SUMMARY
-                  </div>
-                  <div
-                    className="ppv-summaryText"
+                    className="ppv-metaGrid"
                     style={{
-                      fontSize: 14,
-                      lineHeight: 1.5,
-                      whiteSpace: 'pre-line',
-                      textAlign: 'justify',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: 30,
+                      width: '100%',
+                      maxWidth: 720,
+                      margin: '0 auto',
+                      textAlign: 'center',
+                      alignItems: 'start',
                     }}
                   >
-                    {(typeof profile?.about_me === 'string' ? profile.about_me.trim() : '') || '—'}
-                  </div>
-                </div>
-              </section>
+                    <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+                      <div className="ppv-metaLabel" style={metaLabelStyle}>AGE</div>
+                      <div className="ppv-metaValue" style={metaValueStyle}>
+                        {(showAge && age != null) ? age : '—'}
+                      </div>
+                    </div>
 
-              {/* ⬇️ ANCLA EXPERIENCE */}
-              <div id="ppv-experience">
-                <PublicExperienceSection experiences={experiences} />
+                    <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+                      <div className="ppv-metaLabel" style={metaLabelStyle}>NATIONALITY</div>
+                      <div className="ppv-metaValue" style={metaValueStyle}>
+                        {nationalityText || '—'}
+                      </div>
+                    </div>
+
+                    <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+                      <div className="ppv-metaLabel" style={metaLabelStyle}>CURRENT LOCATION</div>
+                      <div className="ppv-metaValue" style={metaValueStyle}>
+                        {currentLocationText || '—'}
+                      </div>
+                    </div>
+
+                    <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+                      <div className="ppv-metaLabel" style={metaLabelStyle}>AVAILABILITY</div>
+                      <div className="ppv-metaValue" style={metaValueStyle}>
+                        {profile?.availability || '—'}
+                      </div>
+                    </div>
+
+                    <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+                      <div className="ppv-metaLabel" style={metaLabelStyle}>YACHTING EXPERIENCE</div>
+                      <div className="ppv-metaValue" style={metaValueStyle}>
+                        {yachtingMonths == null ? '—' : formatYachtingExperienceLabel(yachtingMonths)}
+                      </div>
+                    </div>
+
+                    <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
+                      <div className="ppv-metaLabel" style={metaLabelStyle}>STATUS</div>
+                      <div className="ppv-metaValue" style={metaValueStyle}>
+                        {employmentStatus || '—'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      width: '100%',
+                      maxWidth: 720,
+                      margin: '0 auto',
+                      paddingTop: 12,
+                      borderTop: '1px solid rgba(0,0,0,.12)',
+                      color: '#0b1220',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <div
+                      className="ppv-a4Title"
+                      role="heading"
+                      aria-level={2}
+                    >
+                      SHORT SUMMARY
+                    </div>
+                    <div
+                      className="ppv-summaryText"
+                      style={{
+                        fontSize: 14,
+                        lineHeight: 1.5,
+                        whiteSpace: 'pre-line',
+                        textAlign: 'justify',
+                      }}
+                    >
+                      {(typeof profile?.about_me === 'string' ? profile.about_me.trim() : '') || '—'}
+                    </div>
+                  </div>
+                </section>
+
+                {/* ⬇️ ANCLA EXPERIENCE */}
+                <div id="ppv-experience">
+                  <PublicExperienceSection experiences={experiences} />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Página 2 */}
-          <div className="ppv-a4Page" role="region" aria-label="CV second page">
-            <div className="ppv-pageInner">
-              {/* ⬇️ ANCLA CERTIFICATES & DOCS */}
-              <div id="ppv-certdocs">
-                <PublicCertDocsSection documents={documents} />
-              </div>
+          <div
+            className="ppv-pageSizer"
+            style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale)}px` }}
+          >
+            <div
+              className="ppv-a4Page"
+              role="region"
+              aria-label="CV second page"
+              style={{
+                width: BASE_A4_WIDTH,
+                height: BASE_A4_HEIGHT,
+                position: 'relative',
+                left: '50%',
+                transform: `translateX(-50%) scale(${pageScale})`,
+                transformOrigin: 'top center',
+                margin: '12px 0'
+              }}
+            >
+              <div className="ppv-pageInner">
+                {/* ⬇️ ANCLA CERTIFICATES & DOCS */}
+                <div id="ppv-certdocs">
+                  <PublicCertDocsSection documents={documents} />
+                </div>
 
-              {/* ⬇️ ANCLA LANGUAGES & SKILLS */}
-              <div id="ppv-langskills">
-                <PublicLanguagesSkillsSection profile={profile} />
-              </div>
+                {/* ⬇️ ANCLA LANGUAGES & SKILLS */}
+                <div id="ppv-langskills">
+                  <PublicLanguagesSkillsSection profile={profile} />
+                </div>
 
-              {/* ⬇️ ANCLA LIFESTYLE */}
-              <div id="ppv-lifestyle">
-                <PublicLifestyleHabitsSection profile={profile} />
+                {/* ⬇️ ANCLA LIFESTYLE */}
+                <div id="ppv-lifestyle">
+                  <PublicLifestyleHabitsSection profile={profile} />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Página 3: References + Media + Education */}
-          <div className="ppv-a4Page" role="region" aria-label="CV third page">
-            <div className="ppv-pageInner">
-              {/* ⬇️ ANCLA REFERENCES */}
-              <div id="ppv-refs">
-                <PublicReferencesSection
-                  profileId={profile?.id}
-                  references={references}
-                />
-              </div>
+          <div
+            className="ppv-pageSizer"
+            style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale)}px` }}
+          >
+            <div
+              className="ppv-a4Page"
+              role="region"
+              aria-label="CV third page"
+              style={{
+                width: BASE_A4_WIDTH,
+                height: BASE_A4_HEIGHT,
+                position: 'relative',
+                left: '50%',
+                transform: `translateX(-50%) scale(${pageScale})`,
+                transformOrigin: 'top center',
+                margin: '12px 0'
+              }}
+            >
+              <div className="ppv-pageInner">
+                {/* ⬇️ ANCLA REFERENCES */}
+                <div id="ppv-refs">
+                  <PublicReferencesSection
+                    profileId={profile?.id}
+                    references={references}
+                  />
+                </div>
 
-              {/* ⬇️ ANCLA MEDIA */}
-              <div id="ppv-media">
-                <PublicMediaGallerySection
-                  title="MEDIA"
-                  subtitle="Photos & Videos"
-                  gallery={gallery}
-                  maxItems={14}
-                />
-              </div>
+                {/* ⬇️ ANCLA MEDIA */}
+                <div id="ppv-media">
+                  <PublicMediaGallerySection
+                    title="MEDIA"
+                    subtitle="Photos & Videos"
+                    gallery={gallery}
+                    maxItems={14}
+                  />
+                </div>
 
-              {/* ⬇️ ANCLA EDUCATION */}
-              <div id="ppv-education">
-                <PublicEducationSection
-                  title="FORMAL STUDIES & DEGREES"
-                  items={education}
-                />
-              </div>
+                {/* ⬇️ ANCLA EDUCATION */}
+                <div id="ppv-education">
+                  <PublicEducationSection
+                    title="FORMAL STUDIES & DEGREES"
+                    items={education}
+                  />
+                </div>
 
-              {/* ⬇️ ANCLA CONTACT DETAILS */}
-              <div id="ppv-contact">
-                <PublicContactDetailsSection profile={profile} />
+                {/* ⬇️ ANCLA CONTACT DETAILS */}
+                <div id="ppv-contact">
+                  <PublicContactDetailsSection profile={profile} />
+                </div>
               </div>
             </div>
           </div>

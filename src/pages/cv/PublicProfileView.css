@@ -86,17 +86,24 @@
 .ppv-btn:disabled { opacity: .6; cursor: not-allowed; }
 .ppv-btn.primary { background: #e6f4ff; }
 
-/* ---------- Primera página A4 ---------- */
+/* ---------- Área de páginas ---------- */
 .ppv-body { /* contenedor del área de páginas */
   background: transparent; border: 0; padding: 0;
 }
 
+/* Nuevo: envoltorio que reserva el alto de la página escalada */
+.ppv-pageSizer {
+  width: 100%;
+  position: relative;
+  margin: 12px auto;
+}
+
+/* Página A4 base (el tamaño final lo controla inline-style + transform) */
 .ppv-a4Page {
-  /* Mantiene proporción A4 en pantalla */
   aspect-ratio: 210 / 297;
   width: 100%;
-  max-width: 900px;          /* se ajusta dentro de .ppv-wrap */
-  margin: 12px auto;         /* centrado */
+  max-width: 900px;
+  margin: 12px auto;
   position: relative;
   background: #F7F7F7;
   border: 1px solid rgba(0,0,0,.08);
@@ -105,20 +112,16 @@
   overflow: hidden;
 }
 
-/* NUEVO: contenedor interno para “dar aire” solo en pantalla */
+/* Contenido interno de la página */
 .ppv-pageInner {
-  position: relative; /* conserva anclajes absolutos internos */
+  position: relative;
   width: 100%;
   height: 100%;
   transform-origin: top center;
 }
 
-/* Escala solo en pantalla (no afecta impresión/PDF) */
-@media screen {
-  .ppv-pageInner {
-    transform: scale(0.96); /* 4% de aire alrededor. Ajustable 0.94–0.98 */
-  }
-}
+/* ⛔️ Eliminado el escalado previo para evitar “doble escala” — ahora escala el contenedor vía JS */
+/* (No incluir transform adicional aquí) */
 
 /* Foto: esquina superior derecha, 1/3 ancho x 1/2 alto */
 .ppv-a4Photo {
@@ -145,13 +148,13 @@
   height: calc(50% / 5);
   padding: 16px;
   display: flex !important;
-  align-items: center !important;      /* vertical */
-  justify-content: center !important;  /* horizontal */
+  align-items: center !important;
+  justify-content: center !important;
   gap: 6px;
   background: #6fc2bd;
   border-bottom: 1px solid #3a7e79;
   color: #0b1220;
-  overflow: visible; /* permite que la franja sobresalga si es necesario */
+  overflow: visible;
 }
 
 /* ===== Franja diagonal “Yacht Daywork” */
@@ -301,7 +304,7 @@
 
   font-family: var(--font-header, 'Playfair Display', serif);
 
-  color: #0b1220;         /* se mantiene oscuro porque el fondo es blanco */
+  color: #0b1220;
   opacity: 1;
   mix-blend-mode: normal;
 }
