@@ -95,16 +95,15 @@ body.dark-mode .pcd-section .pcd-muted { color: #64748b !important; opacity:1 !i
 /* ===== Responsive ===== */
 @media (max-width: 720px){
   .pcd-grid{
-    grid-template-columns: 1fr;   /* 1 columna en móvil */
-    justify-content: stretch;     /* ocupar todo el ancho disponible */
+    grid-template-columns: repeat(3, max-content);
+    justify-content: center;
   }
   .pcd-item,
   .pcd-field,
   .pcd-headline,
   .pcd-value{
-    width: 100%;
+    width: auto;
   }
 }
 
-/* Espaciadores (si los usas para completar filas) */
 .pcd-item--spacer{ visibility: hidden; }
