@@ -162,6 +162,16 @@ function Navbar() {
     }
   };
 
+const handleOpenChat = (offerId, receiverId) => {
+
+  if (offerId === '__external__') {
+    setActiveChat({ external: true, threadId: receiverId });
+    return;
+  }
+
+  setActiveChat({ offerId, receiverId });
+};
+
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -402,20 +412,26 @@ function Navbar() {
       {showChatList && (
         <Modal onClose={() => { setActiveChat(null); setShowChatList(false); }}>
           {!activeChat ? (
-            <ChatList
-              currentUser={currentUser}
-              onOpenChat={(offerId, receiverId) => setActiveChat({ offerId, receiverId })}
-            />
-          ) : (
-            <ChatPage
-              offerId={activeChat.offerId}
-              receiverId={activeChat.receiverId}
-              onBack={() => {
-                setActiveChat(null);
-                setShowChatList(true);
-              }}
-            />
-          )}
+  <ChatList currentUser={currentUser} onOpenChat={handleOpenChat} />
+) : activeChat.external ? (
+  <ChatPage
+    mode="external"
+    externalThreadId={activeChat.threadId}
+    onBack={() => {
+      setActiveChat(null);
+      setShowChatList(true);
+    }}
+  />
+) : (
+  <ChatPage
+    offerId={activeChat.offerId}
+    receiverId={activeChat.receiverId}
+    onBack={() => {
+      setActiveChat(null);
+      setShowChatList(true);
+    }}
+  />
+)}
         </Modal>
       )}
       {showLegalModal && (

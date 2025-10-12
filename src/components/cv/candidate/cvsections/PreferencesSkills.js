@@ -1,0 +1,176 @@
+// src/components/cv/candidate/cvsections/PreferencesSkills.js
+import React from 'react';
+import supabase from '../../../../supabase';
+
+import {
+  AvailabilityPicker,
+  LanguageProficiencyPicker,
+  DepartmentSpecialtiesInput,
+  ContractTypesSelector,
+  RotationPreferencePicker,
+  VesselTypePreferenceSelector,
+  VesselSizeRangeSelector,
+  RegionsSeasonsPicker,
+  DayRateSalaryInput,
+  OnboardPreferences,
+  ProgramTypePreferenceSelector,
+  DietaryRequirementsSelector,
+} from '../sectionscomponents/preferencesskills';
+
+export function buildPrefsSkillsPayload({
+  availability,
+  regionsSeasons,
+  contracts,
+  languageLevels,
+  deptSpecialties,
+  rateSalary,
+  rotation,
+  vesselTypes,
+  vesselSizeRange,
+  programTypes,
+  dietaryRequirements,
+  onboardPrefs,
+} = {}) {
+  const payload = {};
+  if (availability !== undefined)         payload.availability = availability;
+  if (regionsSeasons !== undefined)       payload.regionsSeasons = regionsSeasons;
+  if (contracts !== undefined)            payload.contracts = contracts;
+  if (languageLevels !== undefined)       payload.languageLevels = languageLevels;
+  if (deptSpecialties !== undefined)      payload.deptSpecialties = deptSpecialties;
+  if (rateSalary !== undefined)           payload.rateSalary = rateSalary;
+
+  if (rotation !== undefined)             payload.rotation = rotation;
+  if (vesselTypes !== undefined)          payload.vesselTypes = vesselTypes;
+  if (vesselSizeRange !== undefined)      payload.vesselSizeRange = vesselSizeRange;
+  if (programTypes !== undefined)         payload.programTypes = programTypes;
+  if (dietaryRequirements !== undefined)  payload.dietaryRequirements = dietaryRequirements;
+  if (onboardPrefs !== undefined)         payload.onboardPrefs = onboardPrefs;
+
+  return payload;
+}
+
+export async function savePreferencesSkills(props) {
+  const payload = buildPrefsSkillsPayload(props);
+  const { data, error } = await supabase.rpc('rpc_save_prefs_skills', { payload });
+  if (error) throw error;
+  return Array.isArray(data) ? data[0] ?? null : null;
+}
+
+// Hook local para detectar móvil (≤640px). No afecta desktop.
+function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState(
+    typeof window !== 'undefined' ? window.innerWidth <= 640 : false
+  );
+  React.useEffect(() => {
+    const mql = typeof window !== 'undefined' ? window.matchMedia('(max-width: 640px)') : null;
+    const onChange = (e) => setIsMobile(!!e.matches);
+    mql?.addEventListener?.('change', onChange);
+    setIsMobile(mql ? mql.matches : false);
+    return () => mql?.removeEventListener?.('change', onChange);
+  }, []);
+  return isMobile;
+}
+
+export default function PreferencesSkills({
+  availability,
+  onChangeAvailability,
+  contracts,
+  onChangeContracts,
+  rotation,
+  onChangeRotation,
+  vesselTypes,
+  onChangeVesselTypes,
+  vesselSizeRange,
+  onChangeVesselSizeRange,
+  regionsSeasons,
+  onChangeRegionsSeasons,
+  rateSalary,
+  onChangeRateSalary,
+  languageLevels,
+  onChangeLanguageLevels,
+  deptSpecialties,
+  onChangeDeptSpecialties,
+  onboardPrefs,
+  onChangeOnboardPrefs,
+
+  // NUEVOS (opcionales)
+  programTypes,
+  onChangeProgramTypes,
+  dietaryRequirements,
+  onChangeDietaryRequirements,
+}) {
+  const isMobile = useIsMobile();
+
+  // 2 columnas en desktop; 1 forzada en móviles
+  const twoCol = {
+    display: 'grid',
+    gap: 12,
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))',
+  };
+
+  return (
+    <div className="cp-form">
+      {/* Availability | Preferred regions */}
+      <div style={twoCol}>
+        <AvailabilityPicker value={availability} onChange={onChangeAvailability} />
+        <RegionsSeasonsPicker value={regionsSeasons} onChange={onChangeRegionsSeasons} />
+      </div>
+
+      {/* Accepted contract types | Preferred rotation cycles */}
+      <div style={twoCol}>
+        <ContractTypesSelector value={contracts} onChange={onChangeContracts} />
+        <RotationPreferencePicker value={rotation} onChange={onChangeRotation} />
+      </div>
+
+      {/* Preferred vessel types | Desired LOA range */}
+      <div style={twoCol}>
+        <VesselTypePreferenceSelector
+          value={Array.isArray(vesselTypes) ? vesselTypes : []}
+          onChange={onChangeVesselTypes}
+        />
+        <VesselSizeRangeSelector
+          value={vesselSizeRange}
+          onChange={onChangeVesselSizeRange}
+        />
+      </div>
+
+      {/* Languages (with proficiency) | Specific skills */}
+      <div style={twoCol}>
+        <LanguageProficiencyPicker
+          value={languageLevels}
+          onChange={onChangeLanguageLevels}
+        />
+        <DepartmentSpecialtiesInput
+          value={deptSpecialties}
+          onChange={onChangeDeptSpecialties}
+        />
+      </div>
+
+      {/* Compensation expectations (izquierda) | Program type + Dietary (derecha, lado a lado) */}
+      <div style={twoCol}>
+        <DayRateSalaryInput value={rateSalary} onChange={onChangeRateSalary} />
+        {/* En desktop: 2 columnas lado a lado; en móvil: apilado sin padding adicional */}
+        <div
+          style={{
+            display: 'grid',
+            gap: 12,
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            paddingTop: isMobile ? 0 : 24.8, // ajuste vertical solo en desktop
+          }}
+        >
+          <ProgramTypePreferenceSelector
+            value={programTypes}
+            onChange={onChangeProgramTypes}
+          />
+          <DietaryRequirementsSelector
+            value={dietaryRequirements}
+            onChange={onChangeDietaryRequirements}
+          />
+        </div>
+      </div>
+
+      {/* Onboard preferences / personality / work style / lifestyle */}
+      <OnboardPreferences value={onboardPrefs} onChange={onChangeOnboardPrefs} />
+    </div>
+  );
+}

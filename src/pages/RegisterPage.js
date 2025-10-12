@@ -26,6 +26,7 @@ function RegisterPage() {
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [isCandidate, setIsCandidate] = useState(false);
   const [error, setError] = useState('');
   const [showEmailConfirmModal, setShowEmailConfirmModal] = useState(false);
 
@@ -175,6 +176,7 @@ try {
             phone_number: form.phone,
             alt_phone: fullAltPhone,
             alt_email: form.altEmail || null,
+            is_candidate: isCandidate,
             accepted_terms: true,
             updated_at: new Date().toISOString(),
           },
@@ -386,6 +388,16 @@ try {
             )}
         </div>
 
+        <div style={{ display: 'grid', gridTemplateColumns: '20px auto', columnGap: 10, margin: '8px 0 12px' }}>
+          <input
+            type="checkbox"
+            id="isCandidate"
+            checked={isCandidate}
+            onChange={(e) => setIsCandidate(e.target.checked)}
+          />
+          <label htmlFor="isCandidate">Enable Candidate Profile</label>
+        </div>
+        
         <div
           style={{
             display: 'grid',

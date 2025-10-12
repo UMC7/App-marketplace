@@ -1,0 +1,130 @@
+/* src/pages/cv/ProfileAnalyticsPage.css */
+/* Estilos específicos de la página /cv/analytics (scope por prefijo .cv-analytics) */
+
+.cv-analytics {
+  --cv-ana-gap: 12px;
+  --cv-ana-maxw: 1120px;
+
+  width: 100%;
+  margin: 20px auto 32px;
+  /* espacio superior extra para que el título no quede bajo el navbar fijo */
+  padding: 24px 16px 0;
+  max-width: var(--cv-ana-maxw);
+  box-sizing: border-box;
+}
+
+/* Números estables (evita “baile” al cambiar de dígitos) */
+.cv-analytics,
+.cv-analytics * {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+.cv-analytics__header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--cv-ana-gap);
+  margin-bottom: 14px;
+}
+
+.cv-analytics__title {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--ana-text);
+}
+
+.cv-analytics__subtitle {
+  font-size: 13px;
+  color: var(--ana-muted);
+}
+
+.cv-analytics__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cv-analytics__back {
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: var(--ana-card-bg);
+  color: var(--ana-text);
+  cursor: pointer;
+}
+
+/* Contenido */
+.cv-analytics__content {
+  display: grid;
+  gap: var(--cv-ana-gap);
+}
+
+/* Fila genérica */
+.cv-analytics__row {
+  display: grid;
+  gap: var(--cv-ana-gap);
+}
+
+/* KPI row (5 columnas en desktop) */
+.cv-analytics__row--kpis {
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+}
+
+/* Dos columnas iguales (charts/tablas pareadas) */
+.cv-analytics__row--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Una columna (full width) */
+.cv-analytics__row--1 {
+  grid-template-columns: 1fr;
+}
+
+/* ====== Alineación visual con widgets (evitar fondos blancos en dark) ====== */
+.cv-analytics .ana-filters {
+  background: var(--ana-card-bg) !important;
+  border: 1px solid var(--ana-card-bd) !important;
+  color: var(--ana-text);
+}
+.cv-analytics .ana-select,
+.cv-analytics .ana-btn {
+  background: var(--ana-card-bg);
+  color: var(--ana-text);
+  border-color: var(--ana-card-bd);
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+  .cv-analytics__row--kpis {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .cv-analytics {
+    padding-top: 16px; /* un poco más en móvil por el navbar */
+  }
+  .cv-analytics__header {
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+  .cv-analytics__title {
+    font-size: 20px;
+  }
+  .cv-analytics__row--kpis,
+  .cv-analytics__row--2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ======================= Dark mode tweaks ======================= */
+:root[data-theme="dark"] .cv-analytics__back,
+html[data-theme="dark"] .cv-analytics__back,
+body.dark-mode .cv-analytics__back {
+  border-color: rgba(148,163,184,0.35);
+  background: #0f172a;
+  color: #e5e7eb;
+}

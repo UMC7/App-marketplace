@@ -1,0 +1,145 @@
+/* src/pages/cv/sections/education/PublicEducationSection.css */
+
+/* ====== Base (light) ====== */
+.edu-section{
+  background:#ffffff;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:12px;
+  padding:14px 16px;
+  margin:14px 0;
+}
+
+/* ---------- Lista: SOLO 2 tarjetas visibles; si hay más, scroll ---------- */
+/* Altura compacta estimada por tarjeta (título + una línea + padding) */
+:root { --edu-card-compact-h: 56px; }
+
+.edu-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  max-height: calc(var(--edu-card-compact-h) * 2 + 10px); /* 2 cards + 1 gap */
+  overflow-y:auto;
+  padding-right:4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15,23,42,.2) transparent;
+  overscroll-behavior: contain;
+}
+
+/* ---------- Tarjeta (SUPER COMPACTA) ---------- */
+.edu-card{
+  border:1px solid rgba(15,23,42,.10);
+  border-radius:10px;
+  padding:6px 10px;                      /* compacto */
+  background:#f8fafc;
+  /* Asegura que NINGUNA regla anterior fije altos mayores */
+  min-height:auto !important;
+}
+
+.edu-card-title{
+  font-weight:700;
+  color:#0b1220;
+  line-height:1.2;
+  margin:0 0 2px 0;                      /* separa del renglón inferior */
+}
+
+/* (legacy, por compatibilidad si existen) */
+.edu-card-sub{
+  font-size:14px;
+  color:#334155;
+  margin-top:2px;
+  display:flex; gap:6px; align-items:center;
+}
+.edu-card-meta{
+  font-size:12px;
+  color:#64748b;
+  margin-top:4px;
+  display:flex; gap:6px; align-items:center;
+}
+
+.edu-empty{
+  text-align:center; padding:20px 8px; color:#64748b; font-size:14px;
+}
+.sep{ opacity:.6; }
+
+/* ---------- Título con el mismo look de otras secciones ---------- */
+.edu-section .ppv-sectionTitleWrap{
+  width:100%;
+  max-width:720px;
+  margin:6px auto 0;
+  padding-top:0;
+  border-top:0;
+  text-align:center;
+  color:#0b1220;
+}
+.edu-section .ppv-sectionTitle{
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:.1em;
+  margin-bottom:8px;
+  text-transform:uppercase;
+  text-align:center;
+  color:#0b1220 !important;
+  opacity:1 !important;
+  mix-blend-mode:normal !important;
+  text-shadow:none !important;
+}
+
+/* ---------- Fila única con todos los campos ---------- */
+.edu-card-line{
+  margin-top:0;                           /* cero para compactar más */
+  font-size:14px;
+  color:#334155;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* ====== Responsive tweaks ====== */
+@media (max-width: 480px){
+  :root{ --edu-card-compact-h: 60px; }    /* un poco más alta en móviles */
+}
+
+/* ====== Dark mode (mantener contraste claro) ====== */
+@media (prefers-color-scheme: dark) {
+  .edu-section{
+    background: #fff;
+    border:1px solid rgba(15,23,42,.08);
+  }
+
+  .edu-section .ppv-sectionTitleWrap{ color:#0b1220; }
+  .edu-section .ppv-sectionTitle{ color:#0b1220 !important; }
+
+  .edu-card{
+    background:#f8fafc;
+    border-color: rgba(15,23,42,.10);
+    min-height:auto !important;           /* refuerzo en dark */
+    padding:6px 10px !important;
+  }
+  .edu-card-title{ color:#0b1220; }
+  .edu-card-sub{ color:#334155; }
+  .edu-card-meta{ color:#64748b; }
+  .edu-card-line{ color:#334155; }
+
+  .edu-list{
+    scrollbar-color: rgba(15,23,42,.2) transparent;
+  }
+  .sep{ opacity:.6; }
+}
+
+/* separadores en la fila */
+.edu-card-line .edu-part{ display:inline; }
+.edu-dot{
+  display:inline-block;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#6b7280;        /* gris (similar a los bullets del resto de la UI) */
+  margin:0 10px;
+  vertical-align:middle;
+}
+
+/* dark mode: mismo tono para mantener contraste */
+@media (prefers-color-scheme: dark){
+  .edu-dot{ background:#6b7280; }
+}

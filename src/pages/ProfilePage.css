@@ -1,3 +1,8 @@
+/* src/pages/ProfilePage.css */
+
+/* ───────────────────────────────
+   Formulario de información del usuario
+   ─────────────────────────────── */
 .user-info-form {
   max-width: 600px;
   margin: 40px auto;
@@ -63,6 +68,30 @@
   color: #333;
 }
 
+/* ✅ Alineación correcta del checkbox y texto */
+.user-info-form #enable-candidate {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  align-self: center;
+}
+
+.user-info-form label[for="enable-candidate"] {
+  align-self: center;
+  line-height: 1.4;
+}
+
+/* ✅ Contenedor del checkbox y etiqueta */
+.user-info-form .enable-candidate-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 16px;
+}
+
+/* ───────────────────────────────
+   Contenedores de productos / servicios / empleos
+   ─────────────────────────────── */
 .profile-products-container {
   display: flex;
   flex-wrap: wrap;
@@ -150,9 +179,9 @@
   background-color: #ffebee;
 }
 
-/* ──────────────────────────────────────────────
+/* ───────────────────────────────
    Desktop-only tabs (permanent bg per theme)
-   ────────────────────────────────────────────── */
+   ─────────────────────────────── */
 @media (min-width: 1024px) {
   .tabs-container .profile-tabs {
     display: flex;
@@ -162,40 +191,42 @@
     justify-content: flex-start;
   }
 
-  /* MODO CLARO: fondo gris permanente */
+  /* MODO CLARO */
   .tabs-container .profile-tabs button {
-    color: #081a3b;                       /* azul texto */
-    background-color: rgba(8, 26, 59, 0.10); /* gris azulado permanente */
-    border: 1px solid rgba(8, 26, 59, 0.10);
+    color: #081a3b;
+    background-color: rgba(8, 26, 59, 0.1);
+    border: 1px solid rgba(8, 26, 59, 0.1);
     padding: 8px 14px;
-    border-radius: 9999px;                /* pill */
+    border-radius: 9999px;
     font-weight: 600;
     transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .08s ease;
     box-shadow: 0 1px 2px rgba(8,26,59,0.06);
   }
+
   .tabs-container .profile-tabs button:hover {
-    background-color: rgba(8, 26, 59, 0.16);  /* un poco más oscuro en hover */
+    background-color: rgba(8, 26, 59, 0.16);
     border-color: rgba(8, 26, 59, 0.16);
     box-shadow: 0 2px 6px rgba(8,26,59,0.10);
   }
+
   .tabs-container .profile-tabs button:active {
     transform: translateY(1px);
   }
 
-  /* MODO OSCURO: se mantiene look turquesa permanente */
+  /* MODO OSCURO */
   [data-theme="dark"] .tabs-container .profile-tabs button {
     color: #68ada8;
     background-color: rgba(104, 173, 168, 0.18);
     border: 1px solid rgba(104, 173, 168, 0.22);
     box-shadow: 0 1px 2px rgba(0,0,0,0.20);
   }
+
   [data-theme="dark"] .tabs-container .profile-tabs button:hover {
     background-color: rgba(104, 173, 168, 0.28);
     border-color: rgba(104, 173, 168, 0.32);
     box-shadow: 0 2px 8px rgba(0,0,0,0.28);
   }
 
-  /* Focus accesible */
   .tabs-container .profile-tabs button:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 2px;

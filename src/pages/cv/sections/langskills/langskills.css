@@ -1,0 +1,173 @@
+/* src/pages/cv/sections/langskills/langskills.css */
+
+/* ===================
+   Contenedor sección
+=================== */
+.pls {
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 16px;
+}
+
+/* ===================
+   Título
+=================== */
+.pls-titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* centramos horizontalmente el título */
+  margin-bottom: 12px;
+}
+.pls-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #0b1220;
+  text-align: center;  /* asegura el centrado del texto */
+  width: 100%;         /* ocupa el ancho para centrar fluido */
+}
+
+/* ===================
+   Pills de idiomas
+=================== */
+.pls-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  margin-bottom: 10px;
+}
+.pls-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #8fe3d9;
+  color: #0b1220;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Muted helper (mensajes vacíos) */
+.pls-muted {
+  font-size: 13px;
+  opacity: .6;
+  margin: 6px 0 10px;
+}
+
+/* =========================
+   Bloques por departamento
+========================= */
+.pls-dept {
+  margin-top: 12px;
+}
+
+/* Encabezado del depto (título + toggle) */
+.pls-deptHdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.pls-deptTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0b1220;
+  opacity: 1;
+}
+
+/* Botón "Show All" más bajo (altura similar a los chips de skills) */
+.pls .ppv-btn.sm {
+  padding: 6px 12px !important; /* reduce alto */
+  font-size: 13px !important;
+  line-height: 1 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+/* ===================
+   Grilla de skills
+=================== */
+.pls-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  overflow: hidden;                 /* para animación con max-height */
+  will-change: max-height;
+  transition: max-height .28s ease; /* refuerzo a la animación */
+}
+.pls-skill {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  background: #f9fafb;
+  color: #0b1220;
+  word-break: break-word;
+}
+
+/* Responsivo */
+@media (max-width: 820px) {
+  .pls-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .pls-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Impresión: evita saltos feos */
+@media print {
+  .pls {
+    break-inside: avoid;
+  }
+}
+
+/* =============================
+   Dark mode — colores legibles
+============================= */
+[data-theme='dark'] .pls,
+.dark .pls {
+  background: #ffffff !important;
+  border-color: rgba(0,0,0,.12) !important;
+  color: #0b1220 !important;
+}
+
+[data-theme='dark'] .pls-title,
+[data-theme='dark'] .pls-deptTitle,
+.dark .pls-title,
+.dark .pls-deptTitle {
+  color: #0b1220 !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  text-shadow: none !important;
+}
+
+[data-theme='dark'] .pls-pill,
+.dark .pls-pill {
+  background: #8fe3d9 !important;
+  color: #0b1220 !important;
+  border: 1px solid rgba(0,0,0,.12) !important;
+  box-shadow: 0 2px 6px rgba(2,6,23,.06);
+}
+
+[data-theme='dark'] .pls-skill,
+.dark .pls-skill {
+  background: #f9fafb !important;
+  color: #0b1220 !important;
+  border-color: rgba(0,0,0,.12) !important;
+}

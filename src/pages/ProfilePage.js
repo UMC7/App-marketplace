@@ -12,6 +12,7 @@ import EditServiceModal from '../components/EditServiceModal';
 import EditJobModal from '../components/EditJobModal';
 import EditEventModal from '../components/EditEventModal';
 import Avatar from '../components/Avatar';
+import CandidateProfileTab from '../components/cv/CandidateProfileTab';
 import './ProfilePage.css';
 import { formatPhoneNumber } from '../utils/formatPhone';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
@@ -23,7 +24,7 @@ import {
 
 const ALLOWED_TABS = new Set([
   'productos','servicios','empleos','eventos',
-  'compras','ventas','eliminados','valoracion','usuario'
+  'compras','ventas','eliminados','valoracion','usuario','cv'
 ]);
 
 function ProfilePage() {
@@ -68,6 +69,7 @@ const fetchServices = async () => {
 };
   const [deletedEvents, setDeletedEvents] = useState([]);
   const [userDetails, setUserDetails] = useState({});
+  const [candidateEnabled, setCandidateEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('productos');
   const [editingProductId, setEditingProductId] = useState(null);
@@ -151,7 +153,7 @@ useEffect(() => {
         ] = await Promise.all([
           supabase
             .from('users')
-            .select('first_name, last_name, birth_year, nickname, phone, alt_phone, alt_email')
+            .select('first_name, last_name, birth_year, nickname, phone, alt_phone, alt_email, is_candidate')
             .eq('id', currentUser.id)
             .single(),
           supabase
@@ -167,61 +169,61 @@ useEffect(() => {
             .eq('status', 'deleted')
             .order('deleted_at', { ascending: false }),
           // 🔵 Bloque para VENTAS (quién compró tus productos)
-supabase
-  .from('purchase_items')
-  .select(`
-    id,
-    quantity,
-    total_price,
-    product_id,
-    products (
-      id,
-      name,
-      mainphoto,
-      owner
-    ),
-    purchases (
-      id,
-      created_at,
-      user_id,
-      users!purchases_user_id_fkey (
-        first_name,
-        last_name,
-        phone,
-        email
-      )
-    )
-  `),
+          supabase
+            .from('purchase_items')
+            .select(`
+              id,
+              quantity,
+              total_price,
+              product_id,
+              products (
+              id,
+              name,
+              mainphoto,
+              owner
+            ),
+              purchases (
+                id,
+                created_at,
+                user_id,
+                users!purchases_user_id_fkey (
+                first_name,
+                last_name,
+                phone,
+                email
+              )
+            )
+          `),
 
-// 🟢 Bloque para COMPRAS (a quién le compraste)
-supabase
-  .from('purchase_items')
-  .select(`
-    id,
-    quantity,
-    total_price,
-    product_id,
-    products (
-      id,
-      name,
-      mainphoto,
-      owner,
-      city,
-      users!products_owner_fkey (
-        first_name,
-        last_name,
-        phone,
-        email
-      )
-    ),
-    purchases (
-      id,
-      status,
-      buyer_confirmed,
-      created_at,
-      user_id
-    )
-  `),
+          // 🟢 Bloque para COMPRAS (a quién le compraste)
+          supabase
+            .from('purchase_items')
+            .select(`
+              id,
+              quantity,
+              total_price,
+              product_id,
+              products (
+                id,
+                name,
+                mainphoto,
+                owner,
+                city,
+                users!products_owner_fkey (
+                first_name,
+                last_name,
+                phone,
+                email
+              )
+            ),
+            purchases (
+              id,
+              status,
+              buyer_confirmed,
+              created_at,
+              user_id
+            )
+          `),
           supabase
             .from('services') // Nueva consulta
             .select('*')
@@ -251,7 +253,7 @@ supabase
             .select('*')
             .eq('owner', currentUser.id)
             .eq('status', 'deleted')
-            .order('deleted_at', { ascending: false }),              
+            .order('updated_at', { ascending: false }),              
         ]);
 
   const { data: reviewsData, error: reviewsError } = await supabase
@@ -303,6 +305,7 @@ setAverageRating(avgRating);
 
         if (userError) throw userError;
         setUserDetails(userData);
+        setCandidateEnabled(!!userData?.is_candidate);
         const splitPhone = (fullPhone) => {
   if (!fullPhone) return { code: '', number: '' };
 
@@ -561,7 +564,7 @@ const deleteEvent = async (eventId) => {
   try {
     const { error } = await supabase
       .from('events')
-      .update({ status: 'deleted', deleted_at: new Date().toISOString() })
+      .update({ status: 'deleted', updated_at: new Date().toISOString() })
       .eq('id', eventId);
 
     if (error) throw error;
@@ -572,7 +575,7 @@ const deleteEvent = async (eventId) => {
       .select('*')
       .eq('owner', currentUser.id)
       .eq('status', 'deleted')
-      .order('deleted_at', { ascending: false });
+      .order('updated_at', { ascending: false });
     setDeletedEvents(updatedDeleted);
     toast.error('Event deleted successfully.');
   } catch (error) {
@@ -769,6 +772,23 @@ if (wantsPasswordChange) {
   } catch (error) {
     console.error('Failed to update information:', error.message);
     setUpdateMessage('Failed to update information.');
+  }
+};
+
+  const handleCandidateToggle = async (e) => {
+  const next = e.target.checked;
+  try {
+    const { error } = await supabase
+      .from('users')
+      .update({ is_candidate: next, updated_at: new Date().toISOString() })
+      .eq('id', currentUser.id);
+    if (error) throw error;
+    setCandidateEnabled(next);
+    // Si se desactiva estando en la pestaña CV, volvemos a User Details
+    if (!next && activeTab === 'cv') setActiveTab('usuario');
+    toast.success(next ? 'Candidate profile enabled.' : 'Candidate profile disabled.');
+  } catch (err) {
+    toast.error('Could not update Candidate profile setting.');
   }
 };
 
@@ -1187,6 +1207,28 @@ case 'compras':
     )}
   </div>
 </div>
+<div
+  style={{
+    margin: '8px 0 16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  }}
+>
+  <input
+    type="checkbox"
+    id="enable-candidate"
+    checked={candidateEnabled}
+    onChange={handleCandidateToggle}
+    style={{ width: '18px', height: '18px', margin: 0, alignSelf: 'center' }}
+  />
+  <label
+    htmlFor="enable-candidate"
+    style={{ margin: 0, lineHeight: '1', alignSelf: 'center' }}
+  >
+    Enable Candidate Profile
+  </label>
+</div>
       <form onSubmit={handleUserFormSubmit}>
         <div className="static-info"><strong>Name:</strong> {userDetails.first_name || ''}</div>
         <div className="static-info"><strong>Last Name:</strong> {userDetails.last_name || ''}</div>
@@ -1282,6 +1324,9 @@ case 'compras':
       </form>
     </div>
   );
+  
+  case 'cv':
+  return <CandidateProfileTab />;
 
       default:
         return null;
@@ -1406,6 +1451,11 @@ const refetchEvents = async () => {
     <button onClick={() => { setActiveTab('ventas'); setIsMenuOpen(false); }}>My Sales</button>
     <button onClick={() => { setActiveTab('eliminados'); setIsMenuOpen(false); }}>Deleted</button>
     <button onClick={() => { setActiveTab('valoracion'); setIsMenuOpen(false); }}>Rating</button>
+    {candidateEnabled && (
+      <button onClick={() => { setActiveTab('cv'); setIsMenuOpen(false); }}>
+        Candidate Profile
+      </button>
+    )}
     <button onClick={() => { navigate('/profile?tab=usuario', { replace: true }); setActiveTab('usuario'); setIsMenuOpen(false); }}>User Details</button>
   </div>
 </div>

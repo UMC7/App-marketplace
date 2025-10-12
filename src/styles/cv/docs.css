@@ -1,0 +1,315 @@
+/* src/styles/cv/docs.css */
+/* Scoped styles for CV Documents, References & Media. Theme-aware. */
+
+/* ---------- Generic section container (card inside cp-card) ---------- */
+.cv-section {
+  width: 100%;
+  margin: 16px 0 24px;
+
+  /* Alineado al diseño de .cp-card usando las mismas variables */
+  background: linear-gradient(180deg, var(--card, #ffffff), var(--card-2, #f8fafc));
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: var(--radius, 14px);
+  box-shadow: var(--shadow-soft, 0 4px 12px rgba(2, 6, 23, .06));
+  padding: 16px;
+}
+
+.cv-section-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.cv-section-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text, #0f172a);
+}
+
+.cv-section-subtitle,
+.cv-section-hint {
+  margin: 0;
+  color: var(--muted, #475569);
+  font-size: 0.95rem;
+}
+
+.cv-section-body { width: 100%; }
+
+.cv-empty-state {
+  padding: 16px;
+  background: var(--card-2, #f8fafc);
+  border: 1px dashed var(--line, #e2e8f0);
+  border-radius: 12px;
+  color: var(--muted, #475569);
+  text-align: center;
+}
+
+/* ---------- Public list (DocumentsSection) ---------- */
+.cv-docs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+/* Desktop: 3 columnas (móvil intacto) */
+@media (min-width: 1024px) {
+  .cv-docs-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.cv-docs-item {
+  background: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.cv-docs-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cv-docs-title {
+  font-weight: 600;
+  color: var(--text, #0f172a);
+}
+
+.cv-docs-meta {
+  font-size: 0.9rem;
+  color: var(--muted, #475569);
+  /* que ocupe su propia línea bajo el título */
+  display: block;
+  white-space: normal;
+}
+
+/* ---------- Manager (editor) ---------- */
+.doc-manager {
+  display: grid;
+  gap: 12px;
+}
+
+.doc-manager__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.doc-manager__titles { display: grid; gap: 4px; }
+.doc-manager__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text, #0f172a);
+}
+.doc-manager__subtitle {
+  margin: 0;
+  color: var(--muted, #475569);
+  font-size: 0.95rem;
+}
+
+.doc-manager__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.doc-manager__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+}
+
+.doc-manager__left { display: flex; gap: 8px; align-items: center; }
+.doc-manager__right { display: flex; gap: 8px; align-items: center; }
+.doc-manager__hint { color: var(--muted, #475569); font-size: 0.9rem; }
+.doc-manager__stats { color: var(--muted, #475569); }
+
+.doc-manager__list { width: 100%; }
+.doc-manager__empty {
+  padding: 16px;
+  border: 1px dashed var(--line, #e2e8f0);
+  border-radius: 12px;
+  text-align: center;
+  color: var(--muted, #475569);
+}
+
+/* ---------- List / Items ---------- */
+.doc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.doc-item {
+  background: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.doc-item__main { display: grid; gap: 10px; }
+
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .doc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.doc-field { display: grid; gap: 6px; }
+.doc-label {
+  font-size: 0.9rem;
+  color: var(--muted, #475569);
+}
+.doc-input {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--input-bd, #cbd5e1);
+  background: var(--input-bg, #ffffff);
+  color: var(--text, #0f172a);
+}
+.doc-input::placeholder { color: var(--muted, #475569); opacity: .9; }
+.doc-input:focus {
+  outline: none;
+  border-color: var(--accent-2, #2563eb);
+  box-shadow: var(--focus, 0 0 0 2px rgba(37,99,235,.25));
+}
+
+.doc-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: var(--muted, #475569);
+}
+
+.doc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  color: var(--muted, #475569);
+  font-size: 0.9rem;
+}
+.doc-meta__pill {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line, #e2e8f0);
+  background: var(--card-2, #f8fafc);
+  color: var(--muted, #475569);
+}
+.doc-meta__note { color: var(--muted, #475569); }
+
+.doc-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* ---------- Compact card (DocCard) ---------- */
+.cv-doc-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.cv-doc-card__main { min-width: 0; }
+.cv-doc-card__title {
+  font-weight: 600;
+  color: var(--text, #0f172a);
+}
+.cv-doc-card__meta {
+  font-size: 0.9rem;
+  color: var(--muted, #475569);
+}
+
+.cv-doc-card__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.cv-doc-card__right { margin-left: 4px; }
+
+/* ---------- Dark mode (redundante pero seguro con variables) ---------- */
+[data-theme='dark'] .cv-section {
+  background: linear-gradient(180deg, var(--card, #151a23), var(--card-2, #10151d));
+  border-color: var(--line, #212734);
+}
+
+[data-theme='dark'] .cv-docs-item,
+[data-theme='dark'] .doc-item,
+[data-theme='dark'] .cv-doc-card {
+  background: var(--card, #151a23);
+  border-color: var(--line, #212734);
+}
+
+/* Evitar overflow horizontal de las secciones internas */
+.candidate-profile-tab .cv-section,
+.candidate-profile-tab .cv-docs-item,
+.candidate-profile-tab .doc-item,
+.candidate-profile-tab .cv-doc-card,
+.candidate-profile-tab .media-uploader .dropzone,
+.candidate-profile-tab .media-uploader .tile {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* (Opcional) recorta cualquier sombra/artefacto dentro de la tarjeta externa */
+.candidate-profile-tab .cp-card {
+  overflow: hidden;
+}
+
+/* === Fix About me: evitar que los textareas se empujen a la derecha === */
+.cv-section-card .field-group {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  align-items: start !important;
+  justify-items: stretch !important;
+  margin: 12px 0 !important;
+  padding: 0 !important;
+}
+
+.cv-section-card .field-group label.field-label {
+  margin-bottom: 6px !important;
+}
+
+.cv-section-card .field-group textarea,
+.cv-section-card .field-group .input.textarea {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  resize: vertical !important;
+}

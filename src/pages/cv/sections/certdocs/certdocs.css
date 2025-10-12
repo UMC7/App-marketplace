@@ -1,0 +1,159 @@
+/* src/pages/cv/sections/certdocs/certdocs.css */
+
+/* ---------- CONTENEDOR DE LA SECCIÓN (página 2) ---------- */
+/* Ahora ocupa el flujo normal, sin overlay ni solapamientos */
+.ppv-docs {
+  position: relative;
+  width: 100%;
+  padding: 14px 18px 18px;
+  background: transparent;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+.ppv-docsInner {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ---------- TÍTULO ---------- */
+.ppv-sectionTitleWrap {
+  width: 100%;
+  max-width: 720px;
+  margin: 6px auto 0;
+  padding-top: 0;
+  border-top: 0;
+  color: #0b1220;
+  text-align: left;
+}
+
+.ppv-docs .ppv-sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  text-align: center;
+  color: #0b1220 !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  text-shadow: none !important;
+}
+
+/* ---------- LISTA DE DOCUMENTOS ---------- */
+.ppv-docList {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.ppv-docItem {
+  display: grid;
+  grid-template-columns: 16px minmax(0,1fr) max-content max-content;
+  align-items: center;
+  column-gap: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(2,6,23,.06);
+}
+
+.ppv-docBullet {
+  font-size: 18px;
+  line-height: 1;
+  color: #0b1220;
+  text-align: center;
+  transform: translateY(-1px);
+}
+
+.ppv-docTitle {
+  font-weight: 700;
+  color: #0b1220;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ppv-docSep {
+  opacity: .6;
+  margin: 0 2px;
+}
+
+/* ====== Estilo label/valor ====== */
+.ppv-kvLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.ppv-kvValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0b1220;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ppv-docExp {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+  min-width: max-content;
+}
+
+/* Botón para abrir modal */
+.ppv-docOpenBtn {
+  border: 1px solid rgba(0,0,0,.18);
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+}
+
+.ppv-docOpenBtn:hover {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37,99,235,.2);
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 560px) {
+  .ppv-docItem {
+    grid-template-columns: 14px minmax(0,1fr) max-content max-content;
+    gap: 10px;
+  }
+  .ppv-docSep { display: none; }
+  .ppv-docExp { align-items: flex-end; }
+}
+
+/* ---------- DARK MODE ---------- */
+[data-theme='dark'] .ppv-docItem {
+  background: #fff;
+  color: #0b1220;
+}
+
+/* ==== Modal: imágenes contain ==== */
+.ppv-docModalCard .ppv-docImg {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  image-orientation: from-image !important;
+}
+
+.ppv-docModal .ppv-docModalCard img {
+  max-width: 100%;
+  height: auto;
+}

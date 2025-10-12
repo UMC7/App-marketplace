@@ -1,0 +1,336 @@
+/* src/pages/cv/PublicProfileView.css */
+
+.ppv-wrap {
+  max-width: 1040px;
+  margin: 20px auto;
+  padding: 0 16px 32px;
+}
+
+.ppv-previewRibbon {
+  margin: 0 0 10px;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 13px;
+}
+
+/* Header */
+.ppv-header {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.ppv-hero {
+  width: 120px; height: 120px;
+  border-radius: 12px; overflow: hidden;
+  background: rgba(15,23,42,.06);
+  display: grid; place-items: center;
+}
+.ppv-heroFallback {
+  width: 100%; height: 100%;
+  display: grid; place-items: center;
+  font-size: 28px; font-weight: 700; color: #0f172a;
+  background: linear-gradient(180deg, #e2f3f2, #fff);
+}
+.ppv-heroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ppv-headInfo { min-width: 0; }
+.ppv-title { margin: 0; font-size: 24px; line-height: 1.2; }
+.ppv-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.ppv-badge {
+  display: inline-block; padding: 4px 8px; border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.12); font-size: 12px; background: #fafafa;
+}
+.ppv-subtle { margin-top: 6px; font-size: 12px; opacity: .7; word-break: break-all; }
+.ppv-brand { justify-self: end; text-align: right; font-size: 12px; }
+.ppv-logo { font-weight: 700; letter-spacing: .2px; }
+
+/* Tarjetas y cuerpo (por defecto) */
+.ppv-card {
+  background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 12px; padding: 16px;
+}
+
+/* Sticky actions */
+.ppv-stickyBar {
+  position: sticky; bottom: 8px; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: #ffffffcc; backdrop-filter: blur(6px);
+  border: 1px solid rgba(0,0,0,.08); border-radius: 10px; padding: 10px 12px;
+  box-shadow: 0 8px 22px rgba(2,6,23,.10);
+  margin: 8px 0;
+}
+.ppv-stickyLeft { min-width: 0; }
+.ppv-stickySnippet { font-size: 13px; opacity: .8; display: inline-block; max-width: 60ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ppv-stickyActions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Buttons */
+.ppv-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.ppv-btn {
+  padding: 10px 14px; border-radius: 8px;
+  border: 1px solid rgba(0,0,0,.18); background: #f3f4f6;
+  cursor: pointer; transition: box-shadow .15s ease, transform .05s ease, border-color .15s ease;
+  font: inherit;
+}
+.ppv-btn:hover { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.2); }
+.ppv-btn:active { transform: translateY(1px); }
+.ppv-btn:disabled { opacity: .6; cursor: not-allowed; }
+.ppv-btn.primary { background: #e6f4ff; }
+
+/* ---------- Primera página A4 ---------- */
+.ppv-body { /* contenedor del área de páginas */
+  background: transparent; border: 0; padding: 0;
+}
+
+.ppv-a4Page {
+  /* Mantiene proporción A4 en pantalla */
+  aspect-ratio: 210 / 297;
+  width: 100%;
+  max-width: 900px;          /* se ajusta dentro de .ppv-wrap */
+  margin: 12px auto;         /* centrado */
+  position: relative;
+  background: #F7F7F7;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(2,6,23,.12);
+  overflow: hidden;
+}
+
+/* NUEVO: contenedor interno para “dar aire” solo en pantalla */
+.ppv-pageInner {
+  position: relative; /* conserva anclajes absolutos internos */
+  width: 100%;
+  height: 100%;
+  transform-origin: top center;
+}
+
+/* Escala solo en pantalla (no afecta impresión/PDF) */
+@media screen {
+  .ppv-pageInner {
+    transform: scale(0.96); /* 4% de aire alrededor. Ajustable 0.94–0.98 */
+  }
+}
+
+/* Foto: esquina superior derecha, 1/3 ancho x 1/2 alto */
+.ppv-a4Photo {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 33.333%;
+  height: 50%;
+  overflow: hidden;
+}
+.ppv-a4Photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.ppv-a4Intro {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 33.333%;
+  height: calc(50% / 5);
+  padding: 16px;
+  display: flex !important;
+  align-items: center !important;      /* vertical */
+  justify-content: center !important;  /* horizontal */
+  gap: 6px;
+  background: #6fc2bd;
+  border-bottom: 1px solid #3a7e79;
+  color: #0b1220;
+  overflow: visible; /* permite que la franja sobresalga si es necesario */
+}
+
+/* ===== Franja diagonal “Yacht Daywork” */
+.ppv-a4Intro::before {
+  content: "Powered by\A Yacht Daywork";
+  white-space: pre;
+  position: absolute;
+  top: -20px;
+  left: -92px;
+  width: 330px;
+  height: 50px;
+  background: #facc15;
+  color: #0b1220;
+  font-weight: 800;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  font-size: 12px;
+  line-height: 1.05;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 80px;
+  transform: rotate(-30deg);
+  box-shadow: 0 4px 12px rgba(2,6,23,.18);
+  border: 1px solid rgba(0,0,0,.15);
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .ppv-a4Intro::before {
+    top: -10px;
+    left: -88px;
+    width: 300px;
+    height: 50px;
+    font-size: 12px;
+    transform: rotate(-30deg);
+  }
+}
+
+.ppv-introInner {
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+  text-align: left;
+}
+.ppv-introName {
+  font-size: 40px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: #0b1220;
+}
+.ppv-introRank {
+  font-size: 26px;
+  color: #334155;
+}
+
+/* Bloque 2 (blanco): AGE / NATIONALITY / CURRENT LOCATION */
+.ppv-a4Meta {
+  background: #fff;
+  color: #0b1220;
+  border-bottom: 1px solid rgba(0,0,0,.12);
+  position: absolute;
+  bottom: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Centrar verticalmente el bloque SHORT SUMMARY dentro del espacio restante */
+.ppv-a4Meta > div:last-child {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1 1 auto;
+}
+
+.ppv-metaGrid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 16px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.ppv-metaLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #334155;
+  white-space: nowrap;
+}
+.ppv-metaValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0b1220;
+  text-align: right;
+}
+
+/* --- Reglas de texto del SHORT SUMMARY para evitar desbordes hacia la foto --- */
+.ppv-summaryText {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+  max-width: 100%;
+}
+
+/* -------------- Skeletons -------------- */
+.ppv-skel {
+  background: linear-gradient(90deg, #f3f4f6, #e5e7eb, #f3f4f6);
+  background-size: 200% 100%;
+  animation: ppv-shimmer 1.2s infinite;
+  border-radius: 8px;
+}
+.ppv-skel.h32 { height: 32px; }
+.ppv-skel.h16 { height: 16px; }
+.ppv-skel.w40 { width: 40%; }
+.ppv-skel.w60 { width: 60%; }
+.ppv-skel.w80 { width: 80%; }
+@keyframes ppv-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ---------------- Dark mode ---------------- */
+[data-theme='dark'] .ppv-badge { background: #10151d; border-color: #212734; color: #e6e9ef; }
+[data-theme='dark'] .ppv-stickyBar { background: rgba(16,21,29,.9); border-color: #212734; color: #e6e9ef; }
+[data-theme='dark'] .ppv-btn { background: #0c1017; border-color: #202635; color: #e6e9ef; }
+[data-theme='dark'] .ppv-card { background: #151a23; border-color: #212734; color: #e6e9ef; }
+/* La página A4 se mantiene blanca para impresión legible */
+[data-theme='dark'] .ppv-a4Page { background: #F7F7F7; }
+
+/* --------------- Responsive ---------------- */
+@media (max-width: 720px) {
+  .ppv-header { grid-template-columns: 72px 1fr; grid-auto-rows: auto; }
+  .ppv-hero { width: 72px; height: 72px; }
+  .ppv-brand { grid-column: 1 / -1; justify-self: start; text-align: left; margin-top: 6px; }
+}
+
+.ppv-a4Meta .ppv-a4Title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-align: center;
+
+  font-family: var(--font-header, 'Playfair Display', serif);
+
+  color: #0b1220;         /* se mantiene oscuro porque el fondo es blanco */
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+
+[data-theme="dark"] .ppv-a4Meta .ppv-a4Title {
+  color: #0b1220;
+}
+
+/* --------------- Print (A4 real) ---------------- */
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: #F7F7F7 !important; }
+  .ppv-wrap { max-width: none; padding: 0; margin: 0; }
+  .ppv-previewRibbon, .ppv-stickyBar { display: none !important; }
+  .ppv-header { margin-bottom: 8mm; }
+  .ppv-a4Page {
+    width: auto; max-width: none; aspect-ratio: auto;
+    height: 267mm; /* 297mm - márgenes aproximados (12+12mm) */
+    border: none; box-shadow: none; border-radius: 0; margin: 0;
+  }
+  .ppv-pageInner {
+    transform: none !important;
+  }
+}
+
+.ppv-a4Page { background: #F7F7F7 !important; }                 /* modo normal */
+[data-theme='dark'] .ppv-a4Page { background: #F7F7F7 !important; }  /* modo dark */
+
+/* En impresión queremos papel blanco sí o sí */
+@media print {
+  .ppv-a4Page { background: #F7F7F7 !important; }
+}

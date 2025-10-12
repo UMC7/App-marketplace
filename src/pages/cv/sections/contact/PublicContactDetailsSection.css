@@ -1,0 +1,110 @@
+/* src/pages/cv/sections/contact/PublicContactDetailsSection.css */
+
+/* ===== Base & variables ===== */
+.pcd-section{
+  --pcd-bullet: 6px;   /* diámetro del punto */
+  --pcd-gap: 8px;      /* espacio entre punto y texto */
+  --pcd-indent: calc(var(--pcd-bullet) + var(--pcd-gap));
+
+  padding: 10px 12px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,.08);
+  background: var(--ppv-card-bg, #fff);
+  color: inherit;
+}
+
+.pcd-title{
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: .12em;
+  font-weight: 800;
+  text-transform: uppercase;
+  opacity: 1;
+}
+
+/* ===== ÚNICA grilla: 3 columnas por contenido, centradas ===== */
+.pcd-grid{
+  display: grid;
+  grid-template-columns: repeat(3, max-content); /* ancho dictado por la PRIMERA FILA y el contenido más ancho de cada columna */
+  gap: 18px 28px;
+  align-items: start;
+  justify-content: center;  /* ⬅️ centra horizontalmente todo el bloque de 3 columnas */
+  margin-top: 8px;
+}
+
+/* ===== Ítem ===== */
+.pcd-item{
+  display: block;
+  width: auto;  /* ⬅️ NO estirar; respetar el ancho por contenido de la columna */
+}
+
+.pcd-field{ width: max-content; }
+
+/* ===== Título (bullet + texto) ===== */
+.pcd-headline{
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--pcd-gap);
+  margin-bottom: 4px;
+  text-align: left;
+  width: max-content;
+}
+
+.pcd-bullet{
+  width: var(--pcd-bullet);
+  height: var(--pcd-bullet);
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  flex: 0 0 var(--pcd-bullet);
+}
+
+.pcd-label{
+  font-size: 12px;
+  letter-spacing: .12em;
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+/* ===== Valor: arranca bajo el inicio del TEXTO del título ===== */
+.pcd-value{
+  width: max-content;             /* igual lógica de ancho por contenido */
+  box-sizing: border-box;
+  padding-left: var(--pcd-indent);/* compensa bullet + gap */
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.pcd-value a{ text-decoration: none; }
+.pcd-value a:hover{ text-decoration: underline; }
+
+.pcd-muted{ opacity: .6; }
+
+/* ===== Dark mode: solo tipografía ===== */
+body.dark-mode .pcd-section { color: #0b1220 !important; }
+body.dark-mode .pcd-section .pcd-title { color: #0b1220 !important; }
+body.dark-mode .pcd-section .pcd-label { color: #0b1220 !important; }
+body.dark-mode .pcd-section .pcd-value { color: #0b1220 !important; }
+body.dark-mode .pcd-section .pcd-value a { color: #2563eb !important; }
+body.dark-mode .pcd-section .pcd-muted { color: #64748b !important; opacity:1 !important; }
+
+/* ===== Responsive ===== */
+@media (max-width: 720px){
+  .pcd-grid{
+    grid-template-columns: 1fr;   /* 1 columna en móvil */
+    justify-content: stretch;     /* ocupar todo el ancho disponible */
+  }
+  .pcd-item,
+  .pcd-field,
+  .pcd-headline,
+  .pcd-value{
+    width: 100%;
+  }
+}
+
+/* Espaciadores (si los usas para completar filas) */
+.pcd-item--spacer{ visibility: hidden; }

@@ -10,6 +10,7 @@ function ChatList({ currentUser, onOpenChat }) {
     const fetchChats = async () => {
       if (!currentUser) return;
 
+      // ---------- INTERNAL (tu lógica original) ----------
       const { data: messages, error } = await supabase
         .from('yacht_work_messages')
         .select('id, offer_id, sender_id, receiver_id, sent_at')
@@ -21,8 +22,7 @@ function ChatList({ currentUser, onOpenChat }) {
       }
 
       const uniqueChats = {};
-
-      for (let msg of messages) {
+      for (let msg of messages || []) {
         const otherUser =
           msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
         const key = `${msg.offer_id}_${otherUser}`;
@@ -40,8 +40,6 @@ function ChatList({ currentUser, onOpenChat }) {
       }
 
       const chatArray = Object.values(uniqueChats);
-
-      // Obtener perfiles y títulos de oferta
       const userIds = [...new Set(chatArray.map((c) => c.user_id))];
       const offerIds = [...new Set(chatArray.map((c) => c.offer_id))];
 
@@ -57,14 +55,51 @@ function ChatList({ currentUser, onOpenChat }) {
         (offers || []).map((o) => [o.id, o.title])
       );
 
-      const enrichedChats = chatArray.map((chat) => ({
+      const internalRows = chatArray.map((chat) => ({
         ...chat,
         nickname: usersMap[chat.user_id]?.nickname || 'User',
         avatar_url: usersMap[chat.user_id]?.avatar_url || null,
         offerTitle: offersMap[chat.offer_id] || 'Deleted offer',
       }));
 
-      setChatSummaries(enrichedChats);
+      const { data: threads, error: extErr } = await supabase
+        .from('external_threads')
+        .select('id, candidate_id, status, created_at')
+        .eq('candidate_id', currentUser.id)
+        .order('created_at', { ascending: false });
+
+      if (extErr) {
+        console.error('Error fetching external threads:', extErr);
+      }
+
+      const externalRows = [];
+      for (const t of threads || []) {
+        // último mensaje para ordenar
+        const { data: last } = await supabase
+          .from('external_messages')
+          .select('created_at')
+          .eq('thread_id', t.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        externalRows.push({
+          // mapeo compatible con tu UI y onOpenChat
+          offer_id: '__external__',
+          user_id: t.id, // usamos el threadId en el segundo argumento
+          sent_at: last?.created_at || t.created_at,
+          nickname: 'Anonymous',
+          avatar_url: null,
+          offerTitle: 'CV chat',
+        });
+      }
+
+      // Merge + sort por fecha, manteniendo idéntica estructura
+      const merged = [...internalRows, ...externalRows].sort(
+        (a, b) => new Date(b.sent_at) - new Date(a.sent_at)
+      );
+
+      setChatSummaries(merged);
     };
 
     fetchChats();
@@ -94,21 +129,18 @@ function ChatList({ currentUser, onOpenChat }) {
                 }}
                 onClick={() => onOpenChat(chat.offer_id, chat.user_id)}
               >
-                {/* Avatar circular del otro usuario */}
                 <Avatar
                   nickname={chat.nickname || 'User'}
                   srcUrl={chat.avatar_url || null}
                   size={28}
                   shape="circle"
                 />
-
-                {/* Contenedor de texto: permite elipsis en el título */}
                 <span
                   style={{
                     display: 'flex',
                     alignItems: 'baseline',
                     gap: '6px',
-                    minWidth: 0, // necesario para que elipsis funcione dentro de flex
+                    minWidth: 0,
                     flex: 1,
                   }}
                 >
@@ -123,7 +155,7 @@ function ChatList({ currentUser, onOpenChat }) {
                       textOverflow: 'ellipsis',
                       display: 'block',
                     }}
-                    title={chat.offerTitle} // tooltip con el título completo
+                    title={chat.offerTitle}
                   >
                     {chat.offerTitle}
                   </em>

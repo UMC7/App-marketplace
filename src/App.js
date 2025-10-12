@@ -1,3 +1,4 @@
+// src/App.js
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -32,14 +33,19 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import AdminPanel from './admin/AdminPanel';
 import LegalPage from './pages/legal/LegalPage';
 import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage';
+import ExternalChatPage from './pages/ExternalChatPage';
 
 import './App.css';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AnimatedLayout from './layouts/AnimatedLayout'; // ✅ Nuevo layout
+import AnimatedLayout from './layouts/AnimatedLayout';
 
 // ✅ NUEVO: detalle de evento (para deep links o uso futuro)
 import EventDetail from './pages/EventDetail';
+
+// ✅ NUEVO: vista pública del CV
+import PublicProfileView from './pages/cv/PublicProfileView';
+import ProfileAnalyticsPage from './pages/cv/ProfileAnalyticsPage';
 
 function AuthRedirectHandler() {
   const location = useLocation();
@@ -81,6 +87,7 @@ function AppRoutes({ currentUser }) {
         <Route element={<AnimatedLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/marketplace" element={<HomePage />} />
+          <Route path="/cv/:handle/chat/:threadId" element={<ExternalChatPage />} />
 
           <Route
             path="/login"
@@ -103,6 +110,17 @@ function AppRoutes({ currentUser }) {
           <Route path="/event/:id" element={<EventDetail />} />
           <Route path="/events/:id" element={<EventDetail />} />
 
+          {/* ✅ NUEVO: ruta pública del CV */}
+          <Route path="/cv/:handle" element={<PublicProfileView />} />
+
+          <Route
+            path="/cv/analytics"
+            element={
+              <ProtectedRoute>
+                <ProfileAnalyticsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/profile"
             element={
@@ -193,5 +211,4 @@ function App() {
     </Router>
   );
 }
-
 export default App;

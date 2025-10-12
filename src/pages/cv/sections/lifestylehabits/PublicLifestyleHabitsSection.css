@@ -1,0 +1,146 @@
+/* src/pages/cv/sections/lifestylehabits/PublicLifestyleHabitsSection.css */
+/* Contenedor tipo card — siempre claro para coincidir con otras secciones públicas */
+.ppv-section {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 12px 0;
+}
+
+.ppv-sectionTitle {
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: .08em;
+  margin-bottom: 12px;
+  color: #0b1220;
+}
+
+.ppv-lh-grid {
+  display: grid;
+  grid-template-columns: repeat(4, max-content);
+  column-gap: 24px;
+  justify-content: space-between;
+  align-items: start;
+  width: 100%;
+  margin: 0 0 12px;
+}
+
+.ppv-lh-meter {
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 12px;
+  padding: 12px;
+  background: #f7fafc;
+
+  width: fit-content;
+  justify-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ppv-lh-head {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  margin-bottom: 8px;
+  text-align: center;
+  align-self: stretch;
+}
+
+.ppv-lh-row {
+  display: grid;
+  grid-template-columns: max-content 64px; /* <- igual al ancho del tile del icono */
+  align-items: end;
+  gap: 10px;
+  min-height: 30px;
+}
+
+.ppv-lh-barsV {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 7px;
+  height: 64px;
+}
+
+.vbar {
+  width: 14px;
+  border: 2px solid #0b1220;
+  border-radius: 4px;
+  background: transparent;
+}
+
+.vbar-1 { height: 32px; }
+.vbar-2 { height: 46px; }
+.vbar-3 { height: 60px; }
+
+.vbar.active {
+  background: #08b2e3;
+}
+
+.ppv-lh-iconBig {
+  display: grid;
+  place-items: center;
+  height: 64px;
+  width: 64px;          /* debe coincidir con la 2ª columna del row */
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid rgba(15, 23, 42, .08);
+}
+
+.ppv-lh-svg-big {
+  width: 50px;
+  height: 50px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+.ppv-lh-value {
+  margin-top: 8px;
+  text-align: center;
+  font-weight: 700;
+  color: #0b1220;
+  font-size: 13px;
+  text-transform: none;
+}
+
+.ppv-lh-line {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.ppv-lh-lineLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.ppv-lh-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ppv-lh-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #c7f3ee;
+  color: #063b38;
+  font-weight: 700;
+  border: 1px solid rgba(15, 23, 42, .08);
+}
+
+@media (max-width: 1080px) {
+  .ppv-lh-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .ppv-lh-grid { grid-template-columns: 1fr; }
+  .ppv-lh-line { grid-template-columns: 1fr; }
+}

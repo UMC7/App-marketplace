@@ -1,0 +1,158 @@
+/* src/pages/cv/sections/media/PublicMediaGallerySection.css */
+
+/* --- Fuerza contraste del título y evita que herede opacidad/blend de ancestros --- */
+.pmg-section,
+.pmg-head{
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+.pmg-head{
+  position: relative;
+  isolation: isolate; /* nuevo stacking context, corta mezclas heredadas */
+}
+
+.pmg-section{
+  background:#fff;
+  border:1px solid rgba(0,0,0,.08);
+  border-radius:12px;
+  padding:14px 16px;
+  margin:14px 0;
+}
+.pmg-head{ text-align:center; margin-bottom:8px; }
+
+/* Título con alto contraste forzado */
+.pmg-title{
+  margin:0;
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:#0b1220 !important;      /* color oscuro */
+  opacity:1 !important;          /* evita opacidad heredada */
+  mix-blend-mode:normal !important; /* evita mezclas que lo aclaren */
+  text-shadow:none !important;
+}
+
+/* SUBTÍTULO REMOVIDO: dejamos la clase por compatibilidad pero sin usar */
+.pmg-subtitle{ display:none; }
+
+.pmg-empty{
+  text-align:center; padding:24px 8px; color:#64748b; font-size:14px;
+}
+
+/* Coverflow */
+.pmg-coverflow{
+  position:relative;
+  height: 280px;
+  perspective: 1100px;
+  overflow:hidden;
+  margin: 8px 0 2px;
+  padding: 0 44px;
+}
+.pmg-track{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  transform-style: preserve-3d;
+}
+.pmg-card{
+  position:absolute;
+  width: 160px; height: 220px;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid rgba(0,0,0,.06);
+  background:#f8fafc;
+  box-shadow: 0 12px 26px rgba(2,6,23,.12);
+  cursor:pointer;
+  transition: transform .35s ease, opacity .25s ease, box-shadow .2s ease;
+  will-change: transform;
+}
+.pmg-card:is(:hover,.is-active){ box-shadow: 0 18px 36px rgba(2,6,23,.18); }
+.pmg-card img{
+  width:100%; height:100%; object-fit:cover; display:block;
+  user-select:none; -webkit-user-drag:none;
+}
+.pmg-badgeVideo{
+  position:absolute; right:8px; top:8px;
+  width:28px; height:28px; border-radius:999px;
+  display:grid; place-items:center;
+  font-weight:700; font-size:14px;
+  color:#fff; background:rgba(15,23,42,.6);
+  backdrop-filter: blur(2px);
+}
+
+/* Arrows */
+.pmg-nav{
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:34px; height:34px; border-radius:999px;
+  border:1px solid rgba(0,0,0,.12);
+  background:#ffffffcc; backdrop-filter: blur(6px);
+  display:grid; place-items:center;
+  cursor:pointer; font-size:20px; line-height:1;
+  z-index: 2000;
+}
+.pmg-prev{ left:8px; } .pmg-next{ right:8px; }
+.pmg-nav:hover{ box-shadow:0 0 0 2px rgba(37,99,235,.18); }
+
+/* Dots */
+.pmg-dots{
+  display:flex; justify-content:center; gap:6px; margin-top:6px;
+}
+.pmg-dot{
+  width:8px; height:8px; border-radius:999px; border:1px solid rgba(0,0,0,.38);
+  background:#fff; cursor:pointer;
+}
+.pmg-dot.is-on{ background:#0b1220; border-color:#0b1220; }
+
+/* Lightbox */
+.pmg-lightbox{
+  position:fixed; inset:0; z-index:50;
+  background:rgba(0,0,0,.6);
+  display:grid; place-items:center;
+  padding: 0;
+}
+.pmg-lightbox-inner{
+  position:relative;
+  width: min(98vw, 1400px);
+  height: min(98dvh, 98vh);
+  background:#000;
+  border-radius:12px;
+  overflow:hidden;
+  box-sizing: border-box;
+  display:flex; align-items:center; justify-content:center;
+}
+.pmg-lightbox-close{
+  position:absolute; right:10px; top:10px;
+  width:36px; height:36px; border-radius:999px;
+  border:1px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.45); color:#fff; cursor:pointer;
+}
+.pmg-lightbox-media{
+  width: auto !important;
+  height: auto !important;
+  max-width: calc(100% - 24px) !important;
+  max-height: calc(100% - 24px) !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  background:#000;
+  display:block;
+}
+
+/* Dark mode – mantenerlo legible sobre “hoja” blanca */
+[data-theme='dark'] .pmg-section{
+  background:transparent; 
+  border-color: rgba(0,0,0,.08);
+  color:#0b1220;
+}
+[data-theme='dark'] .pmg-title{
+  color:#0b1220 !important;
+  opacity:1 !important;
+  mix-blend-mode:normal !important;
+}
+[data-theme='dark'] .pmg-coverflow{ background: transparent; }
+[data-theme='dark'] .pmg-nav{
+  background:#ffffffcc; 
+  border-color: rgba(0,0,0,.12);
+  color:#0b1220;
+}
+[data-theme='dark'] .pmg-dot{ border-color: rgba(0,0,0,.38); }
+[data-theme='dark'] .pmg-dot.is-on{ background:#0b1220; border-color:#0b1220; }
