@@ -422,3 +422,34 @@
   opacity: 1;
   mix-blend-mode: normal;
 }
+
+/* =========================================================
+   A4 DESKTOP-LOCKED OVERRIDES (solo dentro de la página A4)
+   Mantienen el layout de escritorio aunque el viewport sea móvil
+   ========================================================= */
+.ppv-a4Page .xp-chartsRow {
+  grid-template-columns: 1fr 1fr !important;   /* siempre dos columnas */
+  align-items: start;
+}
+.ppv-a4Page .xp-chartCard {
+  min-width: 0;          /* permitir encaje correcto en grid */
+  width: auto;
+  padding: 14px 16px;
+}
+/* Botón "Show details" sin estirarse a 100% dentro del A4 */
+.ppv-a4Page .ppv-xpToggle {
+  width: auto !important;
+  align-self: flex-start;
+}
+
+/* Evitar que la barra de scroll interna tape texto cuando el A4 está escalado */
+.ppv-a4Page .ppv-xp {
+  scrollbar-gutter: stable both-edges;
+}
+
+/* Contraste en dark mode para las cards de charts dentro del A4 */
+[data-theme='dark'] .ppv-a4Page .xp-chartCard {
+  background: #f8fafc;
+  border-color: #2a3344;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}

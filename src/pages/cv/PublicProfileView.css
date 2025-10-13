@@ -289,8 +289,16 @@
   .ppv-header { grid-template-columns: 72px 1fr; grid-auto-rows: auto; }
   .ppv-hero { width: 72px; height: 72px; }
   .ppv-brand { grid-column: 1 / -1; justify-self: start; text-align: left; margin-top: 6px; }
+
+  /* Fix: en móviles, separar el bloque blanco (metas) de la franja turquesa
+     para que AGE / NATIONALITY / CURRENT LOCATION queden visibles. */
+  .ppv-a4Meta {
+    padding-top: 22px;        /* empuja el contenido debajo del borde de la franja */
+    min-height: 220px;        /* asegura espacio para las 2 filas de ítems */
+  }
 }
 
+/* Título del bloque dentro de ppv-a4Meta */
 .ppv-a4Meta .ppv-a4Title {
   margin: 0 0 8px;
   font-size: 18px;

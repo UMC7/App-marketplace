@@ -16,6 +16,7 @@
   color: #0b1220;
 }
 
+/* ====== Meters (fila de 4 en desktop/tablet) ====== */
 .ppv-lh-grid {
   display: grid;
   grid-template-columns: repeat(4, max-content);
@@ -105,6 +106,7 @@
   text-transform: none;
 }
 
+/* Línea genérica (no se usa en desktop para los meters) */
 .ppv-lh-line {
   display: grid;
   grid-template-columns: 160px 1fr;
@@ -119,6 +121,7 @@
   color: #6b7280;
 }
 
+/* Chips (respuestas) */
 .ppv-lh-chips {
   display: flex;
   gap: 8px;
@@ -137,10 +140,50 @@
   border: 1px solid rgba(15, 23, 42, .08);
 }
 
+/* ====== Responsivo ====== */
 @media (max-width: 1080px) {
-  .ppv-lh-grid { grid-template-columns: 1fr 1fr; }
+  /* En tablets, 2 columnas está bien */
+  .ppv-lh-grid {
+    grid-template-columns: repeat(2, max-content);
+    justify-content: center;
+    column-gap: 18px;
+    row-gap: 12px;
+  }
 }
+
 @media (max-width: 560px) {
-  .ppv-lh-grid { grid-template-columns: 1fr; }
-  .ppv-lh-line { grid-template-columns: 1fr; }
+  /* En móviles: una sola fila desplazable horizontalmente (mantiene el look de desktop) */
+  .ppv-lh-grid {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    padding-bottom: 2px; /* evita que la barra de scroll tape contenido */
+  }
+  .ppv-lh-meter {
+    scroll-snap-align: start;
+    flex: 0 0 auto;          /* que no se encoja */
+  }
+
+  /* Fila genérica a una columna si se usa */
+  .ppv-lh-line {
+    grid-template-columns: 1fr;
+  }
+
+  /* Hacer visibles las dos filas de 232px×2 que están definidas inline en JSX.
+     No sobreescribimos los estilos inline; sólo permitimos scroll horizontal. */
+  .ppv-section > div[style*="grid-template-columns: 232px 232px"] {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* (Opcional visual) Ocultar la barra en navegadores que soportan scrollbar-width sin afectar el scroll */
+@media (max-width: 560px) {
+  .ppv-lh-grid {
+    scrollbar-width: thin;
+  }
 }
