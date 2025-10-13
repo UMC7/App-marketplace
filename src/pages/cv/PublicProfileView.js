@@ -430,26 +430,34 @@ export default function PublicProfileView() {
         // DOCUMENTS
         {
           const { data: docRows } = await supabase
-            .from('public_documents')
+            .from('v_public_documents_for_cv')
             .select('id, type, title, visibility, file_url, created_at')
             .eq('profile_id', pid)
             .order('created_at', { ascending: false });
 
-          const { data: certRows } = await supabase
-            .from('candidate_certificates')
-            .select('file_url, issued_on, expires_on')
-            .eq('profile_id', pid);
+          // ⚠️ Solo intentamos “unir” por file_url cuando exista:
+          let issuedByPath = new Map();
+          let expiresByPath = new Map();
+          try {
+            const { data: certRows } = await supabase
+              .from('candidate_certificates')
+              .select('file_url, issued_on, expires_on')
+              .eq('profile_id', pid);
 
-          const certByPath = new Map((certRows || []).map(c => [String(c.file_url || ''), c]));
-          const docs = (docRows || []).map(r => {
-            const cert = certByPath.get(String(r.file_url || ''));
-            return {
-              ...r,
-              visibility: mapDbVisToUi(r.visibility),
-              issued_on: cert?.issued_on || null,
-              expires_on: cert?.expires_on || null,
-            };
-          });
+            (certRows || [])
+              .filter(c => c?.file_url) // <-- evita “null” como key
+              .forEach(c => {
+                issuedByPath.set(String(c.file_url), c.issued_on || null);
+                expiresByPath.set(String(c.file_url), c.expires_on || null);
+              });
+          } catch { /* no-op */ }
+          
+          const docs = (docRows || []).map(r => ({
+            ...r,
+            visibility: mapDbVisToUi(r.visibility),
+            issued_on: r.file_url ? issuedByPath.get(String(r.file_url)) || null : null,
+            expires_on: r.file_url ? expiresByPath.get(String(r.file_url)) || null : null,
+          }));
           setDocuments(docs);
         }
 
