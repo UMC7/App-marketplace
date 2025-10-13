@@ -451,7 +451,7 @@ export default function PublicProfileView() {
                 expiresByPath.set(String(c.file_url), c.expires_on || null);
               });
           } catch { /* no-op */ }
-          
+
           const docs = (docRows || []).map(r => ({
             ...r,
             visibility: mapDbVisToUi(r.visibility),
@@ -463,35 +463,26 @@ export default function PublicProfileView() {
 
         // REFERENCES
         {
-          const { data: refRows } = await supabase
-            .from('candidate_references')
-            .select(`
-              id,
-              name,
-              role,
-              vessel_company,
-              organization,
-              contact_email,
-              contact_phone,
-              email,
-              phone,
-              file_url,
-              attachment_url,
-              document_url,
-              file
-            `)
-            .eq('profile_id', pid)
-            .order('created_at', { ascending: false });
+          const { data: refRows, error: refErr } = await supabase
+            .rpc('rpc_public_references_by_handle', { handle_in: row.handle });
 
-          const normalized = (refRows || []).map(r => ({
-            ...r,
-            vessel_company: r.vessel_company || r.organization || '',
-            email: r.contact_email || r.email || '',
-            phone: r.contact_phone || r.phone || '',
-            file_url: r.file_url || r.attachment_url || r.document_url || r.file || null,
-          }));
-
-          setReferences(normalized);
+          if (refErr) {
+            console.error('refs rpc error', refErr);
+            setReferences([]);
+          } else {
+            // La RPC ya devuelve exactamente los campos que consume el componente.
+            const normalized = (refRows || []).map(r => ({
+              id: r.id,
+              name: r.name || '',
+              role: r.role || '',
+              vessel_company: r.vessel_company || '',
+              email: r.email || '',
+              phone: r.phone || '',
+              file_url: r.file_url || null,
+              created_at: r.created_at,
+            }));
+            setReferences(normalized);
+          }
         }
 
         // EDUCATION
