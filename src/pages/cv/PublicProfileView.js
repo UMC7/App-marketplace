@@ -485,40 +485,17 @@ export default function PublicProfileView() {
           }
         }
 
-        // EDUCATION
+        // EDUCATION (public)
         {
-          let authUserId = row.user_id || row.auth_user_id || null;
-          if (!authUserId && pid) {
-            const { data: pr } = await supabase
-              .from('public_profiles')
-              .select('user_id')
-              .eq('id', pid)
-              .single();
-            authUserId = pr?.user_id || null;
-          }
+          const { data: eduRows, error: eduErr } = await supabase
+            .rpc('rpc_public_education_by_handle', { handle_in: row.handle });
 
-          let eduRows = [];
-          if (authUserId) {
-            const { data: r1 } = await supabase
-              .from('cv_education')
-              .select('id,institution,program,level_type,country,start_month,start_year,end_month,end_year,current,created_at')
-              .eq('user_id', authUserId)
-              .order('start_year', { ascending: false })
-              .order('start_month', { ascending: false })
-              .order('created_at', { ascending: false });
-            eduRows = r1 || [];
+          if (eduErr) {
+            console.error('edu RPC error:', eduErr);
+            setEducation([]);
           } else {
-            const { data: r2 } = await supabase
-              .from('cv_education')
-              .select('id,institution,program,level_type,country,start_month,start_year,end_month,end_year,current,created_at')
-              .eq('profile_id', pid)
-              .order('start_year', { ascending: false })
-              .order('start_month', { ascending: false })
-              .order('created_at', { ascending: false });
-            eduRows = r2 || [];
+            setEducation(eduRows || []);
           }
-
-          setEducation(eduRows);
         }
       } catch (e) {
         if (!cancelled) setError(e.message || 'Failed to load profile.');
