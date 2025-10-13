@@ -673,7 +673,7 @@ export default function PublicProfileView() {
   /* ----- UI ----- */
   if (loading) {
     return (
-      <div className="ppv-wrap" style={{ paddingTop: 50 }}>
+      <div className={`ppv-wrap ${isPreview ? 'ppv--preview' : 'ppv--public'}`} style={{ paddingTop: isPreview ? 50 : 12 }}>
         <div className="ppv-card">
           <div className="ppv-skel h32 w40" />
           <div className="ppv-skel h16 w80" />
@@ -685,7 +685,7 @@ export default function PublicProfileView() {
 
   if (error || !profile) {
     return (
-      <div className="ppv-wrap" style={{ paddingTop: 50 }}>
+      <div className={`ppv-wrap ${isPreview ? 'ppv--preview' : 'ppv--public'}`} style={{ paddingTop: isPreview ? 50 : 12 }}>
         <div className="ppv-card">
           <h2 className="ppv-title">Profile not available</h2>
           <p>This CV link may be invalid, revoked, or not publicly previewable.</p>
@@ -711,46 +711,48 @@ export default function PublicProfileView() {
   };
 
   return (
-    <div className="ppv-wrap" style={{ paddingTop: 50 }}>
+    <div className={`ppv-wrap ${isPreview ? 'ppv--preview' : 'ppv--public'}`} style={{ paddingTop: isPreview ? 50 : 12 }}>
       {isPreview && <div className="ppv-previewRibbon">Preview mode — recruiters won’t see this label</div>}
 
-      {/* Header */}
-      <header className="ppv-header">
-        <div className="ppv-hero">
-          {heroSrc ? (
-            <img className="ppv-heroImg" src={heroSrc} alt={`${profile?.first_name || 'Candidate'} photo`} />
-          ) : (
-            <div className="ppv-heroFallback">CV</div>
-          )}
-        </div>
-
-        <div className="ppv-headInfo">
-          <h1 className="ppv-title">{displayName}</h1>
-
-          <div className="ppv-badges" style={{ marginTop: 6 }}>
-            {profile?.primary_department && <span className="ppv-badge">{profile.primary_department}</span>}
-            {profile?.primary_role && <span className="ppv-badge">{profile.primary_role}</span>}
+      {/* Header (solo en modo Preview) */}
+      {isPreview && (
+        <header className="ppv-header">
+          <div className="ppv-hero">
+            {heroSrc ? (
+              <img className="ppv-heroImg" src={heroSrc} alt={`${profile?.first_name || 'Candidate'} photo`} />
+            ) : (
+              <div className="ppv-heroFallback">CV</div>
+            )}
           </div>
 
-          <div className="ppv-badges">
-            {profile?.availability && <span className="ppv-badge">Availability: {profile.availability}</span>}
-            {(profile?.city_port || profile?.country) && (
-              <span className="ppv-badge">{[profile.city_port, profile.country].filter(Boolean).join(', ')}</span>
-            )}
-            {(profile?.visibility_settings?.show_age ?? profile?.show_age_public ?? true) && age != null && (
-              <span className="ppv-badge">Age: {age}</span>
-            )}
-            {langsText && <span className="ppv-badge">Languages: {langsText}</span>}
+          <div className="ppv-headInfo">
+            <h1 className="ppv-title">{displayName}</h1>
+
+            <div className="ppv-badges" style={{ marginTop: 6 }}>
+              {profile?.primary_department && <span className="ppv-badge">{profile.primary_department}</span>}
+              {profile?.primary_role && <span className="ppv-badge">{profile.primary_role}</span>}
+            </div>
+
+            <div className="ppv-badges">
+              {profile?.availability && <span className="ppv-badge">Availability: {profile.availability}</span>}
+              {(profile?.city_port || profile?.country) && (
+                <span className="ppv-badge">{[profile.city_port, profile.country].filter(Boolean).join(', ')}</span>
+              )}
+              {(profile?.visibility_settings?.show_age ?? profile?.show_age_public ?? true) && age != null && (
+                <span className="ppv-badge">Age: {age}</span>
+              )}
+              {langsText && <span className="ppv-badge">Languages: {langsText}</span>}
+            </div>
+
+            <div className="ppv-subtle">Link: {publicUrl.replace(/^https?:\/\//, '')}</div>
           </div>
 
-          <div className="ppv-subtle">Link: {publicUrl.replace(/^https?:\/\//, '')}</div>
-        </div>
-
-        <div className="ppv-brand">
-          <small>CV powered by</small>
-          <div className="ppv-logo">Yacht Daywork</div>
-        </div>
-      </header>
+          <div className="ppv-brand">
+            <small>CV powered by</small>
+            <div className="ppv-logo">Yacht Daywork</div>
+          </div>
+        </header>
+      )}
 
       {/* Sticky action bar */}
       <div className="ppv-stickyBar" role="region" aria-label="Actions">
