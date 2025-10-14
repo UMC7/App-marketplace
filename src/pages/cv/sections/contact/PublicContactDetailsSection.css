@@ -6,7 +6,8 @@
   --pcd-gap: 8px;      /* espacio entre punto y texto */
   --pcd-indent: calc(var(--pcd-bullet) + var(--pcd-gap));
 
-  padding: 10px 12px 6px;
+  /* +padding lateral para que la 1ª columna no quede “comida” por el borde */
+  padding: 10px 16px 8px;
   border-radius: 8px;
   border: 1px solid rgba(0,0,0,.08);
   background: var(--ppv-card-bg, #fff);
@@ -23,23 +24,27 @@
   opacity: 1;
 }
 
-/* ===== ÚNICA grilla: 3 columnas por contenido, centradas ===== */
+/* ===== ÚNICA grilla: 3 columnas por fila, centradas y contenidas ===== */
 .pcd-grid{
   display: grid;
-  grid-template-columns: repeat(3, max-content); /* ancho dictado por la PRIMERA FILA y el contenido más ancho de cada columna */
+  /* Columnas elásticas pero con mínimo útil; nunca más de 3 por fila */
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
   gap: 18px 28px;
   align-items: start;
-  justify-content: center;  /* ⬅️ centra horizontalmente todo el bloque de 3 columnas */
+  justify-content: center;        /* centra el bloque completo */
+  width: 100%;
+  max-width: 100%;
   margin-top: 8px;
 }
 
 /* ===== Ítem ===== */
 .pcd-item{
   display: block;
-  width: auto;  /* ⬅️ NO estirar; respetar el ancho por contenido de la columna */
+  width: 100%;
+  max-width: 100%;                /* no permitir que se salga de su celda */
 }
 
-.pcd-field{ width: max-content; }
+.pcd-field{ width: 100%; }
 
 /* ===== Título (bullet + texto) ===== */
 .pcd-headline{
@@ -50,6 +55,7 @@
   margin-bottom: 4px;
   text-align: left;
   width: max-content;
+  max-width: 100%;
 }
 
 .pcd-bullet{
@@ -67,19 +73,37 @@
   font-weight: 800;
   text-transform: uppercase;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 /* ===== Valor: arranca bajo el inicio del TEXTO del título ===== */
 .pcd-value{
-  width: max-content;             /* igual lógica de ancho por contenido */
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
-  padding-left: var(--pcd-indent);/* compensa bullet + gap */
+  padding-left: var(--pcd-indent);   /* compensa bullet + gap */
   text-align: left;
   font-size: 14px;
   line-height: 1.4;
 }
 
-.pcd-value a{ text-decoration: none; }
+/* Enlaces/valores: 1 sola línea con elipsis + protección ante URLs largas */
+.pcd-value a,
+.pcd-value span{
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+
+/* Si llegan cadenas sin separadores, permitir cortes seguros dentro de la elipsis */
+.pcd-value a{
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-decoration: none;
+}
 .pcd-value a:hover{ text-decoration: underline; }
 
 .pcd-muted{ opacity: .6; }
@@ -93,16 +117,23 @@ body.dark-mode .pcd-section .pcd-value a { color: #2563eb !important; }
 body.dark-mode .pcd-section .pcd-muted { color: #64748b !important; opacity:1 !important; }
 
 /* ===== Responsive ===== */
+@media (max-width: 900px){
+  .pcd-grid{
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+  }
+}
+
 @media (max-width: 720px){
   .pcd-grid{
-    grid-template-columns: repeat(3, max-content);
+    grid-template-columns: repeat(3, minmax(140px, 1fr));
     justify-content: center;
   }
   .pcd-item,
   .pcd-field,
   .pcd-headline,
   .pcd-value{
-    width: auto;
+    width: 100%;
+    max-width: 100%;
   }
 }
 

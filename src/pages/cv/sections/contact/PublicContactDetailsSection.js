@@ -52,6 +52,15 @@ export default function PublicContactDetailsSection({ profile }) {
     ? `+${String(waCC || '').replace(/[^\d]/g, '')} ${waNumber}`
     : '';
 
+  // Reglas para "compactar" grilla (solo omitimos los campos realmente vacíos)
+  const shouldShowEmail     = showEmail ? !isBlank(email) : true;  // si está oculto mostramos "Hidden"
+  const shouldShowPhone     = showPhone ? !isBlank(phoneText) : true;
+  const shouldShowWhatsapp  = showPhone ? !isBlank(waText) : true;
+  const shouldShowFacebook  = !isBlank(facebook);
+  const shouldShowInstagram = !isBlank(instagram);
+  const shouldShowWebsite   = !isBlank(website);
+  const shouldShowLinkedin  = !isBlank(linkedin);
+
   return (
     <section className="pcd-section" aria-label="Contact details">
       <h3 className="pcd-title">CONTACT DETAILS</h3>
@@ -59,128 +68,132 @@ export default function PublicContactDetailsSection({ profile }) {
       {/* ÚNICA grilla con 3 columnas para TODOS los campos */}
       <div className="pcd-grid">
 
-        {/* 1. EMAIL */}
-        <div className="pcd-item">
-          <div className="pcd-field">
-            <div className="pcd-headline">
-              <span className="pcd-bullet" aria-hidden="true" />
-              <span className="pcd-label">Email</span>
-            </div>
-            <div className="pcd-value">
-              {showEmail
-                ? (email
-                    ? <a href={mailto(email)} target="_blank" rel="noreferrer">{email}</a>
-                    : <span className="pcd-muted">—</span>)
-                : <span className="pcd-muted">— Hidden —</span>}
+        {/* 1. EMAIL (si está oculto, mostramos "Hidden" y ocupa lugar) */}
+        {shouldShowEmail && (
+          <div className="pcd-item">
+            <div className="pcd-field">
+              <div className="pcd-headline">
+                <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-label">Email</span>
+              </div>
+              <div className="pcd-value">
+                {showEmail
+                  ? (email
+                      ? <a href={mailto(email)} target="_blank" rel="noreferrer">{email}</a>
+                      : <span className="pcd-muted">—</span>)
+                  : <span className="pcd-muted">— Hidden —</span>}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* 2. MOBILE PHONE */}
-        <div className="pcd-item">
-          <div className="pcd-field">
-            <div className="pcd-headline">
-              <span className="pcd-bullet" aria-hidden="true" />
-              <span className="pcd-label">Mobile phone</span>
-            </div>
-            <div className="pcd-value">
-              {showPhone
-                ? (phoneText
-                    ? <a href={tel(phoneCC, phoneNumber)} target="_blank" rel="noreferrer">{phoneText}</a>
-                    : <span className="pcd-muted">—</span>)
-                : <span className="pcd-muted">— Hidden —</span>}
+        {/* 2. MOBILE PHONE (si está oculto, mostramos "Hidden" y ocupa lugar) */}
+        {shouldShowPhone && (
+          <div className="pcd-item">
+            <div className="pcd-field">
+              <div className="pcd-headline">
+                <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-label">Mobile phone</span>
+              </div>
+              <div className="pcd-value">
+                {showPhone
+                  ? (phoneText
+                      ? <a href={tel(phoneCC, phoneNumber)} target="_blank" rel="noreferrer">{phoneText}</a>
+                      : <span className="pcd-muted">—</span>)
+                  : <span className="pcd-muted">— Hidden —</span>}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* 3. WHATSAPP */}
-        <div className="pcd-item">
-          <div className="pcd-field">
-            <div className="pcd-headline">
-              <span className="pcd-bullet" aria-hidden="true" />
-              <span className="pcd-label">WhatsApp</span>
-            </div>
-            <div className="pcd-value">
-              {showPhone
-                ? (waText
-                    ? <a href={waLink(waCC, waNumber)} target="_blank" rel="noreferrer">{waText}</a>
-                    : <span className="pcd-muted">—</span>)
-                : <span className="pcd-muted">— Hidden —</span>}
+        {/* 3. WHATSAPP (si está oculto, mostramos "Hidden" y ocupa lugar) */}
+        {shouldShowWhatsapp && (
+          <div className="pcd-item">
+            <div className="pcd-field">
+              <div className="pcd-headline">
+                <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-label">WhatsApp</span>
+              </div>
+              <div className="pcd-value">
+                {showPhone
+                  ? (waText
+                      ? <a href={waLink(waCC, waNumber)} target="_blank" rel="noreferrer">{waText}</a>
+                      : <span className="pcd-muted">—</span>)
+                  : <span className="pcd-muted">— Hidden —</span>}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 4. FACEBOOK */}
-        <div className="pcd-item">
-          <div className="pcd-field">
-            <div className="pcd-headline">
-              <span className="pcd-bullet" aria-hidden="true" />
-              <span className="pcd-label">Facebook</span>
-            </div>
-            <div className="pcd-value">
-              {facebook
-                ? <a href={facebook} target="_blank" rel="noreferrer">
-                    {facebook.replace(/^https?:\/\//, '')}
-                  </a>
-                : <span className="pcd-muted">—</span>}
+        {shouldShowFacebook && (
+          <div className="pcd-item">
+            <div className="pcd-field">
+              <div className="pcd-headline">
+                <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-label">Facebook</span>
+              </div>
+              <div className="pcd-value">
+                <a href={facebook} target="_blank" rel="noreferrer">
+                  {facebook.replace(/^https?:\/\//, '')}
+                </a>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 5. INSTAGRAM */}
-        <div className="pcd-item">
-          <div className="pcd-field">
-            <div className="pcd-headline">
-              <span className="pcd-bullet" aria-hidden="true" />
-              <span className="pcd-label">Instagram</span>
-            </div>
-            <div className="pcd-value">
-              {instagram
-                ? <a href={instagram} target="_blank" rel="noreferrer">
-                    {instagram.replace(/^https?:\/\//, '')}
-                  </a>
-                : <span className="pcd-muted">—</span>}
+        {shouldShowInstagram && (
+          <div className="pcd-item">
+            <div className="pcd-field">
+              <div className="pcd-headline">
+                <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-label">Instagram</span>
+              </div>
+              <div className="pcd-value">
+                <a href={instagram} target="_blank" rel="noreferrer">
+                  {instagram.replace(/^https?:\/\//, '')}
+                </a>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 6. WEBSITE */}
-        <div className="pcd-item">
-          <div className="pcd-field">
-            <div className="pcd-headline">
-              <span className="pcd-bullet" aria-hidden="true" />
-              <span className="pcd-label">Website / Portfolio</span>
-            </div>
-            <div className="pcd-value">
-              {website
-                ? <a href={website} target="_blank" rel="noreferrer">
-                    {website.replace(/^https?:\/\//, '')}
-                  </a>
-                : <span className="pcd-muted">—</span>}
+        {shouldShowWebsite && (
+          <div className="pcd-item">
+            <div className="pcd-field">
+              <div className="pcd-headline">
+                <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-label">Website / Portfolio</span>
+              </div>
+              <div className="pcd-value">
+                <a href={website} target="_blank" rel="noreferrer">
+                  {website.replace(/^https?:\/\//, '')}
+                </a>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 7. LINKEDIN */}
-        <div className="pcd-item">
-          <div className="pcd-field">
-            <div className="pcd-headline">
-              <span className="pcd-bullet" aria-hidden="true" />
-              <span className="pcd-label">LinkedIn</span>
-            </div>
-            <div className="pcd-value">
-              {linkedin
-                ? <a href={linkedin} target="_blank" rel="noreferrer">
-                    {linkedin.replace(/^https?:\/\//, '')}
-                  </a>
-                : <span className="pcd-muted">—</span>}
+        {shouldShowLinkedin && (
+          <div className="pcd-item">
+            <div className="pcd-field">
+              <div className="pcd-headline">
+                <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-label">LinkedIn</span>
+              </div>
+              <div className="pcd-value">
+                <a href={linkedin} target="_blank" rel="noreferrer">
+                  {linkedin.replace(/^https?:\/\//, '')}
+                </a>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* 8-9. Espaciadores para completar la grilla (alineación perfecta) */}
-        <div className="pcd-item pcd-item--spacer" aria-hidden="true">&nbsp;</div>
-        <div className="pcd-item pcd-item--spacer" aria-hidden="true">&nbsp;</div>
+        {/* Eliminamos spacers: la grilla se compacta sola a 3 columnas máximo */}
       </div>
     </section>
   );
