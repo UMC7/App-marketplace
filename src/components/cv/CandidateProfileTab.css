@@ -125,6 +125,9 @@
 .candidate-profile-tab button:disabled { opacity: .55; cursor: not-allowed; }
 .cp-rotate { background: var(--input-bg); border-color: var(--input-bd); }
 
+/* ===== Share actions: soporte a grid 2×2 en móvil, desktop intacto ===== */
+.cp-shareActions { display: flex; gap: 8px; flex-wrap: wrap; }
+
 .cp-chips { display: flex; gap: 8px; flex-wrap: wrap; }
 .cp-chip {
   display: inline-flex;
@@ -294,9 +297,6 @@
   grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 
-/* ----------------------------- */
-/*   SOLO MOBILE (≤ 720px)       */
-/* ----------------------------- */
 @media (max-width: 720px) {
   .candidate-profile-tab{
     --row-2-cols: 1fr;
@@ -368,7 +368,6 @@
   .candidate-profile-tab .cp-chip--active .cp-chip-x{ background: rgba(0,0,0,.18); }
   [data-theme='dark'] .candidate-profile-tab .cp-chip .cp-chip-x{ background: rgba(255,255,255,.14); }
 
-  /* ====== Department & ranks (solo mobile) ====== */
   .candidate-profile-tab .cp-dept-row{
     display: grid !important;
     grid-template-columns: 1fr;
@@ -404,23 +403,29 @@
   }
   .candidate-profile-tab .cp-chip-grid .cp-chip{ margin: 0; }
 
-  /* ===== Lifestyle & Habits – SOLO móviles ===== */
   .lh-grid{
     grid-template-columns: 1fr 1fr;   /* de 3→2 cols en móvil */
     gap: 10px 12px;
   }
   .lh-field{ min-width: 0; }          /* evita overflow de selects largos */
 
-  /* Apilar selector y botón para que no se monten con los chips */
   .lh-allergies-controls{
     grid-template-columns: 1fr;       /* select arriba, botón abajo */
   }
   .lh-allergies-controls .cp-select{ width: 100%; }
   .lh-allergies-controls .cp-btn-add{ width: 100%; }
 
-  /* Chips más compactos en móvil */
   .lh-pills{ gap: 6px; margin-top: 6px; }
   .lh-field .cp-label{ margin-bottom: 4px; }
+
+  .cp-shareActions{
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .cp-shareActions .cp-btn{
+    width: 100% !important;
+  }
 }
 
 .candidate-profile-tab select.cp-input { max-width: 100%; }
@@ -437,7 +442,6 @@
   color: var(--muted) !important;
 }
 
-/* ===== Lifestyle & Habits – base (desktop intacto) ===== */
 .lh-grid{
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -480,15 +484,10 @@
   margin-top: 0 !important;
 }
 
-/* Extra pequeño (≤400px): 1 sola columna para Lifestyle & Habits) */
 @media (max-width: 400px){
   .lh-grid{ grid-template-columns: 1fr; }
 }
 
-/* ===================================================== */
-/*   Education (Studies) – estilo alineado a Experience  */
-/*   (sin romper otras pantallas)                        */
-/* ===================================================== */
 .candidate-profile-tab .education-card{
   display: flex;
   gap: 12px;
@@ -525,7 +524,6 @@
   min-width: 140px;
 }
 
-/* Móvil: apilar contenido; **botones lado a lado** */
 @media (max-width: 720px){
   .candidate-profile-tab .education-card{
     flex-direction: column;
@@ -541,7 +539,6 @@
     width: 100%;
   }
 
-  /* Ocultar el país en meta SOLO en móvil */
   .candidate-profile-tab .education-card .cv-card-meta > span:first-child{
     display: none;
   }

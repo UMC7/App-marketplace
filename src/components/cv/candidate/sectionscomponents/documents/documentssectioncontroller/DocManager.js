@@ -5,10 +5,7 @@ import { safeExtractIfPdf } from "./docmanager/pdfText";
 import DocumentTitleField from "./docmanager/DocumentTitleField";
 
 export default function DocManager({ initialDocs = [], onSave, onClose }) {
-  const [docs, setDocs] = useState(() =>
-    (initialDocs || []).map(coerceDoc)
-  );
-  // Keep selected files in memory (id -> File) for future upload wiring (no breaking changes to onSave)
+  const [docs, setDocs] = useState(() => (initialDocs || []).map(coerceDoc));
   const [pendingFiles, setPendingFiles] = useState(() => new Map());
 
   const stats = useMemo(() => {
@@ -17,7 +14,6 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
     return { total, withExpiry };
   }, [docs]);
 
-  // Receive docs extracted from filenames/text and their corresponding File objects
   const handleAddFromDropzone = (newDocs, fileMap) => {
     if (Array.isArray(newDocs) && newDocs.length) {
       setDocs((prev) => [...newDocs.map(coerceDoc), ...prev]);
@@ -35,27 +31,19 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
     setDocs((prev) => prev.map((d) => (d.id === id ? { ...d, ...patch } : d)));
   };
 
-  const handleRemove = (id) => {
-    setDocs((prev) => prev.filter((d) => d.id !== id));
-    setPendingFiles((prev) => {
-      const next = new Map(prev);
-      next.delete(id);
-      return next;
-    });
-  };
-
+  // ✅ CORREGIDO: permite alternar entre "sin expiry" y "con expiry"
   const handleToggleNoExpiry = (id, noExpiry) => {
-    handleChange(id, { expiresOn: noExpiry ? "" : "" });
+    handleChange(id, { expiresOn: noExpiry ? "" : new Date().toISOString().slice(0, 10) });
   };
 
   const handleSave = () => {
     const cleaned = docs.map(normalizeDoc);
     if (typeof onSave === "function") onSave(cleaned, pendingFiles);
-    // Nota: el wiring de subida/persistencia se hará en el siguiente paso.
   };
 
   return (
     <div className="doc-manager">
+      {/* HEADER */}
       <header className="doc-manager__head">
         <div className="doc-manager__titles">
           <h3 className="doc-manager__title">Documents Manager</h3>
@@ -63,21 +51,14 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
             Add your CV and certificates. Edit the detected fields before publishing.
           </p>
         </div>
-        <div className="doc-manager__actions">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
-            Close
-          </button>
-          <button type="button" className="btn btn-primary" onClick={handleSave}>
-            Save changes
-          </button>
-        </div>
       </header>
 
+      {/* DROPZONE */}
       <section className="doc-manager__toolbar">
         <div className="doc-manager__left" style={{ flex: 1 }}>
           <DocUploadDropzone
             onAdd={handleAddFromDropzone}
-            extractText={safeExtractIfPdf}  // PDF text extraction (no OCR yet)
+            extractText={safeExtractIfPdf}
           />
           <span className="doc-manager__hint">
             Drag & drop or select PDF/images. Title, Issue and Expiry are auto-detected.
@@ -90,6 +71,7 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
         </div>
       </section>
 
+      {/* LIST */}
       <section className="doc-manager__list">
         {docs.length === 0 ? (
           <div className="doc-manager__empty">
@@ -100,46 +82,56 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
             {docs.map((d) => (
               <li key={d.id} className="doc-item">
                 <div className="doc-item__main">
+                  {/* Title */}
                   <div className="doc-field">
                     <label className="doc-label">Title (EN)</label>
                     <DocumentTitleField
                       value={d.title}
                       onChange={(v) => handleChange(d.id, { title: v })}
                       defaultMode="select"
-                      allowSwitch={true}
+                      allowSwitch={false}
                       placeholder="e.g., STCW Basic Safety Training"
                       name={`title-${d.id}`}
                     />
                   </div>
 
-                  <div className="doc-grid">
-                    <div className="doc-field">
-                      <label className="doc-label">Issue date</label>
-                      <input
-                        type="date"
-                        className="doc-input"
-                        value={safeDateInputValue(d.issuedOn)}
-                        onChange={(e) => handleChange(d.id, { issuedOn: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="doc-field">
-                      <label className="doc-label">Expiry date</label>
-                      <input
-                        type="date"
-                        className="doc-input"
-                        value={safeDateInputValue(d.expiresOn)}
-                        onChange={(e) => handleChange(d.id, { expiresOn: e.target.value })}
-                        disabled={false}
-                      />
-                      <div className="doc-checkbox">
+                  {/* Issue + Expiry + Visibility */}
+                  <div className="doc-grid doc-grid--compact">
+                    <div className="doc-dates">
+                      <div className="doc-field">
+                        <label className="doc-label">Issue date</label>
                         <input
-                          id={`noexp-${d.id}`}
-                          type="checkbox"
-                          checked={!d.expiresOn}
-                          onChange={(e) => handleToggleNoExpiry(d.id, e.target.checked)}
+                          type="date"
+                          className="doc-input doc-input--date"
+                          value={safeDateInputValue(d.issuedOn)}
+                          onChange={(e) =>
+                            handleChange(d.id, { issuedOn: e.target.value })
+                          }
                         />
-                        <label htmlFor={`noexp-${d.id}`}>No expiry</label>
+                      </div>
+
+                      <div className="doc-field">
+                        <label className="doc-label">Expiry date</label>
+                        <input
+                          type="date"
+                          className="doc-input doc-input--date"
+                          value={safeDateInputValue(d.expiresOn)}
+                          onChange={(e) =>
+                            handleChange(d.id, { expiresOn: e.target.value })
+                          }
+                          disabled={!d.expiresOn}
+                        />
+                        <div className="doc-checkbox">
+                          <input
+                            id={`noexp-${d.id}`}
+                            type="checkbox"
+                            checked={!d.expiresOn}
+                            onChange={(e) =>
+                              handleToggleNoExpiry(d.id, e.target.checked)
+                            }
+                          />
+                          <label htmlFor={`noexp-${d.id}`}>No expiry</label>
+                        </div>
                       </div>
                     </div>
 
@@ -148,7 +140,9 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
                       <select
                         className="doc-input"
                         value={d.visibility}
-                        onChange={(e) => handleChange(d.id, { visibility: e.target.value })}
+                        onChange={(e) =>
+                          handleChange(d.id, { visibility: e.target.value })
+                        }
                       >
                         <option value="public">Public</option>
                         <option value="unlisted">Unlisted</option>
@@ -157,6 +151,7 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
                     </div>
                   </div>
 
+                  {/* Meta */}
                   <div className="doc-meta">
                     <span className="doc-meta__pill">
                       {d.mimeType || "Unknown type"}
@@ -173,24 +168,23 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
                     ) : null}
                   </div>
                 </div>
-
-                <div className="doc-item__actions">
-                  <button type="button" className="btn btn-ghost" disabled>
-                    Preview (soon)
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={() => handleRemove(d.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      {/* FOOTER */}
+      <footer className="doc-manager__footer">
+        <div className="doc-manager__footer-actions">
+          <button type="button" className="btn btn-ghost" onClick={onClose}>
+            Close
+          </button>
+          <button type="button" className="btn btn-primary" onClick={handleSave}>
+            Save changes
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -235,7 +229,6 @@ function safeDateInputValue(v) {
 
 function normalizeDateInput(v) {
   if (!v) return "";
-  // Accept Date, ISO string, or 'YYYY-MM-DD'; store as 'YYYY-MM-DD' for inputs
   try {
     if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
     const dt = v instanceof Date ? v : new Date(String(v));
@@ -247,7 +240,6 @@ function normalizeDateInput(v) {
 }
 
 function normalizeDateOutput(v) {
-  // Return 'YYYY-MM-DD' or undefined (empty = no expiry/issue)
   const s = normalizeDateInput(v);
   return s || undefined;
 }

@@ -995,10 +995,10 @@ body {
   font-size: 14px;
   font-family: var(--font-body);
 
-  width: 90%;                 /* ✅ Nuevo: ancho uniforme */
-  max-width: 320px;           /* ✅ Nuevo: límite superior */
-  margin-left: auto;          /* ✅ Nuevo: centra el botón */
-  margin-right: auto;         /* ✅ Nuevo: centra el botón */
+  width: 90%;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .container {
@@ -1010,7 +1010,7 @@ body {
   .tabs-container .navbar-toggle {
     display: none !important;
   }
-
+  
   .profile-tabs {
     display: flex !important;
     flex-direction: row;

@@ -186,20 +186,26 @@
   .tabs-container .profile-tabs {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* una sola fila en claro y oscuro */
     align-items: center;
     justify-content: flex-start;
   }
 
-  /* MODO CLARO */
+  /* MODO CLARO (y base para oscuro) */
   .tabs-container .profile-tabs button {
     color: #081a3b;
     background-color: rgba(8, 26, 59, 0.1);
     border: 1px solid rgba(8, 26, 59, 0.1);
+    /* 🔧 Reset para igualar altura con dark mode */
+    font-size: 14px;
+    line-height: 1.2;
     padding: 8px 14px;
+    box-sizing: border-box;
+
     border-radius: 9999px;
     font-weight: 600;
-    transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .08s ease;
+    transition: background-color .18s ease, color .18s ease,
+                box-shadow .18s ease, transform .08s ease;
     box-shadow: 0 1px 2px rgba(8,26,59,0.06);
   }
 
@@ -231,4 +237,11 @@
     outline: 2px solid currentColor;
     outline-offset: 2px;
   }
+}
+
+body:not([data-theme="dark"]) .tabs-container .profile-tabs > button {
+  font-size: 14px;
+  line-height: 1.2;
+  padding: 8px 14px;
+  margin: 0;
 }

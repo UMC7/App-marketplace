@@ -940,25 +940,21 @@ const progressSections = {
         <>
           {/* Shareable link (AL TOPE) */}
           <div className="cp-card">
-            <h3 className="cp-h3">Your shareable link</h3>
-            <p className="cp-muted" style={{ wordBreak: 'break-all' }}>
-              {publicUrl || '—'}
-            </p>
-            <div className="cp-actions">
-              <button type="button" onClick={openAnalytics} disabled={saving}>
+            <div className="cp-actions cp-shareActions" role="group" aria-label="Share actions">
+              <button className="cp-btn" type="button" onClick={openAnalytics} disabled={saving}>
                 Analytics
               </button>
-              <button type="button" onClick={handlePreview} disabled={!publicUrl || saving}>
+              <button className="cp-btn" type="button" onClick={handlePreview} disabled={!publicUrl || saving}>
                 Preview
               </button>
-              <button type="button" onClick={handleCopy} disabled={!publicUrl || saving}>
+              <button className="cp-btn" type="button" onClick={handleCopy} disabled={!publicUrl || saving}>
                 Copy link
               </button>
               <button
+                className="cp-btn cp-rotate"
                 type="button"
                 onClick={handleRotate}
                 disabled={!profile || saving}
-                className="cp-rotate"
                 title="Revoke current link and generate a new one"
               >
                 Rotate link

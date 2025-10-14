@@ -610,18 +610,65 @@ export default function PublicProfileView() {
     }
   }, []);
 
+function getStickyBarHeight() {
+  const sticky = document.querySelector('.ppv-stickyBar');
+  return sticky ? sticky.getBoundingClientRect().height : 0;
+}
+
+function getTopFixedHeaderHeight() {
+  const selectors = [
+    'header[role="banner"]',
+    '.main-header',
+    '.app-header',
+    '.navbar',
+    '.topbar',
+  ];
+  let maxBottom = 0;
+
+  document.querySelectorAll(selectors.join(',')).forEach((el) => {
+    const cs = getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    if (cs.position === 'fixed' && r.top <= 0 && r.bottom > 0) {
+      maxBottom = Math.max(maxBottom, r.bottom);
+    }
+  });
+  
+  if (maxBottom === 0) {
+    document.querySelectorAll('*').forEach((el) => {
+      try {
+        const cs = getComputedStyle(el);
+        if (cs.position !== 'fixed') return;
+        const r = el.getBoundingClientRect();
+        if (r.height && r.width && r.top <= 0 && r.bottom > 0 && r.top > -200) {
+          maxBottom = Math.max(maxBottom, r.bottom);
+        }
+      } catch {}
+    });
+  }
+  return maxBottom;
+}
+
+function computeScrollTargetTop(el, extra = 12) {
+  const absoluteTop = window.scrollY + el.getBoundingClientRect().top;
+  const offset = getTopFixedHeaderHeight() + getStickyBarHeight() + extra;
+  return Math.max(0, absoluteTop - offset);
+}
+
   function openContact() {
     setContactOpen(true);
     setTimeout(() => {
-      const el = document.getElementById('ppv-contact');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const el = document.getElementById('ppv-contact');
+    if (!el) return;
+    const targetY = computeScrollTargetTop(el, 12);
+    window.scrollTo({ top: targetY, behavior: 'smooth' });
     }, 0);
   }
 
-  // ⬇️ helper genérico para hacer scroll a secciones
   const scrollTo = useCallback((id) => {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!el) return;
+    const targetY = computeScrollTargetTop(el, 12);
+    window.scrollTo({ top: targetY, behavior: 'smooth' });
   }, []);
 
   async function startContact(e) {

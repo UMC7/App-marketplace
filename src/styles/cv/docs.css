@@ -5,8 +5,6 @@
 .cv-section {
   width: 100%;
   margin: 16px 0 24px;
-
-  /* Alineado al diseño de .cp-card usando las mismas variables */
   background: linear-gradient(180deg, var(--card, #ffffff), var(--card-2, #f8fafc));
   border: 1px solid var(--line, #e2e8f0);
   border-radius: var(--radius, 14px);
@@ -57,7 +55,6 @@
   gap: 10px;
 }
 
-/* Desktop: 3 columnas (móvil intacto) */
 @media (min-width: 1024px) {
   .cv-docs-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -85,15 +82,16 @@
 .cv-docs-meta {
   font-size: 0.9rem;
   color: var(--muted, #475569);
-  /* que ocupe su propia línea bajo el título */
   display: block;
   white-space: normal;
 }
 
-/* ---------- Manager (editor) ---------- */
+/* ---------- Manager (modal editor) ---------- */
 .doc-manager {
   display: grid;
-  gap: 12px;
+  gap: 16px;
+  padding-bottom: 80px;
+  --doc-input-h: 40px;
 }
 
 .doc-manager__head {
@@ -102,12 +100,14 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  border-bottom: 1px solid var(--line, #e2e8f0);
+  padding-bottom: 6px;
 }
 
 .doc-manager__titles { display: grid; gap: 4px; }
 .doc-manager__title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text, #0f172a);
 }
@@ -117,27 +117,27 @@
   font-size: 0.95rem;
 }
 
-.doc-manager__actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
 .doc-manager__toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
-  padding: 8px 0;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid var(--line, #e2e8f0);
 }
 
-.doc-manager__left { display: flex; gap: 8px; align-items: center; }
+.doc-manager__left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
 .doc-manager__right { display: flex; gap: 8px; align-items: center; }
 .doc-manager__hint { color: var(--muted, #475569); font-size: 0.9rem; }
 .doc-manager__stats { color: var(--muted, #475569); }
 
-.doc-manager__list { width: 100%; }
+.doc-manager__list { width: 100%; margin-top: 4px; }
 .doc-manager__empty {
   padding: 16px;
   border: 1px dashed var(--line, #e2e8f0);
@@ -146,52 +146,102 @@
   color: var(--muted, #475569);
 }
 
-/* ---------- List / Items ---------- */
+/* ---------- Document items ---------- */
 .doc-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .doc-item {
   background: var(--card, #ffffff);
   border: 1px solid var(--line, #e2e8f0);
   border-radius: 12px;
-  padding: 12px;
+  padding: 14px 16px;
+  box-shadow: var(--shadow-soft, 0 4px 12px rgba(2, 6, 23, .06));
 }
 
-.doc-item__main { display: grid; gap: 10px; }
+.doc-item__main { display: grid; gap: 12px; }
 
 .doc-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 10px 14px;
 }
 
-@media (max-width: 720px) {
-  .doc-grid {
-    grid-template-columns: 1fr;
-  }
+/* Bloque de fechas: 2 columnas internas y ocupa 2 del grid externo */
+.doc-dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  grid-column: 1 / span 2;
 }
 
-.doc-field { display: grid; gap: 6px; }
+/* Mantener compactación existente */
+.doc-grid--compact .doc-input--date { width: 85%; }
+
+@media (max-width: 1024px) {
+  .doc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .doc-dates { grid-column: 1 / span 2; }
+}
+@media (max-width: 640px) {
+  .doc-grid { grid-template-columns: 1fr; }
+  /* En móviles, las fechas siguen en la misma fila */
+  .doc-dates { grid-column: 1 / -1; }
+}
+
+.doc-field { display: flex; flex-direction: column; gap: 6px; }
 .doc-label {
   font-size: 0.9rem;
   color: var(--muted, #475569);
+  font-weight: 600;
 }
+
+/* ====== Altura UNIFORME para Title / Date / Select ====== */
 .doc-input {
   width: 100%;
-  min-height: 36px;
-  padding: 6px 10px;
-  border-radius: 10px;
+  min-height: var(--doc-input-h);
+  height: var(--doc-input-h);
+  line-height: calc(var(--doc-input-h) - 2px);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--input-bd, #cbd5e1);
+  background: var(--input-bg, #ffffff);
+  color: var(--text, #0f172a);
+  font-size: 0.95rem;
+}
+
+input.doc-input[type="date"],
+.doc-input--date {
+  min-height: var(--doc-input-h);
+  height: var(--doc-input-h);
+  line-height: calc(var(--doc-input-h) - 2px);
+  padding: 8px 10px;
+}
+
+.doc-field .dts-input-wrap {
+  min-height: var(--doc-input-h);
+  height: var(--doc-input-h);
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
   border: 1px solid var(--input-bd, #cbd5e1);
   background: var(--input-bg, #ffffff);
   color: var(--text, #0f172a);
 }
+
+.doc-field .dts-input-wrap input {
+  height: 100%;
+  line-height: calc(var(--doc-input-h) - 2px);
+  font-size: 0.95rem;
+}
+
 .doc-input::placeholder { color: var(--muted, #475569); opacity: .9; }
-.doc-input:focus {
+.doc-input:focus,
+.doc-field .dts-input-wrap:focus-within {
   outline: none;
   border-color: var(--accent-2, #2563eb);
   box-shadow: var(--focus, 0 0 0 2px rgba(37,99,235,.25));
@@ -201,9 +251,14 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 6px;
+  margin-top: 4px;
   font-size: 0.9rem;
   color: var(--muted, #475569);
+}
+.doc-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-2, #2563eb);
 }
 
 .doc-meta {
@@ -213,6 +268,7 @@
   align-items: center;
   color: var(--muted, #475569);
   font-size: 0.9rem;
+  margin-top: 2px;
 }
 .doc-meta__pill {
   display: inline-flex;
@@ -222,59 +278,77 @@
   background: var(--card-2, #f8fafc);
   color: var(--muted, #475569);
 }
-.doc-meta__note { color: var(--muted, #475569); }
+.doc-meta__note { color: var(--muted, #475569); font-style: italic; }
 
-.doc-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-/* ---------- Compact card (DocCard) ---------- */
-.cv-doc-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.doc-manager__footer {
+  position: sticky;
+  bottom: 0;
   background: var(--card, #ffffff);
-  border: 1px solid var(--line, #e2e8f0);
-  border-radius: 12px;
-  padding: 12px 14px;
-}
-
-.cv-doc-card__main { min-width: 0; }
-.cv-doc-card__title {
-  font-weight: 600;
-  color: var(--text, #0f172a);
-}
-.cv-doc-card__meta {
-  font-size: 0.9rem;
-  color: var(--muted, #475569);
-}
-
-.cv-doc-card__actions {
+  border-top: 1px solid var(--line, #e2e8f0);
+  padding: 12px 0 16px;
   display: flex;
-  gap: 8px;
-  align-items: center;
+  justify-content: center;
+  z-index: 10;
 }
 
-.cv-doc-card__right { margin-left: 4px; }
+.doc-manager__footer-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
 
-/* ---------- Dark mode (redundante pero seguro con variables) ---------- */
+/* ====== NUEVO: botones en la MISMA FILA en móviles ====== */
+@media (max-width: 640px) {
+  .doc-manager__footer-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Close | Save */
+    width: 100%;
+    max-width: 480px;
+    gap: 10px;
+  }
+  .doc-manager__footer-actions .btn {
+    width: 100%;
+  }
+}
+
+/* ---------- Dropzone coherente ---------- */
+.media-uploader__dropzone,
+.uploader-dropzone,
+.dropzone,
+[data-role="dropzone"] {
+  background: linear-gradient(180deg, var(--card), var(--card-2));
+  border: 1px dashed var(--line, #e2e8f0);
+  color: var(--text, #0f172a);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+.dropzone * { color: var(--muted, #475569); }
+
+/* ---------- Dark mode ---------- */
 [data-theme='dark'] .cv-section {
   background: linear-gradient(180deg, var(--card, #151a23), var(--card-2, #10151d));
   border-color: var(--line, #212734);
 }
-
 [data-theme='dark'] .cv-docs-item,
 [data-theme='dark'] .doc-item,
 [data-theme='dark'] .cv-doc-card {
   background: var(--card, #151a23);
   border-color: var(--line, #212734);
 }
+[data-theme='dark'] .doc-label,
+[data-theme='dark'] .doc-meta,
+[data-theme='dark'] .doc-checkbox {
+  color: var(--muted, #9aa4b2);
+}
+[data-theme='dark'] .doc-input,
+[data-theme='dark'] .doc-field .dts-input-wrap {
+  background: var(--input-bg, #0c1017);
+  border-color: var(--input-bd, #202635);
+  color: var(--text, #e6e9ef);
+}
 
-/* Evitar overflow horizontal de las secciones internas */
 .candidate-profile-tab .cv-section,
 .candidate-profile-tab .cv-docs-item,
 .candidate-profile-tab .doc-item,
@@ -285,31 +359,21 @@
   max-width: 100%;
 }
 
-/* (Opcional) recorta cualquier sombra/artefacto dentro de la tarjeta externa */
-.candidate-profile-tab .cp-card {
-  overflow: hidden;
-}
-
-/* === Fix About me: evitar que los textareas se empujen a la derecha === */
 .cv-section-card .field-group {
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  align-items: start !important;
-  justify-items: stretch !important;
-  margin: 12px 0 !important;
-  padding: 0 !important;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  justify-items: stretch;
+  margin: 12px 0;
+  padding: 0;
 }
-
-.cv-section-card .field-group label.field-label {
-  margin-bottom: 6px !important;
-}
-
+.cv-section-card .field-group label.field-label { margin-bottom: 6px; }
 .cv-section-card .field-group textarea,
 .cv-section-card .field-group .input.textarea {
-  width: 100% !important;
-  box-sizing: border-box !important;
-  margin: 0 !important;
-  border-radius: 8px !important;
-  padding: 12px !important;
-  resize: vertical !important;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  border-radius: 8px;
+  padding: 12px;
+  resize: vertical;
 }
