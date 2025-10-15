@@ -12,6 +12,10 @@ export default function DocumentsSection({
   // 🔹 NUEVO (opcionales): flags de “Sí/No” para documentos básicos
   docFlags,
   onChangeDocFlag,
+
+  // 🔹 NUEVO: guardado independiente del bloque de 9 selectores
+  onSaveDocFlags,     // () => void
+  savingDocFlags,     // boolean
 }) {
   // Mapeo de los 9 campos que pediste
   const quickItems = [
@@ -47,19 +51,8 @@ export default function DocumentsSection({
         )}
       </header>
 
-      {/* 🔹 NUEVO: bloque de 9 selectores (responsive) — 3 columnas en desktop, 1 en móvil */}
-      <div
-        className="cv-docs-quickflags"
-        style={{
-          marginTop: 12,
-          marginBottom: 12,
-          display: "grid",
-          // auto-fit + minmax hace que en pantallas estrechas caiga a 1 columna,
-          // y en desktop quepan 2–3 sin tocar estilos globales.
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap: 12,
-        }}
-      >
+      {/* 🔹 Bloque de 9 selectores: 3 columnas en desktop (CSS), 1 en móvil */}
+      <div className="cv-docs-quickflags">
         {quickItems.map((it) => (
           <label
             key={it.key}
@@ -70,7 +63,7 @@ export default function DocumentsSection({
               gap: 10,
               padding: "8px 10px",
               background: "var(--card, #fff)",
-              border: "1px solid rgba(0,0,0,.12)",
+              border: "1px solid var(--line, #e2e8f0)",
               borderRadius: 10,
             }}
           >
@@ -97,6 +90,21 @@ export default function DocumentsSection({
             </select>
           </label>
         ))}
+      </div>
+
+      {/* Botón Save independiente para los 9 selectores */}
+      <div className="cv-section-body" style={{ marginTop: 8 }}>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={onSaveDocFlags}
+            disabled={!!savingDocFlags || typeof onSaveDocFlags !== "function"}
+            aria-label="Save document flags"
+          >
+            {savingDocFlags ? "Saving…" : "Save"}
+          </button>
+        </div>
       </div>
 
       <div className="cv-section-body">

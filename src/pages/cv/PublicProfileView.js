@@ -17,8 +17,8 @@ const BUCKET = 'cv-docs';
 
 const pad2 = (n) => String(n).padStart(2, '0');
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-const BASE_A4_WIDTH  = 900;                 // ancho lógico usado en CSS
-const BASE_A4_HEIGHT = Math.round(BASE_A4_WIDTH * (297 / 210)); // mantiene proporción A4
+const BASE_A4_WIDTH  = 900;
+const BASE_A4_HEIGHT = Math.round(BASE_A4_WIDTH * (297 / 210));
 
 function calcAge(month, year) {
   const m = parseInt(month, 10);
@@ -48,7 +48,6 @@ function inferTypeByName(nameOrPath = '') {
   return /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(nameOrPath) ? 'video' : 'image';
 }
 
-/** Intenta hidratar un item de galería (si es path privado → signed URL) */
 async function hydrateMediaItem(it) {
   if (!it) return null;
   if (typeof it === 'string') {
@@ -66,7 +65,6 @@ async function hydrateMediaItem(it) {
   return base;
 }
 
-/** Mapea visibilidad DB → UI */
 function mapDbVisToUi(v) {
   const s = (v || '').toString().toLowerCase();
   if (s === 'public') return 'public';
@@ -74,7 +72,6 @@ function mapDbVisToUi(v) {
   return 'unlisted';
 }
 
-/** Clasifica un doc/cert a un tipo canónico para “empatar” metadatos sin file_url */
 function canonicalTypeFromText(type = '', title = '') {
   const text = `${type} ${title}`.toLowerCase().replace(/[\u2019\u2018]/g, "'");
   const has = (re) => re.test(text);
@@ -90,7 +87,6 @@ function canonicalTypeFromText(type = '', title = '') {
   return 'other';
 }
 
-// --- Hidrata datos de contacto desde public_profiles (id -> handle -> user_id) y fallback a users ---
 async function hydrateContactFields({ profileId, userId, handle }) {
   let contact = {};
 
@@ -155,7 +151,6 @@ async function hydrateContactFields({ profileId, userId, handle }) {
   return contact;
 }
 
-/** Parse robusto para strings JSON con comillas simples/dobles */
 function parseMaybeJson(s) {
   let t = String(s || '').trim();
   if (!t) return null;
@@ -175,7 +170,6 @@ function parseMaybeJson(s) {
   }
 }
 
-/** Normaliza idiomas a "Lang (Level)" */
 function normalizeLanguages(arr) {
   if (!Array.isArray(arr)) return [];
   return arr
@@ -210,7 +204,6 @@ function normalizeLanguages(arr) {
     .filter(Boolean);
 }
 
-// Formatea "Yachting experience"
 function formatYachtingExperienceLabel(totalMonths) {
   const m = Number(totalMonths || 0);
   if (!Number.isFinite(m) || m <= 0) return '—';
@@ -219,16 +212,11 @@ function formatYachtingExperienceLabel(totalMonths) {
   return `${(Math.round(years * 10) / 10).toFixed(1)} years`;
 }
 
-/* ----------------------------------
-   Componente
----------------------------------- */
 export default function PublicProfileView() {
   const { handle } = useParams();
   const { search } = useLocation();
-
   const isPreview = useMemo(() => qs(search).has('preview'), [search]);
   const isMock = useMemo(() => qs(search).has('mock'), [search]);
-
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [gallery, setGallery] = useState([]);
@@ -237,8 +225,6 @@ export default function PublicProfileView() {
   const [references, setReferences] = useState([]);
   const [education, setEducation] = useState([]);        // ⬅️ NUEVO
   const [error, setError] = useState('');
-
-  // Contact form
   const [contactOpen, setContactOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [cEmail, setCEmail] = useState('');
@@ -408,16 +394,47 @@ export default function PublicProfileView() {
         if (expErr) throw expErr;
         const exposed = Array.isArray(exposedRows) ? (exposedRows[0] || {}) : (exposedRows || {});
 
+        const { data: freshPR } = await supabase
+          .from('public_profiles')
+          .select('prefs_skills, languages, skills')
+          .eq('id', baseRow.id)
+          .single();
+
+        const mergedPrefs =
+          freshPR && typeof freshPR.prefs_skills === 'object' && freshPR.prefs_skills !== null
+            ? { ...(baseRow?.prefs_skills || {}), ...freshPR.prefs_skills }
+            : (baseRow?.prefs_skills ?? null);
+        const mergedLanguages =
+          (freshPR && freshPR.languages != null) ? freshPR.languages
+            : (baseRow?.languages ?? exposed?.languages ?? null);
+        const mergedSkills =
+          (freshPR && freshPR.skills != null) ? freshPR.skills
+            : (baseRow?.skills ?? exposed?.skills ?? null);
+
         const row = {
           ...baseRow,
           ...exposed,
+          prefs_skills: mergedPrefs,
+          languages: mergedLanguages,
+          skills: mergedSkills,
           nationalities: nat,
         };
 
-        setProfile(row);
+        const ps = row && typeof row.prefs_skills === 'object' ? row.prefs_skills : null;
+        const bridged = { ...row };
+          if (ps) {
+          if (ps.availability != null) bridged.availability = ps.availability;
+          if (Array.isArray(ps.contracts)) bridged.contract_types = ps.contracts;
+          if (Array.isArray(ps.regionsSeasons)) bridged.regions = ps.regionsSeasons;
+          if (ps.rateSalary != null) bridged.compensation = ps.rateSalary;
+          if (Array.isArray(ps.languageLevels)) bridged.languages = ps.languageLevels;
+          if (Array.isArray(ps.deptSpecialties)) bridged.skills = ps.deptSpecialties;
+        }
+
+        setProfile(bridged);
         setGallery(hydrated);
 
-        const pid = row.id;
+        const pid = bridged.id;
 
         // EXPERIENCES
         {
@@ -522,7 +539,7 @@ export default function PublicProfileView() {
         // REFERENCES
         {
           const { data: refRows, error: refErr } = await supabase
-            .rpc('rpc_public_references_by_handle', { handle_in: row.handle });
+            .rpc('rpc_public_references_by_handle', { handle_in: bridged.handle });
 
           if (refErr) {
             console.error('refs rpc error', refErr);
@@ -546,7 +563,7 @@ export default function PublicProfileView() {
         // EDUCATION (public)
         {
           const { data: eduRows, error: eduErr } = await supabase
-            .rpc('rpc_public_education_by_handle', { handle_in: row.handle });
+            .rpc('rpc_public_education_by_handle', { handle_in: bridged.handle });
 
           if (eduErr) {
             console.error('edu RPC error:', eduErr);
@@ -774,6 +791,11 @@ function computeScrollTargetTop(el, extra = 12) {
   const photoBackdropStyle = useMemo(() => {
     return heroSrc ? { ['--ppv-photo-url']: `url("${heroSrc}")` } : {};
   }, [heroSrc]);
+
+  const docFlags = useMemo(() => {
+    const ps = profile?.prefs_skills && typeof profile.prefs_skills === 'object' ? profile.prefs_skills : {};
+    return (ps && typeof ps.docFlags === 'object') ? ps.docFlags : {};
+  }, [profile?.prefs_skills]);
 
   /* ----- UI ----- */
   if (loading) {
@@ -1061,7 +1083,7 @@ function computeScrollTargetTop(el, extra = 12) {
               <div className="ppv-pageInner">
                 {/* ⬇️ ANCLA CERTIFICATES & DOCS */}
                 <div id="ppv-certdocs">
-                  <PublicCertDocsSection documents={documents} />
+                  <PublicCertDocsSection documents={documents} docFlags={docFlags} />
                 </div>
 
                 {/* ⬇️ ANCLA LANGUAGES & SKILLS */}

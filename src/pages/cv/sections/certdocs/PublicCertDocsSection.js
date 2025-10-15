@@ -76,6 +76,8 @@ function toOriginalSupabaseUrl(u) {
 export default function PublicCertDocsSection({
   documents = [],
   title = 'CERTIFICATION & DOCUMENTS',
+  /** 🔹 NUEVO: flags provenientes del perfil (prefs_skills.docFlags) */
+  docFlags = {},
 }) {
   // Modal viewer
   const [viewer, setViewer] = useState({ open: false, url: '', title: '' });
@@ -177,7 +179,7 @@ export default function PublicCertDocsSection({
         </div>
 
         {/* Resumen (Passport >6 months, etc.) — usa la lista ya filtrada (sin Unlisted) */}
-        <BasicDocsSummary documents={sorted} />
+        <BasicDocsSummary documents={sorted} docFlags={docFlags} />
         
         {/* Lista con scroll interno: solo 5 visibles a la vez */}
         <ul

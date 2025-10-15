@@ -62,6 +62,42 @@ export default function CandidateProfileTab() {
     fitness: '',
   });
 
+  // ===== Doc flags (9 campos sí/no) =====
+const DEFAULT_DOC_FLAGS = {
+  passport6m: null,
+  schengenVisa: null,
+  stcwBasic: null,
+  seamansBook: null,
+  eng1: null,
+  usVisa: null,
+  drivingLicense: null,
+  pdsd: null,
+  covidVaccine: null,
+};
+const [docFlags, setDocFlags] = useState({ ...DEFAULT_DOC_FLAGS });
+
+function buildFullPrefsSkillsPayload() {
+  return {
+    ...buildPrefsSkillsPayload({
+      availability,
+      regionsSeasons,
+      contracts,
+      languageLevels,
+      deptSpecialties,
+      rateSalary,
+      rotation,
+      vesselTypes,
+      vesselSizeRange,
+      programTypes,
+      dietaryRequirements,
+      onboardPrefs,
+    }),
+    // Siempre incluir estos bloques también:
+    lifestyleHabits,
+    docFlags,
+  };
+}
+
   // Personal details (nuevo bloque)
   const [personal, setPersonal] = useState({
     first_name: '',
@@ -88,26 +124,39 @@ export default function CandidateProfileTab() {
     gender: '',
   });
 
-  // NUEVO: Docs & Media (estado local — sin persistencia aún)
   const [docs, setDocs] = useState([]);
-
-  // NUEVO: estado controlado de la galería + guardado local
   const [gallery, setGallery] = useState([]);
+  const [savingDocFlags, setSavingDocFlags] = useState(false);
   const [savingGallery, setSavingGallery] = useState(false);
-  // NUEVO: paths actualmente persistidos (para saber qué borrar en storage)
-  const [persistedPaths, setPersistedPaths] = useState([]);
 
-  // NUEVO: banderas de completitud consultadas en el padre (sin tocar hijos)
+  const handleSaveDocFlags = async () => {
+  if (!profile?.id) return;
+  setSavingDocFlags(true);
+  try {
+    // Enviar SIEMPRE el objeto COMPLETO (no sólo docFlags)
+    const payload = buildFullPrefsSkillsPayload();
+
+    const { data, error } = await supabase.rpc('rpc_save_prefs_skills', { payload });
+    if (error) throw error;
+    const updated = Array.isArray(data) ? data[0] : null;
+    if (updated) setProfile(updated);
+    toast.success('Document flags saved');
+  } catch (e) {
+    toast.error(e.message || 'Could not save document flags');
+  } finally {
+    setSavingDocFlags(false);
+  }
+};
+
+  const [persistedPaths, setPersistedPaths] = useState([]);
   const [expCount, setExpCount] = useState(0);
   const [refsCount, setRefsCount] = useState(0);
-
   const publicUrl = useMemo(() => {
     if (!profile?.handle) return '';
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     return `${origin}/cv/${profile.handle}`;
   }, [profile?.handle]);
 
-  // util: inferir tipo por nombre o mimetype
   const inferTypeByName = (nameOrPath = '') => (
     /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(nameOrPath) ? 'video' : 'image'
   );
@@ -222,7 +271,44 @@ export default function CandidateProfileTab() {
 
           // >>> Precarga desde prefs_skills (JSONB)
           const ps = (data && data.prefs_skills && typeof data.prefs_skills === 'object') ? data.prefs_skills : {};
-          // rotation puede venir como string o como array -> normalizamos a array
+          
+          // --- OVERRIDE: si existen en prefs_skills, usar esos valores y caer a legacy solo si faltan ---
+          setAvailability(
+            ps?.availability ?? (data?.availability || '')
+          );
+
+          setLanguageLevels(
+            Array.isArray(ps?.languageLevels)
+              ? ps.languageLevels
+              : normalizeLanguageLevels(data?.languages)
+          );
+
+          setRegionsSeasons(
+            Array.isArray(ps?.regionsSeasons)
+              ? ps.regionsSeasons
+              : (Array.isArray(data?.regions) ? data.regions : [])
+          );
+
+          setRateSalary(
+            ps?.rateSalary && typeof ps.rateSalary === 'object'
+              ? ps.rateSalary
+              : (data?.compensation && typeof data.compensation === 'object'
+                ? data.compensation
+                : { currency: 'USD', dayRateMin: '', salaryMin: '' })
+          );
+
+          setContracts(
+            Array.isArray(ps?.contracts)
+              ? ps.contracts
+              : (Array.isArray(data?.contract_types) ? data.contract_types : [])
+          );
+
+          setDeptSpecialties(
+            Array.isArray(ps?.deptSpecialties)
+              ? ps.deptSpecialties
+              : (Array.isArray(data?.skills) ? data.skills : [])
+          );
+
           setRotation(Array.isArray(ps?.rotation) ? ps.rotation : (ps?.rotation ? [ps.rotation] : []));
           setVesselTypes(Array.isArray(ps?.vesselTypes) ? ps.vesselTypes : []);
           setVesselSizeRange(ps?.vesselSizeRange ?? []); // acepta [] o {min,max,unit}
@@ -230,7 +316,13 @@ export default function CandidateProfileTab() {
           setDietaryRequirements(Array.isArray(ps?.dietaryRequirements) ? ps.dietaryRequirements : []);
           setOnboardPrefs(ps?.onboardPrefs && typeof ps.onboardPrefs === 'object' ? ps.onboardPrefs : {});
 
-                    // Lifestyle & Habits (JSONB dentro de prefs_skills)
+          // Doc flags (JSONB dentro de prefs_skills)
+          setDocFlags({
+            ...DEFAULT_DOC_FLAGS,
+            ...(ps && typeof ps.docFlags === 'object' ? ps.docFlags : {}),
+          });
+
+          // Lifestyle & Habits (JSONB dentro de prefs_skills)
           const lh = ps && typeof ps.lifestyleHabits === 'object' ? ps.lifestyleHabits : {};
           setLifestyleHabits({
             tattoosVisible: lh.tattoosVisible || '',
@@ -561,28 +653,27 @@ const generateShortHandle = () => {
     }
   };
 
-  // Guardar Preferences & Skills con RPC
   const handleSaveDetails = async (e) => {
     e.preventDefault();
     if (!profile?.id) return;
 
-    const payload = {
-  ...buildPrefsSkillsPayload({
-    availability,
-    regionsSeasons,
-    contracts,
-    languageLevels,
-    deptSpecialties,
-    rateSalary,
-    rotation,
-    vesselTypes,
-    vesselSizeRange,
-    programTypes,
-    dietaryRequirements,
-    onboardPrefs,
-  }),
-  lifestyleHabits,
-};
+  const payload = {
+    ...buildPrefsSkillsPayload({
+      availability,
+      regionsSeasons,
+      contracts,
+      languageLevels,
+      deptSpecialties,
+      rateSalary,
+      rotation,
+      vesselTypes,
+      vesselSizeRange,
+      programTypes,
+      dietaryRequirements,
+      onboardPrefs,
+    }),
+    lifestyleHabits,
+  };
 
     setSaving(true);
     try {
@@ -1088,6 +1179,10 @@ const progressSections = {
             <DocumentsSectionController
               initialDocs={docs}
               onSave={handleSaveDocs}
+              initialDocFlags={docFlags}
+              onDocFlagsChange={setDocFlags}
+              onSaveDocFlags={handleSaveDocFlags}
+              savingDocFlags={savingDocFlags}
             />
           </div>
 

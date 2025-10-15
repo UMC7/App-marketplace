@@ -24,6 +24,10 @@ export default function DocumentsSectionController({
   /** opcionales: si el padre quiere hidratar/escuchar los flags */
   initialDocFlags,
   onDocFlagsChange,
+
+  /** 🔹 NUEVO (opcionales): guardado independiente del bloque de 9 selectores */
+  onSaveDocFlags,     // (flags) => Promise<void> | void
+  savingDocFlags,     // boolean
 }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("bulk"); // 'add' | 'single' | 'bulk'
@@ -180,11 +184,27 @@ export default function DocumentsSectionController({
   const handleChangeDocFlag = (key, value) => {
     setDocFlags((prev) => {
       const next = { ...prev, [key]: value };
+      // ⚠️ Para evitar la advertencia de React “Cannot update a component while rendering
+      // a different component”, notificamos al padre en un microtask (fuera del render actual).
       if (typeof onDocFlagsChange === "function") {
-        try { onDocFlagsChange(next); } catch {}
+        if (typeof queueMicrotask === "function") {
+          queueMicrotask(() => {
+            try { onDocFlagsChange(next); } catch {}
+          });
+        } else {
+          setTimeout(() => {
+            try { onDocFlagsChange(next); } catch {}
+          }, 0);
+        }
       }
       return next;
     });
+  };
+
+  const handleSaveDocFlagsClick = async () => {
+    if (typeof onSaveDocFlags === "function") {
+      await onSaveDocFlags(docFlags);
+    }
   };
 
   return (
@@ -198,6 +218,9 @@ export default function DocumentsSectionController({
         // 🔹 Nuevo: pasamos flags + updater para que se rendericen arriba de la lista
         docFlags={docFlags}
         onChangeDocFlag={handleChangeDocFlag}
+        // 🔹 Nuevo: botón Save independiente
+        onSaveDocFlags={handleSaveDocFlagsClick}
+        savingDocFlags={!!savingDocFlags}
       />
       <DocumentsManagerDialog
         open={open}
