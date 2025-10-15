@@ -74,6 +74,22 @@ function mapDbVisToUi(v) {
   return 'unlisted';
 }
 
+/** Clasifica un doc/cert a un tipo canónico para “empatar” metadatos sin file_url */
+function canonicalTypeFromText(type = '', title = '') {
+  const text = `${type} ${title}`.toLowerCase().replace(/[\u2019\u2018]/g, "'");
+  const has = (re) => re.test(text);
+
+  if (has(/\bpassport\b/)) return 'passport';
+  if (has(/\bvisa\b|residen/)) return 'visa';
+  if (has(/\b(seaman'?s|seafarer)\b.*\bbook\b|\bdischarge\s*book\b/)) return 'seamanbook';
+  if (has(/\bstcw\b|a-?vi\/?1|\bbst\b|basic\s*safety|pssr|pbst|crowd|fire\s*fighting|survival|proficiency|pdsd/)) return 'stcw';
+  if (has(/\beng\s*1\b|eng1/)) return 'eng1';
+  if (has(/\bcoc\b|certificate of competency/)) return 'coc';
+  if (has(/\bgoc\b|general operator/)) return 'goc';
+  if (has(/yacht\s*master|yachtmaster/)) return 'yachtmaster';
+  return 'other';
+}
+
 // --- Hidrata datos de contacto desde public_profiles (id -> handle -> user_id) y fallback a users ---
 async function hydrateContactFields({ profileId, userId, handle }) {
   let contact = {};
@@ -435,29 +451,71 @@ export default function PublicProfileView() {
             .eq('profile_id', pid)
             .order('created_at', { ascending: false });
 
-          // ⚠️ Solo intentamos “unir” por file_url cuando exista:
-          let issuedByPath = new Map();
-          let expiresByPath = new Map();
+          // 1) Mapas por path (cuando hay file_url)
+          const issuedByPath = new Map();
+          const expiresByPath = new Map();
+
+          // 2) Fallback por tipo canónico (para docs privados sin URL)
+          const bestCertByType = new Map(); // type -> { issued_on, expires_on }
+
           try {
             const { data: certRows } = await supabase
               .from('candidate_certificates')
-              .select('file_url, issued_on, expires_on')
+              .select('file_url, issued_on, expires_on, title')
               .eq('profile_id', pid);
 
-            (certRows || [])
-              .filter(c => c?.file_url) // <-- evita “null” como key
-              .forEach(c => {
-                issuedByPath.set(String(c.file_url), c.issued_on || null);
-                expiresByPath.set(String(c.file_url), c.expires_on || null);
-              });
-          } catch { /* no-op */ }
+            (certRows || []).forEach((c) => {
+              const keyPath = c?.file_url ? String(c.file_url) : null;
+              if (keyPath) {
+                issuedByPath.set(keyPath, c.issued_on || null);
+                expiresByPath.set(keyPath, c.expires_on || null);
+              }
+              // construir mejor candidato por tipo
+              const t = canonicalTypeFromText('', c?.title || '');
+              const prev = bestCertByType.get(t);
+              const currScore = c?.expires_on ? new Date(c.expires_on).getTime() : -Infinity;
+              const prevScore = prev?.expires_on ? new Date(prev.expires_on).getTime() : -Infinity;
+              if (!prev || currScore > prevScore) {
+                bestCertByType.set(t, { issued_on: c?.issued_on || null, expires_on: c?.expires_on || null });
+              }
+            });
+          } catch {
+            // no-op
+          }
 
-          const docs = (docRows || []).map(r => ({
-            ...r,
-            visibility: mapDbVisToUi(r.visibility),
-            issued_on: r.file_url ? issuedByPath.get(String(r.file_url)) || null : null,
-            expires_on: r.file_url ? expiresByPath.get(String(r.file_url)) || null : null,
-          }));
+          // 3) Construir docs con metadatos:
+          const docsAll = (docRows || []).map((r) => {
+            const visibilityUi = mapDbVisToUi(r.visibility);
+            let issued = null;
+            let expires = null;
+
+            if (r.file_url) {
+              const k = String(r.file_url);
+              issued = issuedByPath.get(k) || null;
+              expires = expiresByPath.get(k) || null;
+            }
+
+            // Fallback por tipo, si aún no hay metadatos (p. ej., Private sin URL)
+            if (!issued && !expires) {
+              const t = canonicalTypeFromText(r.type || '', r.title || '');
+              const byType = bestCertByType.get(t);
+              if (byType) {
+                issued = byType.issued_on || null;
+                expires = byType.expires_on || null;
+              }
+            }
+
+            return {
+              ...r,
+              visibility: visibilityUi,
+              issued_on: issued,
+              expires_on: expires,
+            };
+          });
+
+          // 4) Regla de visibilidad: Unlisted NO se lista en el CV público
+          const docs = docsAll.filter((d) => d.visibility !== 'unlisted');
+          
           setDocuments(docs);
         }
 

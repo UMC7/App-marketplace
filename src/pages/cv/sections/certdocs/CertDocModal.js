@@ -157,7 +157,7 @@ export default function CertDocModal({ open, onClose, src, title = 'Document' })
           ) : (
             <div style={{ padding: 16 }}>
               <p>
-                Preview not available for this file type.{' '}
+                Preview not available for this file type.{` `}
                 {src ? (
                   <a href={src} target="_blank" rel="noreferrer">
                     Open in new tab

@@ -81,9 +81,14 @@ export default function PublicCertDocsSection({
   const [viewer, setViewer] = useState({ open: false, url: '', title: '' });
 
   // Ordenar por prioridad y luego por fechas (más próximos primero)
+  // Requisito de visibilidad:
+  // - Unlisted: NO se muestra (se filtra).
+  // - Private: se muestra (para indicadores/fechas) pero NO se puede abrir.
+  // - Public: se muestra y se puede abrir.
   const sorted = useMemo(() => {
     const list = Array.isArray(documents) ? [...documents] : [];
-    return list.sort((a, b) => {
+    const filtered = list.filter((d) => (d?.visibility || 'public') !== 'unlisted');
+    return filtered.sort((a, b) => {
       const pa = priorityOf(a), pb = priorityOf(b);
       if (pa !== pb) return pa - pb;
       const ax = a.expires_on ? new Date(a.expires_on).getTime() : Infinity;
@@ -125,6 +130,9 @@ export default function PublicCertDocsSection({
 
   const openDoc = useCallback(async (doc) => {
     if (!doc) return;
+    // Solo PUBLIC puede abrirse/verse
+    if ((doc.visibility || 'public') !== 'public') return;
+
     let url = '';
     const path = String(doc.file_url || '');
     if (!path) return;
@@ -168,6 +176,7 @@ export default function PublicCertDocsSection({
           </h2>
         </div>
 
+        {/* Resumen (Passport >6 months, etc.) — usa la lista ya filtrada (sin Unlisted) */}
         <BasicDocsSummary documents={sorted} />
         
         {/* Lista con scroll interno: solo 5 visibles a la vez */}
@@ -183,6 +192,12 @@ export default function PublicCertDocsSection({
         >
           {sorted.map((doc) => {
             const expText = fmtDate(doc.expires_on) || '—';
+            const canOpen = (doc.visibility || 'public') === 'public' && !!doc.file_url;
+            const openTitle =
+              (doc.visibility || 'public') === 'private'
+                ? 'File is private'
+                : (!doc.file_url ? 'No file available' : 'View scan');
+
             return (
               <li
                 key={doc.id || doc.file_url || doc.title}
@@ -199,9 +214,10 @@ export default function PublicCertDocsSection({
                 </div>
                 <button
                   className="ppv-docOpenBtn"
-                  onClick={() => openDoc(doc)}
-                  title="View scan"
+                  onClick={() => canOpen && openDoc(doc)}
+                  title={openTitle}
                   aria-label={`View ${doc.title || 'document'}`}
+                  disabled={!canOpen}
                 >
                   🔍
                 </button>

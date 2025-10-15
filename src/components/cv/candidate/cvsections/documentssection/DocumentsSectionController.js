@@ -6,17 +6,47 @@ import supabase from "../../../../../supabase";
 import { toast } from "react-toastify";
 import "../../../../../styles/cv/docs.css";
 
-export default function DocumentsSectionController({ initialDocs = [], onSave }) {
+const DEFAULT_DOC_FLAGS = {
+  passport6m: null,
+  schengenVisa: null,
+  stcwBasic: null,
+  seamansBook: null,
+  eng1: null,
+  usVisa: null,
+  drivingLicense: null,
+  pdsd: null,
+  covidVaccine: null,
+};
+
+export default function DocumentsSectionController({
+  initialDocs = [],
+  onSave,
+  /** opcionales: si el padre quiere hidratar/escuchar los flags */
+  initialDocFlags,
+  onDocFlagsChange,
+}) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("bulk"); // 'add' | 'single' | 'bulk'
   const [editDoc, setEditDoc] = useState(null); // doc activo en modo 'single'
   const [busyId, setBusyId] = useState(null);   // doc en proceso (delete)
   const [docs, setDocs] = useState(() => (initialDocs || []).map(coerceDoc));
 
+  // 🔹 Nuevo: estado local para los 9 selectores (No/Yes -> null/false/true)
+  const [docFlags, setDocFlags] = useState(() => ({
+    ...DEFAULT_DOC_FLAGS,
+    ...(initialDocFlags || {}),
+  }));
+
   // ⬅️ Sincroniza con los docs del padre (sin pisar al cerrar el modal)
   useEffect(() => {
     setDocs((initialDocs || []).map(coerceDoc));
   }, [initialDocs]);
+
+  // ⬅️ Sincroniza flags si el padre los cambia externamente
+  useEffect(() => {
+    if (!initialDocFlags) return;
+    setDocFlags((prev) => ({ ...prev, ...initialDocFlags }));
+  }, [initialDocFlags]);
 
   const orderedDocs = useMemo(() => {
     // Basic sort: public → unlisted → private, then by title
@@ -145,6 +175,18 @@ export default function DocumentsSectionController({ initialDocs = [], onSave })
     }
   };
 
+  /* -------- Flags (9 selectores) -------- */
+
+  const handleChangeDocFlag = (key, value) => {
+    setDocFlags((prev) => {
+      const next = { ...prev, [key]: value };
+      if (typeof onDocFlagsChange === "function") {
+        try { onDocFlagsChange(next); } catch {}
+      }
+      return next;
+    });
+  };
+
   return (
     <>
       <DocumentsSection
@@ -153,6 +195,9 @@ export default function DocumentsSectionController({ initialDocs = [], onSave })
         onEditDoc={handleEditDoc}
         onDeleteDoc={handleDeleteDoc}
         busyId={busyId}
+        // 🔹 Nuevo: pasamos flags + updater para que se rendericen arriba de la lista
+        docFlags={docFlags}
+        onChangeDocFlag={handleChangeDocFlag}
       />
       <DocumentsManagerDialog
         open={open}

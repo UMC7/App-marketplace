@@ -51,10 +51,10 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
   const [waCC, setWaCC]           = useState(''); // digits only
   const [waNum, setWaNum]         = useState('');
 
-  // Visibilidad
-  const [showEmail, setShowEmail] = useState(false);
-  const [showPhone, setShowPhone] = useState(false);
-  const [showAge,   setShowAge]   = useState(false);
+  // Visibilidad (forzados SIEMPRE a true)
+  const [showEmail, setShowEmail] = useState(true);
+  const [showPhone, setShowPhone] = useState(true);
+  const [showAge,   setShowAge]   = useState(true);
 
   // Sociales
   const [linkedin, setLinkedin]   = useState('');
@@ -99,10 +99,10 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
     setBirthMonth(profile.birth_month || '');
     setBirthYear(profile.birth_year || '');
 
-    // visibilidad
-    setShowEmail(!!profile.show_email_public);
-    setShowPhone(!!profile.show_phone_public);
-    setShowAge(!!profile.show_age_public);
+    // visibilidad (FORZAR a true)
+    setShowEmail(true);
+    setShowPhone(true);
+    setShowAge(true);
 
     // redes
     setLinkedin(profile.linkedin || '');
@@ -164,11 +164,11 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
 
       birth_month: birthMonth ? Number(birthMonth) : null,
       birth_year:  birthYear ? Number(birthYear)  : null,
-      show_age_public: !!showAge,
+      show_age_public: true,        // 🔒 forzado
 
       contact_pref: commPref || null,
-      show_email_public: !!showEmail,
-      show_phone_public: !!showPhone,
+      show_email_public: true,      // 🔒 forzado
+      show_phone_public: true,      // 🔒 forzado
 
       linkedin:  linkedin ? normalizeUrl(linkedin) : null,
       instagram: (instagram || '').trim() || null,
@@ -328,14 +328,11 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
         />
       </div>
 
-      {/* Toggles de visibilidad */}
+      {/* Toggles de visibilidad — siempre activos y bloqueados */}
       <VisibilityTogglesRow
-        showAge={showAge}
-        onChangeShowAge={setShowAge}
-        showEmail={showEmail}
-        onChangeShowEmail={setShowEmail}
-        showPhone={showPhone}
-        onChangeShowPhone={setShowPhone}
+        showAge={true}
+        showEmail={true}
+        showPhone={true}
       />
 
       {/* Actions */}

@@ -2,13 +2,15 @@
 import React from 'react';
 
 export default function VisibilityTogglesRow({
-  showAge = false,
-  onChangeShowAge,
-  showEmail = false,
-  onChangeShowEmail,
-  showPhone = false,
-  onChangeShowPhone,
+  showAge = false,          // compat: ignorado, siempre true visualmente
+  onChangeShowAge,          // compat: ignorado
+  showEmail = false,        // compat: ignorado, siempre true visualmente
+  onChangeShowEmail,        // compat: ignorado
+  showPhone = false,        // compat: ignorado, siempre true visualmente
+  onChangeShowPhone,        // compat: ignorado
 }) {
+  const forcedChecked = true;
+
   return (
     <div
       style={{
@@ -22,8 +24,10 @@ export default function VisibilityTogglesRow({
       <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <input
           type="checkbox"
-          checked={!!showAge}
-          onChange={(e) => onChangeShowAge && onChangeShowAge(e.target.checked)}
+          checked={forcedChecked}
+          disabled
+          aria-disabled="true"
+          title="This setting is enforced by the platform"
         />
         <span className="cp-muted">Show age on CV</span>
       </label>
@@ -31,8 +35,10 @@ export default function VisibilityTogglesRow({
       <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <input
           type="checkbox"
-          checked={!!showEmail}
-          onChange={(e) => onChangeShowEmail && onChangeShowEmail(e.target.checked)}
+          checked={forcedChecked}
+          disabled
+          aria-disabled="true"
+          title="This setting is enforced by the platform"
         />
         <span className="cp-muted">Show email on CV</span>
       </label>
@@ -40,8 +46,10 @@ export default function VisibilityTogglesRow({
       <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <input
           type="checkbox"
-          checked={!!showPhone}
-          onChange={(e) => onChangeShowPhone && onChangeShowPhone(e.target.checked)}
+          checked={forcedChecked}
+          disabled
+          aria-disabled="true"
+          title="This setting is enforced by the platform"
         />
         <span className="cp-muted">Show phone on CV</span>
       </label>

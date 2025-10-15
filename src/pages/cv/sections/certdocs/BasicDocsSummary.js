@@ -107,7 +107,12 @@ function ItemRow({ label, ok }) {
 
 export default function BasicDocsSummary({ documents = [] }) {
   const items = useMemo(() => {
-    const docs = Array.isArray(documents) ? documents : [];
+    // REGLA DE VISIBILIDAD:
+    // - Unlisted: NO se considera.
+    // - Public/Private: sí se consideran para los indicadores.
+    const docsAll = Array.isArray(documents) ? documents : [];
+    const docs = docsAll.filter(d => (d?.visibility || 'public') !== 'unlisted');
+
     const byType = (type) => docs.filter(d => canonicalType(d) === type);
 
     // Passport (>6 months)

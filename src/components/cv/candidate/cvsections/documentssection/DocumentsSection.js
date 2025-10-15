@@ -8,7 +8,28 @@ export default function DocumentsSection({
   onEditDoc,
   onDeleteDoc,
   busyId, // opcional: id que está en proceso de borrado para deshabilitar el botón
+
+  // 🔹 NUEVO (opcionales): flags de “Sí/No” para documentos básicos
+  docFlags,
+  onChangeDocFlag,
 }) {
+  // Mapeo de los 9 campos que pediste
+  const quickItems = [
+    { key: "passport6m",     label: "Passport >6 months" },
+    { key: "schengenVisa",   label: "SCHENGEN Visa" },
+    { key: "stcwBasic",      label: "STCW Basic Safety" },
+    { key: "seamansBook",    label: "Seaman’s Book" },
+    { key: "eng1",           label: "ENG1" },
+    { key: "usVisa",         label: "US VISA" },
+    { key: "drivingLicense", label: "Driving License" },
+    { key: "pdsd",           label: "PDSD Course" },
+    { key: "covidVaccine",   label: "COVID Vaccine" },
+  ];
+
+  // Normaliza boolean/null -> valor del <select>
+  const valOf = (v) => (v === true ? "yes" : v === false ? "no" : "");
+  const parseVal = (s) => (s === "yes" ? true : s === "no" ? false : null);
+
   return (
     <>
       <header className="cv-section-head">
@@ -25,6 +46,58 @@ export default function DocumentsSection({
           <small className="cv-section-hint">Manager coming soon</small>
         )}
       </header>
+
+      {/* 🔹 NUEVO: bloque de 9 selectores (responsive) — 3 columnas en desktop, 1 en móvil */}
+      <div
+        className="cv-docs-quickflags"
+        style={{
+          marginTop: 12,
+          marginBottom: 12,
+          display: "grid",
+          // auto-fit + minmax hace que en pantallas estrechas caiga a 1 columna,
+          // y en desktop quepan 2–3 sin tocar estilos globales.
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: 12,
+        }}
+      >
+        {quickItems.map((it) => (
+          <label
+            key={it.key}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+              padding: "8px 10px",
+              background: "var(--card, #fff)",
+              border: "1px solid rgba(0,0,0,.12)",
+              borderRadius: 10,
+            }}
+          >
+            <span style={{ fontSize: 14 }}>{it.label}</span>
+            <select
+              value={valOf(docFlags?.[it.key])}
+              onChange={(e) =>
+                typeof onChangeDocFlag === "function"
+                  ? onChangeDocFlag(it.key, parseVal(e.target.value))
+                  : undefined
+              }
+              style={{
+                minWidth: 120,
+                padding: "6px 8px",
+                borderRadius: 8,
+                border: "1px solid rgba(0,0,0,.18)",
+                background: "var(--card, #fff)",
+              }}
+              aria-label={it.label}
+            >
+              <option value="">Select...</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </label>
+        ))}
+      </div>
 
       <div className="cv-section-body">
         {docs.length === 0 ? (
