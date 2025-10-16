@@ -21,6 +21,11 @@ function safeData(res, fallback) {
   return (data ?? fallback) || fallback;
 }
 
+/** Unwrap: algunas RPC devuelven una sola fila dentro de un array */
+function unwrapSingle(data) {
+  return Array.isArray(data) ? (data[0] || null) : data;
+}
+
 /**
  * Overview (totales del periodo)
  * Retorna: { views, unique_viewers, contact_opens, chat_starts, cv_downloads }
@@ -35,9 +40,7 @@ export async function fetchOverview({ handle, userId, from, to } = {}) {
 
   try {
     const res = await supabase.rpc('rpc_cv_analytics_overview', params);
-    const row =
-      safeData(res, null) ||
-      null;
+    const row = unwrapSingle(safeData(res, null));
 
     return {
       views: Number(row?.views ?? 0),
@@ -126,7 +129,7 @@ export async function fetchGeography({ handle, userId, from, to, limit = 10 } = 
 
   try {
     const res = await supabase.rpc('rpc_cv_analytics_geography', params);
-    const data = safeData(res, base) || base;
+    const data = unwrapSingle(safeData(res, base)) || base;
 
     const countries = Array.isArray(data.countries) ? data.countries : [];
     const cities = Array.isArray(data.cities) ? data.cities : [];
@@ -162,7 +165,7 @@ export async function fetchDevices({ handle, userId, from, to } = {}) {
 
   try {
     const res = await supabase.rpc('rpc_cv_analytics_devices', params);
-    const data = safeData(res, base) || base;
+    const data = unwrapSingle(safeData(res, base)) || base;
 
     return {
       devices: (Array.isArray(data.devices) ? data.devices : []).map((r) => ({
@@ -193,7 +196,7 @@ export async function fetchFunnel({ handle, userId, from, to } = {}) {
 
   try {
     const res = await supabase.rpc('rpc_cv_analytics_funnel', params);
-    const row = safeData(res, null) || null;
+    const row = unwrapSingle(safeData(res, null));
 
     return {
       views: Number(row?.views ?? row?.profile_views ?? 0),
