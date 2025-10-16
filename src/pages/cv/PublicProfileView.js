@@ -20,6 +20,16 @@ const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 const BASE_A4_WIDTH  = 900;
 const BASE_A4_HEIGHT = Math.round(BASE_A4_WIDTH * (297 / 210));
 
+function setViewportContent(content) {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (!meta) return { restore: () => {} };
+  const prev = meta.getAttribute('content') || '';
+  meta.setAttribute('content', content);
+  return {
+    restore: () => meta.setAttribute('content', prev),
+  };
+}
+
 function calcAge(month, year) {
   const m = parseInt(month, 10);
   const y = parseInt(year, 10);
@@ -278,6 +288,11 @@ export default function PublicProfileView() {
       window.removeEventListener('resize', measure);
       window.removeEventListener('orientationchange', measure);
     };
+  }, []);
+
+  useEffect(() => {
+    const { restore } = setViewportContent('width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes');
+    return () => restore();
   }, []);
 
   useEffect(() => {
