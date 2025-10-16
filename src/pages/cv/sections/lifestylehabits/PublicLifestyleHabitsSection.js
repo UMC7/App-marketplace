@@ -90,9 +90,9 @@ function Meter({ label, value, options = [], icon, iconColor }) {
 
       <div className="ppv-lh-row">
         <div className="ppv-lh-barsV" aria-hidden="true">
-          <span className={`vbar vbar-1 ${idx >= 0 ? 'active' : ''}`} />
-          <span className={`vbar vbar-2 ${idx >= 1 ? 'active' : ''}`} />
-          <span className={`vbar vbar-3 ${idx >= 2 ? 'active' : ''}`} />
+          <span className={`vbar vbar-1 ${idx >= 1 ? 'active' : ''}`} />
+          <span className={`vbar vbar-2 ${idx >= 2 ? 'active' : ''}`} />
+          <span className={`vbar vbar-3 ${idx >= 3 ? 'active' : ''}`} />
         </div>
 
         {/* Color aplicado sólo al icono */}
@@ -204,28 +204,28 @@ export default function PublicLifestyleHabitsSection({ profile }) {
         <Meter
           label="Smoking habits"
           value={lh.smoking}
-          options={['Non-smoker', 'Occasional', 'Regular']}
+          options={['Non-smoker', '< 3 cigarettes per day', '3–10 cigarettes per day', '> 10 cigarettes per day']}
           icon={<IconSmokingPack />}
           iconColor={ICON_COLOR}
         />
         <Meter
           label="Vaping"
           value={lh.vaping}
-          options={['No', 'Occasionally', 'Regularly']}
+          options={['None', '< 1 puff per hour', '1–3 puffs per hour', '> 3 puffs per hour']}
           icon={<IconVapeECig />}
           iconColor={ICON_COLOR}
         />
         <Meter
           label="Alcohol consumption"
           value={lh.alcohol}
-          options={['None', 'Social', 'Regular']}
+          options={['None', '≤ 1 unit per day', '≤ 3 units per day', '> 3 units per day']}
           icon={<IconAlcoholCocktail />}
           iconColor={ICON_COLOR}
         />
         <Meter
           label="Fitness / sport activity"
           value={lh.fitness}
-          options={['Low', 'Moderate', 'Active']}
+          options={['None', '< 2 days per week', '2–4 days per week', '≥ 5 days per week']}
           icon={<IconFitnessPose />}
           iconColor={ICON_COLOR}
         />
