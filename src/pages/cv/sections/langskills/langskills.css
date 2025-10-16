@@ -8,6 +8,11 @@
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   padding: 16px;
+
+  /* ✅ Mantiene altura fija y scroll interno */
+  max-height: 354px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ===================
@@ -16,7 +21,7 @@
 .pls-titleRow {
   display: flex;
   align-items: center;
-  justify-content: center; /* centramos horizontalmente el título */
+  justify-content: center;
   margin-bottom: 12px;
 }
 .pls-title {
@@ -26,8 +31,8 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #0b1220;
-  text-align: center;  /* asegura el centrado del texto */
-  width: 100%;         /* ocupa el ancho para centrar fluido */
+  text-align: center;
+  width: 100%;
 }
 
 /* ===================
@@ -88,7 +93,7 @@
 
 /* Botón "Show All" más bajo (altura similar a los chips de skills) */
 .pls .ppv-btn.sm {
-  padding: 6px 12px !important; /* reduce alto */
+  padding: 6px 12px !important;
   font-size: 13px !important;
   line-height: 1 !important;
   min-height: 0 !important;
@@ -104,9 +109,9 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  overflow: hidden;                 /* para animación con max-height */
+  overflow: hidden;
   will-change: max-height;
-  transition: max-height .28s ease; /* refuerzo a la animación */
+  transition: max-height .28s ease;
 }
 .pls-skill {
   border: 1px solid rgba(0, 0, 0, 0.06);
@@ -118,7 +123,7 @@
   word-break: break-word;
 }
 
-/* Responsivo (original) */
+/* Responsivo */
 @media (max-width: 820px) {
   .pls-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -134,6 +139,8 @@
 @media print {
   .pls {
     break-inside: avoid;
+    max-height: none !important;
+    overflow: visible !important;
   }
 }
 
@@ -173,12 +180,9 @@
 }
 
 @media (max-width: 820px) {
-  /* Mantener 4 columnas también en móvil dentro del CV A4 */
   .ppv-a4Page .pls-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   }
-
-  /* Botón compacto, sin crecimiento */
   .ppv-a4Page .pls-deptHdr .ppv-btn.sm {
     flex: 0 0 auto !important;
     width: auto !important;
@@ -187,11 +191,9 @@
 }
 
 @media (max-width: 560px) {
-  /* Reafirmar 4 columnas en móviles más pequeños */
   .ppv-a4Page .pls-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   }
-
   .ppv-a4Page .pls-deptHdr .ppv-btn.sm {
     flex: 0 0 auto !important;
     width: auto !important;

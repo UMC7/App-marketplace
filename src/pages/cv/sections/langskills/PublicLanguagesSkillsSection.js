@@ -1,8 +1,6 @@
 // src/pages/cv/sections/langskills/PublicLanguagesSkillsSection.js
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './langskills.css';
-
-// Catálogo para mapear cada skill a su departamento (misma fuente del formulario)
 import { DEPT_SPECIALTIES_SUGGESTIONS } from '../../../../components/cv/candidate/sectionscomponents/preferencesskills/catalogs';
 
 /* ============================
@@ -84,33 +82,30 @@ function normalizeLanguages(input, profile) {
 }
 
 /* ============================
-   Fluencyómetro (solo visual)
+   Fluencyómetro visual
 ============================ */
 function levelToPct(level) {
   const s = String(level || '').toLowerCase();
   if (s.includes('native')) return 100;
   if (s.includes('fluent')) return 80;
-  if (s.includes('convers')) return 40; // conversational
-  return 60; // fallback neutro si no hay nivel
+  if (s.includes('convers')) return 40;
+  return 60;
 }
 
 function LanguageBar({ lang, level }) {
   const pct = levelToPct(level);
   const pretty = level ? cap(level) : '—';
 
-  // Riel con degradé completo (rojo→naranja→amarillo→verde) y borde negro
   const trackStyle = {
     position: 'relative',
     width: '100%',
-    height: 18,                 // barra más alta (gruesa)
+    height: 18,
     borderRadius: 999,
-    border: '2px solid #000',   // borde negro para contraste
-    background:
-      'linear-gradient(90deg, #c8f2f4 0%, #8be3e9 40%, #18a7b5 100%)',
+    border: '2px solid #000',
+    background: 'linear-gradient(90deg, #c8f2f4 0%, #8be3e9 40%, #18a7b5 100%)',
     overflow: 'hidden',
   };
 
-  // Máscara gris que cubre el (100 - pct)% desde la derecha
   const maskStyle = {
     position: 'absolute',
     top: 0,
@@ -126,27 +121,24 @@ function LanguageBar({ lang, level }) {
       <div style={trackStyle}>
         <div style={maskStyle} />
       </div>
-      <div style={{ marginTop: 8, fontSize: 13, fontWeight: 700 }}>
-        {pretty}
-      </div>
+      <div style={{ marginTop: 8, fontSize: 13, fontWeight: 700 }}>{pretty}</div>
     </div>
   );
 }
 
-/* Construye índice inverso: skill → departamento a partir del catálogo */
+/* ============================
+   Índice skill → departamento
+============================ */
 function buildSkillToDeptIndex() {
   const index = new Map();
   const norm = (s) => String(s || '').trim().toLowerCase();
-
   for (const [dept, raw] of Object.entries(DEPT_SPECIALTIES_SUGGESTIONS || {})) {
     if (!Array.isArray(raw)) continue;
-
-    // Puede venir como array de strings o como [{group, items}]
     if (raw.length && typeof raw[0] === 'string') {
       for (const it of raw) index.set(norm(it), dept);
     } else {
       for (const group of raw) {
-        for (const it of (group?.items || [])) index.set(norm(it), dept);
+        for (const it of group?.items || []) index.set(norm(it), dept);
       }
     }
   }
@@ -154,7 +146,7 @@ function buildSkillToDeptIndex() {
 }
 const SKILL_TO_DEPT = buildSkillToDeptIndex();
 
-/** Normaliza "skills por dept" a { DeptName: [skill, ...] } */
+/** Normaliza "skills por dept" */
 function normalizeSkillsByDept(input, profile) {
   const raw =
     input ??
@@ -174,7 +166,6 @@ function normalizeSkillsByDept(input, profile) {
     if (!arr.includes(s)) arr.push(s);
   };
 
-  // Mapa ya estructurado
   if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
     for (const [dept, list] of Object.entries(raw)) {
       if (Array.isArray(list)) {
@@ -185,7 +176,6 @@ function normalizeSkillsByDept(input, profile) {
     }
   }
 
-  // Array: inferir dept
   if (Array.isArray(raw)) {
     for (const it of raw) {
       if (!it) continue;
@@ -195,7 +185,8 @@ function normalizeSkillsByDept(input, profile) {
         const skill = it.skill || it.name || it.label || it.title || '';
         if (dept && skill) push(dept, skill);
         if (dept && Array.isArray(it.items)) {
-          for (const s of it.items) push(dept, typeof s === 'string' ? s : s?.name || s?.label);
+          for (const s of it.items)
+            push(dept, typeof s === 'string' ? s : s?.name || s?.label);
         }
         continue;
       }
@@ -213,7 +204,6 @@ function normalizeSkillsByDept(input, profile) {
     }
   }
 
-  // Orden sugerido + resto alfa
   const order = ['Deck', 'Engine', 'Interior', 'Galley'];
   const result = {};
   for (const key of order) {
@@ -229,23 +219,22 @@ function normalizeSkillsByDept(input, profile) {
 }
 
 /* ============================
-   Subcomponente: Grupo colapsable
-   - Mide cuántos chips caben en la PRIMERA FILA real
-   - Colapsado: sólo muestra esa fila
-   - Expandido: muestra todo
+   Grupo colapsable
 ============================ */
 function CollapsibleSkillsGroup({ title, items }) {
   const gridRef = useRef(null);
   const [firstRowCount, setFirstRowCount] = useState(0);
   const [expanded, setExpanded] = useState(false);
 
-  // Medir primera fila (chips con el mismo offsetTop que el primero)
   useEffect(() => {
     const el = gridRef.current;
     if (!el) return;
     const measure = () => {
       const chips = Array.from(el.querySelectorAll('[data-chip="1"]'));
-      if (!chips.length) { setFirstRowCount(0); return; }
+      if (!chips.length) {
+        setFirstRowCount(0);
+        return;
+      }
       const top0 = chips[0].offsetTop;
       let count = 0;
       for (const c of chips) {
@@ -270,7 +259,7 @@ function CollapsibleSkillsGroup({ title, items }) {
         {needsToggle && (
           <button
             type="button"
-            className="ppv-btn sm"     // reusa estilo de botones pequeños
+            className="ppv-btn sm"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
           >
@@ -282,11 +271,6 @@ function CollapsibleSkillsGroup({ title, items }) {
       <div
         ref={gridRef}
         className={`pls-grid ${expanded ? 'is-open' : 'is-closed'}`}
-        style={{
-          // Animación simple con max-height; suficientemente alta cuando está abierto
-          maxHeight: expanded ? 1000 : undefined,
-          transition: 'max-height .28s ease',
-        }}
       >
         {visibleItems.map((sk, i) => (
           <div key={`${title}-${i}`} className="pls-skill" data-chip="1">
@@ -299,7 +283,7 @@ function CollapsibleSkillsGroup({ title, items }) {
 }
 
 /* ============================
-   Componente principal
+   Principal
 ============================ */
 export default function PublicLanguagesSkillsSection({
   languages,
@@ -310,23 +294,21 @@ export default function PublicLanguagesSkillsSection({
   const langList = useMemo(() => normalizeLanguages(languages, profile), [languages, profile]);
   const skillsByDept = useMemo(() => normalizeSkillsByDept(skills, profile), [skills, profile]);
 
-  // Altura con scroll interno (alineada con Experience). Si tu CSS de Experience
-  // ya fija altura al contenedor de página, este overflow asegura el scroll interno.
+  // Altura fija (≈354 px) con scroll interno
   const scrollStyle = {
-    maxHeight: '520px',         // equivalente práctico al bloque de Experience
+    maxHeight: '354px',
     overflowY: 'auto',
   };
 
-  // ======= Estilos del grid de idiomas (hasta 3 por fila, centrados) =======
   const langGridStyle = {
     display: 'flex',
     flexWrap: 'wrap',
     gap: 14,
-    justifyContent: 'center',  // centra horizontalmente cada fila
+    justifyContent: 'center',
     margin: '6px 0 10px',
   };
   const langItemWrapStyle = {
-    flex: '0 1 30%',           // intenta 3 por fila
+    flex: '0 1 30%',
     minWidth: 240,
     maxWidth: 360,
     display: 'flex',
@@ -339,7 +321,6 @@ export default function PublicLanguagesSkillsSection({
         <h2 className="pls-title">{title.toUpperCase()}</h2>
       </div>
 
-      {/* Idiomas → fluencyómetro en filas de hasta 3, centrados */}
       {langList.length > 0 ? (
         <div style={langGridStyle}>
           {langList.map((l, idx) => (
@@ -352,7 +333,6 @@ export default function PublicLanguagesSkillsSection({
         <div className="pls-muted">No languages provided.</div>
       )}
 
-      {/* Skills por departamento — grupos colapsables */}
       {Object.keys(skillsByDept).length ? (
         Object.entries(skillsByDept).map(([dept, list]) => (
           <CollapsibleSkillsGroup key={dept} title={dept} items={list} />
