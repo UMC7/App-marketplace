@@ -223,7 +223,7 @@ export default function PublicProfileView() {
   const [experiences, setExperiences] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [references, setReferences] = useState([]);
-  const [education, setEducation] = useState([]);        // ⬅️ NUEVO
+  const [education, setEducation] = useState([]);
   const [error, setError] = useState('');
   const [contactOpen, setContactOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -235,7 +235,7 @@ export default function PublicProfileView() {
   const [contactError, setContactError] = useState('');
   const [contactInfo, setContactInfo] = useState('');
   const [yachtingMonths, setYachtingMonths] = useState(null);
-  const [employmentStatus, setEmploymentStatus] = useState(''); // 'Employed' | 'Unemployed' | ''
+  const [employmentStatus, setEmploymentStatus] = useState('');
   const [twoUp, setTwoUp] = useState(false);
   const a4Ref = useRef(null);
   const introRef = useRef(null);
@@ -253,8 +253,8 @@ export default function PublicProfileView() {
           container ? container.clientWidth : (window.innerWidth || 0)
         )
       );
-      let s = availW / BASE_A4_WIDTH;              // encajar por ancho
-      s = clamp(s, 0.42, 1);                       // límites de seguridad
+      let s = availW / BASE_A4_WIDTH;
+      s = clamp(s, 0.42, 1);
       setPageScale(s);
 
       const page = a4Ref.current;
@@ -485,17 +485,26 @@ export default function PublicProfileView() {
             console.error('refs rpc error', refErr);
             setReferences([]);
           } else {
-            // La RPC ya devuelve exactamente los campos que consume el componente.
-            const normalized = (refRows || []).map(r => ({
-              id: r.id,
-              name: r.name || '',
-              role: r.role || '',
-              vessel_company: r.vessel_company || '',
-              email: r.email || '',
-              phone: r.phone || '',
-              file_url: r.file_url || null,
-              created_at: r.created_at,
-            }));
+            const normalized = (refRows || []).map((r) => {
+              const rawPath =
+                r.attachment_path ?? r.file_url ?? null;
+              const attachment_path = rawPath
+                ? String(rawPath).replace(`${BUCKET}/`, '')
+                : null;
+
+              return {
+                id: r.id,
+                name: r.name || '',
+                role: r.role || '',
+                vessel_company: r.vessel_company || '',
+                email: r.email || '',
+                phone: r.phone || '',
+                attachment_path,
+                title: r.attachment_name || r.title || r.name || 'Reference document',
+                created_at: r.created_at,
+              };
+            });
+
             setReferences(normalized);
           }
         }
