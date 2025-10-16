@@ -1,6 +1,7 @@
 // src/pages/cv/sections/contact/PublicContactDetailsSection.jsx
 import React, { useMemo } from 'react';
 import './PublicContactDetailsSection.css';
+import { emitContactOpen } from '../../../../services/analytics/emitEvent';
 
 const isBlank = (v) => String(v ?? '').trim() === '';
 
@@ -61,6 +62,23 @@ export default function PublicContactDetailsSection({ profile }) {
   const shouldShowWebsite   = !isBlank(website);
   const shouldShowLinkedin  = !isBlank(linkedin);
 
+  // Contexto para analytics
+  const ownerUserId = profile?.user_id || profile?.owner_user_id || null;
+  const handle      = profile?.handle || null;
+
+  // Emisor "fire-and-forget" (no interfiere con la navegación)
+  const emitContact = (channel, value) => {
+    try {
+      emitContactOpen({
+        ownerUserId,
+        handle,
+        extra: { channel, value: String(value || '').slice(0, 200) },
+      });
+    } catch (_) {
+      /* no-op */
+    }
+  };
+
   return (
     <section className="pcd-section" aria-label="Contact details">
       <h3 className="pcd-title">CONTACT DETAILS</h3>
@@ -79,7 +97,16 @@ export default function PublicContactDetailsSection({ profile }) {
               <div className="pcd-value">
                 {showEmail
                   ? (email
-                      ? <a href={mailto(email)} target="_blank" rel="noreferrer">{email}</a>
+                      ? (
+                        <a
+                          href={mailto(email)}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => emitContact('email', email)}
+                        >
+                          {email}
+                        </a>
+                      )
                       : <span className="pcd-muted">—</span>)
                   : <span className="pcd-muted">— Hidden —</span>}
               </div>
@@ -98,7 +125,16 @@ export default function PublicContactDetailsSection({ profile }) {
               <div className="pcd-value">
                 {showPhone
                   ? (phoneText
-                      ? <a href={tel(phoneCC, phoneNumber)} target="_blank" rel="noreferrer">{phoneText}</a>
+                      ? (
+                        <a
+                          href={tel(phoneCC, phoneNumber)}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => emitContact('phone', `+${String(phoneCC || '').replace(/[^\d]/g, '')}${String(phoneNumber || '').replace(/[^\d]/g, '')}`)}
+                        >
+                          {phoneText}
+                        </a>
+                      )
                       : <span className="pcd-muted">—</span>)
                   : <span className="pcd-muted">— Hidden —</span>}
               </div>
@@ -117,7 +153,16 @@ export default function PublicContactDetailsSection({ profile }) {
               <div className="pcd-value">
                 {showPhone
                   ? (waText
-                      ? <a href={waLink(waCC, waNumber)} target="_blank" rel="noreferrer">{waText}</a>
+                      ? (
+                        <a
+                          href={waLink(waCC, waNumber)}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => emitContact('whatsapp', `+${String(waCC || '').replace(/[^\d]/g, '')}${String(waNumber || '').replace(/[^\d]/g, '')}`)}
+                        >
+                          {waText}
+                        </a>
+                      )
                       : <span className="pcd-muted">—</span>)
                   : <span className="pcd-muted">— Hidden —</span>}
               </div>

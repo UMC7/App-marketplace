@@ -11,6 +11,7 @@ import PublicReferencesSection from './sections/references';
 import PublicMediaGallerySection from './sections/media';
 import PublicEducationSection from './sections/education';
 import PublicContactDetailsSection from './sections/contact';
+import useEmitProfileView from '../../hooks/useEmitProfileView';
 
 const qs = (search) => new URLSearchParams(search || '');
 const BUCKET = 'cv-docs';
@@ -760,6 +761,8 @@ function computeScrollTargetTop(el, extra = 12) {
     const ps = profile?.prefs_skills && typeof profile.prefs_skills === 'object' ? profile.prefs_skills : {};
     return (ps && typeof ps.docFlags === 'object') ? ps.docFlags : {};
   }, [profile?.prefs_skills]);
+
+  useEmitProfileView(profile);
 
   /* ----- UI ----- */
   if (loading) {

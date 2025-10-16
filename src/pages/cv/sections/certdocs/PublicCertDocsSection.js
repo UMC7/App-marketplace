@@ -1,7 +1,9 @@
 // src/pages/cv/sections/certdocs/PublicCertDocsSection.js
 import React, { useMemo, useState, useCallback, useRef, useLayoutEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import supabase from '../../../../supabase';
 import BasicDocsSummary from './BasicDocsSummary';
+import { emitCvDownload } from '../../../../services/analytics/emitEvent';
 
 const BUCKET = 'cv-docs';
 
@@ -82,6 +84,10 @@ export default function PublicCertDocsSection({
   // Modal viewer
   const [viewer, setViewer] = useState({ open: false, url: '', title: '' });
 
+  // Param handle desde la URL pública (/cv/:handle)
+  const params = useParams();
+  const handleFromRoute = params?.handle || null;
+
   // Ordenar por prioridad y luego por fechas (más próximos primero)
   // Requisito de visibilidad:
   // - Unlisted: NO se muestra (se filtra).
@@ -139,6 +145,22 @@ export default function PublicCertDocsSection({
     const path = String(doc.file_url || '');
     if (!path) return;
 
+    // 🔹 Emitimos evento de "cv_download" (interpretado como apertura de documento del CV)
+    try {
+      const ownerUserId = doc?.owner_user_id || doc?.user_id || null;
+      const handle = handleFromRoute || doc?.handle || null;
+      emitCvDownload({
+        ownerUserId,
+        handle,
+        extra: {
+          doc_id: doc?.id || null,
+          title: doc?.title || null,
+          ext: inferExt(path) || null,
+          visibility: doc?.visibility || 'public',
+        },
+      });
+    } catch { /* no-op */ }
+
     if (/^https?:\/\//i.test(path)) {
       url = toOriginalSupabaseUrl(path);
     } else if (path.startsWith(`${BUCKET}/`)) {
@@ -160,7 +182,7 @@ export default function PublicCertDocsSection({
     }
     url = toOriginalSupabaseUrl(url);
     setViewer({ open: true, url, title: doc.title || 'Document' });
-  }, []);
+  }, [handleFromRoute]);
 
   if (!sorted.length) return null;
 
