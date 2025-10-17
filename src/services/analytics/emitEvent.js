@@ -173,7 +173,11 @@ async function postToEdge(payload) {
     const res = await fetch(url, {
       method: 'POST',
       mode: 'cors',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        'authorization': `Bearer ${process.env.REACT_APP_SUPABASE_ANON_KEY}`,
+        'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY,
+      },
       body: JSON.stringify(payload),
       signal: ctrl?.signal,
     });
