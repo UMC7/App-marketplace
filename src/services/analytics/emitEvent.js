@@ -286,7 +286,7 @@ export async function emitEvent({
       extra_data: extra ? sanitizeJson(extra) : null,
     };
 
-    // Try Edge first
+    console.info('[cv-analytics] edgeUrl ->', edgeUrl());
     const tryEdge = await postToEdge(edgePayload);
     if (tryEdge.ok) return { ok: true };
 
