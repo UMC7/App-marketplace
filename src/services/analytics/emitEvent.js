@@ -67,6 +67,55 @@ function getSessionId() {
   }
 }
 
+/* --- Persistent viewer_id (new) --- */
+function getCookie(name) {
+  try {
+    const d = safeDocument();
+    if (!d) return null;
+    const value = `; ${d.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift() || null;
+    return null;
+  } catch {
+    return null;
+  }
+}
+function setCookie(name, value, days = 3650) {
+  try {
+    const d = safeDocument();
+    if (!d) return;
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    d.cookie = `${name}=${value}; Expires=${expires}; Path=/; SameSite=Lax`;
+  } catch {}
+}
+function getViewerId() {
+  const KEY = 'ydw_cv_viewer_id';
+  try {
+    const w = safeWindow();
+    // Try localStorage
+    if (w && w.localStorage) {
+      let vid = w.localStorage.getItem(KEY);
+      if (!vid) {
+        vid = uuidv4();
+        w.localStorage.setItem(KEY, vid);
+      }
+      return vid;
+    }
+  } catch {}
+  // Fallback to cookie
+  try {
+    let vid = getCookie(KEY);
+    if (!vid) {
+      vid = uuidv4();
+      setCookie(KEY, vid);
+    }
+    return vid;
+  } catch {
+    // Last resort: ephemeral UUID (won't persist if storage is blocked)
+    return uuidv4();
+  }
+}
+
 function parseUA() {
   const n = safeNavigator();
   const ua = n?.userAgent || '';
@@ -177,6 +226,7 @@ export async function emitEvent({
 
     const ctx = parseUA();
     const sessionId = getSessionId();
+    const viewerId = getViewerId(); // <-- persistent visitor id
     const lang = getLanguage();
     const ref = (referrer && String(referrer)) || getReferrer();
 
@@ -186,7 +236,7 @@ export async function emitEvent({
       handle: handle || null,
       event_type: String(type),
       session_id: sessionId ? sessionId : null,
-      viewer_id: null, // optional: set if you identify logged-in visitor
+      viewer_id: viewerId || null, // <-- include persistent viewer_id
       referrer: ref,
       user_agent: ctx.userAgent || null,
       device: ctx.device || null,
@@ -208,6 +258,7 @@ export async function emitEvent({
       user_agent: ctx.userAgent || null,
       // helpful context (optional)
       session_id: sessionId || null,
+      viewer_id: viewerId || null, // <-- forward to edge as well
       language: lang || null,
       device: ctx.device || null,
       browser: ctx.browser || null,
