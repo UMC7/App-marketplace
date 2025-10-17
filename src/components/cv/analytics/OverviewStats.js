@@ -1,5 +1,5 @@
 // src/components/cv/analytics/OverviewStats.js
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { formatInt, formatDeltaLabel } from '../../../utils/analytics/formatters';
 
 /**
@@ -12,7 +12,7 @@ import { formatInt, formatDeltaLabel } from '../../../utils/analytics/formatters
  *     unique_viewers: number,
  *     contact_opens: number,
  *     chat_starts: number,
- *     cv_downloads: number,
+ *     cv_downloads: number, // puede venir pero no se muestra
  *   }
  * - prevOverview?: mismo shape, para mostrar delta (opcional)
  * - loading?: boolean
@@ -23,11 +23,22 @@ export default function OverviewStats({
     unique_viewers: 0,
     contact_opens: 0,
     chat_starts: 0,
-    cv_downloads: 0,
+    cv_downloads: 0, // ignorado en UI
   },
   prevOverview = null,
   loading = false,
 }) {
+  // ===== Solo móviles (≤540px): 2 filas x 2 columnas =====
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 540px)');
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener?.('change', apply);
+    return () => mq.removeEventListener?.('change', apply);
+  }, []);
+
+  // Eliminamos la tarjeta "CV downloads"
   const items = [
     {
       key: 'views',
@@ -53,12 +64,6 @@ export default function OverviewStats({
       value: overview?.chat_starts ?? 0,
       prev: prevOverview?.chat_starts ?? null,
     },
-    {
-      key: 'cv_downloads',
-      label: 'CV downloads',
-      value: overview?.cv_downloads ?? 0,
-      prev: prevOverview?.cv_downloads ?? null,
-    },
   ];
 
   return (
@@ -66,7 +71,9 @@ export default function OverviewStats({
       aria-label="Overview KPIs"
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(5, minmax(120px, 1fr))',
+        gridTemplateColumns: isMobile
+          ? 'repeat(2, minmax(120px, 1fr))' // móvil: 2 columnas
+          : 'repeat(4, minmax(120px, 1fr))', // desktop: 4 columnas
         gap: 12,
         alignItems: 'stretch',
       }}

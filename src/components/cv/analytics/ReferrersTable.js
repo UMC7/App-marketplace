@@ -1,5 +1,5 @@
 // src/components/cv/analytics/ReferrersTable.js
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { formatInt, formatPercent } from '../../../utils/analytics/formatters';
 
 /**
@@ -28,6 +28,16 @@ export default function ReferrersTable({
     [data]
   );
 
+  // ===== Solo móviles (≤540px) sin tocar desktop =====
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 540px)');
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener?.('change', apply);
+    return () => mq.removeEventListener?.('change', apply);
+  }, []);
+
   return (
     <section
       aria-label={title}
@@ -54,14 +64,14 @@ export default function ReferrersTable({
         </small>
       </header>
 
-      <div style={{ overflowX: 'auto' }}>
+      <div style={{ overflowX: isMobile ? 'hidden' : 'auto' }}>
         <table
           role="table"
           style={{
             width: '100%',
             borderCollapse: 'separate',
             borderSpacing: 0,
-            minWidth: 520,
+            minWidth: isMobile ? 'auto' : 520,
           }}
         >
           <thead>
@@ -72,16 +82,17 @@ export default function ReferrersTable({
                 borderBottom: '1px solid var(--ana-line)',
               }}
             >
-              <Th label="Source" align="left" />
-              <Th label="Views" align="right" />
-              <Th label="Unique" align="right" />
-              <Th label="% of views" align="right" />
+              <Th label="Source" align="left" compact={isMobile} />
+              {/* En móvil mantenemos el mismo encabezado pero el contenido apila Views/Unique/% */}
+              <Th label="Views" align="right" compact={isMobile} />
+              {!isMobile && <Th label="Unique" align="right" />}
+              {!isMobile && <Th label="% of views" align="right" />}
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr role="row">
-                <Td colSpan={4} align="center">
+                <Td colSpan={isMobile ? 2 : 4} align="center">
                   <span style={{ fontSize: 12, color: 'var(--ana-muted)' }}>Loading…</span>
                 </Td>
               </tr>
@@ -89,7 +100,7 @@ export default function ReferrersTable({
 
             {!loading && data.length === 0 && (
               <tr role="row">
-                <Td colSpan={4} align="center">
+                <Td colSpan={isMobile ? 2 : 4} align="center">
                   <span style={{ fontSize: 12, color: 'var(--ana-muted)' }}>
                     No referrer data for the selected range.
                   </span>
@@ -114,13 +125,13 @@ export default function ReferrersTable({
                       borderBottom: '1px solid var(--ana-line-soft)',
                     }}
                   >
-                    <Td align="left">
+                    <Td align="left" compact={isMobile}>
                       <div
                         style={{
                           display: 'flex',
                           alignItems: 'center',
                           gap: 8,
-                          minWidth: 180,
+                          minWidth: 140,
                         }}
                       >
                         <Favicon source={it.source} />
@@ -128,19 +139,43 @@ export default function ReferrersTable({
                           title={String(it.source || '')}
                           style={{
                             overflow: 'hidden',
-                            whiteSpace: 'nowrap',
-                            textOverflow: 'ellipsis',
-                            maxWidth: 320,
+                            whiteSpace: isMobile ? 'normal' : 'nowrap',
+                            textOverflow: isMobile ? 'clip' : 'ellipsis',
+                            maxWidth: isMobile ? '100%' : 320,
                             color: 'var(--ana-text)',
+                            lineHeight: 1.25,
                           }}
                         >
                           {normalizeSource(it.source)}
                         </span>
                       </div>
                     </Td>
-                    <Td align="right">{formatInt(it.views || 0)}</Td>
-                    <Td align="right">{formatInt(it.unique_viewers || 0)}</Td>
-                    <Td align="right">{formatPercent(pct, 1)}</Td>
+
+                    {/* Desktop: columnas separadas / Móvil: bloque apilado a la derecha */}
+                    {isMobile ? (
+                      <Td align="right" compact>
+                        <div
+                          style={{
+                            display: 'grid',
+                            justifyItems: 'end',
+                            gap: 4,
+                          }}
+                        >
+                          <div style={{ fontWeight: 700 }}>
+                            {formatInt(it.views || 0)}
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--ana-muted)' }}>
+                            Unique: {formatInt(it.unique_viewers || 0)} · {formatPercent(pct, 1)}
+                          </div>
+                        </div>
+                      </Td>
+                    ) : (
+                      <>
+                        <Td align="right">{formatInt(it.views || 0)}</Td>
+                        <Td align="right">{formatInt(it.unique_viewers || 0)}</Td>
+                        <Td align="right">{formatPercent(pct, 1)}</Td>
+                      </>
+                    )}
                   </tr>
                 );
               })}
@@ -153,14 +188,14 @@ export default function ReferrersTable({
 
 /* ---------- Partials ---------- */
 
-function Th({ label, align = 'left' }) {
+function Th({ label, align = 'left', compact = false }) {
   return (
     <th
       role="columnheader"
       style={{
         textAlign: align,
-        padding: '10px 12px',
-        fontSize: 12,
+        padding: compact ? '8px 10px' : '10px 12px',
+        fontSize: compact ? 11 : 12,
         letterSpacing: '.06em',
         textTransform: 'uppercase',
         fontWeight: 700,
@@ -172,15 +207,15 @@ function Th({ label, align = 'left' }) {
   );
 }
 
-function Td({ children, align = 'left', colSpan }) {
+function Td({ children, align = 'left', colSpan, compact = false }) {
   return (
     <td
       role="cell"
       colSpan={colSpan}
       style={{
         textAlign: align,
-        padding: '10px 12px',
-        fontSize: 14,
+        padding: compact ? '8px 10px' : '10px 12px',
+        fontSize: compact ? 13 : 14,
         color: 'var(--ana-text)',
       }}
     >

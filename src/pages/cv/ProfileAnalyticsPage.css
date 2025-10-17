@@ -128,7 +128,7 @@
   .cv-analytics__header { grid-template-columns: 1fr !important; text-align: center; }
   .cv-analytics__back { width: 100%; }
 
-  /* Filtros apilados y 100% */
+  /* Filtros apilados y 100% del contenedor */
   .cv-analytics .ana-filters {
     display: grid !important;
     grid-template-columns: 1fr !important;
@@ -136,14 +136,32 @@
     padding: 10px !important;
   }
   .cv-analytics .ana-filters > * { width: 100% !important; }
-  .cv-analytics .ana-filters .ana-select,
-  .cv-analytics .ana-filters .ana-btn { width: 100% !important; min-width: 0 !important; }
 
-  /* Forzamos 1 columna en los SECTION que tienen grid en inline-style */
-  .cv-analytics__row--kpis > section,
+  /* Selects full width; botones con tamaño auto */
+  .cv-analytics .ana-filters .ana-select { width: 100% !important; min-width: 0 !important; }
+  .cv-analytics .ana-filters .ana-btn { width: auto !important; min-width: 120px; }
+
+  /* Fila específica de botones (Refresh + Back) uno al lado del otro */
+  .cv-analytics .ana-filters > div:nth-of-type(2) {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .cv-analytics .ana-filters > div:nth-of-type(2) .ana-btn {
+    flex: 1 1 0;            /* dos botones ocupan la misma fila y ancho */
+    min-width: 0 !important;
+  }
+
+  /* KPIs: 2 columnas en móvil (no forzar 1) */
+  .cv-analytics__row--kpis > section {
+    grid-template-columns: repeat(2, minmax(120px, 1fr)) !important;
+  }
+
+  /* Forzamos 1 columna en otros SECTION que tienen grid inline */
   .cv-analytics__row--2 > section,
   .cv-analytics__row--1 > section {
-    grid-template-columns: 1fr !important;  /* anula repeat(5,…) o 1fr 1fr inline */
+    grid-template-columns: 1fr !important;  /* anula 1fr 1fr inline */
   }
 
   /* Utilidades de widgets si aparecen dentro de la página */

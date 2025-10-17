@@ -1,5 +1,5 @@
 // src/components/cv/analytics/DeviceBrowserBreakdown.js
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { formatInt } from '../../../utils/analytics/formatters';
 
 export default function DeviceBrowserBreakdown({
@@ -19,6 +19,16 @@ export default function DeviceBrowserBreakdown({
     return arr.slice(0, Math.max(1, limit));
   }, [data?.browsers, limit]);
 
+  // ===== Solo móviles (≤540px) sin tocar desktop =====
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 540px)');
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener?.('change', apply);
+    return () => mq.removeEventListener?.('change', apply);
+  }, []);
+
   return (
     <section
       aria-label="Devices & Browsers"
@@ -30,6 +40,7 @@ export default function DeviceBrowserBreakdown({
     >
       <Card title={titleDevices} loading={loading}>
         <ListTable
+          isMobile={isMobile}
           headers={['Device', 'Views']}
           rows={devices.map((d) => [normalizeDevice(d.device), formatInt(d.views || 0)])}
           emptyLabel="No device data."
@@ -38,6 +49,7 @@ export default function DeviceBrowserBreakdown({
 
       <Card title={titleBrowsers} loading={loading}>
         <ListTable
+          isMobile={isMobile}
           headers={['Browser', 'Views']}
           rows={browsers.map((b) => [normalizeBrowser(b.browser), formatInt(b.views || 0)])}
           emptyLabel="No browser data."
@@ -77,7 +89,7 @@ function Card({ title, loading, children }) {
   );
 }
 
-function ListTable({ headers = [], rows = [], emptyLabel = 'No data.' }) {
+function ListTable({ headers = [], rows = [], emptyLabel = 'No data.', isMobile = false }) {
   return (
     <table
       role="table"
@@ -85,7 +97,7 @@ function ListTable({ headers = [], rows = [], emptyLabel = 'No data.' }) {
         width: '100%',
         borderCollapse: 'separate',
         borderSpacing: 0,
-        minWidth: 420,
+        minWidth: isMobile ? 'auto' : 420,
       }}
     >
       <thead>
@@ -101,9 +113,9 @@ function ListTable({ headers = [], rows = [], emptyLabel = 'No data.' }) {
               key={h}
               role="columnheader"
               style={{
-                textAlign: 'left',
-                padding: '10px 12px',
-                fontSize: 12,
+                textAlign: String(h).toLowerCase() === 'views' ? 'right' : 'left',
+                padding: isMobile ? '8px 10px' : '10px 12px',
+                fontSize: isMobile ? 11 : 12,
                 letterSpacing: '.06em',
                 textTransform: 'uppercase',
                 fontWeight: 700,
@@ -123,7 +135,7 @@ function ListTable({ headers = [], rows = [], emptyLabel = 'No data.' }) {
               colSpan={headers.length}
               style={{
                 textAlign: 'center',
-                padding: '12px',
+                padding: isMobile ? '10px' : '12px',
                 fontSize: 12,
                 color: 'var(--ana-muted)',
               }}
@@ -146,9 +158,14 @@ function ListTable({ headers = [], rows = [], emptyLabel = 'No data.' }) {
                   role="cell"
                   style={{
                     textAlign: j === r.length - 1 ? 'right' : 'left',
-                    padding: '10px 12px',
-                    fontSize: 14,
+                    padding: isMobile ? '8px 10px' : '10px 12px',
+                    fontSize: isMobile ? 13 : 14,
                     color: 'var(--ana-text)',
+                    // Evita recortes en móviles (nombres largos)
+                    whiteSpace: j === 0 ? (isMobile ? 'normal' : 'nowrap') : 'nowrap',
+                    overflow: j === 0 && !isMobile ? 'hidden' : 'visible',
+                    textOverflow: j === 0 && !isMobile ? 'ellipsis' : 'clip',
+                    lineHeight: 1.25,
                   }}
                 >
                   {cell}

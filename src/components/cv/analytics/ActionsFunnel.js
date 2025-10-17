@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { formatInt, formatPercent, clamp } from '../../../utils/analytics/formatters';
 
 export default function ActionsFunnel({
+  // Puede venir cv_downloads en el objeto, pero no se muestra
   funnel = { views: 0, profile_opens: 0, contact_opens: 0, chat_starts: 0, cv_downloads: 0 },
   loading = false,
   title = 'Actions funnel',
@@ -11,13 +12,12 @@ export default function ActionsFunnel({
     const v = Number(funnel?.views || funnel?.profile_opens || 0);
     const contact = Number(funnel?.contact_opens || 0);
     const chat = Number(funnel?.chat_starts || 0);
-    const cv = Number(funnel?.cv_downloads || 0);
 
+    // Eliminamos la etapa "CV downloads"
     const steps = [
       { key: 'views', label: 'Views', value: v },
       { key: 'contact_opens', label: 'Contact opens', value: contact },
       { key: 'chat_starts', label: 'Chat starts', value: chat },
-      { key: 'cv_downloads', label: 'CV downloads', value: cv },
     ];
 
     const max = Math.max(1, ...steps.map((s) => s.value));
@@ -45,14 +45,7 @@ export default function ActionsFunnel({
         }}
       >
         <div style={{ fontWeight: 700, color: 'var(--ana-text)' }}>{title}</div>
-        {!loading && (
-          <small style={{ opacity: 0.85, color: 'var(--ana-muted)' }}>
-            Conversion to CV:{' '}
-            {base.first
-              ? formatPercent((Number(funnel?.cv_downloads || 0) / base.first) * 100, 1)
-              : '0%'}
-          </small>
-        )}
+        {/* Se quita el indicador "Conversion to CV" */}
       </header>
 
       <div style={{ padding: '8px 12px 12px', display: 'grid', gap: 10 }}>
@@ -130,8 +123,6 @@ function barColor(index) {
       return '#10b981'; // contact
     case 2:
       return '#a78bfa'; // chat
-    case 3:
-      return '#f59e0b'; // cv
     default:
       return '#94a3b8';
   }

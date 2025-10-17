@@ -35,6 +35,16 @@ export default function ProfileAnalyticsPage() {
   const [rangeKey, setRangeKey] = useState('30d'); // 7d | 30d | 90d | this_month | last_month | ytd
   const [bucket, setBucket] = useState('day');     // day | week | month
 
+  // ===== Detectar móvil (para mover el botón Back junto al Refresh) =====
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 540px)');
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener?.('change', apply);
+    return () => mq.removeEventListener?.('change', apply);
+  }, []);
+
   // 1) Resolver handle del dueño si no viene por query
   useEffect(() => {
     let cancelled = false;
@@ -158,9 +168,12 @@ export default function ProfileAnalyticsPage() {
           {/* (opcional) acciones extra */}
         </div>
 
-        <button className="cv-analytics__back" onClick={() => window.history.back()}>
-          Back
-        </button>
+        {/* En móvil el botón Back se mostrará junto a Refresh dentro de FiltersBar */}
+        {!isMobile && (
+          <button className="cv-analytics__back" onClick={() => window.history.back()}>
+            Back
+          </button>
+        )}
       </header>
 
       {/* Filtros */}
@@ -171,6 +184,9 @@ export default function ProfileAnalyticsPage() {
           bucket={bucket}
           onChangeBucket={setBucket}
           onRefresh={refetch}
+          /* Para móvil: pedir al FiltersBar que pinte el botón Back a su lado */
+          showBackInline={isMobile}
+          onBack={() => window.history.back()}
         />
 
         {/* KPIs */}

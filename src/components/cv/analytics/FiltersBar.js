@@ -11,6 +11,9 @@ export default function FiltersBar({
   rangeLabel,
   onRefresh,
   rightSlot = null,
+  // Cuando es true (móvil), mostramos Back junto a Refresh en una fila aparte.
+  showBackInline = false,
+  onBack,
 }) {
   const range = useMemo(() => getRangeByKey(rangeKey), [rangeKey]);
   const label = useMemo(
@@ -19,11 +22,8 @@ export default function FiltersBar({
   );
 
   return (
-    <section
-      aria-label="Analytics filters"
-      className="ana-filters"
-    >
-      {/* Left: Selectores */}
+    <section aria-label="Analytics filters" className="ana-filters">
+      {/* Controles (si showBackInline=false, aquí también va Refresh para desktop) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <Select
           label="Date range"
@@ -52,7 +52,8 @@ export default function FiltersBar({
           {label}
         </span>
 
-        {onRefresh && (
+        {/* En desktop, mantenemos Refresh en la misma fila de los selectores */}
+        {!showBackInline && onRefresh && (
           <button
             type="button"
             onClick={onRefresh}
@@ -63,6 +64,32 @@ export default function FiltersBar({
           </button>
         )}
       </div>
+
+      {/* En móvil, fila dedicada para tener Refresh y Back uno al lado del otro */}
+      {showBackInline && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              className="ana-btn"
+              title="Refresh data"
+            >
+              Refresh
+            </button>
+          )}
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="ana-btn"
+              title="Go back"
+            >
+              Back
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Right: acciones adicionales (opcional) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -178,6 +178,40 @@
   .ana-select { min-width: 130px; }
 }
 
+/* ===== Refuerzo móvil (≤540px): legibilidad completa sin alterar desktop ===== */
+@media (max-width: 540px) {
+  /* Tablas más compactas y sin cortes */
+  .ana-table {
+    table-layout: fixed;              /* permite wrapping controlado */
+  }
+  .ana-th,
+  .ana-td {
+    padding: 8px 10px;
+  }
+  .ana-th {
+    font-size: 11px;
+  }
+  .ana-td {
+    font-size: 13px;
+    line-height: 1.25;
+    word-break: break-word;           /* evita overflow en palabras largas */
+  }
+
+  /* Primera columna (nombres) con wrap; valores mantienen alineación */
+  .ana-table thead th:first-child,
+  .ana-table tbody td:first-child {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  /* Evita scroll lateral en tarjetas/tablas anidadas */
+  .ana-card,
+  .ana-card__body {
+    overflow-x: hidden;
+  }
+}
+
 /* ===================================================================== */
 /* ============================ DARK MODE =============================== */
 /* ===================================================================== */

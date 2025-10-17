@@ -1,5 +1,5 @@
 // src/components/cv/analytics/GeographyBreakdown.js
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { formatInt } from '../../../utils/analytics/formatters';
 
 export default function GeographyBreakdown({
@@ -19,6 +19,16 @@ export default function GeographyBreakdown({
     return arr.slice(0, Math.max(1, limit));
   }, [data?.cities, limit]);
 
+  // ===== Solo móviles (≤540px) sin tocar desktop =====
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 540px)');
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener?.('change', apply);
+    return () => mq.removeEventListener?.('change', apply);
+  }, []);
+
   return (
     <section
       aria-label="Geography"
@@ -30,6 +40,7 @@ export default function GeographyBreakdown({
     >
       <Card title={titleCountries} loading={loading}>
         <GeoTable
+          isMobile={isMobile}
           headers={['Country', 'Views']}
           rows={countries.map((c) => [c.country || '—', formatInt(c.views || 0)])}
           emptyLabel="No country data."
@@ -38,6 +49,7 @@ export default function GeographyBreakdown({
 
       <Card title={titleCities} loading={loading}>
         <GeoTable
+          isMobile={isMobile}
           headers={['City', 'Country', 'Views']}
           rows={cities.map((c) => [
             c.city || '—',
@@ -81,7 +93,10 @@ function Card({ title, loading, children }) {
   );
 }
 
-function GeoTable({ headers = [], rows = [], emptyLabel = 'No data.' }) {
+function GeoTable({ headers = [], rows = [], emptyLabel = 'No data.', isMobile = false }) {
+  // cityMode cuando hay 3 columnas: [City, Country, Views]
+  const isCityMode = headers.length === 3;
+
   return (
     <table
       role="table"
@@ -89,7 +104,7 @@ function GeoTable({ headers = [], rows = [], emptyLabel = 'No data.' }) {
         width: '100%',
         borderCollapse: 'separate',
         borderSpacing: 0,
-        minWidth: 420,
+        minWidth: isMobile ? 'auto' : 420,
       }}
     >
       <thead>
@@ -100,40 +115,35 @@ function GeoTable({ headers = [], rows = [], emptyLabel = 'No data.' }) {
             borderBottom: '1px solid var(--ana-line)',
           }}
         >
-          {headers.map((h) => (
-            <th
-              key={h}
-              role="columnheader"
-              style={{
-                textAlign: 'left',
-                padding: '10px 12px',
-                fontSize: 12,
-                letterSpacing: '.06em',
-                textTransform: 'uppercase',
-                fontWeight: 700,
-                color: 'var(--ana-muted)',
-              }}
-            >
-              {h}
-            </th>
-          ))}
+          {isMobile && isCityMode ? (
+            // En móvil para ciudades: encabezados compactos City / Views (Country irá debajo de City)
+            <>
+              <Th label="City" align="left" compact />
+              <Th label="Views" align="right" compact />
+            </>
+          ) : (
+            headers.map((h) => (
+              <Th
+                key={h}
+                label={h}
+                align={String(h).toLowerCase() === 'views' ? 'right' : 'left'}
+                compact={isMobile}
+              />
+            ))
+          )}
         </tr>
       </thead>
       <tbody>
         {rows.length === 0 ? (
           <tr role="row">
-            <td
+            <Td
               role="cell"
-              colSpan={headers.length}
-              style={{
-                textAlign: 'center',
-                padding: '12px',
-                fontSize: 12,
-                color: 'var(--ana-muted)',
-              }}
+              colSpan={isMobile && isCityMode ? 2 : headers.length}
+              align="center"
+              compact={isMobile}
             >
-              {emptyLabel}
-            </td>
+              <span style={{ fontSize: 12, color: 'var(--ana-muted)' }}>{emptyLabel}</span>
+            </Td>
           </tr>
         ) : (
           rows.map((r, i) => (
@@ -144,24 +154,72 @@ function GeoTable({ headers = [], rows = [], emptyLabel = 'No data.' }) {
                 borderBottom: '1px solid var(--ana-line-soft)',
               }}
             >
-              {r.map((cell, j) => (
-                <td
-                  key={`${i}-${j}`}
-                  role="cell"
-                  style={{
-                    textAlign: j === r.length - 1 ? 'right' : 'left',
-                    padding: '10px 12px',
-                    fontSize: 14,
-                    color: 'var(--ana-text)',
-                  }}
-                >
-                  {cell}
-                </td>
-              ))}
+              {isMobile && isCityMode ? (
+                <>
+                  {/* Primera celda apilada: City + Country en línea secundaria */}
+                  <Td align="left" compact>
+                    <div style={{ display: 'grid', gap: 2 }}>
+                      <div style={{ color: 'var(--ana-text)' }}>{r[0]}</div>
+                      <small style={{ color: 'var(--ana-muted)' }}>{r[1]}</small>
+                    </div>
+                  </Td>
+                  {/* Segunda celda: Views a la derecha */}
+                  <Td align="right" compact>
+                    {r[2]}
+                  </Td>
+                </>
+              ) : (
+                r.map((cell, j) => (
+                  <Td
+                    key={`${i}-${j}`}
+                    role="cell"
+                    align={j === r.length - 1 ? 'right' : 'left'}
+                    compact={isMobile}
+                  >
+                    {cell}
+                  </Td>
+                ))
+              )}
             </tr>
           ))
         )}
       </tbody>
     </table>
+  );
+}
+
+function Th({ label, align = 'left', compact = false }) {
+  return (
+    <th
+      role="columnheader"
+      style={{
+        textAlign: align,
+        padding: compact ? '8px 10px' : '10px 12px',
+        fontSize: compact ? 11 : 12,
+        letterSpacing: '.06em',
+        textTransform: 'uppercase',
+        fontWeight: 700,
+        color: 'var(--ana-muted)',
+      }}
+    >
+      {label}
+    </th>
+  );
+}
+
+function Td({ children, align = 'left', colSpan, compact = false }) {
+  return (
+    <td
+      role="cell"
+      colSpan={colSpan}
+      style={{
+        textAlign: align,
+        padding: compact ? '8px 10px' : '10px 12px',
+        fontSize: compact ? 13 : 14,
+        color: 'var(--ana-text)',
+      }}
+    >
+      {children}
+    </td>
   );
 }
