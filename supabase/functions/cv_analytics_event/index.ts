@@ -93,9 +93,21 @@ serve(async (req: Request) => {
     });
 
     if (!res.ok) {
-      console.error("Supabase insert error", await res.text());
-      return new Response("Insert failed", { status: 500 });
+  const errText = await res.text().catch(() => "unknown");
+  console.error("Supabase insert error", errText);
+  return new Response(
+    JSON.stringify({ ok: false, error: errText }),
+    {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
     }
+  );
+}
 
     return new Response(
       JSON.stringify({ ok: true, stored: payload }),
