@@ -3,6 +3,7 @@
 // - Fault-tolerant: never throws; returns { ok: boolean }.
 // - Works for anon users (RLS allows INSERT).
 // - Captures basic context (referrer, device, browser, lang, session).
+// - NEW: tries to send to Edge Function (geo/IP) and falls back to direct insert.
 //
 // Usage examples:
 //   import { emitView, emitContactOpen, emitChatStart, emitCvDownload } from '@/services/analytics/emitEvent';
@@ -109,18 +110,57 @@ function getLanguage() {
   return n?.language || n?.languages?.[0] || '';
 }
 
+function edgeUrl() {
+  // Public URL of the Edge Function (set in .env / hosting env)
+  // Example: https://<project-ref>.functions.supabase.co/cv_analytics_event
+  return process.env.REACT_APP_EDGE_ANALYTICS_URL || process.env.NEXT_PUBLIC_EDGE_ANALYTICS_URL || '';
+}
+
+async function postToEdge(payload) {
+  const url = edgeUrl();
+  if (!url) return { ok: false };
+  try {
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const id = ctrl ? setTimeout(() => ctrl.abort(), 5000) : null;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: ctrl?.signal,
+    });
+
+    if (id) clearTimeout(id);
+    if (!res.ok) return { ok: false };
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
+}
+
+function sanitizeJson(obj) {
+  try {
+    // Ensure serializable shallow object
+    return JSON.parse(JSON.stringify(obj));
+  } catch {
+    return null;
+  }
+}
+
 /* ------------------------ Core emitter ------------------------ */
 
 /**
  * Emits a single analytics event into public.cv_analytics_events.
+ * Tries Edge Function first (better geo/referrer/IP), then falls back to direct insert.
  * @param {Object} opts
  * @param {string} opts.type                - 'view' | 'profile_open' | 'contact_open' | 'chat_start' | 'cv_download' | ...
  * @param {string} [opts.ownerUserId]       - UUID of CV owner (recommended)
  * @param {string} [opts.handle]            - Public handle of the CV (recommended)
  * @param {string} [opts.referrer]          - Override referrer; defaults to document.referrer or 'Direct'
- * @param {string} [opts.country]           - Optional geo (server/edge preferred)
- * @param {string} [opts.city]              - Optional geo (server/edge preferred)
- * @param {string} [opts.ipHash]            - Optional hashed IP (compute on server/edge ideally)
+ * @param {string} [opts.country]           - Optional geo (client-side only; Edge preferred)
+ * @param {string} [opts.city]              - Optional geo (client-side only; Edge preferred)
+ * @param {string} [opts.ipHash]            - Optional hashed IP (server/edge ideal)
  * @param {Object} [opts.extra]             - Extra JSON payload (will be stored in extra_data)
  * @returns {Promise<{ok: boolean}>}
  */
@@ -142,7 +182,8 @@ export async function emitEvent({
     const lang = getLanguage();
     const ref = (referrer && String(referrer)) || getReferrer();
 
-    const payload = {
+    // Payload for direct insert (keeps everything)
+    const directPayload = {
       owner_user_id: ownerUserId || null,
       handle: handle || null,
       event_type: String(type),
@@ -160,23 +201,32 @@ export async function emitEvent({
       extra_data: extra ? sanitizeJson(extra) : null,
     };
 
-    const { error } = await supabase.from('cv_analytics_events').insert(payload);
-    if (error) {
-      // Swallow error to avoid breaking UX; you can console.debug in dev if needed
-      return { ok: false };
-    }
+    // Try Edge first (lets server detect country/city/ip)
+    // Edge expects a minimal set. It can also accept extra_data if you pass it.
+    const edgePayload = {
+      event_type: String(type),
+      handle: handle || null,
+      user_id: ownerUserId || null,
+      referrer: ref,
+      user_agent: ctx.userAgent || null,
+      // Helpful context for debugging/analytics (optional)
+      session_id: sessionId || null,
+      language: lang || null,
+      device: ctx.device || null,
+      browser: ctx.browser || null,
+      os: ctx.os || null,
+      extra_data: extra ? sanitizeJson(extra) : null,
+    };
+
+    const tryEdge = await postToEdge(edgePayload);
+    if (tryEdge.ok) return { ok: true };
+
+    // Fallback: direct insert (previous behavior)
+    const { error } = await supabase.from('cv_analytics_events').insert(directPayload);
+    if (error) return { ok: false };
     return { ok: true };
   } catch {
     return { ok: false };
-  }
-}
-
-function sanitizeJson(obj) {
-  try {
-    // Ensure serializable shallow object
-    return JSON.parse(JSON.stringify(obj));
-  } catch {
-    return null;
   }
 }
 
