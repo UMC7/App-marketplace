@@ -222,7 +222,25 @@ export async function emitEvent({
     if (tryEdge.ok) return { ok: true };
 
     // Fallback: direct insert (previous behavior)
-    const { error } = await supabase.from('cv_analytics_events').insert(directPayload);
+    const edgeUrl = process.env.NEXT_PUBLIC_EDGE_ANALYTICS_URL;
+
+if (edgeUrl) {
+  try {
+    await fetch(edgeUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
+} else {
+  const { error } = await supabase.from('cv_analytics_events').insert(payload);
+  if (error) return { ok: false };
+  return { ok: true };
+}
+
     if (error) return { ok: false };
     return { ok: true };
   } catch {
