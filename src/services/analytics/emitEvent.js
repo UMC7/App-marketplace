@@ -3,12 +3,7 @@
 // - Fault-tolerant: never throws; returns { ok: boolean }.
 // - Works for anon users (RLS allows INSERT).
 // - Captures basic context (referrer, device, browser, lang, session).
-// - NEW: tries to send to Edge Function (geo/IP) and falls back to direct insert.
-//
-// Usage examples:
-//   import { emitView, emitContactOpen, emitChatStart, emitCvDownload } from '@/services/analytics/emitEvent';
-//   await emitView({ ownerUserId, handle });
-//   await emitContactOpen({ ownerUserId, handle, extra: { entry: 'phone' } });
+// - Tries to send to Edge Function (geo/IP) and falls back to direct insert.
 
 import supabase from '../../supabase';
 
@@ -51,7 +46,6 @@ function uuidv4() {
   // Fallback (non-crypto)
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
-    // eslint-disable-next-line no-mixed-operators
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
@@ -112,8 +106,12 @@ function getLanguage() {
 
 function edgeUrl() {
   // Public URL of the Edge Function (set in .env / hosting env)
-  // Example: https://<project-ref>.functions.supabase.co/cv_analytics_event
-  return process.env.REACT_APP_EDGE_ANALYTICS_URL || process.env.NEXT_PUBLIC_EDGE_ANALYTICS_URL || '';
+  // Example: https://<project-ref>.functions.supabase.co/functions/v1/cv_analytics_event
+  return (
+    process.env.REACT_APP_EDGE_ANALYTICS_URL ||
+    process.env.NEXT_PUBLIC_EDGE_ANALYTICS_URL ||
+    ''
+  );
 }
 
 async function postToEdge(payload) {
@@ -121,7 +119,7 @@ async function postToEdge(payload) {
   if (!url) return { ok: false };
   try {
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const id = ctrl ? setTimeout(() => ctrl.abort(), 5000) : null;
+    const timeoutId = ctrl ? setTimeout(() => ctrl.abort(), 5000) : null;
 
     const res = await fetch(url, {
       method: 'POST',
@@ -131,7 +129,7 @@ async function postToEdge(payload) {
       signal: ctrl?.signal,
     });
 
-    if (id) clearTimeout(id);
+    if (timeoutId) clearTimeout(timeoutId);
     if (!res.ok) return { ok: false };
     return { ok: true };
   } catch {
@@ -201,15 +199,14 @@ export async function emitEvent({
       extra_data: extra ? sanitizeJson(extra) : null,
     };
 
-    // Try Edge first (lets server detect country/city/ip)
-    // Edge expects a minimal set. It can also accept extra_data if you pass it.
+    // Payload for Edge (server figures out geo/ip)
     const edgePayload = {
       event_type: String(type),
       handle: handle || null,
       user_id: ownerUserId || null,
       referrer: ref,
       user_agent: ctx.userAgent || null,
-      // Helpful context for debugging/analytics (optional)
+      // helpful context (optional)
       session_id: sessionId || null,
       language: lang || null,
       device: ctx.device || null,
@@ -218,31 +215,13 @@ export async function emitEvent({
       extra_data: extra ? sanitizeJson(extra) : null,
     };
 
+    // Try Edge first
     const tryEdge = await postToEdge(edgePayload);
     if (tryEdge.ok) return { ok: true };
 
     // Fallback: direct insert (previous behavior)
-    const edgeUrl = process.env.NEXT_PUBLIC_EDGE_ANALYTICS_URL;
-
-if (edgeUrl) {
-  try {
-    await fetch(edgeUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    return { ok: true };
-  } catch {
-    return { ok: false };
-  }
-} else {
-  const { error } = await supabase.from('cv_analytics_events').insert(payload);
-  if (error) return { ok: false };
-  return { ok: true };
-}
-
-    if (error) return { ok: false };
-    return { ok: true };
+    const { error } = await supabase.from('cv_analytics_events').insert(directPayload);
+    return { ok: !error };
   } catch {
     return { ok: false };
   }
