@@ -195,6 +195,18 @@ function sanitizeJson(obj) {
   }
 }
 
+/* --- Geo helper (client-side fallback) --- */
+async function getGeoFromBrowser() {
+  try {
+    const r = await fetch('https://ipapi.co/json/');
+    if (!r.ok) return { country: null, city: null };
+    const j = await r.json();
+    return { country: j.country_name || null, city: j.city || null };
+  } catch {
+    return { country: null, city: null };
+  }
+}
+
 /* ------------------------ Core emitter ------------------------ */
 
 /**
@@ -230,6 +242,11 @@ export async function emitEvent({
     const lang = getLanguage();
     const ref = (referrer && String(referrer)) || getReferrer();
 
+    // Try to enrich geo on the client if not provided
+    const geo = await getGeoFromBrowser();
+    const countryDetected = country ?? geo.country;
+    const cityDetected = city ?? geo.city;
+
     // Payload for direct insert (keeps everything)
     const directPayload = {
       owner_user_id: ownerUserId || null,
@@ -243,8 +260,8 @@ export async function emitEvent({
       browser: ctx.browser || null,
       os: ctx.os || null,
       language: lang || null,
-      country: country || null,
-      city: city || null,
+      country: countryDetected || null,
+      city: cityDetected || null,
       ip_hash: ipHash || null,
       extra_data: extra ? sanitizeJson(extra) : null,
     };
@@ -263,6 +280,9 @@ export async function emitEvent({
       device: ctx.device || null,
       browser: ctx.browser || null,
       os: ctx.os || null,
+      // pass along client-detected geo as a hint
+      country: countryDetected || null,
+      city: cityDetected || null,
       extra_data: extra ? sanitizeJson(extra) : null,
     };
 
