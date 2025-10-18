@@ -1,4 +1,4 @@
-// src/components/cv/candidate/sectionscomponents/references/AttachmentInput.jsx
+// src/components/cv/candidate/sectionscomponents/references/AttachmentInput.js
 import React, { useRef, useState } from "react";
 
 export default function AttachmentInput({
@@ -20,7 +20,7 @@ export default function AttachmentInput({
       setErr("");
       let uploadedUrl = "";
       if (typeof onUpload === "function") {
-        uploadedUrl = await onUpload(file); // delega la subida
+        uploadedUrl = await onUpload(file);
       } else {
         uploadedUrl = file.name;
       }
@@ -35,7 +35,7 @@ export default function AttachmentInput({
 
   const handleInputChange = (ev) => {
     const file = ev.target.files?.[0];
-    ev.target.value = ""; // reset input
+    ev.target.value = "";
     handleFile(file);
   };
 
@@ -44,6 +44,7 @@ export default function AttachmentInput({
     ev.stopPropagation();
     const file = ev.dataTransfer.files?.[0];
     handleFile(file);
+    if (dropRef.current) dropRef.current.classList.remove("drag-over");
   };
 
   const handleDragOver = (ev) => {
@@ -69,7 +70,9 @@ export default function AttachmentInput({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
       >
-        <p>{fileName ? `Selected: ${fileName}` : "Drag & drop file here or click to browse"}</p>
+        <p className="drop-hint">
+          {fileName ? `Selected: ${fileName}` : "Drag & drop file here or click to browse"}
+        </p>
         <input
           ref={fileRef}
           type="file"
@@ -91,15 +94,52 @@ export default function AttachmentInput({
 
       <style>{`
         .att-input { display:flex; flex-direction:column; gap:8px; }
-        .att-label { font-weight:500; color:#e5e7eb; }
-        .drop-zone {
-          border:2px dashed #4b5563; border-radius:8px;
-          padding:16px; text-align:center; color:#9ca3af;
-          display:flex; flex-direction:column; gap:8px; align-items:center;
+
+        /* Etiqueta legible en ambos modos usando tokens del contenedor */
+        .att-label {
+          font-weight:500;
+          color: var(--muted-2);
         }
-        .drop-zone.drag-over { border-color:#39797a; background:#1f2937; }
-        .btn { border-radius:8px; padding:6px 12px; cursor:pointer; }
-        .btn.ghost { background:transparent; border:1px solid #4b5563; color:#e5e7eb; }
+
+        /* Zona de arrastre: colores por variables (light/dark) */
+        .drop-zone {
+          border: 2px dashed var(--line);
+          border-radius: 8px;
+          padding: 16px;
+          text-align: center;
+          color: var(--muted);
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          align-items: center;
+          background: linear-gradient(180deg, var(--card), var(--card-2));
+          transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+        }
+        .drop-zone .drop-hint { color: var(--muted); }
+
+        /* Estado drag-over: realce sutil con tokens del tema */
+        .drop-zone.drag-over {
+          border-color: var(--accent-2);
+          box-shadow: var(--focus);
+          background: var(--input-bg);
+        }
+
+        /* Botón "Browse…" conserva clase .btn.ghost pero hereda tokens */
+        .btn {
+          border-radius: 8px;
+          padding: 6px 12px;
+          cursor: pointer;
+          transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease, transform .05s ease;
+        }
+        .btn.ghost {
+          background: var(--btn-bg);
+          border: 1px solid var(--btn-bd);
+          color: var(--btn-tx);
+        }
+        .btn.ghost:hover { border-color: var(--accent-2); box-shadow: var(--focus); }
+        .btn:active { transform: translateY(1px); }
+
+        /* Errores */
         .att-error { color:#fca5a5; font-size:12px; }
       `}</style>
     </div>

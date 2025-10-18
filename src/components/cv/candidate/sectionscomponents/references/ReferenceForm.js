@@ -1,15 +1,7 @@
-// src/components/cv/candidate/sectionscomponents/references/ReferenceForm.jsx
+// src/components/cv/candidate/sectionscomponents/references/ReferenceForm.js
 import React, { useEffect, useState } from "react";
 import { AttachmentInput } from "./index";
 
-/**
- * ReferenceForm
- * Props:
- * - initialValue?: { id?, name, role, company, phone, email, attachment_url }
- * - onCancel?: () => void
- * - onSave: (refObj) => void
- * - onUploadAttachment?: (file: File) => Promise<string>      // opcional
- */
 const EMPTY = {
   name: "",
   role: "",
@@ -26,16 +18,32 @@ export default function ReferenceForm({
   onUploadAttachment,
 }) {
   const [model, setModel] = useState(
-  initialValue ? { ...EMPTY, ...initialValue, company: initialValue.company ?? initialValue.vessel_company ?? "" } : EMPTY
+    initialValue
+      ? {
+          ...EMPTY,
+          ...initialValue,
+          company:
+            initialValue.company ??
+            initialValue.vessel_company ??
+            "",
+        }
+      : EMPTY
   );
 
   const [errors, setErrors] = useState({});
-  const [pickedFile, setPickedFile] = useState(null); // <- capturamos el File para persistencia
+  const [pickedFile, setPickedFile] = useState(null);
 
   useEffect(() => {
-   if (initialValue) {
-    setModel({ ...EMPTY, ...initialValue, company: initialValue.company ?? initialValue.vessel_company ?? "" });
-   }
+    if (initialValue) {
+      setModel({
+        ...EMPTY,
+        ...initialValue,
+        company:
+          initialValue.company ??
+          initialValue.vessel_company ??
+          "",
+      });
+    }
   }, [initialValue]);
 
   const setField = (k, v) => setModel((m) => ({ ...m, [k]: v }));
@@ -51,14 +59,11 @@ export default function ReferenceForm({
     return Object.keys(e).length === 0;
   };
 
-  // Capturamos el File que el usuario selecciona (sin romper el flujo anterior)
   const handleUpload = async (file) => {
     setPickedFile(file);
     if (typeof onUploadAttachment === "function") {
-      // comportamiento previo: delegar upload si el padre lo provee
       return onUploadAttachment(file);
     }
-    // fallback: URL local para previsualización si no hay uploader
     try {
       return URL.createObjectURL(file);
     } catch {
@@ -71,18 +76,14 @@ export default function ReferenceForm({
     if (!validate()) return;
 
     const payload = {
-      // preserva id al editar
       id: initialValue?.id || null,
       name: model.name.trim(),
       role: model.role.trim(),
-      // compat + nuevo nombre que espera la API
       company: model.company.trim(),
       vessel_company: model.company.trim(),
       phone: model.phone?.trim() || "",
       email: model.email?.trim() || "",
-      // compat con el componente actual
       attachment_url: model.attachment_url?.trim() || "",
-      // nuevo: pasamos el File para que la API lo suba
       file: pickedFile || null,
     };
 
@@ -151,7 +152,7 @@ export default function ReferenceForm({
           <AttachmentInput
             value={model.attachment_url}
             onChange={(u) => setField("attachment_url", u)}
-            onUpload={handleUpload} // capturamos el File y, si existe, delegamos upload
+            onUpload={handleUpload}
             label="Attachment"
           />
         </div>
@@ -174,16 +175,56 @@ export default function ReferenceForm({
         @media (max-width: 768px){
           .cv-ref-form .grid{ grid-template-columns: 1fr; }
         }
+
         .cv-ref-form label{ display:flex; flex-direction:column; gap:6px; }
+        .cv-ref-form label > span{ color: var(--muted-2); font-size: 13px; }
+
+        /* —— Inputs: usan variables del tema (light/dark) —— */
         .cv-ref-form input{
-          background:#1f2937; border:1px solid #374151; color:#e5e7eb;
-          border-radius:8px; padding:10px 12px;
+          background: var(--input-bg);
+          border: 1px solid var(--input-bd);
+          color: var(--text);
+          border-radius: 8px;
+          padding: 10px 12px;
+          outline: none;
+          transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
         }
-        .cv-ref-form .actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
-        .btn{ border-radius:10px; padding:10px 14px; border:1px solid transparent; cursor:pointer; }
-        .btn.primary{ background:#39797a; color:white; }
-        .btn.ghost{ background:transparent; border-color:#4b5563; color:#e5e7eb; }
-        .err{ color:#fca5a5; font-size:12px; }
+        .cv-ref-form input::placeholder{ color: var(--muted-2); opacity: .9; }
+        .cv-ref-form input:focus{
+          border-color: var(--accent-2);
+          box-shadow: var(--focus);
+        }
+
+        .cv-ref-form .actions{
+          display:flex; gap:10px; justify-content:flex-end; margin-top:12px;
+        }
+
+        /* —— Botones: heredan tokens del contenedor —— */
+        .cv-ref-form .btn{
+          border-radius:10px; padding:10px 14px;
+          background: var(--btn-bg);
+          color: var(--btn-tx);
+          border: 1px solid var(--btn-bd);
+          cursor:pointer;
+          transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease, transform .05s ease;
+        }
+        .cv-ref-form .btn:hover{ border-color: var(--accent-2); box-shadow: var(--focus); }
+        .cv-ref-form .btn:active{ transform: translateY(1px); }
+
+        .cv-ref-form .btn.primary{
+          background: var(--accent);
+          color: #fff;
+          border-color: var(--accent);
+        }
+
+        /* Ghost legible en modo claro y sin romper dark */
+        .cv-ref-form .btn.ghost{
+          background: var(--btn-bg);
+          color: var(--btn-tx);
+          border-color: var(--btn-bd);
+        }
+
+        .cv-ref-form .err{ color:#fca5a5; font-size:12px; }
       `}</style>
     </form>
   );

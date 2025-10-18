@@ -1,4 +1,4 @@
-// src/components/cv/candidate/sectionscomponents/references/ReferencesEditor.jsx
+// src/components/cv/candidate/sectionscomponents/references/ReferencesEditor.js
 import React, { useEffect, useMemo, useState } from "react";
 import ReferenceForm from "./ReferenceForm";
 import ReferenceCard from "./ReferenceCard";
@@ -12,14 +12,12 @@ export default function ReferencesEditor({
 }) {
   const [items, setItems] = useState(Array.isArray(value) ? value : []);
   const [editingIndex, setEditingIndex] = useState(-1);
-  const [, setSaving] = useState(false); // setter usado en llamadas async; no necesitamos leer el estado
+  const [, setSaving] = useState(false);
 
-  // sync externo -> interno
   useEffect(() => {
     if (Array.isArray(value)) setItems(value);
   }, [value]);
 
-  // Sync hacia el padre si se provee onChange
   const commit = (next) => {
     setItems(next);
     onChange?.(next);
@@ -37,7 +35,6 @@ export default function ReferencesEditor({
   const handleSave = async (refObj) => {
     let persisted = refObj;
 
-    // Persistencia opcional (si el padre provee onUpsert)
     if (typeof onUpsert === "function") {
       try {
         setSaving(true);
@@ -118,23 +115,38 @@ export default function ReferencesEditor({
         /* Contenedor seguro y sin overflow */
         .cv-ref-editor{ max-width:100%; box-sizing:border-box; }
         .cv-ref-editor .list{ display:grid; gap:12px; max-width:100%; }
+
+        /* Estado vacío: usa tokens para respetar light/dark */
         .cv-ref-editor .empty{
-          border:1px dashed var(--line, #374151);
+          border:1px dashed var(--line);
           padding:18px; text-align:center;
-          color:var(--muted, #94a3b8);
+          color:var(--muted);
           border-radius:12px;
-          background: var(--card-2, #0b1220);
+          background: linear-gradient(180deg, var(--card), var(--card-2));
         }
+
         .cv-ref-editor .bar{
           margin-top:12px; display:flex; gap:10px; align-items:center; justify-content:flex-start;
           flex-wrap:wrap;
         }
 
+        /* Botones: heredan tokens del contenedor (light/dark) */
         .btn{
-          border-radius:10px; padding:10px 14px; border:1px solid var(--btn-bd, transparent);
-          cursor:pointer; background:var(--btn-bg, #39797a); color:var(--btn-tx, #fff);
+          border-radius:10px; padding:10px 14px;
+          background: var(--btn-bg);
+          color: var(--btn-tx);
+          border: 1px solid var(--btn-bd);
+          cursor:pointer;
+          transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease, transform .05s ease;
         }
-        .btn.primary{ background:var(--accent, #39797a); color:#fff; }
+        .btn:hover{ border-color: var(--accent-2); box-shadow: var(--focus); }
+        .btn:active{ transform: translateY(1px); }
+
+        .btn.primary{
+          background: var(--accent);
+          color: #fff;
+          border-color: var(--accent);
+        }
         .btn.primary:disabled{ opacity:.5; cursor:not-allowed; }
 
         /* Desktop: 2 tarjetas por fila */

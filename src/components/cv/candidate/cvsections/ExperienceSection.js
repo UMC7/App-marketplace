@@ -3,10 +3,8 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import supabase from '../../../../supabase';
 import { toast } from 'react-toastify';
 
-// Reutilizamos catálogos y rank data centralizados
 import { getRanksForDept } from '../shared/rankData';
 
-// Subcomponentes y helpers ya modularizados
 import {
   YachtFields,
   ShoreFields,
@@ -15,36 +13,28 @@ import {
   buildNoteTags,
   buildShoreTags,
   hideTechForRole,
-  computeLongevityAvg, // ⬅️ cálculo de longevidad
+  computeLongevityAvg,
 } from '../sectionscomponents/experience';
 
-/* ===========================================
-   Estado inicial
-=========================================== */
 const emptyYacht = {
   type: 'yacht',
 
-  // Obligatorios
   department: '',
   role: '',
   role_other: '',
   vessel_or_employer: '',
   vessel_type: '',
   length_m: '',
-  start_month: '', // "YYYY-MM"
-  end_month: '',   // "YYYY-MM"
+  start_month: '',
+  end_month: '',
   is_current: false,
-  contract: '', // TERMS
+  contract: '',
   use: '',
   regionsArr: [],
-
-  // NUEVOS (opcionales)
   yacht_brand: '',
   yacht_brand_other: '',
   yacht_model: '',
   management_name: '',
-
-  // Opcionales
   propulsion: '',
   engine_make: '',
   crew_bucket: '',
@@ -53,32 +43,26 @@ const emptyYacht = {
   powerUnit: 'HP',
   crossings: '',
   yardPeriod: '',
-
-  // Internos
   notes: null,
 };
 
 const emptyShore = {
   type: 'shore',
   contract: '',
-  department: '',            // (no se muestra en UI)
+  department: '',
   role: '',
   role_other: '',
   vessel_or_employer: '',
-  vessel_type: '',           // Industry (NO lo persistimos como tal)
-  start_month: '',           // "YYYY-MM"
-  end_month: '',             // "YYYY-MM"
+  vessel_type: '',
+  start_month: '',
+  end_month: '',
   is_current: false,
-  regionsArr: [],            // (no se usa ahora)
+  regionsArr: [],
   location_country: '',
   supervisedBucket: '',
   notes: null,
 };
 
-/* ===========================================
-   Helpers
-=========================================== */
-// "YYYY-MM" -> {year, month}
 function parseYearMonth(ym) {
   if (!ym) return { year: null, month: null };
   const [yStr, mStr] = String(ym).split('-');
@@ -90,8 +74,6 @@ function parseYearMonth(ym) {
   };
 }
 
-// Normaliza a los únicos valores permitidos por el CHECK:
-// Motor | Sail | Catamaran | Expedition | Other
 function normalizeVesselType(v) {
   const s = String(v || '').toLowerCase();
   if (!s) return 'Other';
@@ -103,8 +85,6 @@ function normalizeVesselType(v) {
   return 'Other';
 }
 
-// Normaliza "mode" a la lista permitida por el CHECK.
-// Si no reconoce el valor, devuelve "Other".
 function normalizeMode(type, use, contract) {
   if (type === 'yacht') {
     const u = String(use || '').toLowerCase().trim();
@@ -116,11 +96,10 @@ function normalizeMode(type, use, contract) {
     if (u.includes('shipyard') || u === 'yard') return 'Shipyard';
     return 'Other';
   }
-  // shore: nunca usamos "contract" en mode; guardamos el contrato en extras.
+
   return 'Other';
 }
 
-// Quita claves nulas/vacías; si queda vacío, devuelve {}
 function compactOrEmpty(obj) {
   const out = {};
   for (const [k, v] of Object.entries(obj || {})) {
@@ -136,11 +115,10 @@ function formatYachtingExperienceLabel(totalMonths) {
   if (!Number.isFinite(m) || m <= 0) return '0 months';
   if (m < 24) return `${m} month${m === 1 ? '' : 's'}`;
   const years = m / 12;
-  const rounded = Math.round(years * 10) / 10; // redondeo a un decimal
-  return `${rounded.toFixed(1)} years`;       // siempre muestra 1 decimal
+  const rounded = Math.round(years * 10) / 10;
+  return `${rounded.toFixed(1)} years`;
 }
 
-// Helpers para edición de items existentes (mapear DB -> formulario)
 function ymFrom(y, m) {
   if (!y) return '';
   const mm = String(m || 1).padStart(2, '0');
@@ -180,14 +158,12 @@ function dbRowToEditing(row) {
       end_month: row.is_current ? '' : ymFrom(row.end_year, row.end_month),
       is_current: !!row.is_current,
       contract: extras.contract || '',
-      // Mapear mode -> Use del formulario
       use:
         row.mode === 'Private' ? 'Private' :
         row.mode === 'Charter' ? 'Charter' :
         row.mode === 'Dual' ? 'Private/Charter' : '',
       regionsArr: Array.isArray(row.regions) ? row.regions : [],
 
-      // NUEVOS (leer columnas directas)
       yacht_brand: row.yacht_brand || '',
       yacht_brand_other: row.yacht_brand_other || '',
       yacht_model: row.yacht_model || '',
@@ -205,7 +181,6 @@ function dbRowToEditing(row) {
     };
   }
 
-  // shore
   return {
     id: row.id,
     type: 'shore',
@@ -225,24 +200,30 @@ function dbRowToEditing(row) {
   };
 }
 
-/* ===========================================
-   Componente principal
-=========================================== */
 export default function ExperienceSection({
   profileId,
   onCountChange,
-  onProgressChange,      // NUEVO
-  targetForFull = 3,     // NUEVO
+  onProgressChange,
+  targetForFull = 3,
 }) {
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState(null); // se mantiene para back-compat (cuando no viene profileId)
+  const [profile, setProfile] = useState(null);
   const [items, setItems] = useState([]);
-  const [editing, setEditing] = useState(null); // objeto en edición o null
-
-  // Ref al contenedor visual del editor para hacer scroll hacia él
+  const [editing, setEditing] = useState(null);
   const editBoxRef = useRef(null);
+const scrollEditorIntoView = () => {
+  const el = editBoxRef.current;
+  if (!el || typeof window === 'undefined') return;
+  const rect = el.getBoundingClientRect();
+  const y = rect.top + window.scrollY;
+  const mobileOffset = window.innerWidth <= 768 ? 84 : 0;
 
-  // Total de meses en yates (Motor/Sail/Catamaran/Expedition)
+  window.scrollTo({
+    top: Math.max(0, y - mobileOffset),
+    behavior: 'smooth',
+  });
+};
+
   const [yachtingMonths, setYachtingMonths] = useState(null);
 
   async function refreshYachtingMonths(pid) {
@@ -251,11 +232,10 @@ export default function ExperienceSection({
       if (error) throw error;
       setYachtingMonths(typeof data === 'number' ? data : 0);
     } catch {
-      setYachtingMonths(0); // no romper UI
+      setYachtingMonths(0);
     }
   }
 
-  // Cargar perfil (si no nos pasan profileId) + experiencias
   useEffect(() => {
     let cancelled = false;
     async function init() {
@@ -264,7 +244,6 @@ export default function ExperienceSection({
         let pid = profileId || null;
         let prof = null;
 
-        // Si no nos pasan profileId, obtenemos/creamos el perfil
         if (!pid) {
           const { data: profData, error: pe } = await supabase.rpc('rpc_create_or_get_profile');
           if (pe) throw pe;
@@ -300,20 +279,16 @@ export default function ExperienceSection({
     };
   }, [profileId]);
 
-  // Notificar cantidad/progreso para el padre y emitir eventos globales
   useEffect(() => {
     const count = Array.isArray(items) ? items.length : 0;
 
-    // Callback al padre (opcional)
     if (typeof onCountChange === 'function') {
       try {
         onCountChange(count);
       } catch (_e) {
-        /* no-op */
       }
     }
 
-    // Progreso 0..1 basado en cantidad vs targetForFull
     const denom = Number.isFinite(targetForFull) && targetForFull > 0 ? targetForFull : 3;
     const progress = Math.max(0, Math.min(1, count / denom));
 
@@ -321,11 +296,9 @@ export default function ExperienceSection({
       try {
         onProgressChange(progress);
       } catch (_e) {
-        /* no-op */
       }
     }
 
-    // Evento global (opcional) para quien lo escuche
     try {
       const evtCount = new CustomEvent('cv:experience-changed', {
         detail: { count, profileId: profileId || profile?.id || null },
@@ -337,36 +310,24 @@ export default function ExperienceSection({
       });
       window.dispatchEvent(evtProgress);
     } catch (_e) {
-      /* SSR / CustomEvent no disponible */
     }
   }, [items, onCountChange, onProgressChange, targetForFull, profileId, profile?.id]);
 
   function startEdit(row) {
     const obj = dbRowToEditing(row);
     setEditing(obj);
-    // Desplaza suavemente hasta el contenedor del editor (no al top de la página)
-    setTimeout(() => {
-      if (editBoxRef.current) {
-        editBoxRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 0);
+    setTimeout(scrollEditorIntoView, 0);
   }
 
   function startAdd() {
-    setEditing({ type: '' }); // primero escoger tipo
-    // Lleva al usuario al editor inmediatamente
-    setTimeout(() => {
-      if (editBoxRef.current) {
-        editBoxRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 0);
+    setEditing({ type: '' });
+    setTimeout(scrollEditorIntoView, 0);
   }
 
   function cancelEditing() {
     setEditing(null);
   }
 
-  // (Se mantiene aunque YachtFields también calcula ranks internamente)
   const rankOptions = useMemo(() => {
     if (!editing || !editing.department) return [];
     const list = getRanksForDept(editing.department) || [];
@@ -377,7 +338,6 @@ export default function ExperienceSection({
     return out;
   }, [editing?.department]);
 
-  // Validaciones mínimas (YACHT)
   function validateYacht(y) {
     if (!y.department) return 'Department is required.';
     if (!y.role || (y.role === 'Other' && !y.role_other?.trim())) return 'Rank is required.';
@@ -417,7 +377,6 @@ export default function ExperienceSection({
           ? editing.role_other.trim()
           : editing.role;
 
-      // regions: text[] (no string)
       const regionsArray = Array.isArray(editing.regionsArr)
         ? editing.regionsArr.filter((s) => String(s || '').trim() !== '')
         : null;
@@ -428,7 +387,6 @@ export default function ExperienceSection({
       const { year: sYear, month: sMonth } = parseYearMonth(editing.start_month);
       const { year: eYear, month: eMonth } = parseYearMonth(editing.end_month);
 
-      // extras: jsonb — NOT NULL → devolvemos {} si no hay datos
       const extras = compactOrEmpty({
         propulsion: hideTech ? null : editing.propulsion || null,
         engine_make: hideTech ? null : editing.engine_make || null,
@@ -437,29 +395,27 @@ export default function ExperienceSection({
         crossings: editing.crossings || null,
         yard_period: editing.yardPeriod || null,
         crew_bucket: editing.crew_bucket || null,
-        contract: editing.contract || null, // guardamos términos aquí (back-compat)
+        contract: editing.contract || null,
       });
 
       const payload = {
-        kind: editing.type || null,                            // 'yacht'
+        kind: editing.type || null,
         profile_id: pid,
         department: editing.department || null,
         role: roleToSave || null,
         vessel_name: editing.vessel_or_employer || null,
-        vessel_type: normalizeVesselType(editing.vessel_type), // cumple el CHECK
-        loa_m: Number.isFinite(loa) ? loa : null,              // numeric(5,2)
+        vessel_type: normalizeVesselType(editing.vessel_type),
+        loa_m: Number.isFinite(loa) ? loa : null,
         gt: hideTech ? null : editing.gt ? Number(editing.gt) : null,
-        mode: normalizeMode('yacht', editing.use, editing.contract), // cumple el CHECK
-        regions: regionsArray && regionsArray.length ? regionsArray : null, // text[]
-        start_year: sYear,                                     // NOT NULL
+        mode: normalizeMode('yacht', editing.use, editing.contract),
+        regions: regionsArray && regionsArray.length ? regionsArray : null,
+        start_year: sYear,
         start_month: sMonth,
         end_year: editing.is_current ? null : eYear,
         end_month: editing.is_current ? null : eMonth,
         is_current: !!editing.is_current,
         notes: noteTags || null,
-        extras,                                                // {} como mínimo
-
-        // NUEVOS (columnas directas)
+        extras,
         yacht_brand: editing.yacht_brand || null,
         yacht_brand_other:
           editing.yacht_brand === 'Other' && editing.yacht_brand_other?.trim()
@@ -497,8 +453,6 @@ export default function ExperienceSection({
 
       const { year: sYear, month: sMonth } = parseYearMonth(editing.start_month);
       const { year: eYear, month: eMonth } = parseYearMonth(editing.end_month);
-
-      // Guardamos el país en 'regions' (text[])
       const location = editing.location_country || '';
       const regionsArray = location ? [location] : null;
 
@@ -506,7 +460,6 @@ export default function ExperienceSection({
         supervised: editing.supervisedBucket || '',
       });
 
-      // extras (NOT NULL) — guardamos contrato e industria
       const extras = compactOrEmpty({
         contract: editing.contract || null,
         industry: editing.vessel_type || null,
@@ -515,23 +468,23 @@ export default function ExperienceSection({
       });
 
       const payload = {
-        kind: editing.type || null,                         // 'shore'
+        kind: editing.type || null,
         profile_id: pid,
-        department: editing.department || null,             // (no se muestra, pero no rompe schema)
+        department: editing.department || null,
         role: editing.role || null,
-        vessel_name: editing.vessel_or_employer || null,    // employer / company
-        vessel_type: 'Other',                               // cumple el CHECK
+        vessel_name: editing.vessel_or_employer || null,
+        vessel_type: 'Other',
         loa_m: null,
         gt: null,
-        mode: normalizeMode('shore', null, editing.contract), // → "Other"
-        regions: regionsArray,                              // text[]
-        start_year: sYear,                                  // NOT NULL
+        mode: normalizeMode('shore', null, editing.contract),
+        regions: regionsArray,
+        start_year: sYear,
         start_month: sMonth,
         end_year: editing.is_current ? null : eYear,
         end_month: editing.is_current ? null : eMonth,
         is_current: !!editing.is_current,
         notes: noteTags || null,
-        extras,                                             // {} como mínimo
+        extras,
       };
 
       try {
@@ -554,9 +507,6 @@ export default function ExperienceSection({
     }
   }
 
-  /* ===========================================
-     Sub-UI comunes
-  =========================================== */
   const TypePicker = useMemo(() => {
     if (!editing) return null;
     return (
@@ -582,13 +532,11 @@ export default function ExperienceSection({
     );
   }, [editing]);
 
-  // Longevidad promedio (solo yates)
   const longevity = useMemo(
     () => computeLongevityAvg(items, { onlyYacht: true }),
     [items]
   );
 
-  // Estilo unificado para las tres cajitas de resumen (mismo alto/ancho visual)
   const summaryBoxStyle = {
     margin: '8px 0 12px',
     padding: '8px 12px',
@@ -604,7 +552,6 @@ export default function ExperienceSection({
     textAlign: 'center',
   };
 
-  // === Eliminar experiencia ===
   async function handleDelete(row) {
     const pid = profileId || profile?.id;
     if (!row?.id) return;
@@ -676,7 +623,7 @@ export default function ExperienceSection({
         <div
           ref={editBoxRef}
           style={{
-            border: '1px solid var(--line)',                            // <- tema
+            border: '1px solid var(--line)',
             borderRadius: 12,
             padding: 12,
             background: 'linear-gradient(180deg, var(--card), var(--card-2))', // <- tema

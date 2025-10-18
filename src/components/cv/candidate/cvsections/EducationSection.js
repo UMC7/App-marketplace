@@ -1,5 +1,5 @@
 // src/components/cv/candidate/cvsections/EducationSection.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import supabase from '../../../../supabase';
 import { toast } from 'react-toastify';
 
@@ -12,9 +12,24 @@ export default function EducationSection({ userId: userIdProp }) {
   const [loading, setLoading] = useState(true);
 
   const [creating, setCreating] = useState(false);
-  const [editing, setEditing] = useState(null); // item | null
+  const [editing, setEditing] = useState(null);
 
-  // resolver userId si no vino por props
+  const isDark = useMemo(() => {
+    if (typeof document === 'undefined') return false;
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+  }, []);
+
+  const formWrapperStyle = useMemo(
+    () => ({
+      border: `1px solid ${isDark ? '#212734' : 'var(--line)'}`,
+      borderRadius: 12,
+      padding: 12,
+      background: isDark ? '#0c1017' : 'linear-gradient(180deg, var(--card), var(--card-2))',
+      marginBottom: 10,
+    }),
+    [isDark]
+  );
+
   useEffect(() => {
     let mounted = true;
     async function resolveUser() {
@@ -150,30 +165,14 @@ export default function EducationSection({ userId: userIdProp }) {
 
       {/* Crear (sin título interno) */}
       {creating && (
-        <div
-          style={{
-            border: '1px solid #212734',
-            borderRadius: 12,
-            padding: 12,
-            background: '#0c1017',
-            marginBottom: 10,
-          }}
-        >
+        <div style={formWrapperStyle}>
           <EducationItemForm onSubmit={(p) => createItem(p)} onCancel={() => setCreating(false)} />
         </div>
       )}
 
       {/* Editar (sin título interno) */}
       {editing && (
-        <div
-          style={{
-            border: '1px solid #212734',
-            borderRadius: 12,
-            padding: 12,
-            background: '#0c1017',
-            marginBottom: 10,
-          }}
-        >
+        <div style={formWrapperStyle}>
           <EducationItemForm
             initialValue={{
               institution: editing.institution,
