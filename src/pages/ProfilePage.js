@@ -1,6 +1,6 @@
 // src/pages/ProfilePage.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
@@ -105,16 +105,32 @@ useEffect(() => {
 const navigate = useNavigate();
 const location = useLocation();
 
+const menuRef = useRef(null);
+const isTab = (key) => (activeTab === key ? 'is-active' : '');
+
+useEffect(() => {
+  if (!isMenuOpen) return;
+  const handler = (e) => {
+    if (menuRef.current && !menuRef.current.contains(e.target)) {
+      setIsMenuOpen(false);
+    }
+  };
+  document.addEventListener('mousedown', handler);
+  document.addEventListener('touchstart', handler, { passive: true });
+  return () => {
+    document.removeEventListener('mousedown', handler);
+    document.removeEventListener('touchstart', handler);
+  };
+}, [isMenuOpen]);
+
 useEffect(() => {
   const params = new URLSearchParams(location.search);
 
-  // --- manejar ?tab= ---
   const tab = params.get('tab');
   if (tab && ALLOWED_TABS.has(tab)) {
     setActiveTab(tab);
   }
 
-  // --- manejar ?refresh= ---
   const refreshTarget = params.get('refresh');
   if (refreshTarget) {
     const refetchMap = {
@@ -126,7 +142,6 @@ useEffect(() => {
     const fn = refetchMap[refreshTarget];
     if (typeof fn === 'function') fn();
 
-    // Quitar sólo "refresh" y conservar "tab"
     const next = new URLSearchParams(params);
     next.delete('refresh');
     const qs = next.toString();
@@ -145,7 +160,7 @@ useEffect(() => {
           { data: deletedData, error: deletedError },
           { data: soldItems, error: soldError },
           { data: myPurchases, error: purchaseError },
-          { data: serviceData, error: serviceError }, // Nueva consulta
+          { data: serviceData, error: serviceError },
           { data: offersData, error: offersError },
           { data: deletedJobData, error: deletedJobsError },
           { data: eventData, error: eventError },
@@ -1438,25 +1453,107 @@ const refetchEvents = async () => {
   <div className="container">
     <h1>My Profile</h1>
 
-  <div className="tabs-container">
-  <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+<div className="tabs-container" ref={menuRef}>
+  <button
+    className="navbar-toggle"
+    onClick={() => setIsMenuOpen(!isMenuOpen)}
+    aria-expanded={isMenuOpen ? 'true' : 'false'}
+    aria-controls="profile-tabs-panel"
+  >
     Menu
   </button>
-  <div className={`profile-tabs ${isMenuOpen ? 'active' : ''}`}>
-    <button onClick={() => { setActiveTab('productos'); setIsMenuOpen(false); }}>My Products</button>
-    <button onClick={() => { setActiveTab('servicios'); setIsMenuOpen(false); }}>My Services</button>
-    <button onClick={() => { setActiveTab('empleos'); setIsMenuOpen(false); }}>My Jobs</button>
-    <button onClick={() => { setActiveTab('eventos'); setIsMenuOpen(false); }}>My Events</button>
-    <button onClick={() => { setActiveTab('compras'); setIsMenuOpen(false); }}>My Purchases</button>
-    <button onClick={() => { setActiveTab('ventas'); setIsMenuOpen(false); }}>My Sales</button>
-    <button onClick={() => { setActiveTab('eliminados'); setIsMenuOpen(false); }}>Deleted</button>
-    <button onClick={() => { setActiveTab('valoracion'); setIsMenuOpen(false); }}>Rating</button>
+
+  {/* Añadimos clase 'menu-panel' para heredar paleta de dark mode y nuevos estilos móviles */}
+  <div
+    id="profile-tabs-panel"
+    className={`profile-tabs menu-panel ${isMenuOpen ? 'active' : ''}`}
+    role="menu"
+  >
+    <button
+      className={`tab-pill ${isTab('productos')}`}
+      onClick={() => { setActiveTab('productos'); setIsMenuOpen(false); }}
+      role="menuitem"
+    >
+      My Products
+    </button>
+
+    <button
+      className={`tab-pill ${isTab('servicios')}`}
+      onClick={() => { setActiveTab('servicios'); setIsMenuOpen(false); }}
+      role="menuitem"
+    >
+      My Services
+    </button>
+
+    <button
+      className={`tab-pill ${isTab('empleos')}`}
+      onClick={() => { setActiveTab('empleos'); setIsMenuOpen(false); }}
+      role="menuitem"
+    >
+      My Jobs
+    </button>
+
+    <button
+      className={`tab-pill ${isTab('eventos')}`}
+      onClick={() => { setActiveTab('eventos'); setIsMenuOpen(false); }}
+      role="menuitem"
+    >
+      My Events
+    </button>
+
+    <button
+      className={`tab-pill ${isTab('compras')}`}
+      onClick={() => { setActiveTab('compras'); setIsMenuOpen(false); }}
+      role="menuitem"
+    >
+      My Purchases
+    </button>
+
+    <button
+      className={`tab-pill ${isTab('ventas')}`}
+      onClick={() => { setActiveTab('ventas'); setIsMenuOpen(false); }}
+      role="menuitem"
+    >
+      My Sales
+    </button>
+
+    <button
+      className={`tab-pill ${isTab('eliminados')}`}
+      onClick={() => { setActiveTab('eliminados'); setIsMenuOpen(false); }}
+      role="menuitem"
+    >
+      Deleted
+    </button>
+
+    <button
+      className={`tab-pill ${isTab('valoracion')}`}
+      onClick={() => { setActiveTab('valoracion'); setIsMenuOpen(false); }}
+      role="menuitem"
+    >
+      Rating
+    </button>
+
     {candidateEnabled && (
-      <button onClick={() => { setActiveTab('cv'); setIsMenuOpen(false); }}>
+      <button
+        className={`tab-pill ${isTab('cv')}`}
+        onClick={() => { setActiveTab('cv'); setIsMenuOpen(false); }}
+        role="menuitem"
+      >
         Candidate Profile
       </button>
     )}
-    <button onClick={() => { navigate('/profile?tab=usuario', { replace: true }); setActiveTab('usuario'); setIsMenuOpen(false); }}>User Details</button>
+
+    <button
+      className={`tab-pill ${isTab('usuario')}`}
+      onClick={() => {
+        navigate('/profile?tab=usuario', { replace: true });
+        setActiveTab('usuario');
+        setIsMenuOpen(false);
+      }}
+      role="menuitem"
+    >
+      User Details
+    </button>
   </div>
 </div>
 

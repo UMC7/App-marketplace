@@ -195,10 +195,27 @@ body.dark-mode .module-header-row {
    MENÚS Y DESPLEGABLES
    ========================= */
 body.dark-mode .post-dropdown,
-body.dark-mode .dropdown-menu,
-body.dark-mode .menu-panel {
-  background-color: var(--bg-secondary) !important;
-  border: 1px solid var(--border-color) !important;
+body.dark-mode .dropdown-menu {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+/* Estilo del panel del menú de Profile: solo en móvil */
+@media (max-width: 768px) and (orientation: portrait) {
+  body.dark-mode .tabs-container .profile-tabs.menu-panel {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* En desktop, el panel del menú de Profile NO debe verse como card */
+@media (min-width: 769px) {
+  body.dark-mode .tabs-container .profile-tabs.menu-panel {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
 }
 
 body.dark-mode .post-dropdown button,

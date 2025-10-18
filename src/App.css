@@ -950,59 +950,86 @@ body {
 }
 
 @media (max-width: 768px) and (orientation: portrait) {
-  .profile-menu-toggle {
-    display: block;
+  /* Panel del menú (solo móvil) */
+  .tabs-container .profile-tabs.menu-panel {
+    display: none;                 /* cerrado por defecto */
+    position: relative;
     width: 100%;
-    background-color: var(--primary-color);
-    color: white;
-    font-size: 16px;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    text-align: left;
-    font-family: var(--font-body);
+    box-sizing: border-box;
+    padding: 12px;
+    margin: 8px 0 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(8, 26, 59, 0.12);
+    background: var(--white-color);          /* en dark mode lo sobreescribe .menu-panel */
+    box-shadow: 0 8px 24px rgba(2, 6, 23, 0.12);
+    gap: 10px;
   }
 
-  .profile-tabs {
-    display: none;
-    flex-direction: column;
-    background-color: #ccc;
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-  }
-
-  .profile-tabs.active {
+  .tabs-container .profile-tabs.menu-panel.active {
     display: flex;
     flex-direction: column;
-    background-color: #ccc;
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-
-    align-items: center; /* ✅ Centrado horizontal */
+    animation: profileMenuFade .14s ease-out both;
+    transform-origin: top center;
   }
 
-  .profile-tabs button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  margin-bottom: 6px;
-  border-radius: 4px;
-  text-align: center;         /* ✅ Cambiado a 'center' para alineación uniforme */
-  font-size: 14px;
-  font-family: var(--font-body);
+  /* Botones tipo pill */
+  .tabs-container .profile-tabs.menu-panel .tab-pill {
+    width: 100%;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border-radius: 9999px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    text-align: center;
 
-  width: 90%;
-  max-width: 320px;
-  margin-left: auto;
-  margin-right: auto;
-}
+    /* Mantiene paleta actual */
+    color: var(--primary-color);
+    background: rgba(8, 26, 59, 0.08);
+    border: 1px solid rgba(8, 26, 59, 0.18);
 
-.container {
-    padding-bottom: 50px !important; /* Ajusta el valor al alto real de tu navbar si es necesario */
+    box-shadow: 0 1px 2px rgba(8, 26, 59, 0.06);
+    transition: background-color .18s ease, border-color .18s ease,
+                box-shadow .18s ease, transform .08s ease, color .18s ease;
+  }
+
+  .tabs-container .profile-tabs.menu-panel .tab-pill:hover {
+    background: rgba(8, 26, 59, 0.14);
+    border-color: rgba(8, 26, 59, 0.26);
+    box-shadow: 0 2px 6px rgba(8, 26, 59, 0.12);
+  }
+
+  .tabs-container .profile-tabs.menu-panel .tab-pill:active {
+    transform: translateY(1px);
+  }
+
+  /* Activa/seleccionada */
+  .tabs-container .profile-tabs.menu-panel .tab-pill.is-active {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(8, 26, 59, 0.24);
+  }
+
+  /* Accesibilidad */
+  .tabs-container .profile-tabs.menu-panel .tab-pill:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+  }
+
+  /* Animación de despliegue */
+  @keyframes profileMenuFade {
+    from { opacity: 0; transform: translateY(-6px) scale(.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Evitar que el navbar inferior tape contenido */
+  .container {
+    padding-bottom: 50px !important;
   }
 }
 
