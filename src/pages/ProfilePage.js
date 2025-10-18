@@ -1198,25 +1198,31 @@ case 'compras':
   return (
     <div className="user-info-form">
       <h2>User Information</h2>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '12px 0 20px' }}>
+      <div
+  style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 12,
+    margin: '12px 0 16px'
+  }}
+>
   <Avatar nickname={nickname} srcUrl={localAvatarUrl} size="xl" />
-  <div>
-    <button type="button" onClick={handleRemoveAvatar} disabled={!localAvatarUrl}>
-      Remove photo
-    </button>
-    <div style={{ marginTop: 6 }}>
-  <label htmlFor="avatar-upload-input" style={{ display: 'inline-block', marginRight: 8 }}>
-    Change photo:
-  </label>
-  <input
-    id="avatar-upload-input"
-    type="file"
-    accept="image/png,image/jpeg,image/webp"
-    onChange={handleChangeAvatar}
-  />
-</div>
-    {!localAvatarUrl && (
-      <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem' }}>
+
+  <div style={{ width: '100%', maxWidth: 360 }}>
+    <input
+      id="avatar-upload-input"
+      type="file"
+      accept="image/png,image/jpeg,image/webp"
+      onChange={handleChangeAvatar}
+      style={{ width: '100%' }}
+    />
+    {localAvatarUrl ? (
+      <div style={{ marginTop: 6, textAlign: 'center' }}>
+        <button type="button" onClick={handleRemoveAvatar}>Remove photo</button>
+      </div>
+    ) : (
+      <p style={{ fontSize: '0.85rem', margin: '6px 0 0 0', textAlign: 'center' }}>
         No photo: your nickname will be shown inside a circle.
       </p>
     )}
