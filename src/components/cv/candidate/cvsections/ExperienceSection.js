@@ -8,12 +8,13 @@ import { getRanksForDept } from '../shared/rankData';
 import {
   YachtFields,
   ShoreFields,
+  MerchantFields,
   ItemRow,
   EmploymentStatus,
   buildNoteTags,
   buildShoreTags,
   hideTechForRole,
-  computeLongevityAvg,
+  computeLongevityAvg
 } from '../sectionscomponents/experience';
 
 const emptyYacht = {
@@ -43,6 +44,25 @@ const emptyYacht = {
   powerUnit: 'HP',
   crossings: '',
   yardPeriod: '',
+  notes: null,
+};
+
+const emptyMerchant = {
+  type: 'merchant',
+  department: '',
+  role: '',
+  role_other: '',
+  vessel_or_employer: '',
+  vessel_type: '',
+  loa_m: '',
+  gt: '',
+  start_month: '',
+  end_month: '',
+  is_current: false,
+  contract: '',
+  regionsArr: [],
+  employer_name: '',   // <- NUEVO
+  remarks: '',
   notes: null,
 };
 
@@ -178,6 +198,29 @@ function dbRowToEditing(row) {
       crossings: extras.crossings || '',
       yardPeriod: extras.yard_period || '',
       notes: row.notes || null,
+    };
+  }
+
+    if (type === 'merchant') {
+    return {
+      id: row.id,
+      type: 'merchant',
+      department: mapDbDepartmentToUi(row.department),
+      role: row.role || '',
+      role_other: '',
+      vessel_or_employer: row.vessel_name || '',
+      vessel_type: row.vessel_type || '',
+      length_m: row.loa_m ?? '',
+      gt: row.gt ?? '',
+      start_month: ymFrom(row.start_year, row.start_month),
+      end_month: row.is_current ? '' : ymFrom(row.end_year, row.end_month),
+      is_current: !!row.is_current,
+      contract: (extras && extras.contract) || '',
+      regionsArr: Array.isArray(row.regions) ? row.regions : [],
+      powerValue: extras?.power_value ?? '',
+      powerUnit: extras?.power_unit || 'HP',
+      employer_name: extras?.employer_name || '',   // <- NUEVO
+      remarks: row.notes || ''
     };
   }
 
@@ -445,6 +488,84 @@ const scrollEditorIntoView = () => {
       return;
     }
 
+        if (editing.type === 'merchant') {
+      // Validación
+      if (!editing.department) return toast.error('Department is required.');
+      if (!editing.role || (editing.role === 'Other' && !editing.role_other?.trim()))
+        return toast.error('Rank is required.');
+      if (!editing.vessel_or_employer?.trim()) return toast.error('Vessel is required.');
+      if (!editing.vessel_type) return toast.error('Vessel type is required.');
+      if (!editing.start_month) return toast.error('Start month is required.');
+      if (!editing.is_current && !editing.end_month)
+        return toast.error('End date is required or mark Current.');
+      if (!editing.contract) return toast.error('Terms is required.');
+      if (!Array.isArray(editing.regionsArr) || editing.regionsArr.length === 0)
+        return toast.error('Regions is required.');
+
+      const roleToSave =
+        editing.role === 'Other' && editing.role_other?.trim()
+          ? editing.role_other.trim()
+          : editing.role;
+
+      const regionsArray = Array.isArray(editing.regionsArr)
+        ? editing.regionsArr.filter((s) => String(s || '').trim() !== '')
+        : null;
+
+      const loa =
+        editing.length_m !== '' ? parseFloat(String(editing.length_m).replace(',', '.'))
+        : editing.loa_m !== '' ? parseFloat(String(editing.loa_m).replace(',', '.'))
+        : null;
+
+      const { year: sYear, month: sMonth } = parseYearMonth(editing.start_month);
+      const { year: eYear, month: eMonth } = parseYearMonth(editing.end_month);
+
+      const extras = compactOrEmpty({
+        contract: editing.contract || null,
+        power_value: editing.powerValue ? Number(editing.powerValue) : null,
+        power_unit: editing.powerUnit || null,
+        employer_name: editing.employer_name || null,
+      });
+
+      const payload = {
+        kind: editing.type || null,
+        profile_id: pid,
+        department: editing.department || null,
+        role: roleToSave || null,
+        vessel_name: editing.vessel_or_employer || null,
+        vessel_type: editing.vessel_type || null,
+        loa_m: Number.isFinite(loa) ? loa : null,
+        gt: editing.gt ? Number(editing.gt) : null,
+        mode: 'Other',
+        regions: regionsArray && regionsArray.length ? regionsArray : null,
+        start_year: sYear,
+        start_month: sMonth,
+        end_year: editing.is_current ? null : eYear,
+        end_month: editing.is_current ? null : eMonth,
+        is_current: !!editing.is_current,
+        notes: editing.remarks?.trim() ? editing.remarks.trim() : null,
+        extras,
+      };
+
+      try {
+        const isUpdate = !!editing.id;
+        const q = supabase.from('profile_experiences');
+        const { data, error } = isUpdate
+          ? await q.update(payload).eq('id', editing.id).select().single()
+          : await q.insert(payload).select().single();
+        if (error) throw error;
+
+        setItems((prev) =>
+          isUpdate ? prev.map((r) => (r.id === data.id ? data : r)) : [data, ...prev]
+        );
+        setEditing(null);
+        toast.success(isUpdate ? 'Experience updated.' : 'Experience saved.');
+        await refreshYachtingMonths(pid);
+      } catch (e) {
+        toast.error(e.message || 'Could not save experience.');
+      }
+      return;
+    }
+
     if (editing.type === 'shore') {
       if (!editing.role?.trim()) return toast.error('Role / Rank is required.');
       if (!editing.vessel_or_employer?.trim())
@@ -508,29 +629,32 @@ const scrollEditorIntoView = () => {
   }
 
   const TypePicker = useMemo(() => {
-    if (!editing) return null;
-    return (
-      <div className="cp-row-2" style={{ marginBottom: 10 }}>
-        <div>
-          <label className="cp-label">Experience type</label>
-          <select
-            className="cp-input"
-            value={editing.type || ''}
-            onChange={(e) => {
-              const t = e.target.value;
-              if (!t) return setEditing({ type: '' });
-              setEditing(t === 'yacht' ? { ...emptyYacht } : { ...emptyShore });
-            }}
-          >
-            <option value="">— Select —</option>
-            <option value="yacht">Yacht / Sea Service</option>
-            <option value="shore">Shore-based / Other industries</option>
-          </select>
-        </div>
-        <div />
+  if (!editing) return null;
+  return (
+    <div className="cp-row-2" style={{ marginBottom: 10 }}>
+      <div>
+        <label className="cp-label">Experience type</label>
+        <select
+          className="cp-input"
+          value={editing.type || ''}
+          onChange={(e) => {
+            const t = e.target.value;
+            if (!t) return setEditing({ type: '' });
+            if (t === 'yacht') return setEditing({ ...emptyYacht });
+            if (t === 'merchant') return setEditing({ ...emptyMerchant });
+            return setEditing({ ...emptyShore });
+          }}
+        >
+          <option value="">— Select —</option>
+          <option value="yacht">Yacht / Sea Service</option>
+          <option value="merchant">Merchant / Commercial Vessels</option>
+          <option value="shore">Shore-based / Other industries</option>
+        </select>
       </div>
-    );
-  }, [editing]);
+      <div />
+    </div>
+  );
+}, [editing]);
 
   const longevity = useMemo(
     () => computeLongevityAvg(items, { onlyYacht: true }),
@@ -635,6 +759,9 @@ const scrollEditorIntoView = () => {
           {/* Hasta elegir tipo no mostramos formularios */}
           {editing.type === 'yacht' && (
             <YachtFields editing={editing} setEditing={setEditing} />
+          )}
+          {editing.type === 'merchant' && (
+            <MerchantFields editing={editing} setEditing={setEditing} />
           )}
           {editing.type === 'shore' && (
             <ShoreFields editing={editing} setEditing={setEditing} />

@@ -3,6 +3,7 @@
 // Components
 export { default as YachtFields } from './YachtFields';
 export { default as ShoreFields } from './ShoreFields';
+export { default as MerchantFields } from './MerchantFields';
 export { default as ItemRow } from './ItemRow';
 
 // Utilities (explicit to avoid name collisions)
