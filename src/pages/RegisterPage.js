@@ -28,6 +28,7 @@ function RegisterPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isCandidate, setIsCandidate] = useState(false);
   const [error, setError] = useState('');
+  const [nicknameError, setNicknameError] = useState('');
   const [showEmailConfirmModal, setShowEmailConfirmModal] = useState(false);
 
   const navigate = useNavigate();
@@ -43,6 +44,27 @@ function RegisterPage() {
   };
 
   const isNumeric = (value) => /^\d+$/.test(value);
+
+  // Valida reglas de nickname: máx 7, solo A-Z/a-z/0-9, ≤ 3 dígitos
+const handleNicknameChange = (e) => {
+  let v = e.target.value || '';
+  // solo alfanumérico ASCII y tope 7
+  v = v.replace(/[^A-Za-z0-9]/g, '').slice(0, 7);
+
+  const digits = (v.match(/\d/g) || []).length;
+
+  setForm((prev) => ({ ...prev, nickname: v }));
+
+  if (!v) {
+    setNicknameError('Nickname is required.');
+  } else if (!/^[A-Za-z0-9]{1,7}$/.test(v)) {
+    setNicknameError('Only letters and numbers, up to 7 chars.');
+  } else if (digits > 3) {
+    setNicknameError('Maximum of 3 digits allowed.');
+  } else {
+    setNicknameError('');
+  }
+};
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -81,6 +103,19 @@ const clearAvatar = () => {
 
   const handleRegister = async () => {
     setError('');
+
+    if (!/^[A-Za-z0-9]{1,7}$/.test(form.nickname || '')) {
+      setError('Nickname must be up to 7 characters, letters and numbers only.');
+      return;
+    }
+    if (((form.nickname || '').match(/\d/g) || []).length > 3) {
+      setError('Nickname can contain at most 3 digits.');
+      return;
+    }
+    if (nicknameError) {
+      setError(nicknameError);
+      return;
+    }
 
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match.');
@@ -126,14 +161,14 @@ const clearAvatar = () => {
       return;
     }
 
-    const { data: existingNickname, error: nicknameError } = await supabase
+    const { data: existingNickname, error: nickErr } = await supabase
       .from('users')
       .select('id')
-      .eq('nickname', form.nickname)
+      .ilike('nickname', form.nickname) // sin comodines → igualdad case-insensitive
       .maybeSingle();
 
-    if (nicknameError) {
-      console.error('Error checking nickname:', nicknameError.message);
+    if (nickErr) {
+      console.error('Error checking nickname:', nickErr.message);
     }
 
     if (existingNickname) {
@@ -210,11 +245,16 @@ try {
       confirmPassword,
     } = form;
 
+    const nicknameOk =
+    /^[A-Za-z0-9]{1,7}$/.test(nickname || '') &&
+    ((nickname || '').match(/\d/g) || []).length <= 3 &&
+    !nicknameError;
+
     return (
       firstName.trim() &&
       lastName.trim() &&
       birthYear &&
-      nickname.trim() &&
+      nicknameOk &&
       phoneCode.trim() &&
       isNumeric(phoneCode) &&
       phone.trim() &&
@@ -246,34 +286,41 @@ try {
       <div className="login-form">
         <h2>User Registration</h2>
 
-<label>Profile Photo (optional)</label>
-<div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
-  <Avatar
-    nickname={form.nickname || 'User'}
-    srcUrl={avatarPreviewUrl}
-    size="xl"
-  />
-  <div>
-    <input
-      id="avatar-input"
-      type="file"
-      accept="image/png,image/jpeg,image/webp"
-      onChange={handleAvatarChange}
-    />
-    {avatarPreviewUrl && (
-      <div style={{ marginTop: 6 }}>
-        <button type="button" onClick={clearAvatar}>
-          Remove photo
-        </button>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 12,
+        marginBottom: 16,
+      }}
+    >
+      <Avatar
+        nickname={form.nickname || 'User'}
+        srcUrl={avatarPreviewUrl}
+        size="xl"
+      />
+
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        <input
+          id="avatar-input"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={handleAvatarChange}
+          style={{ width: '100%' }}
+        />
+        {avatarPreviewUrl ? (
+          <div style={{ marginTop: 6, textAlign: 'center' }}>
+            <button type="button" onClick={clearAvatar}>Remove photo</button>
+          </div>
+        ) : (
+          <p style={{ fontSize: '0.85rem', margin: '6px 0 0 0', textAlign: 'center' }}>
+            If you don’t add a photo, we’ll use your nickname inside a circle.
+          </p>
+        )}
       </div>
-    )}
-    {!avatarPreviewUrl && (
-      <p style={{ fontSize: '0.85rem', margin: '6px 0 0 0' }}>
-        If you don’t add a photo, we’ll use your nickname inside a circle.
-      </p>
-    )}
-  </div>
-</div>
+    </div>
+
         <label>
           Name <span style={{ color: 'red' }}>*</span>
         </label>
@@ -299,7 +346,21 @@ try {
         <label>
           Nickname <span style={{ color: 'red' }}>*</span>
         </label>
-        <input name="nickname" placeholder="Nickname" onChange={handleChange} required />
+        <input
+          name="nickname"
+          placeholder="Nickname"
+          value={form.nickname}
+          onChange={handleNicknameChange}
+          maxLength={7}
+          required
+        />
+        {nicknameError ? (
+          <p style={{ color: 'red', marginTop: -8, marginBottom: 8, fontSize: '0.9rem' }}>{nicknameError}</p>
+        ) : (
+          <p style={{ color: '#666', marginTop: -8, marginBottom: 8, fontSize: '0.9rem' }}>
+            Up to 7 characters. Letters and numbers only. Max 3 digits.
+          </p>
+        )}
 
         <label>
           Primary Phone <span style={{ color: 'red' }}>*</span>
@@ -388,14 +449,30 @@ try {
             )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '20px auto', columnGap: 10, margin: '8px 0 12px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '20px auto',
+            columnGap: '10px',
+            margin: '16px 0',
+          }}
+        >
           <input
             type="checkbox"
             id="isCandidate"
             checked={isCandidate}
             onChange={(e) => setIsCandidate(e.target.checked)}
           />
-          <label htmlFor="isCandidate">Enable Candidate Profile</label>
+          <label
+            htmlFor="isCandidate"
+            style={{
+              fontSize: '0.92rem',
+              lineHeight: 1.4,
+              transform: 'translateY(-4px)',
+            }}
+          >
+            Enable Candidate Profile
+          </label>
         </div>
         
         <div
