@@ -434,16 +434,16 @@
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
   }
-
-  .candidate-profile-tab .cp-actions{
-  display: grid !important;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.candidate-profile-tab .cp-actions > button,
-.candidate-profile-tab .cp-actions > .btn{
-  width: 100%;
-}
+  
+  .candidate-profile-tab .cp-card:has(.cp-row-exp-a, .cp-row-exp-b, .cp-row-exp-c, .cp-row-exp-d) .cp-actions{
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .candidate-profile-tab .cp-card:has(.cp-row-exp-a, .cp-row-exp-b, .cp-row-exp-c, .cp-row-exp-d) .cp-actions > button,
+  .candidate-profile-tab .cp-card:has(.cp-row-exp-a, .cp-row-exp-b, .cp-row-exp-c, .cp-row-exp-d) .cp-actions > .btn{
+    width: 100%;
+  }
 
   .cp-shareActions .cp-btn{
     width: 100% !important;
