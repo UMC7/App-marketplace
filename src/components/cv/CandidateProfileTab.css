@@ -297,6 +297,7 @@
   grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 
+/* ======================= MOBILE ======================= */
 @media (max-width: 720px) {
   .candidate-profile-tab{
     --row-2-cols: 1fr;
@@ -332,21 +333,31 @@
   .candidate-profile-tab .cp-row-add { grid-template-columns: 1fr; }
   .candidate-profile-tab .cp-btn-add { width: 100%; }
 
+  /* Experience → apilar UNA columna para que cada bloque herede 100% del vecino superior */
   .candidate-profile-tab .cp-row-exp-a{
     grid-template-columns: 1fr;
   }
 
+  /* Toda la fila B en una columna: cada ítem ocupa 100% */
   .candidate-profile-tab .cp-row-exp-b{
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
-  .candidate-profile-tab .cp-row-exp-b > :nth-child(3){ grid-column: 1 / -1; }
+  .candidate-profile-tab .cp-row-exp-b > *{
+    grid-column: 1 / -1 !important;
+  }
   .candidate-profile-tab .cp-row-exp-b > .cp-spacer{ display: none; }
 
+  /* Regions + Add en una MISMA fila en móvil (igual que desktop) */
   .candidate-profile-tab .cp-row-exp-c{
     grid-template-columns: 1fr;
   }
   .candidate-profile-tab .cp-row-exp-c__regions{
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto; /* select + botón en línea */
+    gap: 8px;
+    align-items: stretch;
+  }
+  .candidate-profile-tab .cp-row-exp-c__regions .cp-btn-add{
+    width: auto; /* no forzar 100% en móvil */
   }
 
   .candidate-profile-tab .cp-row-exp-d{
@@ -423,6 +434,17 @@
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
   }
+
+  .candidate-profile-tab .cp-actions{
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.candidate-profile-tab .cp-actions > button,
+.candidate-profile-tab .cp-actions > .btn{
+  width: 100%;
+}
+
   .cp-shareActions .cp-btn{
     width: 100% !important;
   }

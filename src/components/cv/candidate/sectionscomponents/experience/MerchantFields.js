@@ -35,8 +35,7 @@ const VESSEL_TYPES = VESSEL_TYPES_SRC ?? [
 ];
 
 const REGION_OPTIONS =
-  REGIONS_SRC ??
-  [
+  REGIONS_SRC ?? [
     'Worldwide',
     'Mediterranean',
     'Caribbean',
@@ -60,15 +59,60 @@ const REGION_OPTIONS =
     'South America',
   ];
 
+/** Par de fechas (Start/End) en una sola fila, con lógica de formateo */
+function DatePair({ editing, setEditing }) {
+  return (
+    <>
+      <div>
+        <label className="cp-label">Start date *</label>
+        <input
+          className="cp-input"
+          placeholder="YYYY-MM"
+          inputMode="numeric"
+          maxLength={7}
+          value={editing.start_month || ''}
+          onChange={(e) => {
+            const v = ymFormatOnChange(e.target.value);
+            setEditing({ ...editing, start_month: v });
+          }}
+          onBlur={(e) => {
+            const v = ymNormalize(e.target.value);
+            setEditing({ ...editing, start_month: v });
+          }}
+        />
+      </div>
+      <div>
+        <label className="cp-label">End date *</label>
+        <input
+          className="cp-input"
+          placeholder="YYYY-MM"
+          inputMode="numeric"
+          maxLength={7}
+          value={editing.is_current ? '' : editing.end_month || ''}
+          disabled={!!editing.is_current}
+          onChange={(e) => {
+            const v = ymFormatOnChange(e.target.value);
+            setEditing({ ...editing, end_month: v });
+          }}
+          onBlur={(e) => {
+            if (editing.is_current) return;
+            const v = ymNormalize(e.target.value);
+            setEditing({ ...editing, end_month: v });
+          }}
+        />
+      </div>
+    </>
+  );
+}
+
 export default function MerchantFields({ editing, setEditing }) {
-  // Hooks siempre arriba (regla de hooks)
+  // Hooks
   const [regionPick, setRegionPick] = useState('');
   const [remarksCount, setRemarksCount] = useState(
     () => (editing?.remarks ? String(editing.remarks).length : 0)
   );
   const MAX_REMARKS = 200;
 
-  // NO condicionar hooks; solo el render
   const isActive = !!(editing && editing.type === 'merchant');
 
   const rankOptions = useMemo(() => {
@@ -104,8 +148,9 @@ export default function MerchantFields({ editing, setEditing }) {
     setEditing({ ...editing, regionsArr: Array.from(set) });
   };
 
-  // ---- Render (solo si es merchant) ----
-  return isActive ? (
+  if (!isActive) return null;
+
+  return (
     <>
       {/* ROW A — Department, Rank (+other), Vessel, Vessel type */}
       <div className="cp-row-exp-a">
@@ -193,8 +238,9 @@ export default function MerchantFields({ editing, setEditing }) {
         </div>
       </div>
 
-      {/* ROW B — Length (m), GT, Engine power (solo Eng/Elect), Start date, End date + Current */}
-      <div className="cp-row-exp-b">
+      {/* ROW B — 4 columnas en desktop (alineadas con ROW A) */}
+      <div className="cp-row-exp-b" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+        {/* Col 1: Company / Employer */}
         <div>
           <label className="cp-label">Company / Employer</label>
           <input
@@ -206,111 +252,114 @@ export default function MerchantFields({ editing, setEditing }) {
             }
           />
         </div>
-        <div>
-          <label className="cp-label">Length (m)</label>
-          <input
-            className="cp-input"
-            inputMode="numeric"
-            placeholder="e.g., 120"
-            value={editing.loa_m || editing.length_m || ''}
-            onChange={(e) =>
-              setEditing({ ...editing, loa_m: e.target.value, length_m: e.target.value })
-            }
-          />
-        </div>
 
+        {/* Col 2: Length (m) + GT */}
         <div>
-          <label className="cp-label">GT</label>
-          <input
-            className="cp-input"
-            inputMode="numeric"
-            placeholder="e.g., 5000"
-            value={editing.gt || ''}
-            onChange={(e) => setEditing({ ...editing, gt: e.target.value })}
-          />
-        </div>
-
-        {techPowerVisible && (
-          <div>
-            <label className="cp-label">Engine power</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div>
+              <label className="cp-label">Length (m)</label>
               <input
                 className="cp-input"
                 inputMode="numeric"
-                placeholder="e.g., 20000"
-                value={editing.powerValue || ''}
+                placeholder="e.g., 120"
+                value={editing.loa_m || editing.length_m || ''}
                 onChange={(e) =>
-                  setEditing({ ...editing, powerValue: e.target.value })
+                  setEditing({
+                    ...editing,
+                    loa_m: e.target.value,
+                    length_m: e.target.value,
+                  })
                 }
               />
-              <select
+            </div>
+            <div>
+              <label className="cp-label">GT</label>
+              <input
                 className="cp-input"
-                value={editing.powerUnit || 'HP'}
-                onChange={(e) =>
-                  setEditing({ ...editing, powerUnit: e.target.value })
-                }
-              >
-                <option value="HP">HP</option>
-                <option value="kW">kW</option>
-              </select>
+                inputMode="numeric"
+                placeholder="e.g., 5000"
+                value={editing.gt || ''}
+                onChange={(e) => setEditing({ ...editing, gt: e.target.value })}
+              />
             </div>
           </div>
+        </div>
+
+        {/* Col 3 y Col 4: según “Engine power” */}
+        {techPowerVisible ? (
+          <>
+            {/* Col 3: Engine power */}
+            <div>
+              <label className="cp-label">Engine power</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 8 }}>
+                <input
+                  className="cp-input"
+                  inputMode="numeric"
+                  placeholder="e.g., 20000"
+                  value={editing.powerValue || ''}
+                  onChange={(e) =>
+                    setEditing({ ...editing, powerValue: e.target.value })
+                  }
+                />
+                <select
+                  className="cp-input"
+                  value={editing.powerUnit || 'HP'}
+                  onChange={(e) =>
+                    setEditing({ ...editing, powerUnit: e.target.value })
+                  }
+                >
+                  <option value="HP">HP</option>
+                  <option value="kW">kW</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Col 4: Start/End juntos */}
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <DatePair editing={editing} setEditing={setEditing} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                <input
+                  id="merchant-current"
+                  type="checkbox"
+                  checked={!!editing.is_current}
+                  onChange={(e) =>
+                    setEditing({ ...editing, is_current: e.target.checked })
+                  }
+                />
+                <label htmlFor="merchant-current">Current position</label>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* Sin Engine power: en Col 3 colocamos Start/End juntos; Col 4 queda libre */
+          <>
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <DatePair editing={editing} setEditing={setEditing} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                <input
+                  id="merchant-current"
+                  type="checkbox"
+                  checked={!!editing.is_current}
+                  onChange={(e) =>
+                    setEditing({ ...editing, is_current: e.target.checked })
+                  }
+                />
+                <label htmlFor="merchant-current">Current position</label>
+              </div>
+            </div>
+            <div className="cp-spacer" />
+          </>
         )}
-
-        <div>
-          <label className="cp-label">Start date *</label>
-          <input
-            className="cp-input"
-            placeholder="YYYY-MM"
-            inputMode="numeric"
-            maxLength={7}
-            value={editing.start_month || ''}
-            onChange={(e) => {
-              const v = ymFormatOnChange(e.target.value);
-              setEditing({ ...editing, start_month: v });
-            }}
-            onBlur={(e) => {
-              const v = ymNormalize(e.target.value);
-              setEditing({ ...editing, start_month: v });
-            }}
-          />
-        </div>
-
-        <div>
-          <label className="cp-label">End date *</label>
-          <input
-            className="cp-input"
-            placeholder="YYYY-MM"
-            inputMode="numeric"
-            maxLength={7}
-            value={editing.is_current ? '' : editing.end_month || ''}
-            disabled={!!editing.is_current}
-            onChange={(e) => {
-              const v = ymFormatOnChange(e.target.value);
-              setEditing({ ...editing, end_month: v });
-            }}
-            onBlur={(e) => {
-              if (editing.is_current) return;
-              const v = ymNormalize(e.target.value);
-              setEditing({ ...editing, end_month: v });
-            }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-            <input
-              id="merchant-current"
-              type="checkbox"
-              checked={!!editing.is_current}
-              onChange={(e) =>
-                setEditing({ ...editing, is_current: e.target.checked })
-              }
-            />
-            <label htmlFor="merchant-current">Current position</label>
-          </div>
-        </div>
       </div>
 
-      {/* ROW C — Terms, Regions, Remarks */}
+      {/* ROW C — Terms, Regions, Remarks (si hay Engine power, Terms/Regions siguen aquí) */}
       <div className="cp-row-exp-c">
+        {/* Cuando NO hay Engine power, Terms/Regions ya no suben de fila:
+            mantenemos la misma ubicación que tenías (ROW C) para no tocar desktop. */}
         <div>
           <label className="cp-label">Terms *</label>
           <select
@@ -369,7 +418,10 @@ export default function MerchantFields({ editing, setEditing }) {
         {/* Remarks ocupa toda la fila */}
         <div style={{ gridColumn: '1 / -1' }}>
           <label className="cp-label">
-            Remarks <span style={{ color: 'var(--muted)' }}>({remarksCount}/{MAX_REMARKS})</span>
+            Remarks{' '}
+            <span style={{ color: 'var(--muted)' }}>
+              ({remarksCount}/{MAX_REMARKS})
+            </span>
           </label>
           <textarea
             className="cp-textarea"
@@ -387,5 +439,5 @@ export default function MerchantFields({ editing, setEditing }) {
         </div>
       </div>
     </>
-  ) : null;
+  );
 }
