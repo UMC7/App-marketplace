@@ -16,7 +16,6 @@
   font-size: 13px;
 }
 
-/* Header */
 .ppv-header {
   display: grid;
   grid-template-columns: 120px 1fr auto;
@@ -49,13 +48,10 @@
 .ppv-subtle { margin-top: 6px; font-size: 12px; opacity: .7; word-break: break-all; }
 .ppv-brand { justify-self: end; text-align: right; font-size: 12px; }
 .ppv-logo { font-weight: 700; letter-spacing: .2px; }
-
-/* Tarjetas y cuerpo (por defecto) */
 .ppv-card {
   background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 12px; padding: 16px;
 }
 
-/* Sticky actions */
 .ppv-stickyBar {
   position: sticky; bottom: 8px; z-index: 2;
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -67,8 +63,6 @@
 .ppv-stickyLeft { min-width: 0; }
 .ppv-stickySnippet { font-size: 13px; opacity: .8; display: inline-block; max-width: 60ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ppv-stickyActions { display: flex; gap: 8px; flex-wrap: wrap; }
-
-/* Buttons */
 .ppv-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .ppv-btn {
   padding: 10px 14px; border-radius: 8px;
@@ -80,8 +74,6 @@
 .ppv-btn:active { transform: translateY(1px); }
 .ppv-btn:disabled { opacity: .6; cursor: not-allowed; }
 .ppv-btn.primary { background: #e6f4ff; }
-
-/* ---------- Primera página A4 ---------- */
 .ppv-body { background: transparent; border: 0; padding: 0; }
 
 .ppv-a4Page {
@@ -97,7 +89,6 @@
   overflow: hidden;
 }
 
-/* Foto: esquina superior derecha, 1/3 ancho x 1/2 alto */
 .ppv-a4Photo {
   position: absolute;
   top: 0;
@@ -127,8 +118,6 @@
 .ppv-introInner { width: max-content; max-width: 100%; margin-inline: auto; text-align: left; }
 .ppv-introName { font-size: 40px; line-height: 1.15; font-weight: 800; letter-spacing: .2px; color: #0b1220; }
 .ppv-introRank { font-size: 26px; color: #334155; }
-
-/* Bloque 2 (blanco): AGE / NATIONALITY / CURRENT LOCATION */
 .ppv-a4Meta { background: #fff; color: #0b1220; border-bottom: 1px solid rgba(0,0,0,.08); }
 .ppv-metaGrid {
   display: grid;
@@ -140,8 +129,6 @@
 }
 .ppv-metaLabel { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #334155; white-space: nowrap; }
 .ppv-metaValue { font-size: 14px; font-weight: 700; color: #0b1220; text-align: right; }
-
-/* -------------- Skeletons -------------- */
 .ppv-skel {
   background: linear-gradient(90deg, #f3f4f6, #e5e7eb, #f3f4f6);
   background-size: 200% 100%;
@@ -155,21 +142,18 @@
 .ppv-skel.w80 { width: 80%; }
 @keyframes ppv-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-/* ---------------- Dark mode ---------------- */
 [data-theme='dark'] .ppv-badge { background: #10151d; border-color: #212734; color: #e6e9ef; }
 [data-theme='dark'] .ppv-stickyBar { background: rgba(16,21,29,.9); border-color: #212734; color: #e6e9ef; }
 [data-theme='dark'] .ppv-btn { background: #0c1017; border-color: #202635; color: #e6e9ef; }
 [data-theme='dark'] .ppv-card { background: #151a23; border-color: #212734; color: #e6e9ef; }
 [data-theme='dark'] .ppv-a4Page { background: #fff; }
 
-/* --------------- Responsive ---------------- */
 @media (max-width: 720px) {
   .ppv-header { grid-template-columns: 72px 1fr; grid-auto-rows: auto; }
   .ppv-hero { width: 72px; height: 72px; }
   .ppv-brand { grid-column: 1 / -1; justify-self: start; text-align: left; margin-top: 6px; }
 }
 
-/* --------------- Print (A4 real) ---------------- */
 @media print {
   @page { size: A4; margin: 12mm; }
   body { background: #fff !important; }
@@ -178,7 +162,7 @@
   .ppv-header { margin-bottom: 8mm; }
   .ppv-a4Page {
     width: auto; max-width: none; aspect-ratio: auto;
-    height: 267mm; /* 297mm - márgenes aproximados (12+12mm) */
+    height: 267mm;
     border: none; box-shadow: none; border-radius: 0; margin: 0;
   }
 }
@@ -194,21 +178,14 @@
   --text-color: #0b1220;
 }
 .ppv-xpInner { max-width: 860px; margin: 0 auto; }
-
-/* Título */
 .ppv-xpHeaderRow { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
 .ppv-xpTitle { margin: 0; font-size: 18px; letter-spacing: .12em; text-transform: uppercase; color: #0b1220 !important; font-weight: 800; opacity: 1 !important; mix-blend-mode: normal !important; text-align: center; }
-
-/* Lista / tarjeta */
 .ppv-xpList { display: grid; gap: 12px; }
 .ppv-xpCard { background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 16px; padding: 12px; box-shadow: 0 6px 18px rgba(2,6,23,.06); }
-
 .ppv-xpCardHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .ppv-xpHeadTitle { font-weight: 700; color: #0b1220; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ppv-xpToggle { border: 1px solid rgba(0,0,0,.18); background: #f3f4f6; border-radius: 8px; padding: 6px 10px; cursor: pointer; font: inherit; }
 .ppv-xpToggle:hover { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.2); }
-
-/* Filas de key/values */
 .ppv-kvRow {
   display: grid;
   gap: 12px 16px;
@@ -218,14 +195,12 @@
   position: relative;
 }
 
-/* Columnas */
 .ppv-kvRow[data-cols="2"] { grid-template-columns: repeat(2, minmax(0,1fr)); }
 .ppv-kvRow[data-cols="3"] { grid-template-columns: repeat(3, minmax(0,1fr)); }
 .ppv-kvRow[data-cols="4"] { grid-template-columns: repeat(4, minmax(0,1fr)); }
 .ppv-kvRow[data-cols="5"] { grid-template-columns: repeat(5, minmax(0,1fr)); }
 .ppv-kvRow[data-cols="6"] { grid-template-columns: repeat(6, minmax(0,1fr)); }
 
-/* Líneas separadoras */
 .ppv-xpCard > .ppv-kvRow:not(:last-of-type)::after,
 .ppv-xpBody .ppv-kvRow:not(:last-of-type)::after {
   content: "";
@@ -238,7 +213,6 @@
   pointer-events: none;
 }
 
-/* Bloque expandido */
 .ppv-xpBody { position: relative; }
 .ppv-xpBody.open { padding-top: 0; }
 .ppv-xpBody.open::before {
@@ -272,17 +246,12 @@
   font-size: 14px;
   font-weight: 700;
   color: #0b1220;
-
-  white-space: nowrap;      /* 1 línea */
-  overflow-x: auto;         /* scroll solo si hace falta */
+  white-space: nowrap;
+  overflow-x: auto;
   overflow-y: hidden;
   max-width: 100%;
-
-  /* 👇 crea un canal para el scrollbar, así no tapa el texto */
   padding-bottom: 8px;
   box-sizing: content-box;
-
-  /* estética opcional */
   scrollbar-width: thin;
   scrollbar-gutter: stable both-edges;
 }
@@ -293,7 +262,6 @@
 .ppv-xpBody.closed { display: none; }
 [data-theme='dark'] .ppv-xpCard { background: #fff; color: #0b1220; }
 
-/* ----- Títulos de sección (mismo estilo que SHORT SUMMARY) ----- */
 .ppv-sectionTitleWrap {
   width: 100%;
   max-width: 720px;
@@ -312,7 +280,6 @@
   text-align: center;
 }
 
-/* -------- CHARTS -------- */
 .xp-chartsRow{
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -349,7 +316,7 @@
 }
 .xp-bar{
   display: grid;
-  grid-template-columns: 88px 1fr max-content; /* label | track | valor */
+  grid-template-columns: 88px 1fr max-content;
   align-items: center;
   column-gap: 10px;
 }
@@ -368,7 +335,7 @@
 .xp-barFill{
   position: absolute;
   left: 0; top: 0; bottom: 0;
-  width: 0;                       /* se sobreescribe inline */
+  width: 0;
   border-radius: 999px;
   background: #16c5c1;
 }
@@ -378,7 +345,7 @@
   color: rgba(11,18,32,.85);
   white-space: nowrap;
 }
-/* (opcional) guía de eje X */
+
 .xp-axis{
   display: flex;
   justify-content: space-between;
@@ -390,7 +357,7 @@
 @media (max-width: 760px){
   .xp-chartsRow{ grid-template-columns: 1fr; }
 }
-/* HARD OVERRIDES SOLO PARA CHARTS */
+
 .xp-chartsRow .xp-bar { grid-template-columns: 88px minmax(0,1fr) max-content !important; }
 .xp-chartsRow .xp-barTrack { overflow: visible !important; }
 .xp-chartsRow .xp-barVal {
@@ -402,7 +369,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* reforzamos data-cols dinámico */
 .ppv-kvRow[data-cols="1"] { grid-template-columns: repeat(1, minmax(0,1fr)) !important; }
 .ppv-kvRow[data-cols="2"] { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
 .ppv-kvRow[data-cols="3"] { grid-template-columns: repeat(3, minmax(0,1fr)) !important; }
@@ -410,7 +376,6 @@
 .ppv-kvRow[data-cols="5"] { grid-template-columns: repeat(5, minmax(0,1fr)) !important; }
 .ppv-kvRow[data-cols="6"] { grid-template-columns: repeat(6, minmax(0,1fr)) !important; }
 
-/* --- Título de EXPERIENCE (scopeado, sin afectar otras secciones) --- */
 .ppv-xp .ppv-sectionTitle {
   margin: 0 0 8px;
   font-size: 18px;
@@ -423,31 +388,25 @@
   mix-blend-mode: normal;
 }
 
-/* =========================================================
-   A4 DESKTOP-LOCKED OVERRIDES (solo dentro de la página A4)
-   Mantienen el layout de escritorio aunque el viewport sea móvil
-   ========================================================= */
 .ppv-a4Page .xp-chartsRow {
-  grid-template-columns: 1fr 1fr !important;   /* siempre dos columnas */
+  grid-template-columns: 1fr 1fr !important;
   align-items: start;
 }
 .ppv-a4Page .xp-chartCard {
-  min-width: 0;          /* permitir encaje correcto en grid */
+  min-width: 0;
   width: auto;
   padding: 14px 16px;
 }
-/* Botón "Show details" sin estirarse a 100% dentro del A4 */
+
 .ppv-a4Page .ppv-xpToggle {
   width: auto !important;
   align-self: flex-start;
 }
 
-/* Evitar que la barra de scroll interna tape texto cuando el A4 está escalado */
 .ppv-a4Page .ppv-xp {
   scrollbar-gutter: stable both-edges;
 }
 
-/* Contraste en dark mode para las cards de charts dentro del A4 */
 [data-theme='dark'] .ppv-a4Page .xp-chartCard {
   background: #f8fafc;
   border-color: #2a3344;

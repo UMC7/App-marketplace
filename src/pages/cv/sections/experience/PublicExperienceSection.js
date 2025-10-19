@@ -51,6 +51,17 @@ function sizeBucket(loa){
 }
 const SIZE_ORDER = ['<30m','30–39m','40–49m','50–59m','60–69m','70m+'];
 
+function sizeBucketMerchant(loa){
+  const v = Number(loa);
+  if (!isFinite(v) || v <= 0) return null;
+  if (v < 50)  return '<50m';
+  if (v < 100) return '50–100m';
+  if (v < 150) return '100–150m';
+  if (v < 200) return '150–200m';
+  return '200m+';
+}
+const MERCHANT_SIZE_ORDER = ['<50m','50–100m','100–150m','150–200m','200m+'];
+
 function formatEnginePower(extras){
   const val = extras?.power_value;
   const unit = String(extras?.power_unit || '').trim();
@@ -79,62 +90,76 @@ const chunk = (arr, n) => {
   return out;
 };
 
+/** Calcula datos para las gráficas filtrando por `kind` ('yacht' o 'merchant').
+ *  Nunca contabiliza registros 'shore'. */
+function computeCharts(experiences = [], kind = 'yacht') {
+  const k = String(kind || '').toLowerCase();
+  const sizeMap = new Map();
+  const rankMap = new Map();
+
+  for (const x of experiences || []) {
+    const xKind = String(x?.kind || x?.type || '').toLowerCase();
+    if (xKind !== k) continue; // separa Yachts vs Merchant; excluye Shore
+    const m = monthsBetween(x?.start_year, x?.start_month, x?.end_year, x?.end_month, !!x?.is_current);
+    if (m <= 0) continue;
+
+    const bucket = (k === 'merchant'
+      ? sizeBucketMerchant(x?.loa_m || x?.length_m || x?.length || x?.loa || x?.loaM)
+      : sizeBucket(x?.loa_m || x?.length_m || x?.length || x?.loa || x?.loaM)
+    );
+    if (bucket) sizeMap.set(bucket, (sizeMap.get(bucket) || 0) + m);
+
+    const rank = (x?.role_other || x?.role || '').trim() || 'Unspecified';
+    rankMap.set(rank, (rankMap.get(rank) || 0) + m);
+  }
+
+  const ORDER = (k === 'merchant') ? MERCHANT_SIZE_ORDER : SIZE_ORDER;
+  const sizeData = Array.from(sizeMap.entries())
+    .sort((a,b) => ORDER.indexOf(a[0]) - ORDER.indexOf(b[0]))
+    .map(([label, m]) => ({ label, years: toYears(m) }));
+
+  const rankData = Array.from(rankMap.entries())
+    .sort((a,b) => b[1] - a[1])
+    .map(([label, m]) => ({ label, years: toYears(m) }));
+
+  const maxYears1 = Math.max(0, ...sizeData.map(d => d.years));
+  const maxYears2 = Math.max(0, ...rankData.map(d => d.years));
+  return { sizeData, rankData, maxYears1, maxYears2 };
+}
+
 export default function PublicExperienceSection({ experiences=[] }){
   const list = useMemo(()=> (Array.isArray(experiences)?[...experiences]:[]).sort(byRecency), [experiences]);
 
-  // ===== Datos para gráficas (en el mismo contenedor, antes de EXPERIENCE) =====
-  const { sizeData, rankData, maxYears1, maxYears2 } = useMemo(() => {
-    const sizeMap = new Map();
-    const rankMap = new Map();
+  // ===== Datos para gráficos: separados por Yachts y Merchant (sin Shore) =====
+  const yachtCharts = useMemo(() => computeCharts(experiences, 'yacht'), [experiences]);
+  const merchantCharts = useMemo(() => computeCharts(experiences, 'merchant'), [experiences]);
 
-    for (const x of experiences || []) {
-      if ((x?.kind || x?.type) === 'shore') continue; // solo yate
-      const m = monthsBetween(x?.start_year, x?.start_month, x?.end_year, x?.end_month, !!x?.is_current);
-      if (m <= 0) continue;
+  const hasYachtCharts = (yachtCharts.sizeData?.length || yachtCharts.rankData?.length) > 0;
+  const hasMerchantCharts = (merchantCharts.sizeData?.length || merchantCharts.rankData?.length) > 0;
 
-      const bucket = sizeBucket(x?.loa_m || x?.length_m || x?.length || x?.loa || x?.loaM);
-      if (bucket) sizeMap.set(bucket, (sizeMap.get(bucket) || 0) + m);
-
-      const rank = (x?.role_other || x?.role || '').trim() || 'Unspecified';
-      rankMap.set(rank, (rankMap.get(rank) || 0) + m);
-    }
-
-    const sizeData = Array.from(sizeMap.entries())
-      .sort((a,b) => SIZE_ORDER.indexOf(a[0]) - SIZE_ORDER.indexOf(b[0]))
-      .map(([label, m]) => ({ label, years: toYears(m) }));
-
-    const rankData = Array.from(rankMap.entries())
-      .sort((a,b) => b[1] - a[1])
-      .map(([label, m]) => ({ label, years: toYears(m) }));
-
-    const maxYears1 = Math.max(0, ...sizeData.map(d => d.years));
-    const maxYears2 = Math.max(0, ...rankData.map(d => d.years));
-    return { sizeData, rankData, maxYears1, maxYears2 };
-  }, [experiences]);
-
-  if(!list.length && (!sizeData.length && !rankData.length)) return null;
+  if(!list.length && !hasYachtCharts && !hasMerchantCharts) return null;
 
   return (
     <section className="ppv-xp" aria-label="Experience">
       <div className="ppv-xpInner">
 
         {/* ===== TÍTULO ===== */}
-        {(sizeData.length || rankData.length || list.length) > 0 && (
+        {(hasYachtCharts || hasMerchantCharts || list.length) > 0 && (
           <div className="ppv-sectionTitleWrap">
             <h2 className="ppv-sectionTitle">EXPERIENCE</h2>
           </div>
         )}
 
-        {/* ===== Gráficas ===== */}
-        {(sizeData.length || rankData.length) && (
-          <div className="xp-chartsRow" aria-label="Experience overview charts">
-            {/* Sizes vs Years */}
-            <div className="xp-chartCard" aria-label="Sizes vs years">
-              <div className="xp-chartTitle">Sizes vs Years</div>
-              {sizeData.length ? (
+        {/* ===== Gráficas YACHTS ===== */}
+        {hasYachtCharts && (
+          <div className="xp-chartsRow" aria-label="Experience overview charts (Yachts)">
+            {/* Sizes vs Years (Yachts) */}
+            <div className="xp-chartCard" aria-label="Sizes vs years (Yachts)">
+              <div className="xp-chartTitle">Sizes vs Years (Yachts)</div>
+              {yachtCharts.sizeData.length ? (
                 <ul className="xp-bars">
-                  {sizeData.map(d => {
-                    const pct = maxYears1 ? (d.years / maxYears1) * 100 : 0;
+                  {yachtCharts.sizeData.map(d => {
+                    const pct = yachtCharts.maxYears1 ? (d.years / yachtCharts.maxYears1) * 100 : 0;
                     const valText = `${d.years.toFixed(1)}y`;
                     return (
                       <li className="xp-bar" key={d.label}>
@@ -152,13 +177,66 @@ export default function PublicExperienceSection({ experiences=[] }){
               )}
             </div>
 
-            {/* Ranks vs Years */}
-            <div className="xp-chartCard" aria-label="Ranks vs years">
-              <div className="xp-chartTitle">Ranks vs Years</div>
-              {rankData.length ? (
+            {/* Ranks vs Years (Yachts) */}
+            <div className="xp-chartCard" aria-label="Ranks vs years (Yachts)">
+              <div className="xp-chartTitle">Ranks vs Years (Yachts)</div>
+              {yachtCharts.rankData.length ? (
                 <ul className="xp-bars">
-                  {rankData.map(d => {
-                    const pct = maxYears2 ? (d.years / maxYears2) * 100 : 0;
+                  {yachtCharts.rankData.map(d => {
+                    const pct = yachtCharts.maxYears2 ? (d.years / yachtCharts.maxYears2) * 100 : 0;
+                    const valText = `${d.years.toFixed(1)}y`;
+                    return (
+                      <li className="xp-bar" key={d.label}>
+                        <span className="xp-barLabel">{d.label}</span>
+                        <div className="xp-barTrack" role="img" aria-label={`${d.label}: ${valText}`}>
+                          <div className="xp-barFill" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="xp-barVal">{valText}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <div className="xp-empty">— No ranks recorded —</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ===== Gráficas MERCHANT ===== */}
+        {hasMerchantCharts && (
+          <div className="xp-chartsRow" aria-label="Experience overview charts (Merchant)">
+            {/* Sizes vs Years (Merchant) */}
+            <div className="xp-chartCard" aria-label="Sizes vs years (Merchant)">
+              <div className="xp-chartTitle">Sizes vs Years (Merchant)</div>
+              {merchantCharts.sizeData.length ? (
+                <ul className="xp-bars">
+                  {merchantCharts.sizeData.map(d => {
+                    const pct = merchantCharts.maxYears1 ? (d.years / merchantCharts.maxYears1) * 100 : 0;
+                    const valText = `${d.years.toFixed(1)}y`;
+                    return (
+                      <li className="xp-bar" key={d.label}>
+                        <span className="xp-barLabel">{d.label}</span>
+                        <div className="xp-barTrack" role="img" aria-label={`${d.label}: ${valText}`}>
+                          <div className="xp-barFill" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="xp-barVal">{valText}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <div className="xp-empty">— No yacht sizes recorded —</div>
+              )}
+            </div>
+
+            {/* Ranks vs Years (Merchant) */}
+            <div className="xp-chartCard" aria-label="Ranks vs years (Merchant)">
+              <div className="xp-chartTitle">Ranks vs Years (Merchant)</div>
+              {merchantCharts.rankData.length ? (
+                <ul className="xp-bars">
+                  {merchantCharts.rankData.map(d => {
+                    const pct = merchantCharts.maxYears2 ? (d.years / merchantCharts.maxYears2) * 100 : 0;
                     const valText = `${d.years.toFixed(1)}y`;
                     return (
                       <li className="xp-bar" key={d.label}>
