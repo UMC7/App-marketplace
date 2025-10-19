@@ -17,7 +17,15 @@ function byRecency(a,b){
   const bStart=new Date(`${b?.start_year||0}-${pad2(b?.start_month||1)}-01`);
   return +bStart-+aStart;
 }
-const isShore = (x)=> (x?.kind||'').toString().toLowerCase() !== 'yacht';
+
+// ---- KIND HELPERS (separan Yacht / Merchant / Shore) ----
+const kindOf = (x) => String(x?.kind || x?.type || '').toLowerCase();
+const isYacht = (x) => kindOf(x) === 'yacht';
+const isMerchant = (x) => {
+  const k = kindOf(x);
+  return k === 'merchant' || k === 'commercial' || k === 'commercial_vessel' || k === 'merchant_commercial';
+};
+const isShore = (x) => !isYacht(x) && !isMerchant(x);
 
 const joinArr = (v)=> Array.isArray(v) ? v.filter(Boolean).join(', ') : (v || '');
 const str = (v)=> (v==null ? '' : String(v).trim());
@@ -274,16 +282,23 @@ export default function PublicExperienceSection({ experiences=[] }){
 
 function ExperienceCard({ item }){
   const shore = isShore(item);
+  const merchant = isMerchant(item);
   const [open,setOpen]=React.useState(false);
 
   // Longitud (texto “NN m”) para reutilizar en header/fila
   const lengthText = useMemo(() => {
-    const lenStr = loaToText(item?.loa_m);
+    const lenStr = loaToText(item?.loa_m || item?.length_m || item?.length);
     return lenStr ? `${lenStr} m` : '';
   }, [item]);
 
   // Encabezado
   const headLeft = useMemo(()=>{
+    if(merchant){
+      const name = item?.vessel_name || item?.vessel || item?.name || '—';
+      const rank = item?.role || item?.rank || null;
+      const type = item?.vessel_type || null;
+      return [name, rank, type].filter(Boolean).join(' • ');
+    }
     if(shore){
       const employer = item?.vessel_name || item?.vessel_or_employer || '—';
       const industry = ex(item)?.industry || null;
@@ -294,13 +309,13 @@ function ExperienceCard({ item }){
     const role = item?.role || null;               // mostramos el cargo aquí
     const type = item?.vessel_type || null;
     return [name, role, type].filter(Boolean).join(' • ');
-  },[item, shore]);
+  },[item, shore, merchant]);
 
   // Fechas
   const startDate = fmtYM(item?.start_year, item?.start_month);
   const endDate   = item?.is_current ? 'Present' : fmtYM(item?.end_year, item?.end_month);
 
-  // ======= NÁUTICO (onboard) — declarar items en orden de prioridad =======
+  // ======= YACHT (onboard) =======
   const row2_onboard = [
     { label: 'Length',     value: lengthText },
     { label: 'Start date', value: startDate },
@@ -331,6 +346,26 @@ function ExperienceCard({ item }){
     { label: 'Yard periods',    value: extras?.yard_period || '' },
   ];
 
+  // ======= MERCHANT (Commercial Vessels) — layout solicitado =======
+  const row_merchant_ordered = [
+    { label: 'Start date',  value: startDate },
+    { label: 'End date',    value: endDate },
+    { label: 'Length',      value: lengthText },
+    { label: 'GT',          value: item?.gt ?? '' },
+    { label: 'Engine power',value: formatEnginePower(extras) },
+    { label: 'Terms',       value: item?.terms || extras?.contract || '' },
+    { label: 'Regions',     value: str(joinArr(item?.regions)) },
+  ].filter(isFilled);
+
+  // Merchant: 2 filas (hasta 8 ítems) colapsadas; resto expandido.
+  const merchantCollapsed8 = row_merchant_ordered.slice(0, 8);
+  const merchantRestOnOpen = row_merchant_ordered.slice(8);
+  const collapsedRowsMerchant = chunk(merchantCollapsed8, 4);
+  const expandedRowsMerchant  = chunk(merchantRestOnOpen, 4);
+
+  const remarksText =
+    str(item?.remarks || item?.notes || extras?.remarks || '');
+
   // ======= SHORE =======
   const row2_shore = [
     { label: 'Location',   value: ex(item)?.location_country || '' },
@@ -348,7 +383,6 @@ function ExperienceCard({ item }){
   const allOnboard = [...row2_onboard, ...row3_onboard, ...row4_onboard, ...row5_onboard].filter(isFilled);
   const collapsed8 = allOnboard.slice(0, 8);           // 2 filas x 4
   const restOnOpen = allOnboard.slice(8);
-
   const collapsedRowsOnboard = chunk(collapsed8, 4);   // filas de 4
   const expandedRowsOnboard  = chunk(restOnOpen, 4);   // filas de 4
 
@@ -375,8 +409,14 @@ function ExperienceCard({ item }){
         </button>
       </header>
 
-      {/* COLAPSADO: ya viene sin huecos y con relleno por orden global */}
-      {!shore ? (
+      {/* COLAPSADO */}
+      {merchant ? (
+        <>
+          {collapsedRowsMerchant.map((row, idx) => (
+            <KvRow key={`mer-c-${idx}`} items={row} cols={4}/>
+          ))}
+        </>
+      ) : !shore ? (
         <>
           {collapsedRowsOnboard.map((row, idx) => (
             <KvRow key={`onb-c-${idx}`} items={row} cols={4}/>
@@ -390,11 +430,43 @@ function ExperienceCard({ item }){
         </>
       )}
 
-      {/* EXPANDIDO: solo náutico; el resto de campos en filas de 4 */}
+      {/* EXPANDIDO */}
       <div id={`xp-body-${item.id}`} className={`ppv-xpBody ${open ? 'open' : 'closed'}`}>
-        {!shore && expandedRowsOnboard.map((row, idx) => (
-          <KvRow key={`onb-e-${idx}`} items={row} cols={4}/>
-        ))}
+        {merchant ? (
+          <>
+            {expandedRowsMerchant.map((row, idx) => (
+              <KvRow key={`mer-e-${idx}`} items={row} cols={4}/>
+            ))}
+            {remarksText && (
+              <KvRow
+                items={[{ label: 'Remarks', value: remarksText }]}
+                cols={1}
+              />
+            )}
+          </>
+        ) : !shore ? (
+          <>
+            {expandedRowsOnboard.map((row, idx) => (
+              <KvRow key={`onb-e-${idx}`} items={row} cols={4}/>
+            ))}
+            {remarksText && (
+              <KvRow
+                items={[{ label: 'Remarks', value: remarksText }]}
+                cols={1}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            {/* Para shore: solo mostramos Remarks si hay texto */}
+            {remarksText && (
+              <KvRow
+                items={[{ label: 'Remarks', value: remarksText }]}
+                cols={1}
+              />
+            )}
+          </>
+        )}
       </div>
     </article>
   );

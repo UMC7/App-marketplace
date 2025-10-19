@@ -62,7 +62,7 @@ const COUNTRIES = [
 
 /**
  * ShoreFields
- * Subformulario para experiencia "shore" (idéntico al original).
+ * Subformulario para experiencia "shore" (idéntico al original) + Remarks.
  *
  * Props:
  * - editing: objeto de edición
@@ -71,8 +71,11 @@ const COUNTRIES = [
 export default function ShoreFields({ editing, setEditing }) {
   if (!editing || editing.type !== 'shore') return null;
 
+  const remarksLen = (editing?.remarks || '').length;
+
   // Fila 1: Employer / Role / Contract / Industry
   // Fila 2: Employees supervised / Location (country) / Start / End (+ Current)
+  // Remarks: bloque ancho completo (mismo estilo que Merchant)
   return (
     <>
       {/* Fila 1 */}
@@ -203,6 +206,29 @@ export default function ShoreFields({ editing, setEditing }) {
             />
             <label htmlFor="exp-current-shore">Current position</label>
           </div>
+        </div>
+      </div>
+
+      {/* Remarks (mismo estilo que Merchant: ancho completo, 2 líneas) */}
+      <div className="cp-row-exp-c">
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label className="cp-label">
+            {`Remarks (${remarksLen}/200)`}
+          </label>
+          <textarea
+            className="cp-textarea"
+            rows="2"
+            maxLength={200}
+            placeholder="Brief notes (max ~2 lines)"
+            value={editing.remarks || ''}
+            onChange={(e) =>
+              setEditing({
+                ...editing,
+                remarks: e.target.value.slice(0, 200),
+              })
+            }
+            style={{ lineHeight: 1.3 }}
+          />
         </div>
       </div>
     </>

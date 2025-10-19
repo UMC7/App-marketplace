@@ -44,6 +44,7 @@ const emptyYacht = {
   powerUnit: 'HP',
   crossings: '',
   yardPeriod: '',
+  remarks: '',
   notes: null,
 };
 
@@ -80,6 +81,7 @@ const emptyShore = {
   regionsArr: [],
   location_country: '',
   supervisedBucket: '',
+  remarks: '',
   notes: null,
 };
 
@@ -197,6 +199,7 @@ function dbRowToEditing(row) {
       powerUnit: extras.power_unit || 'HP',
       crossings: extras.crossings || '',
       yardPeriod: extras.yard_period || '',
+      remarks: row.notes || '',
       notes: row.notes || null,
     };
   }
@@ -239,6 +242,7 @@ function dbRowToEditing(row) {
     regionsArr: [],
     location_country: extras.location_country || '',
     supervisedBucket: extras.supervised_bucket || '',
+    remarks: row.notes || '',
     notes: row.notes || null,
   };
 }
@@ -457,7 +461,7 @@ const scrollEditorIntoView = () => {
         end_year: editing.is_current ? null : eYear,
         end_month: editing.is_current ? null : eMonth,
         is_current: !!editing.is_current,
-        notes: noteTags || null,
+        notes: editing.remarks?.trim() ? editing.remarks.trim() : null,
         extras,
         yacht_brand: editing.yacht_brand || null,
         yacht_brand_other:
@@ -604,7 +608,7 @@ const scrollEditorIntoView = () => {
         end_year: editing.is_current ? null : eYear,
         end_month: editing.is_current ? null : eMonth,
         is_current: !!editing.is_current,
-        notes: noteTags || null,
+        notes: editing.remarks?.trim() ? editing.remarks.trim() : null,
         extras,
       };
 

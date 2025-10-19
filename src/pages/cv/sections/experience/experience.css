@@ -412,3 +412,25 @@
   border-color: #2a3344;
   box-shadow: 0 1px 3px rgba(0,0,0,.25);
 }
+
+/* —— Wrap solo para filas de una columna (ej. REMARKS) —— */
+.ppv-kvRow[data-cols="1"] .ppv-kvItem {
+  align-items: flex-start;
+  text-align: left;
+}
+.ppv-kvRow[data-cols="1"] .ppv-kvValue {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: initial;
+  padding-bottom: 0;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Alinear a la izquierda REMARKS (fila de 1 col) */
+.ppv-kvRow[data-cols="1"] .ppv-kvItem,
+.ppv-kvRow[data-cols="1"] .ppv-kvLabel,
+.ppv-kvRow[data-cols="1"] .ppv-kvValue {
+  text-align: left;
+  align-items: flex-start;
+}

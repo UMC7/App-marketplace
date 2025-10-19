@@ -124,6 +124,8 @@ export default function YachtFields({ editing, setEditing }) {
     setEditing({ ...editing, regionsArr: Array.from(set) });
   };
 
+  const remarksLen = (editing?.remarks || '').length;
+
   return (
     <>
       {/* FILA A — Department, Rank, Vessel, Vessel type */}
@@ -507,6 +509,29 @@ export default function YachtFields({ editing, setEditing }) {
               <option key={v} value={v}>{v}</option>
             ))}
           </select>
+        </div>
+      </div>
+
+      {/* ===== NUEVO: Remarks (igual estilo que Merchant) ===== */}
+      <div className="cp-row-exp-c">
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label className="cp-label">
+            {`Remarks (${remarksLen}/200)`}
+          </label>
+          <textarea
+            className="cp-textarea"
+            rows="2"
+            maxLength={200}
+            placeholder="Brief notes (max ~2 lines)"
+            value={editing.remarks || ''}
+            onChange={(e) =>
+              setEditing({
+                ...editing,
+                remarks: e.target.value.slice(0, 200),
+              })
+            }
+            style={{ lineHeight: 1.3 }}
+          />
         </div>
       </div>
     </>
