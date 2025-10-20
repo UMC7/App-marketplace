@@ -15,9 +15,11 @@ import {
   OnboardPreferences,
   ProgramTypePreferenceSelector,
   DietaryRequirementsSelector,
+  StatusPicker,
 } from '../sectionscomponents/preferencesskills';
 
 export function buildPrefsSkillsPayload({
+  status,
   availability,
   regionsSeasons,
   contracts,
@@ -32,6 +34,7 @@ export function buildPrefsSkillsPayload({
   onboardPrefs,
 } = {}) {
   const payload = {};
+  if (status !== undefined)               payload.status = status;
   if (availability !== undefined)         payload.availability = availability;
   if (regionsSeasons !== undefined)       payload.regionsSeasons = regionsSeasons;
   if (contracts !== undefined)            payload.contracts = contracts;
@@ -56,7 +59,6 @@ export async function savePreferencesSkills(props) {
   return Array.isArray(data) ? data[0] ?? null : null;
 }
 
-// Hook local para detectar móvil (≤640px). No afecta desktop.
 function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState(
     typeof window !== 'undefined' ? window.innerWidth <= 640 : false
@@ -72,6 +74,8 @@ function useIsMobile() {
 }
 
 export default function PreferencesSkills({
+  status,
+  onChangeStatus,
   availability,
   onChangeAvailability,
   contracts,
@@ -92,8 +96,6 @@ export default function PreferencesSkills({
   onChangeDeptSpecialties,
   onboardPrefs,
   onChangeOnboardPrefs,
-
-  // NUEVOS (opcionales)
   programTypes,
   onChangeProgramTypes,
   dietaryRequirements,
@@ -101,7 +103,6 @@ export default function PreferencesSkills({
 }) {
   const isMobile = useIsMobile();
 
-  // 2 columnas en desktop; 1 forzada en móviles
   const twoCol = {
     display: 'grid',
     gap: 12,
@@ -110,9 +111,18 @@ export default function PreferencesSkills({
 
   return (
     <div className="cp-form">
-      {/* Availability | Preferred regions */}
+      {/* Status + Availability (comparten 50/50 en desktop) | Preferred regions */}
       <div style={twoCol}>
-        <AvailabilityPicker value={availability} onChange={onChangeAvailability} />
+        <div
+          style={{
+            display: 'grid',
+            gap: 12,
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          }}
+        >
+          <StatusPicker value={status} onChange={onChangeStatus} />
+          <AvailabilityPicker value={availability} onChange={onChangeAvailability} />
+        </div>
         <RegionsSeasonsPicker value={regionsSeasons} onChange={onChangeRegionsSeasons} />
       </div>
 
@@ -155,7 +165,7 @@ export default function PreferencesSkills({
             display: 'grid',
             gap: 12,
             gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            paddingTop: isMobile ? 0 : 24.8, // ajuste vertical solo en desktop
+            paddingTop: isMobile ? 0 : 24.8,
           }}
         >
           <ProgramTypePreferenceSelector

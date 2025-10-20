@@ -13,4 +13,6 @@ export { default as DepartmentSpecialtiesInput } from './DepartmentSpecialtiesIn
 export { default as OnboardPreferences } from './OnboardPreferences';
 export { default as ProgramTypePreferenceSelector } from './ProgramTypePreferenceSelector';
 export { default as DietaryRequirementsSelector } from './DietaryRequirementsSelector';
+export { default as StatusPicker } from './StatusPicker';
+
 export * from './catalogs';

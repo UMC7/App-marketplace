@@ -29,30 +29,30 @@ export default function CandidateProfileTab() {
   const [error, setError] = useState('');
   const [headline, setHeadline] = useState('');
   const [summary, setSummary] = useState('');
-  const [primaryDepartment, setPrimaryDepartment] = useState(''); // Deck / Engine / Interior / Galley / Others
-  const [primaryRank, setPrimaryRank] = useState('');             // Rank principal dependiente del depto
-  const [targetRanks, setTargetRanks] = useState([]);             // [{ department, rank }] (máx. 3)
+  const [primaryDepartment, setPrimaryDepartment] = useState('');
+  const [primaryRank, setPrimaryRank] = useState('');
+  const [targetRanks, setTargetRanks] = useState([]);
   const [availability, setAvailability] = useState('');
   const [locations, setLocations] = useState([]);
   const [languages, setLanguages] = useState([]);
   const [skills, setSkills] = useState([]);
-  const [contracts, setContracts] = useState([]);                // string[]
-  const [rotation, setRotation] = useState([]);                  // AHORA: string[]
-  const [vesselTypes, setVesselTypes] = useState([]);            // string[]
-  const [vesselSizeRange, setVesselSizeRange] = useState([]);    // puede ser [] o {min,max,unit}
-  const [regionsSeasons, setRegionsSeasons] = useState([]);      // string[]
-  const [rateSalary, setRateSalary] = useState({                 // { currency, dayRateMin, salaryMin }
+  const [contracts, setContracts] = useState([]);
+  const [rotation, setRotation] = useState([]);
+  const [vesselTypes, setVesselTypes] = useState([]);
+  const [vesselSizeRange, setVesselSizeRange] = useState([]);
+  const [regionsSeasons, setRegionsSeasons] = useState([]);
+  const [rateSalary, setRateSalary] = useState({
     currency: 'USD',
     dayRateMin: '',
     salaryMin: '',
   });
-  const [languageLevels, setLanguageLevels] = useState([]);      // Array<{ lang, level }>
-  const [deptSpecialties, setDeptSpecialties] = useState([]);    // string[]
-  const [onboardPrefs, setOnboardPrefs] = useState({});          // { flags booleanos }
-  const [programTypes, setProgramTypes] = useState([]);          // string[]
-  const [dietaryRequirements, setDietaryRequirements] = useState([]); // string[]
+  const [status, setStatus] = useState('');
+  const [languageLevels, setLanguageLevels] = useState([]);
+  const [deptSpecialties, setDeptSpecialties] = useState([]);
+  const [onboardPrefs, setOnboardPrefs] = useState({});
+  const [programTypes, setProgramTypes] = useState([]);
+  const [dietaryRequirements, setDietaryRequirements] = useState([]);
 
-    // Lifestyle & Habits
   const [lifestyleHabits, setLifestyleHabits] = useState({
     tattoosVisible: '',
     smoking: '',
@@ -62,7 +62,6 @@ export default function CandidateProfileTab() {
     fitness: '',
   });
 
-  // ===== Doc flags (9 campos sí/no) =====
 const DEFAULT_DOC_FLAGS = {
   passport6m: null,
   schengenVisa: null,
@@ -79,6 +78,7 @@ const [docFlags, setDocFlags] = useState({ ...DEFAULT_DOC_FLAGS });
 function buildFullPrefsSkillsPayload() {
   return {
     ...buildPrefsSkillsPayload({
+      status,
       availability,
       regionsSeasons,
       contracts,
@@ -92,13 +92,12 @@ function buildFullPrefsSkillsPayload() {
       dietaryRequirements,
       onboardPrefs,
     }),
-    // Siempre incluir estos bloques también:
+
     lifestyleHabits,
     docFlags,
   };
 }
 
-  // Personal details (nuevo bloque)
   const [personal, setPersonal] = useState({
     first_name: '',
     last_name: '',
@@ -133,7 +132,6 @@ function buildFullPrefsSkillsPayload() {
   if (!profile?.id) return;
   setSavingDocFlags(true);
   try {
-    // Enviar SIEMPRE el objeto COMPLETO (no sólo docFlags)
     const payload = buildFullPrefsSkillsPayload();
 
     const { data, error } = await supabase.rpc('rpc_save_prefs_skills', { payload });
@@ -161,12 +159,10 @@ function buildFullPrefsSkillsPayload() {
     /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(nameOrPath) ? 'video' : 'image'
   );
 
-  // hidratar paths -> signed URLs (1h)
   const hydrateGallery = async (items) => {
     const list = Array.isArray(items) ? items : [];
     return Promise.all(list.map(async (it) => {
       const base = typeof it === 'object' && it !== null ? it : {};
-      // si ya viene url http(s), la usamos tal cual
       if (base.url && /^https?:\/\//i.test(base.url)) {
         return {
           url: base.url,
@@ -176,7 +172,6 @@ function buildFullPrefsSkillsPayload() {
           size: base.size ?? null,
         };
       }
-      // si viene path del bucket privado
       if (base.path && base.path.startsWith('cv-docs/')) {
         const filePath = base.path.replace(/^cv-docs\//, '');
         const { data, error } = await supabase.storage
@@ -192,16 +187,13 @@ function buildFullPrefsSkillsPayload() {
           size: base.size ?? null,
         };
       }
-      // fallback
       return base;
     }));
   };
 
-  // Carga inicial de perfil + galería hidratada
   useEffect(() => {
     let cancelled = false;
 
-    // Normaliza languages: text[] con strings tipo '{"lang":"..","level":".."}' o 'English:C1'
     function normalizeLanguageLevels(arr) {
       if (!Array.isArray(arr)) return [];
       return arr.map((item) => {
@@ -234,7 +226,6 @@ function buildFullPrefsSkillsPayload() {
         const { data, error } = await supabase.rpc('rpc_create_or_get_profile');
         if (error) throw error;
 
-        // hidratar galería ANTES de setear estados que la usen
         const rawGallery = Array.isArray(data?.gallery) ? data.gallery : [];
         const hydratedGallery = await hydrateGallery(rawGallery);
 
@@ -243,22 +234,18 @@ function buildFullPrefsSkillsPayload() {
           setGallery(hydratedGallery);
           setPersistedPaths(rawGallery.map((g) => g?.path).filter(Boolean));
 
-          // Basics
           setHeadline(data?.headline || '');
           setSummary(data?.summary || '');
 
-          // Department & ranks
           setPrimaryDepartment(data?.primary_department || '');
           setPrimaryRank(data?.primary_role || '');
           setTargetRanks(Array.isArray(data?.target_ranks) ? data.target_ranks : []);
 
-          // Preferences & Skills (legacy)
           setAvailability(data?.availability || '');
           setLocations(Array.isArray(data?.locations) ? data.locations : []);
           setLanguages(Array.isArray(data?.languages) ? data.languages : []);
           setSkills(Array.isArray(data?.skills) ? data.skills : []);
 
-          // >>> Precarga desde columnas legacy adicionales
           setContracts(Array.isArray(data?.contract_types) ? data.contract_types : []);
           setRegionsSeasons(Array.isArray(data?.regions) ? data.regions : []);
           setRateSalary(
@@ -269,10 +256,8 @@ function buildFullPrefsSkillsPayload() {
           setLanguageLevels(normalizeLanguageLevels(data?.languages));
           setDeptSpecialties(Array.isArray(data?.skills) ? data.skills : []);
 
-          // >>> Precarga desde prefs_skills (JSONB)
           const ps = (data && data.prefs_skills && typeof data.prefs_skills === 'object') ? data.prefs_skills : {};
-          
-          // --- OVERRIDE: si existen en prefs_skills, usar esos valores y caer a legacy solo si faltan ---
+
           setAvailability(
             ps?.availability ?? (data?.availability || '')
           );
@@ -315,14 +300,12 @@ function buildFullPrefsSkillsPayload() {
           setProgramTypes(Array.isArray(ps?.programTypes) ? ps.programTypes : []);
           setDietaryRequirements(Array.isArray(ps?.dietaryRequirements) ? ps.dietaryRequirements : []);
           setOnboardPrefs(ps?.onboardPrefs && typeof ps.onboardPrefs === 'object' ? ps.onboardPrefs : {});
-
-          // Doc flags (JSONB dentro de prefs_skills)
+          setStatus(ps?.status || '');
           setDocFlags({
             ...DEFAULT_DOC_FLAGS,
             ...(ps && typeof ps.docFlags === 'object' ? ps.docFlags : {}),
           });
 
-          // Lifestyle & Habits (JSONB dentro de prefs_skills)
           const lh = ps && typeof ps.lifestyleHabits === 'object' ? ps.lifestyleHabits : {};
           setLifestyleHabits({
             tattoosVisible: lh.tattoosVisible || '',
@@ -333,7 +316,6 @@ function buildFullPrefsSkillsPayload() {
             fitness: lh.fitness || '',
           });
 
-          // Personal details
           setPersonal((p) => ({
             ...p,
             first_name: data?.first_name || '',
@@ -372,7 +354,6 @@ function buildFullPrefsSkillsPayload() {
     };
   }, []);
 
-  // ⬇️ Cargar documentos cuando ya tenemos profile.id
   const mapDbVisibilityToUi = (v) => {
     const s = String(v || '').toLowerCase();
     if (s === 'public') return 'public';
@@ -429,13 +410,11 @@ function buildFullPrefsSkillsPayload() {
     return () => { cancelled = true; };
   }, [profile?.id]);
 
-// ⬇️ NUEVO: conteo directo (numérico) para Experience y References
 useEffect(() => {
   let cancelled = false;
   (async () => {
     if (!profile?.id) return;
 
-    // EXPERIENCES (usar la tabla real que lista las experiencias)
     try {
       const { count, error } = await supabase
         .from('profile_experiences')
@@ -446,7 +425,6 @@ useEffect(() => {
       if (!cancelled) setExpCount(0);
     }
 
-    // REFERENCES
     try {
       const { count, error } = await supabase
         .from('candidate_references')
@@ -481,7 +459,6 @@ useEffect(() => {
     window.open(`${publicUrl}?preview=1`, '_blank', 'noopener,noreferrer');
   };
 
-  // --- helper: generar un handle corto único (8 hex) ---
 const generateShortHandle = () => {
   try {
     const bytes = new Uint8Array(4);
@@ -492,7 +469,6 @@ const generateShortHandle = () => {
     }
     return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
   } catch {
-    // fallback
     return Math.random().toString(16).slice(2, 10);
   }
 };
@@ -507,7 +483,6 @@ const generateShortHandle = () => {
 
   setSaving(true);
   try {
-    // Reintenta varias veces por si choca con la UNIQUE(public_profiles.handle)
     for (let attempt = 0; attempt < 6; attempt++) {
       const nextHandle = generateShortHandle();
 
@@ -522,15 +497,13 @@ const generateShortHandle = () => {
         .single();
 
       if (!error) {
-        setProfile(data || null); // esto refresca publicUrl
+        setProfile(data || null);
         toast.success('Link rotated successfully');
         return;
       }
 
       const msg = `${error?.message || ''} ${error?.details || ''}`;
-      // Si el error NO es por unique/duplicate, detenemos
       if (!/duplicate|unique/i.test(msg)) throw error;
-      // si es duplicado, sigue al siguiente intento
     }
 
     toast.error('Could not generate a unique link. Please try again.');
@@ -541,7 +514,6 @@ const generateShortHandle = () => {
   }
 };
 
-  // Guardar PERSONAL DETAILS
   const handleSavePersonal = async (e) => {
     e.preventDefault();
     if (!profile?.id) return;
@@ -581,7 +553,6 @@ const generateShortHandle = () => {
     }
   };
 
-  // Guardar Department + Ranks
   const handleSaveDeptRanks = async (e) => {
     e.preventDefault();
     if (!profile?.id) return;
@@ -625,7 +596,6 @@ const generateShortHandle = () => {
     }
   };
 
-  // Guardar "Basics" (compat)
   const handleSaveBasics = async (e) => {
     e.preventDefault();
     if (!profile?.id) return;
@@ -659,6 +629,7 @@ const generateShortHandle = () => {
 
   const payload = {
     ...buildPrefsSkillsPayload({
+      status,
       availability,
       regionsSeasons,
       contracts,
@@ -689,7 +660,6 @@ const generateShortHandle = () => {
     }
   };
 
-  // —— handler para subir media (cv-docs)
   const handleUploadMedia = async (file) => {
     if (!profile?.user_id) throw new Error('Profile not loaded yet.');
     const uid = profile.user_id;
@@ -728,7 +698,6 @@ const generateShortHandle = () => {
     };
   };
 
-  // —— guardar About me / Professional Statement ——
   const handleSaveAbout = async ({ about_me, professional_statement }) => {
     if (!profile?.id) return;
     setSaving(true);
@@ -754,7 +723,6 @@ const generateShortHandle = () => {
     }
   };
 
-  // —— guardar galería (rpc_save_gallery) —
   const handleSaveGallery = async () => {
     if (!profile?.id) return;
     setSavingGallery(true);
@@ -802,7 +770,6 @@ const generateShortHandle = () => {
     }
   };
 
-  // —— persistencia de Documents & Media ——
   const handleSaveDocs = async (nextDocs = [], pendingFiles) => {
     try {
       setDocs(Array.isArray(nextDocs) ? nextDocs : []);
@@ -901,14 +868,11 @@ const generateShortHandle = () => {
     return 'cv';
   };
 
-  // ---------- Progreso (8 secciones visibles) ----------
   const hasPersonal =
     !!(personal.first_name?.trim() && personal.last_name?.trim() && personal.email_public?.trim());
 
   const hasDeptRanks = !!(primaryDepartment && primaryRank);
 
-  // heurísticas por si el RPC ya trae arrays/conteos;
-  // las banderas expComplete/refsComplete (consultadas arriba) prevalecen.
   const hasExperienceHeuristic =
     (Array.isArray(profile?.experiences) && profile.experiences.length > 0) ||
     Number(profile?.experience_count || 0) > 0;
@@ -955,7 +919,6 @@ const generateShortHandle = () => {
   gender: !!personal.gender,
 };
 
-// Department & Ranks: 3 pasos (dept, rank, al menos 1 target opcional)
 const deptRanksProgress = {
   count:
     (primaryDepartment ? 1 : 0) +
@@ -964,10 +927,8 @@ const deptRanksProgress = {
   total: 3,
 };
 
-// Experience: cap a 3 experiencias para 100%
 const experienceProgress = { count: Math.min(expCount, 3), total: 3 };
 
-// About me: 2 campos (about_me y professional_statement)
 const aboutProgress = {
   count:
     (profile?.about_me?.trim() ? 1 : 0) +
@@ -975,7 +936,6 @@ const aboutProgress = {
   total: 2,
 };
 
-// Preferences & Skills: 10 “slots” representativos
 const prefsSkillsCount = [
   !!(availability && availability.trim()),
   Array.isArray(regionsSeasons) && regionsSeasons.length > 0,
@@ -989,7 +949,6 @@ const prefsSkillsCount = [
   !!(rateSalary && (String(rateSalary.dayRateMin || '').trim() || String(rateSalary.salaryMin || '').trim())),
   Array.isArray(languageLevels) && languageLevels.length > 0,
   Array.isArray(deptSpecialties) && deptSpecialties.length > 0,
-  // agrupamos “otros” para no sobredimensionar la sección
   (onboardPrefs && typeof onboardPrefs === 'object' && Object.values(onboardPrefs).some(Boolean)) ||
     (Array.isArray(programTypes) && programTypes.length > 0) ||
     (Array.isArray(dietaryRequirements) && dietaryRequirements.length > 0),
@@ -997,16 +956,12 @@ const prefsSkillsCount = [
 
 const prefsSkillsProgress = { count: prefsSkillsCount, total: 10 };
 
-// Documents: cap a 3 (CV + 2 docs/certs)
 const documentsProgress = { count: Math.min(docs.length, 3), total: 3 };
 
-// References: cap a 3
 const referencesProgress = { count: Math.min(refsCount, 3), total: 3 };
 
-// Media: cap a 6 ítems (fotos/videos)
 const mediaProgress = { count: Math.min(gallery.length, 6), total: 6 };
 
-// Objeto final para ProfileProgress (acepta booleans, ratios u objetos {count,total})
 const progressSections = {
   personal: personalProgress,
   dept_ranks: deptRanksProgress,
@@ -1114,7 +1069,8 @@ const progressSections = {
             <h3 className="cp-h3">Preferences &amp; Skills</h3>
             <form onSubmit={handleSaveDetails} className="cp-form">
               <PreferencesSkills
-                /* Compat antiguos */
+                status={status}
+                onChangeStatus={setStatus}
                 availability={availability}
                 onChangeAvailability={setAvailability}
                 locations={locations}
@@ -1123,7 +1079,6 @@ const progressSections = {
                 onChangeLanguages={setLanguages}
                 skills={skills}
                 onChangeSkills={setSkills}
-                /* NUEVOS estados para que “Add” funcione */
                 contracts={contracts}
                 onChangeContracts={setContracts}
                 rotation={rotation}

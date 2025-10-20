@@ -369,7 +369,11 @@ export default function PublicProfileView() {
       ];
 
       setYachtingMonths(6);
-      setEmploymentStatus((mockXp || []).some(x => x.is_current) ? 'Employed' : 'Unemployed');
+      setEmploymentStatus(
+        (mock?.prefs_skills && typeof mock.prefs_skills.status === 'string' && mock.prefs_skills.status.trim())
+          ? mock.prefs_skills.status.trim()
+          : ((mockXp || []).some(x => x.is_current) ? 'Employed' : 'Unemployed')
+      );
 
       if (!cancelled) {
         setProfile(mock);
@@ -464,7 +468,11 @@ export default function PublicProfileView() {
           setExperiences(xpRows || []);
 
           const employed = (xpRows || []).some(x => x.is_current === true);
-          setEmploymentStatus(employed ? 'Employed' : 'Unemployed');
+          const psStatus =
+            row && row.prefs_skills && typeof row.prefs_skills.status === 'string'
+              ? row.prefs_skills.status.trim()
+              : '';
+          setEmploymentStatus(psStatus || (employed ? 'Employed' : 'Unemployed'));
         }
 
         // Yachting months
