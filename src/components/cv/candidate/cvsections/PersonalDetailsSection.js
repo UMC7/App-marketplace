@@ -121,17 +121,62 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
     setNationalities(nationalities.filter((x) => x !== n));
   }
 
+  const isEmailValid = useMemo(
+    () => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test((email || '').trim()),
+    [email]
+  );
+  const hasPhoneCC = useMemo(
+    () => String(phoneCC || '').replace(/\D/g, '').length > 0,
+    [phoneCC]
+  );
+  const hasPhoneNum = useMemo(
+    () => String(phoneNum || '').trim().length > 0,
+    [phoneNum]
+  );
+  const isSectionComplete = useMemo(() => {
+    return Boolean(
+      (firstName || '').trim() &&
+      (lastName || '').trim() &&
+      isEmailValid &&
+      hasPhoneCC &&
+      hasPhoneNum &&
+      country &&
+      (cityPort || '').trim() &&
+      birthMonth &&
+      birthYear &&
+      Array.isArray(nationalities) &&
+      nationalities.length > 0
+    );
+  }, [
+    firstName,
+    lastName,
+    isEmailValid,
+    hasPhoneCC,
+    hasPhoneNum,
+    country,
+    cityPort,
+    birthMonth,
+    birthYear,
+    nationalities,
+  ]);
+  // ────────────────────────────────────────────────────────────────────────────
+
   async function save(e) {
     e.preventDefault();
     if (!profile?.id) return;
 
-    // validaciones mínimas
-    if (!firstName.trim()) return toast.error('First name is required');
-    if (!lastName.trim())  return toast.error('Last name is required');
-    if (!email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      return toast.error('Valid email is required');
-    }
+    // validaciones mínimas (mismo criterio que deshabilita el botón)
+    if (!(firstName || '').trim()) return toast.error('First name is required');
+    if (!(lastName || '').trim())  return toast.error('Last name is required');
+    if (!isEmailValid) return toast.error('Valid email is required');
+    if (!hasPhoneCC || !hasPhoneNum) return toast.error('Mobile phone (country code and number) is required');
     if (!country)  return toast.error('Current country is required');
+    if (!(cityPort || '').trim()) return toast.error('Current city / port is required');
+    if (!birthMonth) return toast.error('Birth month is required');
+    if (!birthYear)  return toast.error('Birth year is required');
+    if (!Array.isArray(nationalities) || nationalities.length === 0) {
+      return toast.error('At least one nationality is required');
+    }
 
     const { cc: pcc, num: pnum } = normalizePhone(phoneCC, phoneNum);
     let wcc = waCC, wnum = waNum;
@@ -259,7 +304,7 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
         </div>
 
         <div>
-          <label className="cp-label">Current country</label>
+          <label className="cp-label">Current country *</label>
           <select
             className="cp-input"
             value={country}
@@ -273,7 +318,7 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
         </div>
 
         <div>
-          <label className="cp-label">Current city / port</label>
+          <label className="cp-label">Current city / port *</label>
           <input
             className="cp-input"
             value={cityPort}
@@ -337,7 +382,7 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
 
       {/* Actions */}
       <div className="cp-actions" style={{ marginTop: 12 }}>
-        <button type="submit" disabled={saving}>Save</button>
+        <button type="submit" disabled={saving || !isSectionComplete}>Save</button>
       </div>
     </form>
   );

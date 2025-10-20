@@ -118,7 +118,7 @@ export default function LifestyleHabitsSection({ value, onChange }) {
     <div className="cp-form">
       <div className="lh-grid">
         <SelectField
-          label="Visible tattoos"
+          label="Visible tattoos *"
           options={TATTOOS}
           value={v.tattoosVisible}
           onChange={setField('tattoosVisible')}
@@ -147,7 +147,7 @@ export default function LifestyleHabitsSection({ value, onChange }) {
 
         {/* Dietary allergies (multi con Add + chips iguales a Preferences & Skills) */}
         <div className="lh-field">
-          <label className="cp-label">Dietary allergies</label>
+          <label className="cp-label">Dietary allergies *</label>
           <div className="lh-allergies-controls">
             <select
               className="cp-select cp-input"
@@ -185,7 +185,7 @@ export default function LifestyleHabitsSection({ value, onChange }) {
         </div>
 
         <SelectField
-          label="Fitness / sport activity"
+          label="Fitness / sport activity *"
           options={FITNESS}
           value={v.fitness}
           onChange={setField('fitness')}

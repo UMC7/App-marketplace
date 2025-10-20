@@ -20,7 +20,7 @@ export default function AboutMeEditor({ value = "", onChange }) {
         className="field-label"
         style={{ display: "block", marginBottom: 6 }}
       >
-        Short summary
+        Short summary *
       </label>
 
       <textarea

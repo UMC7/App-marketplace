@@ -25,11 +25,15 @@ export default function BirthNationalityRow({
     <>
       <div className="cp-row-birth-nat">
         <div>
-          <label className="cp-label">Birth month</label>
+          <label className="cp-label" htmlFor="pd-birth-month">
+            Birth month <span aria-hidden="true">*</span>
+          </label>
           <select
+            id="pd-birth-month"
             className="cp-input"
             value={birthMonth}
             onChange={(e) => onChangeBirthMonth && onChangeBirthMonth(e.target.value)}
+            aria-required="true"
           >
             <option value="">—</option>
             {months.map((m) => (
@@ -41,11 +45,15 @@ export default function BirthNationalityRow({
         </div>
 
         <div>
-          <label className="cp-label">Birth year</label>
+          <label className="cp-label" htmlFor="pd-birth-year">
+            Birth year <span aria-hidden="true">*</span>
+          </label>
           <select
+            id="pd-birth-year"
             className="cp-input"
             value={birthYear}
             onChange={(e) => onChangeBirthYear && onChangeBirthYear(e.target.value)}
+            aria-required="true"
           >
             <option value="">—</option>
             {years.map((y) => (
@@ -57,12 +65,16 @@ export default function BirthNationalityRow({
         </div>
 
         <div>
-          <label className="cp-label">Nationalities</label>
+          <label className="cp-label" htmlFor="pd-nat-select">
+            Nationalities <span aria-hidden="true">*</span>
+          </label>
           <div className="cp-row-add">
             <select
+              id="pd-nat-select"
               className="cp-input"
               value={natToAdd}
               onChange={(e) => onChangeNatToAdd && onChangeNatToAdd(e.target.value)}
+              aria-required="true"
             >
               <option value="">Select nationality…</option>
               {uniqueNatOptions.map((n, idx) => (

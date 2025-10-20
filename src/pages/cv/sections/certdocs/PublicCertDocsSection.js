@@ -282,30 +282,7 @@ export default function PublicCertDocsSection({
               position: 'relative',
             }}
           >
-            {/* X para cerrar */}
-            <button
-              onClick={() => setViewer({ open: false, url: '', title: '' })}
-              aria-label="Close"
-              title="Close"
-              style={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                width: 34,
-                height: 34,
-                borderRadius: 8,
-                border: '1px solid rgba(0,0,0,.12)',
-                background: '#ffffff',
-                cursor: 'pointer',
-                display: 'grid',
-                placeItems: 'center',
-                boxShadow: '0 2px 8px rgba(0,0,0,.08)',
-                zIndex: 2
-              }}
-            >
-              <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1 }}>×</span>
-            </button>
-
+            {/* Header con único botón Close */}
             <div
               className="ppv-docModalHead"
               style={{

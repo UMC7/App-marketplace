@@ -2,19 +2,6 @@
 import React, { useMemo } from "react";
 import { getRanksForDept } from "../../shared/rankData";
 
-/**
- * RankSelect
- * Reusable select for choosing a rank given a department.
- *
- * Props:
- * - department: string      // determines available ranks
- * - value: string
- * - onChange: (rank: string) => void
- * - label?: string          // default "Primary rank"
- * - placeholder?: string    // default "Select…"
- * - disabled?: boolean
- * - className?, style?, id?, name?
- */
 export default function RankSelect({
   department,
   value,
@@ -26,13 +13,25 @@ export default function RankSelect({
   style,
   id,
   name,
+  // Opcional: permite forzar el asterisco desde el padre
+  required,
 }) {
   const ranks = useMemo(() => getRanksForDept(department), [department]);
   const isDisabled = disabled || !department;
 
+  // Si no se pasó "required", inferimos para "Primary rank"
+  const isRequired =
+    typeof required === "boolean"
+      ? required
+      : (label && /primary\s+rank/i.test(label));
+
   return (
     <div className={className} style={style}>
-      {label && <label className="cp-label" htmlFor={id}>{label}</label>}
+      {label && (
+        <label className="cp-label" htmlFor={id}>
+          {label} {isRequired ? <span className="cp-req">*</span> : null}
+        </label>
+      )}
       <select
         id={id}
         name={name}

@@ -986,27 +986,42 @@ const progressSections = {
         <>
           {/* Shareable link (AL TOPE) */}
           <div className="cp-card">
-            <div className="cp-actions cp-shareActions" role="group" aria-label="Share actions">
-              <button className="cp-btn" type="button" onClick={openAnalytics} disabled={saving}>
-                Analytics
-              </button>
-              <button className="cp-btn" type="button" onClick={handlePreview} disabled={!publicUrl || saving}>
-                Preview
-              </button>
-              <button className="cp-btn" type="button" onClick={handleCopy} disabled={!publicUrl || saving}>
-                Copy link
-              </button>
-              <button
-                className="cp-btn cp-rotate"
-                type="button"
-                onClick={handleRotate}
-                disabled={!profile || saving}
-                title="Revoke current link and generate a new one"
-              >
-                Rotate link
-              </button>
-            </div>
+          <div className="cp-actions cp-shareActions" role="group" aria-label="Share actions">
+            <button className="cp-btn" type="button" onClick={openAnalytics} disabled={saving}>
+              Analytics
+            </button>
+            {/* Preview siempre habilitado si hay URL */}
+            <button
+              className="cp-btn"
+              type="button"
+              onClick={handlePreview}
+              disabled={!publicUrl || saving}
+              title={!publicUrl ? 'Link not generated yet' : undefined}
+            >
+              Preview
+            </button>
+            {/* Copy link: solo requiere tener URL y no estar guardando */}
+            <button
+              className="cp-btn"
+              type="button"
+              onClick={handleCopy}
+              disabled={!publicUrl || saving}
+              title={!publicUrl ? 'Link not generated yet' : undefined}
+            >
+              Copy link
+            </button>
+            {/* Rotate link: solo requiere perfil cargado y no estar guardando */}
+            <button
+              className="cp-btn cp-rotate"
+              type="button"
+              onClick={handleRotate}
+              disabled={!profile || saving}
+              title="Revoke current link and generate a new one"
+            >
+              Rotate link
+            </button>
           </div>
+        </div>
 
           {/* Personal details */}
           <div className="cp-card">
@@ -1041,8 +1056,14 @@ const progressSections = {
                 onChangeTargetRanks={(arr) => setTargetRanks(arr)}
               />
               <div className="cp-actions" style={{ marginTop: 10 }}>
-                <button type="submit" disabled={saving}>Save</button>
-              </div>
+              <button
+                type="submit"
+                disabled={saving || !hasDeptRanks}
+                title={!hasDeptRanks ? 'Please choose Primary department and Primary rank' : undefined}
+              >
+                Save
+              </button>
+            </div>
             </form>
           </div>
 

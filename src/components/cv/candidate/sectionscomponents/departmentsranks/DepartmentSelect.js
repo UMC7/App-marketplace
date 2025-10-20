@@ -13,12 +13,24 @@ export default function DepartmentSelect({
   id,
   name,
   options,
+  // Opcional: forzar que muestre el asterisco de requerido
+  required,
 }) {
   const items = Array.isArray(options) && options.length ? options : DEPARTMENTS;
 
+  // Si no se pasó "required", se infiere automáticamente para "Primary department"
+  const isRequired =
+    typeof required === "boolean"
+      ? required
+      : (label && /primary\s+department/i.test(label));
+
   return (
     <div className={className} style={style}>
-      {label && <label className="cp-label" htmlFor={id}>{label}</label>}
+      {label && (
+        <label className="cp-label" htmlFor={id}>
+          {label} {isRequired ? <span className="cp-req">*</span> : null}
+        </label>
+      )}
       <select
         id={id}
         name={name}

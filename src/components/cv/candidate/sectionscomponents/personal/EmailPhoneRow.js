@@ -1,15 +1,6 @@
 // src/components/cv/candidate/sectionscomponents/personal/EmailPhoneRow.js
 import React from 'react';
 
-/**
- * EmailPhoneRow
- * Visual layout:
- * - LEFT column: a single row with Gender + Email (side by side).
- * - RIGHT column: a single row with Mobile (CC) + Number + an inline area at the end
- *   (e.g., “WhatsApp same as phone”), plus an optional row **below** for extra fields.
- *
- * Backwards compatible: if `rightInline` / `rightBelow` are not provided, it behaves like before.
- */
 export default function EmailPhoneRow({
   // NEW: gender
   gender = '', // 'male' | 'female' | ''
@@ -36,8 +27,9 @@ export default function EmailPhoneRow({
       <div className="cp-col-left">
         <div className="cp-left-row">
           <div className="cp-cell-gender">
-            <label className="cp-label">Gender</label>
+            <label className="cp-label" htmlFor="pd-gender">Gender</label>
             <select
+              id="pd-gender"
               className="cp-input"
               value={gender}
               onChange={(e) => onChangeGender && onChangeGender(e.target.value)}
@@ -49,12 +41,16 @@ export default function EmailPhoneRow({
           </div>
 
           <div className="cp-cell-email">
-            <label className="cp-label">Email</label>
+            <label className="cp-label" htmlFor="pd-email">
+              Email <span aria-hidden="true">*</span>
+            </label>
             <input
+              id="pd-email"
               className="cp-input"
               value={email}
               onChange={(e) => onChangeEmail && onChangeEmail(e.target.value)}
               placeholder="you@domain.com"
+              aria-required="true"
             />
           </div>
         </div>
@@ -64,12 +60,13 @@ export default function EmailPhoneRow({
       <div className="cp-col-right">
         <div className="cp-right-phone-row">
           <div className="cp-cell-cc">
-            <label className="cp-label" style={labelNowrap}>
-              Mobile (country code)
+            <label className="cp-label" style={labelNowrap} htmlFor="pd-phone-cc">
+              Mobile (country code) <span aria-hidden="true">*</span>
             </label>
             <div className="cp-field-cc">
               <span className="cp-prefix">+</span>
               <input
+                id="pd-phone-cc"
                 className="cp-input"
                 value={phoneCC}
                 onChange={(e) =>
@@ -77,17 +74,22 @@ export default function EmailPhoneRow({
                 }
                 inputMode="numeric"
                 placeholder="34"
+                aria-required="true"
               />
             </div>
           </div>
 
           <div className="cp-cell-num">
-            <label className="cp-label">Number</label>
+            <label className="cp-label" htmlFor="pd-phone-num">
+              Number <span aria-hidden="true">*</span>
+            </label>
             <input
+              id="pd-phone-num"
               className="cp-input"
               value={phoneNum}
               onChange={(e) => onChangePhoneNum && onChangePhoneNum(e.target.value)}
               placeholder="612345678"
+              aria-required="true"
             />
           </div>
 
