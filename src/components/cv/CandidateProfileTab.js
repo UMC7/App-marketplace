@@ -504,7 +504,7 @@ useEffect(() => {
 
     try {
       const { count, error } = await supabase
-        .from('candidate_references')
+        .from('public_references')
         .select('id', { count: 'exact', head: true })
         .eq('profile_id', profile.id);
       if (!cancelled && !error) setRefsCount(count || 0);
