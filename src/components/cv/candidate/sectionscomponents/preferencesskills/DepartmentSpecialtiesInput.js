@@ -1,4 +1,4 @@
-// src/components/cv/candidate/sectionscomponents/preferencesskills/DepartmentSpecialtiesInput.jsx
+// src/components/cv/candidate/sectionscomponents/preferencesskills/DepartmentSpecialtiesInput.js
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DEPT_SPECIALTIES_SUGGESTIONS } from './catalogs';
 
@@ -8,12 +8,10 @@ export default function DepartmentSpecialtiesInput({
   value = [],
   onChange,
 }) {
-  // Dept controlado o local (back-compat)
   const isDeptControlled = typeof onChangeDepartment === 'function';
   const [localDept, setLocalDept] = useState(department || '');
   const dept = isDeptControlled ? department : localDept;
 
-  // Selección controlada o local (inmediata, sin chips)
   const controlled = typeof onChange === 'function';
   const [localSelected, setLocalSelected] = useState(Array.isArray(value) ? value : []);
   const selected = useMemo(
@@ -22,10 +20,8 @@ export default function DepartmentSpecialtiesInput({
   );
   const selectedSet = useMemo(() => new Set(selected), [selected]);
 
-  // Dropdown de specialties (custom con checkboxes, misma estética que <select/>)
   const [open, setOpen] = useState(false);
 
-  // Cerrar dropdown al hacer click fuera
   const wrapRef = useRef(null);
   useEffect(() => {
     const onDocClick = (e) => {
@@ -36,18 +32,15 @@ export default function DepartmentSpecialtiesInput({
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
 
-  // Sugerencias según department (acepta formato array simple o agrupado)
   const groups = useMemo(() => {
     const key = String(dept || '').trim();
     const raw = DEPT_SPECIALTIES_SUGGESTIONS[key] || [];
-    // Back-compat: si es array de strings, lo convertimos a un grupo único
     if (raw.length && typeof raw[0] === 'string') {
       return [{ group: null, items: raw }];
     }
-    return raw; // esperado: [{ group: '...', items: [...] }, ...]
+    return raw;
   }, [dept]);
 
-  // Helpers
   const commit = (arr) => (controlled ? onChange?.(arr) : setLocalSelected(arr));
   const toggle = (name) => {
     const set = new Set(selected);
@@ -59,16 +52,15 @@ export default function DepartmentSpecialtiesInput({
   const handleDeptChange = (next) => {
     if (isDeptControlled) onChangeDepartment?.(next);
     else setLocalDept(next);
-    setOpen(false); // no tocamos la selección: se mantiene entre departments
+    setOpen(false);
   };
 
-  // Placeholder
   const count = selected.length;
   const specialtyPlaceholder = count > 0 ? `${count} selected` : 'Select specialty…';
 
   return (
     <div ref={wrapRef}>
-      <label className="cp-label">Specific skills {dept ? `(${dept})` : ''}</label>
+      <label className="cp-label">Specific skills * {dept ? `(${dept})` : ''}</label>
 
       {/* Disposición: Department | Specialty */}
       <div
@@ -97,7 +89,7 @@ export default function DepartmentSpecialtiesInput({
             onChange={() => {}}
             onMouseDown={(e) => {
               if (!dept) return;
-              e.preventDefault(); // evita menú nativo
+              e.preventDefault();
               setOpen((v) => !v);
             }}
           >

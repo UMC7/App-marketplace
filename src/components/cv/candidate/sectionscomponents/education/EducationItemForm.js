@@ -91,6 +91,19 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
     return Object.keys(e).length === 0;
   }
 
+  const canSave = useMemo(() => {
+    const hasStart = !!startMonth && !!startYear;
+    const hasEndOrCurrent = current || (!!endMonth && !!endYear);
+    return (
+      institution.trim() &&
+      program.trim() &&
+      levelType.trim() &&
+      country.trim() &&
+      hasStart &&
+      hasEndOrCurrent
+    );
+  }, [institution, program, levelType, country, startMonth, startYear, endMonth, endYear, current]);
+
   function handleSubmit(ev) {
     ev.preventDefault();
     if (!validate()) return;
@@ -113,7 +126,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
     <form className="cv-form education-form cp-form" onSubmit={handleSubmit} noValidate>
       <div className="cp-grid cp-grid-2 education-form-grid">
         <div className="field">
-          <label className="cp-label">Institution</label>
+          <label className="cp-label">Institution *</label>
           <input
             className="cp-input"
             type="text"
@@ -125,7 +138,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
         </div>
 
         <div className="field">
-          <label className="cp-label">Program / Degree</label>
+          <label className="cp-label">Program / Degree *</label>
           <input
             className="cp-input"
             type="text"
@@ -137,7 +150,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
         </div>
 
         <div className="field">
-          <label className="cp-label">Level / Type</label>
+          <label className="cp-label">Level / Type *</label>
           <select
             className="cp-select"
             value={levelType}
@@ -154,7 +167,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
         </div>
 
         <div className="field">
-          <label className="cp-label">Country</label>
+          <label className="cp-label">Country *</label>
           <select
             className="cp-select"
             value={country}
@@ -171,7 +184,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
         </div>
 
         <div className="field">
-          <label className="cp-label">Start</label>
+          <label className="cp-label">Start *</label>
           <div className="cp-grid cp-grid-2">
             <select
               className="cp-select"
@@ -206,7 +219,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
         </div>
 
         <div className="field">
-          <label className="cp-label">End</label>
+          <label className="cp-label">End *</label>
           <div className="cp-grid cp-grid-2">
             <select
               className="cp-select"
@@ -265,7 +278,16 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
         <button type="button" className="btn ghost" onClick={onCancel}>
           Cancel
         </button>
-        <button type="submit" className="btn primary">
+        <button
+          type="submit"
+          className="btn primary"
+          disabled={!canSave}
+          title={
+            !canSave
+              ? "Complete all required fields (including Start and End or mark Currently studying)"
+              : undefined
+          }
+        >
           Save
         </button>
       </div>

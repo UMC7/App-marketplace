@@ -7,16 +7,14 @@ export default function MediaSection({
   onChange,
   onUpload,
   title = "Photos & Videos",
-  max = 12,
+  max = 9,
   readOnly = false,
   columns = 3,
-  // showEditor se mantiene en la firma por compatibilidad, pero no se renderiza
   showEditor = true,
 }) {
   const [local, setLocal] = useState(Array.isArray(value) ? value : []);
   const controlled = typeof onChange === "function";
 
-  // Sync cuando el padre cambia value
   useEffect(() => {
     if (Array.isArray(value)) setLocal(value);
   }, [value]);
@@ -50,8 +48,6 @@ export default function MediaSection({
     handleChange(next);
   };
 
-  // Quitamos el contenedor con borde (cv-section) para evitar el “doble marco”
-  // y dejamos solo el contenido funcional.
   return (
     <>
       {!readOnly && (
@@ -61,7 +57,6 @@ export default function MediaSection({
             onChange={handleChange}
             onUpload={onUpload}
             max={max}
-            // Dejamos el uploader solo como dropzone para evitar grilla duplicada
             showGrid={false}
           />
         </div>

@@ -1,8 +1,6 @@
 // src/components/cv/candidate/sectionscomponents/preferencesskills/AvailabilityPicker.js
 import React from 'react';
 
-// Opciones actualizadas: se removieron
-// "Notice period: 2 weeks" y "Open to seasonal/rotational start".
 const DEFAULT_OPTIONS = [
   'Available now',
   'In 1 week',
@@ -29,7 +27,7 @@ export default function AvailabilityPicker({
   };
 
   const handleDate = (e) => {
-    const d = e.target.value; // YYYY-MM-DD
+    const d = e.target.value;
     if (onChange) onChange(d ? `Date specific: ${d}` : 'Date specific');
   };
 
@@ -39,7 +37,7 @@ export default function AvailabilityPicker({
 
   return (
     <div>
-      <label className="cp-label">Availability</label>
+      <label className="cp-label">Availability *</label>
       <select className="cp-input" value={value || ''} onChange={handleSelect}>
         <option value="">—</option>
         {options.map((opt) => (

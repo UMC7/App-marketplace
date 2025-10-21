@@ -962,6 +962,11 @@ const referencesProgress = { count: Math.min(refsCount, 3), total: 3 };
 
 const mediaProgress = { count: Math.min(gallery.length, 6), total: 6 };
 
+const galleryImagesCount = Array.isArray(gallery)
+  ? gallery.filter((it) => (it?.type || inferTypeByName(it?.name || it?.path || it?.url || '')) === 'image').length
+  : 0;
+const meetsPhotosImagesMin = galleryImagesCount >= 3;
+
 const progressSections = {
   personal: personalProgress,
   dept_ranks: deptRanksProgress,
@@ -972,6 +977,18 @@ const progressSections = {
   references: referencesProgress,
   photos_videos: mediaProgress,
 };
+
+const meetsPrefsMin =
+  !!(status && String(status).trim()) &&
+  !!(availability && String(availability).trim()) &&
+  (Array.isArray(languageLevels) &&
+    languageLevels.some((ll) => ll && ll.lang && ll.level)) &&
+  (Array.isArray(deptSpecialties) && deptSpecialties.length > 0);
+
+  const meetsLifestyleMin =
+  !!(lifestyleHabits?.tattoosVisible && String(lifestyleHabits.tattoosVisible).trim()) &&
+  Array.isArray(lifestyleHabits?.dietaryAllergies) && lifestyleHabits.dietaryAllergies.length > 0 &&
+  !!(lifestyleHabits?.fitness && String(lifestyleHabits.fitness).trim());
 
   return (
     <div className="candidate-profile-tab">
@@ -1047,7 +1064,6 @@ const progressSections = {
                 targets={targetRanks}
                 onTargetsChange={(arr) => setTargetRanks(arr)}
                 maxTargets={3}
-                /* Back-compat */
                 primaryDepartment={primaryDepartment}
                 onChangePrimaryDepartment={(v) => setPrimaryDepartment(v)}
                 primaryRank={primaryRank}
@@ -1124,7 +1140,17 @@ const progressSections = {
                 onChangeDietaryRequirements={setDietaryRequirements}
               />
               <div className="cp-actions" style={{ marginTop: 12 }}>
-                <button type="submit" disabled={saving}>Save</button>
+                <button
+                  type="submit"
+                  disabled={saving || !meetsPrefsMin}
+                  title={
+                    !meetsPrefsMin
+                      ? 'Complete Status, Availability, at least one Language with proficiency and at least one Specific skill'
+                      : undefined
+                  }
+                >
+                  Save
+                </button>
               </div>
             </form>
           </div>
@@ -1138,7 +1164,17 @@ const progressSections = {
                 onChange={setLifestyleHabits}
               />
               <div className="cp-actions" style={{ marginTop: 12 }}>
-                <button type="submit" disabled={saving}>Save</button>
+                <button
+                  type="submit"
+                  disabled={saving || !meetsLifestyleMin}
+                  title={
+                    !meetsLifestyleMin
+                      ? 'Complete: Visible tattoos, add at least one Dietary allergy (or “None”), and select Fitness / sport activity'
+                      : undefined
+                  }
+                >
+                  Save
+                </button>
               </div>
             </form>
           </div>
@@ -1180,7 +1216,12 @@ const progressSections = {
               onUpload={handleUploadMedia}
             />
             <div className="cp-actions" style={{ marginTop: 12 }}>
-              <button type="button" onClick={handleSaveGallery} disabled={savingGallery}>
+              <button
+                type="button"
+                onClick={handleSaveGallery}
+                disabled={savingGallery || !meetsPhotosImagesMin}
+                title={!meetsPhotosImagesMin ? 'Add at least 3 images to enable Save' : undefined}
+              >
                 Save
               </button>
             </div>

@@ -1,19 +1,27 @@
 // src/components/cv/candidate/sectionscomponents/media/MediaUploader.js
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export default function MediaUploader({
   value = [],
   onChange,
   onUpload,
-  max = 12,
+  max = 9,
   accept = "image/*,video/*",
-  showGrid = true, // ⬅️ nuevo
+  showGrid = true,
 }) {
   const [items, setItems] = useState(Array.isArray(value) ? value : []);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const fileRef = useRef(null);
   const dropRef = useRef(null);
+
+  // Mantener sincronía con el valor controlado del padre
+  useEffect(() => {
+    if (Array.isArray(value)) setItems(value);
+  }, [value]);
+
+  const countVideos = (arr) => (arr || []).filter((m) => m?.type === "video").length;
+  const hasVideo = countVideos(items) > 0;
 
   const remaining = Math.max(0, max - items.length);
   const canAddMore = remaining > 0;
@@ -38,16 +46,50 @@ export default function MediaUploader({
   const addFiles = useCallback(
     async (filesList) => {
       if (!filesList?.length || typeof onUpload !== "function") return;
-      const files = Array.from(filesList).slice(0, remaining);
-      if (files.length === 0) return;
+
+      const MAX_TOTAL = max;
+      const MAX_VIDEO_BYTES = 50 * 1024 * 1024; // 50 MB
+
+      let nextErr = "";
+      const alreadyHasVideo = countVideos(items) > 0;
+      let videoTaken = alreadyHasVideo ? 1 : 0;
+
+      const incoming = Array.from(filesList);
+      const allowed = [];
+      for (let i = 0; i < incoming.length; i++) {
+        // Respetar el máximo total
+        if (items.length + allowed.length >= MAX_TOTAL) break;
+
+        const f = incoming[i];
+        const kind = inferType(f);
+
+        if (kind === "video") {
+          if (videoTaken >= 1) {
+            nextErr = nextErr || "Only one video is allowed.";
+            continue;
+          }
+          if (Number.isFinite(f.size) && f.size > MAX_VIDEO_BYTES) {
+            nextErr = nextErr || "Video exceeds the 50 MB limit.";
+            continue;
+          }
+          videoTaken = 1;
+        }
+
+        allowed.push(f);
+      }
+
+      if (allowed.length === 0) {
+        if (nextErr) setErr(nextErr);
+        return;
+      }
 
       setBusy(true);
-      setErr("");
+      setErr(nextErr || "");
 
-      // Pre-append previews (optimista)
+      // Pre-append con previews optimistas
       const tempItems = [...items];
       const tempMap = new Map();
-      files.forEach((f, idx) => {
+      allowed.forEach((f, idx) => {
         const kind = inferType(f);
         const previewUrl = toPreviewURL(f);
         const temp = {
@@ -64,8 +106,8 @@ export default function MediaUploader({
       commit(tempItems);
 
       try {
-        for (let i = 0; i < files.length; i++) {
-          const f = files[i];
+        for (let i = 0; i < allowed.length; i++) {
+          const f = allowed[i];
           const key = `${f.name}#${i}`;
           const idx = tempMap.get(key);
           if (idx == null) continue;
@@ -101,6 +143,7 @@ export default function MediaUploader({
         commit(cleaned);
       } finally {
         setBusy(false);
+        // Liberar blobs locales
         tempItems.forEach((it) => {
           if (it.__local__ && it.url?.startsWith("blob:")) {
             try {
@@ -110,7 +153,7 @@ export default function MediaUploader({
         });
       }
     },
-    [items, onUpload, remaining]
+    [items, onUpload, max]
   );
 
   const handleFileInput = (ev) => {
@@ -148,9 +191,8 @@ export default function MediaUploader({
   return (
     <div className="media-uploader">
       <div className="header">
-        <div className="title">Media</div>
         <div className="count">
-          {items.length}/{max}
+          {items.length}/{max} • max 1 video
         </div>
       </div>
 
@@ -164,6 +206,13 @@ export default function MediaUploader({
         onClick={() => !busy && canAddMore && fileRef.current?.click()}
         role="button"
         tabIndex={0}
+        title={
+          !canAddMore
+            ? "Maximum number of media reached"
+            : hasVideo
+            ? "You can add up to 8 images (1 video already added)"
+            : undefined
+        }
       >
         <input
           ref={fileRef}
@@ -188,9 +237,7 @@ export default function MediaUploader({
           {gridItems.map((m, i) => (
             <figure
               key={`${m.url}-${i}`}
-              className={`tile ${m.__uploading__ ? "uploading" : ""} ${
-                m.__error__ ? "error" : ""
-              }`}
+              className={`tile ${m.__uploading__ ? "uploading" : ""} ${m.__error__ ? "error" : ""}`}
             >
               <button
                 className="remove"
@@ -209,11 +256,17 @@ export default function MediaUploader({
                 <img src={m.url} alt={m.name || `media-${i}`} loading="lazy" />
               )}
 
+              {/* Overlay con spinner mientras sube */}
+              {m.__uploading__ && (
+                <div className="overlay">
+                  <div className="spinner" aria-label="Uploading" />
+                </div>
+              )}
+
               <figcaption className="caption" title={m.name || ""}>
                 {m.name || ""}
               </figcaption>
 
-              {m.__uploading__ && <div className="badge">Uploading…</div>}
               {m.__error__ && <div className="badge error">Failed</div>}
             </figure>
           ))}
@@ -225,7 +278,6 @@ export default function MediaUploader({
       <style>{`
         .media-uploader { display:flex; flex-direction:column; gap:12px; }
         .header { display:flex; align-items:center; justify-content:space-between; }
-        .title { font-weight:600; color:var(--text); }
         .count { color:var(--muted-2); font-size:.9rem; }
 
         .dropzone {
@@ -295,6 +347,7 @@ export default function MediaUploader({
           padding:2px 8px; 
           font-size:14px; 
           cursor:pointer;
+          z-index:3;
         }
         .badge {
           position:absolute; 
@@ -306,8 +359,32 @@ export default function MediaUploader({
           border-radius:8px; 
           font-size:12px; 
           border:1px solid var(--btn-bd);
+          z-index:3;
         }
         .badge.error { background:#7f1d1d; border-color:#9f1239; color:#fff; }
+
+        /* Overlay + spinner durante subida */
+        .overlay {
+          position:absolute;
+          inset:0;
+          background:rgba(0,0,0,.4);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          z-index:2;
+        }
+        .spinner {
+          width:32px;
+          height:32px;
+          border:3px solid rgba(255,255,255,.35);
+          border-top-color:#fff;
+          border-radius:50%;
+          animation:spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
         .error { color:#f87171; font-size:.9rem; }
       `}</style>
     </div>

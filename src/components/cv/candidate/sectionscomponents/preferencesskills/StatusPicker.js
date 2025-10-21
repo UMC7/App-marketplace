@@ -1,4 +1,4 @@
-// src/components/cv/candidate/sectionscomponents/preferencesskills/StatusPicker.jsx
+// src/components/cv/candidate/sectionscomponents/preferencesskills/StatusPicker.js
 import React from 'react';
 
 const STATUS_OPTIONS = [
@@ -22,7 +22,7 @@ export default function StatusPicker({ value, onChange, disabled = false, classN
 
   return (
     <div className={className}>
-      <label className="cp-label">Status</label>
+      <label className="cp-label">Status *</label>
       <select
         className="cp-input"
         value={value ?? ''}

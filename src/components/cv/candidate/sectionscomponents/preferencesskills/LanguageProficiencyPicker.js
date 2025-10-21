@@ -1,4 +1,4 @@
-// src/components/cv/candidate/sectionscomponents/preferencesskills/LanguageProficiencyPicker.jsx
+// src/components/cv/candidate/sectionscomponents/preferencesskills/LanguageProficiencyPicker.js
 import React, { useState } from 'react';
 
 const LANGUAGES = [
@@ -32,11 +32,11 @@ export default function LanguageProficiencyPicker({ value = [], onChange }) {
     onChange?.((value || []).filter((x) => x.lang !== name));
   };
 
-  const canAdd = !!selLang && !!selLevel; // deshabilitar Add si falta selección
+  const canAdd = !!selLang && !!selLevel;
 
   return (
     <div>
-      <label className="cp-label">Languages (with proficiency)</label>
+      <label className="cp-label">Languages (with proficiency) *</label>
 
       {/* Mantener layout; Language y Fluency ocupan 50% cada uno */}
       <div className="cp-row-exp-c__regions" style={{ marginBottom: 6 }}>
