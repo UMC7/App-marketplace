@@ -22,10 +22,7 @@ export default function ReferenceForm({
       ? {
           ...EMPTY,
           ...initialValue,
-          company:
-            initialValue.company ??
-            initialValue.vessel_company ??
-            "",
+          company: initialValue.company ?? initialValue.vessel_company ?? "",
         }
       : EMPTY
   );
@@ -38,10 +35,7 @@ export default function ReferenceForm({
       setModel({
         ...EMPTY,
         ...initialValue,
-        company:
-          initialValue.company ??
-          initialValue.vessel_company ??
-          "",
+        company: initialValue.company ?? initialValue.vessel_company ?? "",
       });
     }
   }, [initialValue]);
@@ -53,8 +47,14 @@ export default function ReferenceForm({
     if (!model.name?.trim()) e.name = "Required";
     if (!model.role?.trim()) e.role = "Required";
     if (!model.company?.trim()) e.company = "Required";
-    if (model.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(model.email))
+    if (!model.phone?.trim()) e.phone = "Required";
+    if (!model.email?.trim()) e.email = "Required";
+    if (
+      model.email?.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(model.email.trim())
+    ) {
       e.email = "Invalid email";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -89,6 +89,17 @@ export default function ReferenceForm({
 
     onSave?.(payload);
   };
+
+  const requiredFilled =
+    !!model.name?.trim() &&
+    !!model.role?.trim() &&
+    !!model.company?.trim() &&
+    !!model.phone?.trim() &&
+    !!model.email?.trim();
+  const emailLooksOk =
+    !!model.email?.trim() &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(model.email.trim());
+  const canSave = requiredFilled && emailLooksOk;
 
   return (
     <form className="cv-ref-form" onSubmit={handleSubmit}>
@@ -127,17 +138,18 @@ export default function ReferenceForm({
         </label>
 
         <label>
-          <span>Phone</span>
+          <span>Phone *</span>
           <input
             type="tel"
             value={model.phone}
             onChange={(e) => setField("phone", e.target.value)}
             placeholder="+33 6 95 38 27 57"
           />
+          {errors.phone && <em className="err">{errors.phone}</em>}
         </label>
 
         <label>
-          <span>Email</span>
+          <span>Email *</span>
           <input
             type="email"
             value={model.email}
@@ -147,7 +159,7 @@ export default function ReferenceForm({
           {errors.email && <em className="err">{errors.email}</em>}
         </label>
 
-        {/* Attachment (mantiene el flujo existente y además captura el File) */}
+        {/* Attachment (optional) */}
         <div>
           <AttachmentInput
             value={model.attachment_url}
@@ -162,7 +174,16 @@ export default function ReferenceForm({
         <button type="button" className="btn ghost" onClick={onCancel}>
           Cancel
         </button>
-        <button type="submit" className="btn primary">
+        <button
+          type="submit"
+          className="btn primary"
+          disabled={!canSave}
+          title={
+            canSave
+              ? undefined
+              : "Please complete all required fields and provide a valid email."
+          }
+        >
           Save
         </button>
       </div>
@@ -179,7 +200,6 @@ export default function ReferenceForm({
         .cv-ref-form label{ display:flex; flex-direction:column; gap:6px; }
         .cv-ref-form label > span{ color: var(--muted-2); font-size: 13px; }
 
-        /* —— Inputs: usan variables del tema (light/dark) —— */
         .cv-ref-form input{
           background: var(--input-bg);
           border: 1px solid var(--input-bd);
@@ -199,7 +219,6 @@ export default function ReferenceForm({
           display:flex; gap:10px; justify-content:flex-end; margin-top:12px;
         }
 
-        /* —— Botones: heredan tokens del contenedor —— */
         .cv-ref-form .btn{
           border-radius:10px; padding:10px 14px;
           background: var(--btn-bg);
@@ -217,12 +236,13 @@ export default function ReferenceForm({
           border-color: var(--accent);
         }
 
-        /* Ghost legible en modo claro y sin romper dark */
         .cv-ref-form .btn.ghost{
           background: var(--btn-bg);
           color: var(--btn-tx);
           border-color: var(--btn-bd);
         }
+
+        .cv-ref-form .btn[disabled]{ opacity:.6; cursor:not-allowed; }
 
         .cv-ref-form .err{ color:#fca5a5; font-size:12px; }
       `}</style>

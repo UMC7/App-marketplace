@@ -17,7 +17,6 @@ export default function DocumentTitleField({
   const manualRef = useRef(null);
 
   useEffect(() => {
-    // Si cambia el "value" controlado desde fuera, sincroniza manual
     setManual(value || "");
   }, [value]);
 
@@ -38,7 +37,6 @@ export default function DocumentTitleField({
   return (
     <div className="doc-title-field" style={wrapStyle}>
       <div style={labelRowStyle}>
-        <label style={labelStyle}>Title</label>
         {allowSwitch ? (
           <div style={switchStyle} role="group" aria-label="Title input mode">
             <button
@@ -78,7 +76,7 @@ export default function DocumentTitleField({
           value={value}
           onChange={(v) => typeof onChange === "function" && onChange(v)}
           placeholder="Search a title…"
-          allowCustom={true} // permitir Enter para guardar texto libre si no hay match
+          allowCustom={true}
           disabled={disabled}
           autoFocus={autoFocus}
           name={name}
@@ -105,8 +103,6 @@ export default function DocumentTitleField({
   );
 }
 
-/* ---------------------- inline styles mínimos ---------------------- */
-
 const wrapStyle = { width: "100%", maxWidth: 680 };
 
 const labelRowStyle = {
@@ -114,11 +110,6 @@ const labelRowStyle = {
   alignItems: "center",
   justifyContent: "space-between",
   gap: 8,
-};
-
-const labelStyle = {
-  fontSize: 13,
-  fontWeight: 600,
 };
 
 const switchStyle = {

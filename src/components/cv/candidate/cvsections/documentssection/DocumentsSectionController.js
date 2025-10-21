@@ -21,39 +21,31 @@ const DEFAULT_DOC_FLAGS = {
 export default function DocumentsSectionController({
   initialDocs = [],
   onSave,
-  /** opcionales: si el padre quiere hidratar/escuchar los flags */
   initialDocFlags,
   onDocFlagsChange,
-
-  /** 🔹 NUEVO (opcionales): guardado independiente del bloque de 9 selectores */
-  onSaveDocFlags,     // (flags) => Promise<void> | void
-  savingDocFlags,     // boolean
+  onSaveDocFlags,
+  savingDocFlags,
 }) {
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState("bulk"); // 'add' | 'single' | 'bulk'
-  const [editDoc, setEditDoc] = useState(null); // doc activo en modo 'single'
-  const [busyId, setBusyId] = useState(null);   // doc en proceso (delete)
+  const [mode, setMode] = useState("bulk");
+  const [editDoc, setEditDoc] = useState(null);
+  const [busyId, setBusyId] = useState(null);
   const [docs, setDocs] = useState(() => (initialDocs || []).map(coerceDoc));
-
-  // 🔹 Nuevo: estado local para los 9 selectores (No/Yes -> null/false/true)
   const [docFlags, setDocFlags] = useState(() => ({
     ...DEFAULT_DOC_FLAGS,
     ...(initialDocFlags || {}),
   }));
 
-  // ⬅️ Sincroniza con los docs del padre (sin pisar al cerrar el modal)
   useEffect(() => {
     setDocs((initialDocs || []).map(coerceDoc));
   }, [initialDocs]);
 
-  // ⬅️ Sincroniza flags si el padre los cambia externamente
   useEffect(() => {
     if (!initialDocFlags) return;
     setDocFlags((prev) => ({ ...prev, ...initialDocFlags }));
   }, [initialDocFlags]);
 
   const orderedDocs = useMemo(() => {
-    // Basic sort: public → unlisted → private, then by title
     const rank = { public: 0, unlisted: 1, private: 2 };
     return [...docs].sort((a, b) => {
       const ra = rank[(a.visibility || "unlisted").toLowerCase()] ?? 9;
@@ -63,7 +55,6 @@ export default function DocumentsSectionController({
     });
   }, [docs]);
 
-  // Abrir en modo "Add document": NO cargar la lista existente en el modal
   const handleOpen = () => {
     setMode("add");
     setEditDoc(null);
@@ -75,18 +66,15 @@ export default function DocumentsSectionController({
     setMode("bulk");
   };
 
-  // ⬇️ Guardado desde el modal
   const handleSave = async (nextDocs, pendingFiles) => {
     const cleanedUi = (nextDocs || []).map(coerceDoc);
 
     if (mode === "single") {
-      // Guardar SOLO este doc con persistencia directa
       const updated = cleanedUi[0];
       if (!updated) return handleClose();
 
       try {
         await persistSingleUpdate(updated);
-        // actualiza en UI local
         setDocs((prev) =>
           prev.map((d) => (String(d.id) === String(updated.id) ? coerceDoc(updated) : d))
         );
@@ -101,7 +89,6 @@ export default function DocumentsSectionController({
     }
 
     if (mode === "add") {
-      // Solo se añadieron nuevos documentos. Mezclamos con los existentes.
       const mergedUi = [...cleanedUi, ...docs].map(coerceDoc);
       const cleanedForDb = mergedUi.map((d) => ({
         ...d,
@@ -114,7 +101,6 @@ export default function DocumentsSectionController({
       return;
     }
 
-    // --- Modo 'bulk' (flujo existente) ---
     const cleanedForDb = cleanedUi.map((d) => ({
       ...d,
       visibility: mapVisibilityForDB(d.visibility),
@@ -125,16 +111,12 @@ export default function DocumentsSectionController({
     setOpen(false);
   };
 
-  /* -------- Acciones por documento -------- */
-
-  // Editar: abre el modal SOLO con ese documento
   const handleEditDoc = (doc) => {
     setMode("single");
     setEditDoc(coerceDoc(doc));
     setOpen(true);
   };
 
-  // Eliminar: borra BD + certificado vinculado + archivo en storage
   const handleDeleteDoc = async (doc) => {
     if (!doc?.id) return;
     const ok = window.confirm(
@@ -144,7 +126,6 @@ export default function DocumentsSectionController({
 
     setBusyId(doc.id);
     try {
-      // 1) obtener file_url y profile_id
       const { data: row, error: selErr } = await supabase
         .from("public_documents")
         .select("id, profile_id, file_url")
@@ -154,21 +135,17 @@ export default function DocumentsSectionController({
 
       const fileUrl = row?.file_url || null;
 
-      // 2) borrar certificado asociado (si existe)
       if (fileUrl) {
         await supabase.from("candidate_certificates").delete().eq("file_url", fileUrl);
       }
 
-      // 3) borrar documento
       await supabase.from("public_documents").delete().eq("id", doc.id);
 
-      // 4) borrar archivo en storage
       if (fileUrl && fileUrl.startsWith("cv-docs/")) {
         const relative = fileUrl.replace(/^cv-docs\//, "");
         await supabase.storage.from("cv-docs").remove([relative]);
       }
 
-      // 5) actualizar UI local
       setDocs((prev) => prev.filter((d) => String(d.id) !== String(doc.id)));
       toast.success("Document deleted");
     } catch (e) {
@@ -179,13 +156,9 @@ export default function DocumentsSectionController({
     }
   };
 
-  /* -------- Flags (9 selectores) -------- */
-
   const handleChangeDocFlag = (key, value) => {
     setDocFlags((prev) => {
       const next = { ...prev, [key]: value };
-      // ⚠️ Para evitar la advertencia de React “Cannot update a component while rendering
-      // a different component”, notificamos al padre en un microtask (fuera del render actual).
       if (typeof onDocFlagsChange === "function") {
         if (typeof queueMicrotask === "function") {
           queueMicrotask(() => {
@@ -215,17 +188,14 @@ export default function DocumentsSectionController({
         onEditDoc={handleEditDoc}
         onDeleteDoc={handleDeleteDoc}
         busyId={busyId}
-        // 🔹 Nuevo: pasamos flags + updater para que se rendericen arriba de la lista
         docFlags={docFlags}
         onChangeDocFlag={handleChangeDocFlag}
-        // 🔹 Nuevo: botón Save independiente
         onSaveDocFlags={handleSaveDocFlagsClick}
         savingDocFlags={!!savingDocFlags}
       />
       <DocumentsManagerDialog
         open={open}
         onClose={handleClose}
-        // Modo 'single' → solo ese doc; modo 'add' → lista vacía; otro → lista completa
         initialDocs={
           mode === "single" && editDoc
             ? [editDoc]
@@ -238,8 +208,6 @@ export default function DocumentsSectionController({
     </>
   );
 }
-
-/* ---------- helpers ---------- */
 
 function coerceDoc(raw) {
   const d = { ...(raw || {}) };
@@ -281,13 +249,10 @@ function mapVisibilityForDB(v) {
   return "after_contact";
 }
 
-/* Persistencia para edición individual */
 async function persistSingleUpdate(doc) {
   const visDb = mapVisibilityForDB(doc.visibility);
   const issued = toYmdOrNull(doc.issuedOn);
   const expires = toYmdOrNull(doc.expiresOn);
-
-  // 1) ubicamos file_url + profile_id del documento
   const { data: row, error: selErr } = await supabase
     .from("public_documents")
     .select("id, profile_id, file_url")
@@ -297,8 +262,6 @@ async function persistSingleUpdate(doc) {
 
   const fileUrl = row?.file_url || null;
   const profileId = row?.profile_id || null;
-
-  // 2) actualizar public_documents (título/visibilidad)
   const { error: updErr } = await supabase
     .from("public_documents")
     .update({
@@ -307,15 +270,11 @@ async function persistSingleUpdate(doc) {
     })
     .eq("id", doc.id);
   if (updErr) throw updErr;
-
-  // 3) sincronizar candidate_certificates según fechas
-  if (!fileUrl) return; // nada más que hacer si no tenemos file_url
+  if (!fileUrl) return;
 
   if (!issued && !expires) {
-    // si no hay fechas -> eliminar certificado si existía
     await supabase.from("candidate_certificates").delete().eq("file_url", fileUrl);
   } else {
-    // upsert por file_url
     const { data: exists, error: cSelErr } = await supabase
       .from("candidate_certificates")
       .select("id")

@@ -4,20 +4,14 @@ import React from "react";
 export default function DocumentsSection({
   docs = [],
   onOpenManager,
-  // nuevos (opcionales): permiten editar/eliminar por ítem sin romper nada existente
   onEditDoc,
   onDeleteDoc,
-  busyId, // opcional: id que está en proceso de borrado para deshabilitar el botón
-
-  // 🔹 NUEVO (opcionales): flags de “Sí/No” para documentos básicos
+  busyId,
   docFlags,
   onChangeDocFlag,
-
-  // 🔹 NUEVO: guardado independiente del bloque de 9 selectores
-  onSaveDocFlags,     // () => void
-  savingDocFlags,     // boolean
+  onSaveDocFlags,
+  savingDocFlags,
 }) {
-  // Mapeo de los 9 campos que pediste
   const quickItems = [
     { key: "passport6m",     label: "Passport >6 months" },
     { key: "schengenVisa",   label: "SCHENGEN Visa" },
@@ -30,7 +24,10 @@ export default function DocumentsSection({
     { key: "covidVaccine",   label: "COVID Vaccine" },
   ];
 
-  // Normaliza boolean/null -> valor del <select>
+  const allFlagsSelected = quickItems.every(
+    (it) => typeof (docFlags?.[it.key]) === "boolean"
+  );
+
   const valOf = (v) => (v === true ? "yes" : v === false ? "no" : "");
   const parseVal = (s) => (s === "yes" ? true : s === "no" ? false : null);
 
@@ -67,7 +64,9 @@ export default function DocumentsSection({
               borderRadius: 10,
             }}
           >
-            <span style={{ fontSize: 14 }}>{it.label}</span>
+            <span style={{ fontSize: 14 }}>
+              {it.label} <span aria-hidden="true">*</span>
+            </span>
             <select
               value={valOf(docFlags?.[it.key])}
               onChange={(e) =>
@@ -83,6 +82,7 @@ export default function DocumentsSection({
                 background: "var(--card, #fff)",
               }}
               aria-label={it.label}
+              aria-required="true"
             >
               <option value="">Select...</option>
               <option value="yes">Yes</option>
@@ -99,8 +99,17 @@ export default function DocumentsSection({
             type="button"
             className="btn btn-secondary"
             onClick={onSaveDocFlags}
-            disabled={!!savingDocFlags || typeof onSaveDocFlags !== "function"}
+            disabled={
+              !!savingDocFlags ||
+              typeof onSaveDocFlags !== "function" ||
+              !allFlagsSelected
+            }
             aria-label="Save document flags"
+            title={
+              !allFlagsSelected
+                ? "Complete all required fields (*) before saving"
+                : undefined
+            }
           >
             {savingDocFlags ? "Saving…" : "Save"}
           </button>
@@ -183,8 +192,6 @@ export default function DocumentsSection({
   );
 }
 
-/* ---------------- Helpers (pure, no dependencies) ---------------- */
-
 function formatDateRange(issuedOn, expiresOn) {
   const issued = issuedOn ? safeDate(issuedOn) : null;
   const expires = expiresOn ? safeDate(expiresOn) : null;
@@ -196,10 +203,8 @@ function formatDateRange(issuedOn, expiresOn) {
 
 function safeDate(v) {
   try {
-    // Accepts Date, ISO string, or YYYY-MM-DD
     const d = v instanceof Date ? v : new Date(String(v));
     if (Number.isNaN(d.getTime())) return String(v);
-    // Render as YYYY-MM-DD
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const dd = String(d.getDate()).padStart(2, "0");

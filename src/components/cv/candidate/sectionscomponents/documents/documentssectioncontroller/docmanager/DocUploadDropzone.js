@@ -34,8 +34,7 @@ export default function DocUploadDropzone({
 
       const errs = [];
       const ok = [];
-
-      // Filtro por tamaño y tipo (con fallback a extensión cuando MIME viene vacío)
+      
       for (const f of limited) {
         if (f.size > maxSizeBytes) {
           errs.push(
@@ -176,6 +175,10 @@ export default function DocUploadDropzone({
           <div className="doc-dropzone__hint">
             Accepted: {acceptText}. Max size: {formatBytes(maxSizeBytes)}. Up to {maxFiles} files.
           </div>
+          {/* Nota visible para remarcar que cada documento requiere archivo adjunto */}
+          <div className="doc-dropzone__req" style={{ fontSize: 12, opacity: 0.85 }}>
+            Attachment <strong>*</strong> is required for each document.
+          </div>
           {busy && <div className="doc-dropzone__status">Reading files...</div>}
         </div>
       </div>
@@ -191,8 +194,6 @@ export default function DocUploadDropzone({
   );
 }
 
-/* ---------------- helpers ---------------- */
-
 async function safeExtractText(extractTextFn, file) {
   try {
     const out = await extractTextFn(file);
@@ -203,15 +204,11 @@ async function safeExtractText(extractTextFn, file) {
   }
 }
 
-/**
- * Acepta por MIME cuando existe, y por extensión cuando MIME viene vacío.
- */
 function isAcceptedFile(file, acceptArr) {
   if (!acceptArr || acceptArr.length === 0) return true;
   const type = String(file.type || "").toLowerCase();
   const name = String(file.name || "").toLowerCase();
 
-  // 1) match por MIME
   if (type) {
     const okByMime = acceptArr.some((pat) => {
       if (pat.endsWith("/*")) return type.startsWith(pat.slice(0, -2));
@@ -220,7 +217,6 @@ function isAcceptedFile(file, acceptArr) {
     if (okByMime) return true;
   }
 
-  // 2) fallback por extensión cuando no hay MIME o no coincide
   const allowsPdf = acceptArr.includes("application/pdf");
   const allowsImages =
     acceptArr.includes("image/*") || acceptArr.some((p) => p.startsWith("image/"));
@@ -254,8 +250,6 @@ function formatBytes(bytes) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${(bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
-
-/* -------------- minimal inline styles (optional) -------------- */
 
 const dropzoneStyle = {
   border: "2px dashed rgba(0,0,0,.2)",
