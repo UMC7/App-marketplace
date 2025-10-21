@@ -1,17 +1,14 @@
-// src/components/cv/candidate/sectionscomponents/experience/ShoreFields.jsx
+// src/components/cv/candidate/sectionscomponents/experience/ShoreFields.js
 import React from 'react';
 import { ymFormatOnChange, ymNormalize } from './utils';
 import { TERMS as TERMS_SRC } from '../../shared/experienceCatalogs';
 
 const Opt = ({ value }) => <option value={value}>{value}</option>;
 
-/* ========= Catálogos locales (idénticos al original) ========= */
-// SHORE_TERMS = TERMS sin “Crossing” ni “Delivery”
 const SHORE_TERMS = (TERMS_SRC || []).filter(
   (t) => !/^crossing$/i.test(t) && !/^delivery$/i.test(t)
 );
 
-// Lista acotada de industrias relevantes para transición a yates
 const INDUSTRIES = [
   'Hospitality',
   'Recreation & Tourism',
@@ -28,7 +25,6 @@ const INDUSTRIES = [
   'Other',
 ];
 
-// Lista de países (concisa pero útil)
 const COUNTRIES = [
   'Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina',
   'Armenia','Australia','Austria','Azerbaijan','Bahamas','Bahrain','Bangladesh','Barbados',
@@ -60,22 +56,11 @@ const COUNTRIES = [
   'Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
 ];
 
-/**
- * ShoreFields
- * Subformulario para experiencia "shore" (idéntico al original) + Remarks.
- *
- * Props:
- * - editing: objeto de edición
- * - setEditing: fn(next)
- */
 export default function ShoreFields({ editing, setEditing }) {
   if (!editing || editing.type !== 'shore') return null;
 
   const remarksLen = (editing?.remarks || '').length;
 
-  // Fila 1: Employer / Role / Contract / Industry
-  // Fila 2: Employees supervised / Location (country) / Start / End (+ Current)
-  // Remarks: bloque ancho completo (mismo estilo que Merchant)
   return (
     <>
       {/* Fila 1 */}
@@ -101,7 +86,7 @@ export default function ShoreFields({ editing, setEditing }) {
         </div>
 
         <div>
-          <label className="cp-label">Contract</label>
+          <label className="cp-label">Contract *</label>
           <select
             className="cp-input"
             value={editing.contract || ''}
@@ -115,7 +100,7 @@ export default function ShoreFields({ editing, setEditing }) {
         </div>
 
         <div>
-          <label className="cp-label">Industry</label>
+          <label className="cp-label">Industry *</label>
           <select
             className="cp-input"
             value={editing.vessel_type || ''}
@@ -146,7 +131,7 @@ export default function ShoreFields({ editing, setEditing }) {
         </div>
 
         <div>
-          <label className="cp-label">Location (country)</label>
+          <label className="cp-label">Location (country) *</label>
           <select
             className="cp-input"
             value={editing.location_country || ''}
@@ -179,7 +164,7 @@ export default function ShoreFields({ editing, setEditing }) {
         </div>
 
         <div>
-          <label className="cp-label">End date</label>
+          <label className="cp-label">End date *</label>
           <input
             className="cp-input"
             placeholder="YYYY-MM"
@@ -209,12 +194,10 @@ export default function ShoreFields({ editing, setEditing }) {
         </div>
       </div>
 
-      {/* Remarks (mismo estilo que Merchant: ancho completo, 2 líneas) */}
+      {/* Remarks (ancho completo, 2 líneas) */}
       <div className="cp-row-exp-c">
         <div style={{ gridColumn: '1 / -1' }}>
-          <label className="cp-label">
-            {`Remarks (${remarksLen}/200)`}
-          </label>
+          <label className="cp-label">{`Remarks (${remarksLen}/200)`}</label>
           <textarea
             className="cp-textarea"
             rows="2"

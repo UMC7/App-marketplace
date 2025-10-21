@@ -204,7 +204,7 @@ function dbRowToEditing(row) {
     };
   }
 
-    if (type === 'merchant') {
+  if (type === 'merchant') {
     return {
       id: row.id,
       type: 'merchant',
@@ -258,18 +258,18 @@ export default function ExperienceSection({
   const [items, setItems] = useState([]);
   const [editing, setEditing] = useState(null);
   const editBoxRef = useRef(null);
-const scrollEditorIntoView = () => {
-  const el = editBoxRef.current;
-  if (!el || typeof window === 'undefined') return;
-  const rect = el.getBoundingClientRect();
-  const y = rect.top + window.scrollY;
-  const mobileOffset = window.innerWidth <= 768 ? 84 : 0;
+  const scrollEditorIntoView = () => {
+    const el = editBoxRef.current;
+    if (!el || typeof window === 'undefined') return;
+    const rect = el.getBoundingClientRect();
+    const y = rect.top + window.scrollY;
+    const mobileOffset = window.innerWidth <= 768 ? 84 : 0;
 
-  window.scrollTo({
-    top: Math.max(0, y - mobileOffset),
-    behavior: 'smooth',
-  });
-};
+    window.scrollTo({
+      top: Math.max(0, y - mobileOffset),
+      behavior: 'smooth',
+    });
+  };
 
   const [yachtingMonths, setYachtingMonths] = useState(null);
 
@@ -333,6 +333,7 @@ const scrollEditorIntoView = () => {
       try {
         onCountChange(count);
       } catch (_e) {
+        /* no-op */
       }
     }
 
@@ -343,6 +344,7 @@ const scrollEditorIntoView = () => {
       try {
         onProgressChange(progress);
       } catch (_e) {
+        /* no-op */
       }
     }
 
@@ -357,6 +359,7 @@ const scrollEditorIntoView = () => {
       });
       window.dispatchEvent(evtProgress);
     } catch (_e) {
+      /* no-op */
     }
   }, [items, onCountChange, onProgressChange, targetForFull, profileId, profile?.id]);
 
@@ -492,7 +495,7 @@ const scrollEditorIntoView = () => {
       return;
     }
 
-        if (editing.type === 'merchant') {
+    if (editing.type === 'merchant') {
       // Validación
       if (!editing.department) return toast.error('Department is required.');
       if (!editing.role || (editing.role === 'Other' && !editing.role_other?.trim()))
@@ -633,32 +636,32 @@ const scrollEditorIntoView = () => {
   }
 
   const TypePicker = useMemo(() => {
-  if (!editing) return null;
-  return (
-    <div className="cp-row-2" style={{ marginBottom: 10 }}>
-      <div>
-        <label className="cp-label">Experience type</label>
-        <select
-          className="cp-input"
-          value={editing.type || ''}
-          onChange={(e) => {
-            const t = e.target.value;
-            if (!t) return setEditing({ type: '' });
-            if (t === 'yacht') return setEditing({ ...emptyYacht });
-            if (t === 'merchant') return setEditing({ ...emptyMerchant });
-            return setEditing({ ...emptyShore });
-          }}
-        >
-          <option value="">— Select —</option>
-          <option value="yacht">Yacht / Sea Service</option>
-          <option value="merchant">Merchant / Commercial Vessels</option>
-          <option value="shore">Shore-based / Other industries</option>
-        </select>
+    if (!editing) return null;
+    return (
+      <div className="cp-row-2" style={{ marginBottom: 10 }}>
+        <div>
+          <label className="cp-label">Experience type</label>
+          <select
+            className="cp-input"
+            value={editing.type || ''}
+            onChange={(e) => {
+              const t = e.target.value;
+              if (!t) return setEditing({ type: '' });
+              if (t === 'yacht') return setEditing({ ...emptyYacht });
+              if (t === 'merchant') return setEditing({ ...emptyMerchant });
+              return setEditing({ ...emptyShore });
+            }}
+          >
+            <option value="">— Select —</option>
+            <option value="yacht">Yacht / Sea Service</option>
+            <option value="merchant">Merchant / Commercial Vessels</option>
+            <option value="shore">Shore-based / Other industries</option>
+          </select>
+        </div>
+        <div />
       </div>
-      <div />
-    </div>
-  );
-}, [editing]);
+    );
+  }, [editing]);
 
   const longevity = useMemo(
     () => computeLongevityAvg(items, { onlyYacht: true }),
@@ -697,6 +700,58 @@ const scrollEditorIntoView = () => {
       toast.error(e.message || 'Could not delete experience.');
     }
   }
+
+  /* ---------------- Enable/disable Save based on required fields ---------------- */
+  const isSaveEnabled = useMemo(() => {
+    if (!editing || !editing.type) return false;
+
+    const nonEmpty = (v) => String(v || '').trim() !== '';
+
+    if (editing.type === 'yacht') {
+      return (
+        nonEmpty(editing.department) &&
+        (nonEmpty(editing.role) && !(editing.role === 'Other' && !nonEmpty(editing.role_other))) &&
+        nonEmpty(editing.vessel_or_employer) &&
+        nonEmpty(editing.vessel_type) &&
+        nonEmpty(editing.length_m) &&
+        nonEmpty(editing.start_month) &&
+        (editing.is_current || nonEmpty(editing.end_month)) &&
+        nonEmpty(editing.contract) &&
+        nonEmpty(editing.use) &&
+        Array.isArray(editing.regionsArr) && editing.regionsArr.length > 0
+      );
+    }
+
+    if (editing.type === 'merchant') {
+      const hasLen = nonEmpty(editing.length_m) || nonEmpty(editing.loa_m);
+      return (
+        nonEmpty(editing.department) &&
+        (nonEmpty(editing.role) && !(editing.role === 'Other' && !nonEmpty(editing.role_other))) &&
+        nonEmpty(editing.vessel_or_employer) &&
+        nonEmpty(editing.vessel_type) &&
+        nonEmpty(editing.employer_name) && // requerido
+        hasLen &&
+        nonEmpty(editing.start_month) &&
+        (editing.is_current || nonEmpty(editing.end_month)) &&
+        nonEmpty(editing.contract) &&
+        Array.isArray(editing.regionsArr) && editing.regionsArr.length > 0
+      );
+    }
+
+    if (editing.type === 'shore') {
+      return (
+        nonEmpty(editing.vessel_or_employer) &&
+        nonEmpty(editing.role) &&
+        nonEmpty(editing.contract) &&
+        nonEmpty(editing.vessel_type) && // Industry
+        nonEmpty(editing.location_country) &&
+        nonEmpty(editing.start_month) &&
+        (editing.is_current || nonEmpty(editing.end_month))
+      );
+    }
+
+    return false;
+  }, [editing]);
 
   return (
     <div>
@@ -774,7 +829,7 @@ const scrollEditorIntoView = () => {
           {/* Acciones */}
           {editing.type && (
             <div className="cp-actions" style={{ marginTop: 12 }}>
-              <button onClick={saveEditing}>Save</button>
+              <button onClick={saveEditing} disabled={!isSaveEnabled}>Save</button>
               <button onClick={cancelEditing}>Cancel</button>
             </div>
           )}

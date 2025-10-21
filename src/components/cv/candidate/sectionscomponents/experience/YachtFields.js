@@ -1,4 +1,4 @@
-// src/components/cv/candidate/sectionscomponents/experience/YachtFields.jsx
+// src/components/cv/candidate/sectionscomponents/experience/YachtFields.js
 import React, { useMemo, useState } from 'react';
 import { DEPARTMENTS, getRanksForDept } from '../../shared/rankData';
 import {
@@ -12,12 +12,8 @@ import {
 } from '../../shared/experienceCatalogs';
 import { hideTechForRole } from './helpers';
 import { ymFormatOnChange, ymNormalize } from './utils';
-// NUEVO: catálogo de marcas (yates ≥20 m + "Other")
 import { ALL_YACHT_BRANDS } from '../../shared/yachtBrands';
 
-/* ===========================================
-   Catálogos (con fallback seguro)
-=========================================== */
 const TERMS = TERMS_SRC ?? [
   'Rotational',
   'Permanent',
@@ -76,16 +72,7 @@ const REGION_OPTIONS =
     'South America',
   ];
 
-/**
- * YachtFields
- * Subformulario para experiencia de yates (idéntico al original + nuevos campos).
- *
- * Props:
- * - editing: objeto de edición
- * - setEditing: fn(next)
- */
 export default function YachtFields({ editing, setEditing }) {
-  // Hooks siempre al tope para cumplir la regla de hooks
   const [regionPick, setRegionPick] = useState('');
 
   const rankOptions = useMemo(() => {
@@ -98,12 +85,11 @@ export default function YachtFields({ editing, setEditing }) {
     return out;
   }, [editing?.department]);
 
-  const hideTech = hideTechForRole(editing?.department); // Interior / Galley / Others
+  const hideTech = hideTechForRole(editing?.department);
   const techDisabled = hideTech;
 
   if (!editing || editing.type !== 'yacht') return null;
 
-  // Dropdown + Add para regiones
   const addRegion = () => {
     const r = regionPick;
     if (!r) return;
@@ -213,7 +199,7 @@ export default function YachtFields({ editing, setEditing }) {
               setEditing({
                 ...editing,
                 yacht_brand: e.target.value,
-                yacht_brand_other: '', // reset si cambia
+                yacht_brand_other: '',
               })
             }
           >

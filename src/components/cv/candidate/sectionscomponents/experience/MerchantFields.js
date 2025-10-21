@@ -59,7 +59,6 @@ const REGION_OPTIONS =
     'South America',
   ];
 
-/** Par de fechas (Start/End) en una sola fila, con lógica de formateo */
 function DatePair({ editing, setEditing }) {
   return (
     <>
@@ -106,7 +105,6 @@ function DatePair({ editing, setEditing }) {
 }
 
 export default function MerchantFields({ editing, setEditing }) {
-  // Hooks
   const [regionPick, setRegionPick] = useState('');
   const [remarksCount, setRemarksCount] = useState(
     () => (editing?.remarks ? String(editing.remarks).length : 0)
@@ -127,7 +125,6 @@ export default function MerchantFields({ editing, setEditing }) {
 
   const techPowerVisible = shouldShowEnginePower(editing?.department);
 
-  // Regions: add/remove
   const addRegion = () => {
     const r = regionPick;
     if (!r) return;
@@ -242,7 +239,7 @@ export default function MerchantFields({ editing, setEditing }) {
       <div className="cp-row-exp-b" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
         {/* Col 1: Company / Employer */}
         <div>
-          <label className="cp-label">Company / Employer</label>
+          <label className="cp-label">Company / Employer *</label>
           <input
             className="cp-input"
             placeholder="Company or employer name"
@@ -257,7 +254,7 @@ export default function MerchantFields({ editing, setEditing }) {
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <div>
-              <label className="cp-label">Length (m)</label>
+              <label className="cp-label">Length (m) *</label>
               <input
                 className="cp-input"
                 inputMode="numeric"
@@ -358,8 +355,6 @@ export default function MerchantFields({ editing, setEditing }) {
 
       {/* ROW C — Terms, Regions, Remarks (si hay Engine power, Terms/Regions siguen aquí) */}
       <div className="cp-row-exp-c">
-        {/* Cuando NO hay Engine power, Terms/Regions ya no suben de fila:
-            mantenemos la misma ubicación que tenías (ROW C) para no tocar desktop. */}
         <div>
           <label className="cp-label">Terms *</label>
           <select
