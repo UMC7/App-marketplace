@@ -410,6 +410,8 @@ export default function PublicProfileView() {
         { id: 'e3', institution: 'RINA Course', program: 'Structural Analysis', level_type: 'Postgraduate Diploma / Certificate', country: 'UK', start_month:'10', start_year:'2023', end_month:null, end_year:null, current:true },
       ];
 
+      mock.share_ready = true;
+      
       setYachtingMonths(6);
       setEmploymentStatus(
         (mock?.prefs_skills && typeof mock.prefs_skills.status === 'string' && mock.prefs_skills.status.trim())
@@ -458,7 +460,7 @@ export default function PublicProfileView() {
 
         const { data: freshPR } = await supabase
           .from('public_profiles')
-          .select('prefs_skills, languages, skills')
+          .select('prefs_skills, languages, skills, share_ready')
           .eq('id', baseRow.id)
           .single();
 
@@ -472,6 +474,12 @@ export default function PublicProfileView() {
         const mergedSkills =
           (freshPR && freshPR.skills != null) ? freshPR.skills
             : (baseRow?.skills ?? exposed?.skills ?? null);
+        const shareReadyFlag =
+          (freshPR && typeof freshPR.share_ready === 'boolean')
+            ? freshPR.share_ready
+            : (typeof baseRow?.share_ready === 'boolean'
+              ? baseRow.share_ready
+              : false);
 
         const row = {
           ...baseRow,
@@ -492,6 +500,8 @@ export default function PublicProfileView() {
           if (Array.isArray(ps.languageLevels)) bridged.languages = ps.languageLevels;
           if (Array.isArray(ps.deptSpecialties)) bridged.skills = ps.deptSpecialties;
         }
+
+        bridged.share_ready = !!shareReadyFlag;
 
         setProfile(bridged);
         setGallery(hydrated);
@@ -806,9 +816,12 @@ function computeScrollTargetTop(el, extra = 12) {
     return (ps && typeof ps.docFlags === 'object') ? ps.docFlags : {};
   }, [profile?.prefs_skills]);
 
-  useEmitProfileView(profile);
+  const allowPublicView = useMemo(
+    () => isPreview || (profile?.share_ready === true),
+    [isPreview, profile?.share_ready]
+  );
+  useEmitProfileView(allowPublicView ? profile : null);
 
-  /* ----- UI ----- */
   if (loading) {
     return (
       <div className={`ppv-wrap ${isPreview ? 'ppv--preview' : 'ppv--public'}`} style={{ paddingTop: isPreview ? 50 : 12 }}>
@@ -832,6 +845,17 @@ function computeScrollTargetTop(el, extra = 12) {
       </div>
     );
   }
+
+if (!isPreview && profile && profile.share_ready === false) {
+  return (
+    <div className={`ppv-wrap ${isPreview ? 'ppv--preview' : 'ppv--public'}`} style={{ paddingTop: isPreview ? 50 : 12 }}>
+      <div className="ppv-card">
+        <h2 className="ppv-title">Profile unavailable / incomplete</h2>
+        <p>This CV is not currently available because the minimum required fields have not been completed.</p>
+      </div>
+    </div>
+  );
+}
 
   const metaLabelStyle = {
     fontSize: 12,

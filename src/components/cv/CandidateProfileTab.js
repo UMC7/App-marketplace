@@ -21,6 +21,65 @@ import {
 import AboutMeSection from './candidate/cvsections/aboutmesection';
 import LifestyleHabitsSection from './candidate/cvsections/LifestyleHabitsSection';
 
+function hasLanguagesWithLevel(languageLevels) {
+  if (!Array.isArray(languageLevels)) return false;
+  return languageLevels.some(ll => ll && ll.lang && String(ll.lang).trim() && ll.level && String(ll.level).trim());
+}
+
+function hasDeptSkills(deptSpecialties) {
+  if (!Array.isArray(deptSpecialties)) return false;
+  return deptSpecialties.some(it => {
+    if (!it) return false;
+    if (typeof it === 'string') return String(it).trim().length > 0;
+    const deptOk = !!(it.department || it.dept || it.name);
+    const skillsArr = it.skills || it.items || it.list || [];
+    const skillsOk = Array.isArray(skillsArr) ? skillsArr.length > 0 : false;
+    return deptOk && skillsOk;
+  });
+}
+
+function allDocFlagsSelected(docFlags) {
+  if (!docFlags || typeof docFlags !== 'object') return false;
+  const keys = [
+    'passport6m','schengenVisa','stcwBasic','seamansBook','eng1',
+    'usVisa','drivingLicense','pdsd','covidVaccine'
+  ];
+  return keys.every(k => typeof docFlags[k] === 'boolean');
+}
+
+function docsMeetMin(docs) {
+  if (!Array.isArray(docs) || docs.length < 3) return false;
+  let valid = 0;
+  for (const d of docs) {
+    const titleOk = !!String(d?.title || '').trim();
+    const issuedOk = !!String(d?.issuedOn || '').trim();
+    const expiryOk = true;
+    const visOk = !!String(d?.visibility || 'unlisted').trim();
+    if (titleOk && issuedOk && expiryOk && visOk) valid++;
+    if (valid >= 3) return true;
+  }
+  return false;
+}
+
+function personalMeetsMin(p) {
+  if (!p) return false;
+  const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(p.email_public || '').trim());
+  const phoneCcOk = String(p.phone_cc || '').replace(/\D/g, '').length > 0;
+  const phoneNumOk = String(p.phone_number || '').trim().length > 0;
+  const natsOk = Array.isArray(p.nationalities) && p.nationalities.length > 0;
+  return Boolean(
+    String(p.first_name || '').trim() &&
+    String(p.last_name || '').trim() &&
+    emailOk &&
+    phoneCcOk && phoneNumOk &&
+    p.country &&
+    String(p.city_port || '').trim() &&
+    p.birth_month &&
+    p.birth_year &&
+    natsOk
+  );
+}
+
 export default function CandidateProfileTab() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -123,6 +182,8 @@ function buildFullPrefsSkillsPayload() {
     gender: '',
   });
 
+  const [educationCount, setEducationCount] = useState(0);
+  const [shareReadyPersistTimer, setShareReadyPersistTimer] = useState(null);
   const [docs, setDocs] = useState([]);
   const [gallery, setGallery] = useState([]);
   const [savingDocFlags, setSavingDocFlags] = useState(false);
@@ -358,7 +419,6 @@ function buildFullPrefsSkillsPayload() {
     const s = String(v || '').toLowerCase();
     if (s === 'public') return 'public';
     if (s === 'private') return 'private';
-    // 'after_contact' u otros → 'unlisted'
     return 'unlisted';
   };
 
@@ -409,6 +469,23 @@ function buildFullPrefsSkillsPayload() {
     })();
     return () => { cancelled = true; };
   }, [profile?.id]);
+
+useEffect(() => {
+  let cancelled = false;
+  (async () => {
+    if (!profile?.user_id) return;
+    try {
+      const { count, error } = await supabase
+        .from('cv_education')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', profile.user_id);
+      if (!cancelled && !error) setEducationCount(count || 0);
+    } catch {
+      if (!cancelled) setEducationCount(0);
+    }
+  })();
+  return () => { cancelled = true; };
+}, [profile?.user_id]);
 
 useEffect(() => {
   let cancelled = false;
@@ -990,9 +1067,71 @@ const meetsPrefsMin =
   Array.isArray(lifestyleHabits?.dietaryAllergies) && lifestyleHabits.dietaryAllergies.length > 0 &&
   !!(lifestyleHabits?.fitness && String(lifestyleHabits.fitness).trim());
 
+  const meetsMediaMin = Array.isArray(gallery) && gallery.length >= 3;
+
+  const meetsAboutMin = !!(profile?.about_me && String(profile.about_me).trim());
+
+  const meetsPrefsSkillsMin =
+    !!(status && String(status).trim()) &&
+    !!(availability && String(availability).trim()) &&
+    hasLanguagesWithLevel(languageLevels) &&
+    hasDeptSkills(deptSpecialties);
+
+  const meetsExperienceMin = Number(expCount || 0) >= 1;
+
+  const meetsEducationMin = Number(educationCount || 0) >= 1;
+
+  const meetsDocumentsMin = docsMeetMin(docs) && allDocFlagsSelected(docFlags);
+
+  const meetsReferencesMin = Number(refsCount || 0) >= 1;
+
+  const meetsPersonalMin = personalMeetsMin(personal);
+
+  const isShareReady = Boolean(
+    meetsPersonalMin &&
+    hasDeptRanks &&
+    meetsExperienceMin &&
+    meetsAboutMin &&
+    meetsPrefsSkillsMin &&
+    meetsLifestyleMin &&
+    meetsEducationMin &&
+    meetsDocumentsMin &&
+    meetsReferencesMin &&
+    meetsMediaMin
+  );
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    if (shareReadyPersistTimer) clearTimeout(shareReadyPersistTimer);
+    const t = setTimeout(async () => {
+      try {
+        await supabase
+          .from('public_profiles')
+          .update({ share_ready: isShareReady, updated_at: new Date().toISOString() })
+          .eq('id', profile.id);
+      } catch (_e) {
+        // silencioso
+      }
+    }, 600);
+    setShareReadyPersistTimer(t);
+    return () => clearTimeout(t);
+  }, [
+    profile?.id,
+    isShareReady,
+    personal, hasDeptRanks, expCount, status, availability,
+    languageLevels, deptSpecialties, lifestyleHabits,
+    educationCount, docs, docFlags, refsCount, gallery, profile?.about_me
+  ]);
+
   return (
     <div className="candidate-profile-tab">
       <h2>Candidate Profile</h2>
+
+    {!isShareReady && !loading && !error && (
+      <div className="ppv-previewRibbon" role="status" aria-live="polite">
+        Your public link is disabled until you complete the minimum required fields across all sections.
+      </div>
+    )}
 
       <ProfileProgress sections={progressSections} />
 
@@ -1022,8 +1161,14 @@ const meetsPrefsMin =
               className="cp-btn"
               type="button"
               onClick={handleCopy}
-              disabled={!publicUrl || saving}
-              title={!publicUrl ? 'Link not generated yet' : undefined}
+              disabled={!publicUrl || saving || !isShareReady}
+              title={
+                !publicUrl
+                  ? 'Link not generated yet'
+                  : !isShareReady
+                  ? 'Complete the minimum required fields to enable sharing'
+                  : undefined
+              }
             >
               Copy link
             </button>
@@ -1032,8 +1177,12 @@ const meetsPrefsMin =
               className="cp-btn cp-rotate"
               type="button"
               onClick={handleRotate}
-              disabled={!profile || saving}
-              title="Revoke current link and generate a new one"
+              disabled={!profile || saving || !isShareReady}
+              title={
+                !isShareReady
+                  ? 'Complete the minimum required fields to enable rotate'
+                  : 'Revoke current link and generate a new one'
+              }
             >
               Rotate link
             </button>

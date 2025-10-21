@@ -1,13 +1,6 @@
 // src/services/analytics/emitEvent.js
-// Lightweight client-side emitter for CV analytics events.
-// - Fault-tolerant: never throws; returns { ok: boolean }.
-// - Works for anon users (RLS allows INSERT).
-// - Captures basic context (referrer, device, browser, lang, session).
-// - Tries to send to Edge Function (geo/IP) and falls back to direct insert.
 
 import supabase from '../../supabase';
-
-/* ------------------------ Utilities ------------------------ */
 
 function safeWindow() {
   return typeof window !== 'undefined' ? window : null;
@@ -20,14 +13,16 @@ function safeDocument() {
   const w = safeWindow();
   return w && w.document ? w.document : null;
 }
+function safeLocation() {
+  const w = safeWindow();
+  return w && w.location ? w.location : null;
+}
 
 function uuidv4() {
-  // RFC-4122 v4 using crypto if available; fallback to random.
   const w = safeWindow();
   if (w && w.crypto && w.crypto.getRandomValues) {
     const buf = new Uint8Array(16);
     w.crypto.getRandomValues(buf);
-    // Set version and variant bits
     buf[6] = (buf[6] & 0x0f) | 0x40;
     buf[8] = (buf[8] & 0x3f) | 0x80;
     const hex = [...buf].map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -43,7 +38,6 @@ function uuidv4() {
       hex.slice(20)
     );
   }
-  // Fallback (non-crypto)
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
@@ -67,7 +61,6 @@ function getSessionId() {
   }
 }
 
-/* --- Persistent viewer_id (new) --- */
 function getCookie(name) {
   try {
     const d = safeDocument();
@@ -92,7 +85,6 @@ function getViewerId() {
   const KEY = 'ydw_cv_viewer_id';
   try {
     const w = safeWindow();
-    // Try localStorage
     if (w && w.localStorage) {
       let vid = w.localStorage.getItem(KEY);
       if (!vid) {
@@ -102,7 +94,6 @@ function getViewerId() {
       return vid;
     }
   } catch {}
-  // Fallback to cookie
   try {
     let vid = getCookie(KEY);
     if (!vid) {
@@ -111,7 +102,6 @@ function getViewerId() {
     }
     return vid;
   } catch {
-    // Last resort: ephemeral UUID (won't persist if storage is blocked)
     return uuidv4();
   }
 }
@@ -154,8 +144,6 @@ function getLanguage() {
 }
 
 function edgeUrl() {
-  // Public URL of the Edge Function (set in .env / hosting env)
-  // Example: https://<project-ref>.functions.supabase.co/functions/v1/cv_analytics_event
   return (
     process.env.REACT_APP_EDGE_ANALYTICS_URL ||
     process.env.NEXT_PUBLIC_EDGE_ANALYTICS_URL ||
@@ -192,14 +180,12 @@ async function postToEdge(payload) {
 
 function sanitizeJson(obj) {
   try {
-    // Ensure serializable shallow object
     return JSON.parse(JSON.stringify(obj));
   } catch {
     return null;
   }
 }
 
-/* --- Geo helper (client-side fallback) --- */
 async function getGeoFromBrowser() {
   try {
     const r = await fetch('https://ipapi.co/json/');
@@ -211,20 +197,84 @@ async function getGeoFromBrowser() {
   }
 }
 
-/* ------------------------ Core emitter ------------------------ */
+const _shareReadyCache = {
+  map: new Map(),
+  ttlMs: 5 * 60 * 1000,
+};
+
+function _cacheKey(handle, ownerUserId) {
+  return `${handle || ''}|${ownerUserId || ''}`;
+}
+
+function _isPreviewMode() {
+  try {
+    const loc = safeLocation();
+    const search = loc?.search || '';
+    return /\bpreview(=|%3D)?(1|true)?/i.test(search);
+  } catch {
+    return false;
+  }
+}
+
+async function _fetchShareReady({ handle, ownerUserId }) {
+  try {
+    if (handle) {
+      const { data, error } = await supabase
+        .from('public_profiles')
+        .select('share_ready')
+        .eq('handle', handle)
+        .single();
+      if (error) throw error;
+      return !!data?.share_ready;
+    }
+    if (ownerUserId) {
+      const { data, error } = await supabase
+        .from('public_profiles')
+        .select('share_ready')
+        .eq('user_id', ownerUserId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle?.()
+        || (await supabase
+          .from('public_profiles')
+          .select('share_ready')
+          .eq('user_id', ownerUserId)
+          .order('updated_at', { ascending: false })
+          .limit(1));
+      const row = Array.isArray(data) ? data[0] : data;
+      return !!row?.share_ready;
+    }
+  } catch {
+    return true;
+  }
+  return true;
+}
+
+async function _shouldEmitAnalytics({ handle, ownerUserId }) {
+  if (_isPreviewMode()) return true; // allow in preview
+  const key = _cacheKey(handle, ownerUserId);
+  const now = Date.now();
+  const cached = _shareReadyCache.map.get(key);
+  if (cached && now - cached.ts < _shareReadyCache.ttlMs) {
+    return !!cached.ready;
+  }
+  const ready = await _fetchShareReady({ handle, ownerUserId });
+  _shareReadyCache.map.set(key, { ready, ts: now });
+  return !!ready;
+}
 
 /**
  * Emits a single analytics event into public.cv_analytics_events.
  * Tries Edge Function first (better geo/referrer/IP), then falls back to direct insert.
  * @param {Object} opts
- * @param {string} opts.type                - 'view' | 'profile_open' | 'contact_open' | 'chat_start' | 'cv_download' | ...
- * @param {string} [opts.ownerUserId]       - UUID of CV owner (recommended)
- * @param {string} [opts.handle]            - Public handle of the CV (recommended)
- * @param {string} [opts.referrer]          - Override referrer; defaults to document.referrer or 'Direct'
- * @param {string} [opts.country]           - Optional geo (client-side only; Edge preferred)
- * @param {string} [opts.city]              - Optional geo (client-side only; Edge preferred)
- * @param {string} [opts.ipHash]            - Optional hashed IP (server/edge ideal)
- * @param {Object} [opts.extra]             - Extra JSON payload (will be stored in extra_data)
+ * @param {string} opts.type
+ * @param {string} [opts.ownerUserId]
+ * @param {string} [opts.handle]
+ * @param {string} [opts.referrer]
+ * @param {string} [opts.country]
+ * @param {string} [opts.city]
+ * @param {string} [opts.ipHash]
+ * @param {Object} [opts.extra]
  * @returns {Promise<{ok: boolean}>}
  */
 export async function emitEvent({
@@ -240,24 +290,29 @@ export async function emitEvent({
   try {
     if (!type) return { ok: false };
 
+    const allowPublic = await _shouldEmitAnalytics({ handle, ownerUserId });
+    if (!allowPublic) {
+      return { ok: true };
+    }
+
     const ctx = parseUA();
     const sessionId = getSessionId();
-    const viewerId = getViewerId(); // <-- persistent visitor id
+    const viewerId = getViewerId();
     const lang = getLanguage();
     const ref = (referrer && String(referrer)) || getReferrer();
 
-    // Try to enrich geo on the client if not provided
     const geo = await getGeoFromBrowser();
     const countryDetected = country ?? geo.country;
     const cityDetected = city ?? geo.city;
 
-    // Payload for direct insert (keeps everything)
+    const isPreview = _isPreviewMode();
+
     const directPayload = {
       owner_user_id: ownerUserId || null,
       handle: handle || null,
       event_type: String(type),
       session_id: sessionId ? sessionId : null,
-      viewer_id: viewerId || null, // <-- include persistent viewer_id
+      viewer_id: viewerId || null,
       referrer: ref,
       user_agent: ctx.userAgent || null,
       device: ctx.device || null,
@@ -267,42 +322,50 @@ export async function emitEvent({
       country: countryDetected || null,
       city: cityDetected || null,
       ip_hash: ipHash || null,
-      extra_data: extra ? sanitizeJson(extra) : null,
+      extra_data: sanitizeJson(
+        {
+          ...(extra || {}),
+          context: {
+            preview: isPreview || false,
+          },
+        }
+      ),
     };
 
-    // Payload for Edge (server figures out geo/ip)
     const edgePayload = {
       event_type: String(type),
       handle: handle || null,
       user_id: ownerUserId || null,
       referrer: ref,
       user_agent: ctx.userAgent || null,
-      // helpful context (optional)
       session_id: sessionId || null,
-      viewer_id: viewerId || null, // <-- forward to edge as well
+      viewer_id: viewerId || null,
       language: lang || null,
       device: ctx.device || null,
       browser: ctx.browser || null,
       os: ctx.os || null,
-      // pass along client-detected geo as a hint
       country: countryDetected || null,
       city: cityDetected || null,
-      extra_data: extra ? sanitizeJson(extra) : null,
+      extra_data: sanitizeJson(
+        {
+          ...(extra || {}),
+          context: {
+            preview: isPreview || false,
+          },
+        }
+      ),
     };
 
     console.info('[cv-analytics] edgeUrl ->', edgeUrl());
     const tryEdge = await postToEdge(edgePayload);
     if (tryEdge.ok) return { ok: true };
 
-    // Fallback: direct insert (previous behavior)
     const { error } = await supabase.from('cv_analytics_events').insert(directPayload);
     return { ok: !error };
   } catch {
     return { ok: false };
   }
 }
-
-/* ------------------------ Convenience helpers ------------------------ */
 
 export function emitView(args) {
   return emitEvent({ ...args, type: 'view' });
@@ -323,22 +386,18 @@ export function emitShareClick(args) {
   return emitEvent({ ...args, type: 'share_click' });
 }
 export function emitSectionView(args) {
-  // Expect extra: { section: 'Experience' }
   return emitEvent({ ...args, type: 'section_view' });
 }
 export function emitMediaPlay(args) {
-  // Expect extra: { mediaId, mediaType }
   return emitEvent({ ...args, type: 'media_play' });
 }
 export function emitLinkOut(args) {
-  // Expect extra: { href, label }
   return emitEvent({ ...args, type: 'link_out' });
 }
 export function emitBookmarkProfile(args) {
   return emitEvent({ ...args, type: 'bookmark_profile' });
 }
 export function emitErrorEvent(args) {
-  // Expect extra: { message, code, stack? }
   return emitEvent({ ...args, type: 'error' });
 }
 
