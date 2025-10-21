@@ -1,5 +1,6 @@
 // src/pages/cv/sections/media/PublicMediaGallerySection.jsx
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import './PublicMediaGallerySection.css';
 
 function inferType(u = '', explicit) {
@@ -11,19 +12,48 @@ function getThumbUrl(u = '') { return u; }
 function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
 
 function Lightbox({ open, item, onClose }) {
-  if (!open) return null;
   const isVideo = item?.type === 'video';
-  return (
-    <div className="pmg-lightbox" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="pmg-lightbox-inner" onClick={(e)=>e.stopPropagation()}>
-        <button className="pmg-lightbox-close" onClick={onClose} aria-label="Close">✕</button>
-        {isVideo ? (
-          <video className="pmg-lightbox-media" src={item.url} controls playsInline controlsList="nodownload" />
-        ) : (
-          <img className="pmg-lightbox-media" src={item.url} alt="" />
-        )}
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onKey(e) {
+      if (e.key === 'Escape') onClose?.();
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+    }
+
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return createPortal(
+    (
+      <div className="pmg-lightbox" role="dialog" aria-modal="true" onClick={onClose}>
+        <div className="pmg-lightbox-inner" onClick={(e)=>e.stopPropagation()}>
+          <button className="pmg-lightbox-close" onClick={onClose} aria-label="Close">✕</button>
+          {isVideo ? (
+            <video
+              className="pmg-lightbox-media"
+              src={item.url}
+              controls
+              playsInline
+              controlsList="nodownload"
+            />
+          ) : (
+            <img className="pmg-lightbox-media" src={item.url} alt="" />
+          )}
+        </div>
       </div>
-    </div>
+    ),
+    document.body
   );
 }
 
