@@ -20,6 +20,9 @@ const pad2 = (n) => String(n).padStart(2, '0');
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 const BASE_A4_WIDTH  = 900;
 const BASE_A4_HEIGHT = Math.round(BASE_A4_WIDTH * (297 / 210));
+const INTRO_FIXED_PX = Math.round(BASE_A4_HEIGHT * 0.10) + 14;
+const MIN_SCALE = 0.42;
+const MAX_SCALE = 1;
 
 function setViewportContent(content) {
   const meta = document.querySelector('meta[name="viewport"]');
@@ -253,41 +256,80 @@ export default function PublicProfileView() {
   const [metaTop, setMetaTop] = useState(null);
   const [pageScale, setPageScale] = useState(1);
   const wrapRef = useRef(null);
+  const lastWidthRef = useRef(typeof window !== 'undefined' ? window.innerWidth : BASE_A4_WIDTH);
+  const hasLockedMetaTopRef = useRef(false);
 
   useLayoutEffect(() => {
-    function measure() {
+    function measure(widthChanged = true) {
       const container = wrapRef.current;
-      const availW = Math.max(
-        320,
-        Math.min(
-          window.innerWidth || 0,
-          container ? container.clientWidth : (window.innerWidth || 0)
-        )
-      );
+      const viewportW = typeof window !== 'undefined' ? window.innerWidth : BASE_A4_WIDTH;
+      const hostW = container ? container.clientWidth : viewportW;
+      const availW = Math.max(320, Math.min(viewportW, hostW));
+
       let s = availW / BASE_A4_WIDTH;
-      s = clamp(s, 0.42, 1);
+      s = clamp(s, MIN_SCALE, MAX_SCALE);
       setPageScale(s);
 
-      const page = a4Ref.current;
-      const intro = introRef.current;
-      if (page && intro) {
-        const pageRect  = page.getBoundingClientRect();
-        const introRect = intro.getBoundingClientRect();
-        setMetaTop(introRect.bottom - pageRect.top);
-      }
+      setMetaTop((prev) => {
+        if (hasLockedMetaTopRef.current && prev != null) return prev;
+        hasLockedMetaTopRef.current = true;
+        return INTRO_FIXED_PX;
+      });
 
       const vh = window.innerHeight || document.documentElement.clientHeight || 0;
       const scaledHeight = BASE_A4_HEIGHT * s;
-      const fits = scaledHeight + 24 <= vh;
-      setTwoUp(fits);
+      setTwoUp(scaledHeight + 24 <= vh);
     }
 
-    measure();
-    window.addEventListener('resize', measure);
-    window.addEventListener('orientationchange', measure);
+    measure(true);
+
+    function onResize() {
+      const w = window.innerWidth || 0;
+      if (Math.abs(w - lastWidthRef.current) >= 1) {
+        lastWidthRef.current = w;
+        measure(true);
+      }
+    }
+    function onOrientation() {
+      lastWidthRef.current = window.innerWidth || lastWidthRef.current;
+      hasLockedMetaTopRef.current = false;
+      measure(true);
+    }
+
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onOrientation);
     return () => {
-      window.removeEventListener('resize', measure);
-      window.removeEventListener('orientationchange', measure);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onOrientation);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function afterStable() {
+      try {
+        if (document?.fonts?.ready) {
+          await document.fonts.ready;
+        }
+      } catch {}
+      if (!cancelled) {
+        hasLockedMetaTopRef.current = false;
+        const container = wrapRef.current;
+        const viewportW = typeof window !== 'undefined' ? window.innerWidth : BASE_A4_WIDTH;
+        const hostW = container ? container.clientWidth : viewportW;
+        const availW = Math.max(320, Math.min(viewportW, hostW));
+        let s = availW / BASE_A4_WIDTH;
+        s = clamp(s, MIN_SCALE, MAX_SCALE);
+        setPageScale(s);
+        setMetaTop((prev) => prev ?? INTRO_FIXED_PX);
+      }
+    }
+    if (document.readyState === 'complete') afterStable();
+    else window.addEventListener('load', afterStable, { once: true });
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('load', afterStable, { once: true });
     };
   }, []);
 
@@ -381,7 +423,7 @@ export default function PublicProfileView() {
         setExperiences(mockXp);
         setDocuments(mockDocs);
         setReferences(mockRefs);
-        setEducation(mockEdu); // mock
+        setEducation(mockEdu);
         setLoading(false);
       }
     }
@@ -456,7 +498,6 @@ export default function PublicProfileView() {
 
         const pid = bridged.id;
 
-        // EXPERIENCES
         {
           const { data: xpRows } = await supabase
             .from('profile_experiences')
@@ -475,7 +516,6 @@ export default function PublicProfileView() {
           setEmploymentStatus(psStatus || (employed ? 'Employed' : 'Unemployed'));
         }
 
-        // Yachting months
         try {
           const { data: ymData, error: ymErr } = await supabase.rpc('rpc_yachting_months', { profile_uuid: pid });
           if (ymErr) throw ymErr;
@@ -484,7 +524,6 @@ export default function PublicProfileView() {
           setYachtingMonths(null);
         }
 
-        // DOCUMENTS (usa la RPC que ya incluye issued_on/expires_on y aplica reglas de visibilidad)
         {
           const { data: rows, error: docsErr } = await supabase.rpc(
             'rpc_public_docs_with_exp',
@@ -500,7 +539,6 @@ export default function PublicProfileView() {
           }
         }
 
-        // REFERENCES
         {
           const { data: refRows, error: refErr } = await supabase
             .rpc('rpc_public_references_by_handle', { handle_in: bridged.handle });
@@ -533,7 +571,6 @@ export default function PublicProfileView() {
           }
         }
 
-        // EDUCATION (public)
         {
           const { data: eduRows, error: eduErr } = await supabase
             .rpc('rpc_public_education_by_handle', { handle_in: bridged.handle });
@@ -558,7 +595,6 @@ export default function PublicProfileView() {
     return () => { cancelled = true; };
   }, [handle, isMock, search]);
 
-  /* ----- Memos y handlers ----- */
   const showAge =
     (profile?.visibility_settings?.show_age ?? profile?.show_age_public ?? true) === true;
   const age = calcAge(profile?.birth_month, profile?.birth_year);
@@ -936,7 +972,7 @@ function computeScrollTargetTop(el, extra = 12) {
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 12,
-                    zIndex: 1,
+                    zIndex: 3,
                   }}
                   aria-label="Basic info and short summary"
                 >
