@@ -137,6 +137,8 @@
   place-items:center;
   font-size:18px;
   font-weight:800;
+  line-height:1;                 /* asegura caja tipográfica predecible */
+  transform: translateY(-1px);   /* micro-ajuste vertical para centrar el glifo */
   z-index:10001;
 }
 @media (max-width: 720px){

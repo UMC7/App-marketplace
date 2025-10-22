@@ -989,11 +989,28 @@ const generateShortHandle = () => {
   first_name: !!personal.first_name?.trim(),
   last_name: !!personal.last_name?.trim(),
   email: !!personal.email_public?.trim(),
+
+  phone_cc: !!personal.phone_cc,
+  phone_number: !!personal.phone_number,
+  whatsapp_same: personal.whatsapp_same === true,
+  whatsapp_cc: personal.whatsapp_same ? true : !!personal.whatsapp_cc,
+  whatsapp_number: personal.whatsapp_same ? true : !!personal.whatsapp_number,
+
+  residence_country: !!personal.residence_country,
   country: !!personal.country,
   city_port: !!personal.city_port?.trim(),
-  phone: !!(personal.phone_cc && personal.phone_number),
+  contact_pref: !!personal.contact_pref,
+
+  birth_month: !!personal.birth_month,
+  birth_year: !!personal.birth_year,
   nationality: Array.isArray(personal.nationalities) && personal.nationalities.length > 0,
+
   gender: !!personal.gender,
+
+  linkedin: personal.linkedin === '' || !!personal.linkedin,
+  instagram: personal.instagram === '' || !!personal.instagram,
+  facebook: personal.facebook === '' || !!personal.facebook,
+  website: personal.website === '' || !!personal.website,
 };
 
 const deptRanksProgress = {
@@ -1004,7 +1021,7 @@ const deptRanksProgress = {
   total: 3,
 };
 
-const experienceProgress = { count: Math.min(expCount, 3), total: 3 };
+const experienceProgress = { count: expCount > 0 ? 1 : 0, total: 1 };
 
 const aboutProgress = {
   count:
@@ -1013,31 +1030,50 @@ const aboutProgress = {
   total: 2,
 };
 
-const prefsSkillsCount = [
-  !!(availability && availability.trim()),
-  Array.isArray(regionsSeasons) && regionsSeasons.length > 0,
-  Array.isArray(contracts) && contracts.length > 0,
-  Array.isArray(rotation) && rotation.length > 0,
-  Array.isArray(vesselTypes) && vesselTypes.length > 0,
-  Array.isArray(vesselSizeRange)
-    ? vesselSizeRange.length > 0
-    : (vesselSizeRange && typeof vesselSizeRange === 'object' &&
-       (vesselSizeRange.min || vesselSizeRange.max)),
-  !!(rateSalary && (String(rateSalary.dayRateMin || '').trim() || String(rateSalary.salaryMin || '').trim())),
-  Array.isArray(languageLevels) && languageLevels.length > 0,
-  Array.isArray(deptSpecialties) && deptSpecialties.length > 0,
-  (onboardPrefs && typeof onboardPrefs === 'object' && Object.values(onboardPrefs).some(Boolean)) ||
-    (Array.isArray(programTypes) && programTypes.length > 0) ||
-    (Array.isArray(dietaryRequirements) && dietaryRequirements.length > 0),
-].filter(Boolean).length;
+const lifestyleProgress = {
+  count:
+    (lifestyleHabits?.tattoosVisible ? 1 : 0) +
+    (lifestyleHabits?.smoking ? 1 : 0) +
+    (lifestyleHabits?.vaping ? 1 : 0) +
+    (lifestyleHabits?.alcohol ? 1 : 0) +
+    (Array.isArray(lifestyleHabits?.dietaryAllergies) && lifestyleHabits.dietaryAllergies.length > 0 ? 1 : 0) +
+    (lifestyleHabits?.fitness ? 1 : 0),
+  total: 6,
+};
 
-const prefsSkillsProgress = { count: prefsSkillsCount, total: 10 };
+const prefsSkillsDetail = {
+  status: !!(status && String(status).trim()),
+  availability: !!(availability && availability.trim()),
+  regionsSeasons: Array.isArray(regionsSeasons) && regionsSeasons.length > 0,
+  contracts: Array.isArray(contracts) && contracts.length > 0,
+  rotation: Array.isArray(rotation) && rotation.length > 0,
+  vesselTypes: Array.isArray(vesselTypes) && vesselTypes.length > 0,
+  vesselSizeRange: (vesselSizeRange && typeof vesselSizeRange === 'object'
+    ? (vesselSizeRange.min != null && vesselSizeRange.max != null)
+    : Array.isArray(vesselSizeRange) && vesselSizeRange.length > 0),
+  rateSalary: !!(rateSalary && (
+    String(rateSalary.dayRateMin || '').trim() ||
+    String(rateSalary.salaryMin || '').trim()
+  )),
+  languageLevels: Array.isArray(languageLevels) && languageLevels.length > 0,
+  deptSpecialties: Array.isArray(deptSpecialties) && deptSpecialties.length > 0,
+  programTypes: Array.isArray(programTypes) && programTypes.length > 0,
+  dietaryRequirements: Array.isArray(dietaryRequirements) && dietaryRequirements.length > 0,
+  onboardPrefs: (onboardPrefs && typeof onboardPrefs === 'object' && Object.values(onboardPrefs).some(Boolean)),
+};
+const prefsSkillsProgress = {
+  count: Object.values(prefsSkillsDetail).filter(Boolean).length,
+  total: Object.keys(prefsSkillsDetail).length,
+};
 
-const documentsProgress = { count: Math.min(docs.length, 3), total: 3 };
+const selectedDocFlags = Object.values(docFlags || {}).filter((v) => typeof v === 'boolean').length;
+const documentsProgress = { count: selectedDocFlags, total: 9 };
 
-const referencesProgress = { count: Math.min(refsCount, 3), total: 3 };
+const referencesProgress = { count: refsCount > 0 ? 1 : 0, total: 1 };
 
-const mediaProgress = { count: Math.min(gallery.length, 6), total: 6 };
+const educationProgress = { count: (educationCount || 0) > 0 ? 1 : 0, total: 1 };
+
+const mediaProgress = { count: Math.min(gallery.length, 9), total: 9 };
 
 const galleryImagesCount = Array.isArray(gallery)
   ? gallery.filter((it) => (it?.type || inferTypeByName(it?.name || it?.path || it?.url || '')) === 'image').length
@@ -1049,8 +1085,10 @@ const progressSections = {
   dept_ranks: deptRanksProgress,
   experience: experienceProgress,
   about_me: aboutProgress,
+  lifestyle: lifestyleProgress,
   prefs_skills: prefsSkillsProgress,
-  documents_media: documentsProgress,
+  education: educationProgress,
+  documents: documentsProgress,
   references: referencesProgress,
   photos_videos: mediaProgress,
 };
