@@ -1,3 +1,4 @@
+// src/components/Navbar.js
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -191,18 +192,18 @@ const handleOpenChat = (offerId, receiverId) => {
         {currentUser ? (
           <>
             <button onClick={() => { navigate('/profile'); setIsMenuOpen(false); }} className="profile-icon-text">
-              <span className="material-icons">account_circle</span>
+              <span className="material-icons notranslate" translate="no" aria-hidden="true">account_circle</span>
               <small>Profile</small>
             </button>
             {currentUser?.app_metadata?.role === 'admin' && (
               <button onClick={() => { navigate('/admin'); setIsMenuOpen(false); }} className="profile-icon-text">
-                <span className="material-icons">admin_panel_settings</span>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">admin_panel_settings</span>
                 <small>Admin</small>
               </button>
             )}
             <div ref={menuRef} style={{ position: 'relative', width: '100%' }}>
               <button className="post-icon-text" onClick={() => setShowMenu(!showMenu)}>
-                <span className="material-icons">add_circle_outline</span>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">add_circle_outline</span>
                 <small>Post</small>
               </button>
               {showMenu && (
@@ -216,7 +217,7 @@ const handleOpenChat = (offerId, receiverId) => {
             </div>
             <button onClick={() => { setShowChatList(true); setIsMenuOpen(false); }} className="chats-icon-text">
               {unreadCount > 0 && <span className="chat-badge">{unreadCount}</span>}
-              <span className="material-icons">chat_bubble_outline</span>
+              <span className="material-icons notranslate" translate="no" aria-hidden="true">chat_bubble_outline</span>
               <small>Chats</small>
             </button>
 
@@ -225,27 +226,27 @@ const handleOpenChat = (offerId, receiverId) => {
 
             <button onClick={() => { navigate('/favorites'); setIsMenuOpen(false); }} className="favorites-icon-text">
               {favorites.length > 0 && <span className="favorites-badge">{favorites.length}</span>}
-              <span className="material-icons">favorite_border</span>
+              <span className="material-icons notranslate" translate="no" aria-hidden="true">favorite_border</span>
               <small>Favorites</small>
             </button>
             <button onClick={() => { navigate('/cart'); setIsMenuOpen(false); }} className="cart-icon-text">
               {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
-              <span className="material-icons">shopping_cart</span>
+              <span className="material-icons notranslate" translate="no" aria-hidden="true">shopping_cart</span>
               <small>Cart</small>
             </button>
             <button onClick={() => { setIsMenuOpen(false); handleLogout(); }} className="logout-icon-text">
-              <span className="material-icons">logout</span>
+              <span className="material-icons notranslate" translate="no" aria-hidden="true">logout</span>
               <small>Logout</small>
             </button>
           </>
         ) : (
           <>
             <Link to="/login" className="login-icon-text">
-              <span className="material-icons">person_outline</span>
+              <span className="material-icons notranslate" translate="no" aria-hidden="true">person_outline</span>
               <small>Login</small>
             </Link>
             <Link to="/register" className="register-icon-text">
-              <span className="material-icons">person_add</span>
+              <span className="material-icons notranslate" translate="no" aria-hidden="true">person_add</span>
               <small>Register</small>
             </Link>
           </>
@@ -287,7 +288,9 @@ const handleOpenChat = (offerId, receiverId) => {
               <ThemeToggle />
             </div>
             <span
-              className="material-icons"
+              className="material-icons notranslate"
+              translate="no"
+              aria-hidden="true"
               style={{ fontSize: 26, cursor: 'pointer' }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -497,22 +500,22 @@ const handleOpenChat = (offerId, receiverId) => {
           {currentUser ? (
             <>
               <button className="nav-icon-button" onClick={() => navigate('/profile')}>
-                <span className="material-icons">account_circle</span>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">account_circle</span>
                 <small>Profile</small>
               </button>
               {currentUser?.app_metadata?.role === 'admin' && (
                 <button className="nav-icon-button" onClick={() => navigate('/admin')}>
-                  <span className="material-icons">admin_panel_settings</span>
+                  <span className="material-icons notranslate" translate="no" aria-hidden="true">admin_panel_settings</span>
                   <small>Admin</small>
                 </button>
               )}
               <button className="nav-icon-button" onClick={() => setShowPostOptions(true)}>
-                <span className="material-icons">add_circle_outline</span>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">add_circle_outline</span>
                 <small>Post</small>
               </button>
               <button className="nav-icon-button" onClick={() => setShowChatList(true)}>
                 {unreadCount > 0 && <span className="chat-badge">{unreadCount}</span>}
-                <span className="material-icons">chat_bubble_outline</span>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">chat_bubble_outline</span>
                 <small>Chats</small>
               </button>
 
@@ -521,33 +524,33 @@ const handleOpenChat = (offerId, receiverId) => {
                 {notifUnread > 0 && (
                   <span className="chat-badge">{notifUnread > 99 ? '99+' : notifUnread}</span>
                 )}
-                <span className="material-icons">notifications_none</span>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">notifications_none</span>
                 <small>Alerts</small>
               </button>
 
               <button className="nav-icon-button" onClick={() => navigate('/favorites')}>
                 {favorites.length > 0 && <span className="favorites-badge">{favorites.length}</span>}
-                <span className="material-icons">favorite_border</span>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">favorite_border</span>
                 <small>Favorites</small>
               </button>
               <button className="nav-icon-button" onClick={() => navigate('/cart')}>
                 {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
-                <span className="material-icons">shopping_cart</span>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">shopping_cart</span>
                 <small>Cart</small>
               </button>
               <button className="nav-icon-button" onClick={handleLogout}>
-                <span className="material-icons">logout</span>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">logout</span>
                 <small>Logout</small>
               </button>
             </>
           ) : (
             <>
               <button className="nav-icon-button" onClick={() => navigate('/login')}>
-                <span className="material-icons">person_outline</span>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">person_outline</span>
                 <small>Login</small>
               </button>
               <button className="nav-icon-button" onClick={() => navigate('/register')}>
-                <span className="material-icons">person_add</span>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">person_add</span>
                 <small>Register</small>
               </button>
             </>
