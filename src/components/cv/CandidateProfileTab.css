@@ -23,6 +23,9 @@
   --row-2-cols: 1fr 1fr;
 }
 
+.candidate-profile-tab .cp-nowrap{ white-space: nowrap; }
+.candidate-profile-tab .cp-cc-sub{ display: inline; }
+
 [data-theme='dark'] .candidate-profile-tab{
   --bg: #0f1117;
   --card: #151a23;
@@ -89,7 +92,6 @@
   box-shadow: var(--focus);
 }
 
-/* ===== Visual emphasis for softly disabled tech fields ===== */
 .cp-label--disabled{
   color: var(--muted);
   opacity: .7;
@@ -125,7 +127,6 @@
 .candidate-profile-tab button:disabled { opacity: .55; cursor: not-allowed; }
 .cp-rotate { background: var(--input-bg); border-color: var(--input-bd); }
 
-/* ===== Share actions: soporte a grid 2×2 en móvil, desktop intacto ===== */
 .cp-shareActions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .cp-chips { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -193,7 +194,7 @@
 .candidate-profile-tab .cp-right-phone-row{
   display: grid;
   gap: 12px;
-  grid-template-columns: 0.55fr 1.45fr minmax(160px, max-content); /* cc | num | inline */
+  grid-template-columns: 0.55fr 1.45fr minmax(160px, max-content);
   align-items: end;
 }
 
@@ -214,7 +215,7 @@
 .candidate-profile-tab .cp-row-wa-extra{
   display: grid;
   gap: 12px;
-  grid-template-columns: 1.00fr 1.45fr minmax(160px, max-content); /* cc | num | reserved */
+  grid-template-columns: 1.00fr 1.45fr minmax(160px, max-content);
 }
 
 .candidate-profile-tab .cp-row-country {
@@ -297,7 +298,6 @@
   grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 
-/* ======================= MOBILE ======================= */
 @media (max-width: 720px) {
   .candidate-profile-tab{
     --row-2-cols: 1fr;
@@ -313,6 +313,13 @@
   .candidate-profile-tab .cp-right-phone-row{
     grid-template-columns: var(--cols-cc-num-m);
   }
+  .candidate-profile-tab .cp-right-phone-row .cp-nowrap{
+    white-space: normal;
+  }
+  .candidate-profile-tab .cp-right-phone-row .cp-cc-sub{
+    display: block;
+  }
+
   .candidate-profile-tab .cp-right-inline{
     grid-column: 1 / -1;
     padding-top: 4px;
@@ -333,12 +340,10 @@
   .candidate-profile-tab .cp-row-add { grid-template-columns: 1fr; }
   .candidate-profile-tab .cp-btn-add { width: 100%; }
 
-  /* Experience → apilar UNA columna para que cada bloque herede 100% del vecino superior */
   .candidate-profile-tab .cp-row-exp-a{
     grid-template-columns: 1fr;
   }
 
-  /* Toda la fila B en una columna: cada ítem ocupa 100% */
   .candidate-profile-tab .cp-row-exp-b{
     grid-template-columns: 1fr;
   }
@@ -347,17 +352,16 @@
   }
   .candidate-profile-tab .cp-row-exp-b > .cp-spacer{ display: none; }
 
-  /* Regions + Add en una MISMA fila en móvil (igual que desktop) */
   .candidate-profile-tab .cp-row-exp-c{
     grid-template-columns: 1fr;
   }
   .candidate-profile-tab .cp-row-exp-c__regions{
-    grid-template-columns: 1fr auto; /* select + botón en línea */
+    grid-template-columns: 1fr auto;
     gap: 8px;
     align-items: stretch;
   }
   .candidate-profile-tab .cp-row-exp-c__regions .cp-btn-add{
-    width: auto; /* no forzar 100% en móvil */
+    width: auto;
   }
 
   .candidate-profile-tab .cp-row-exp-d{
@@ -415,13 +419,13 @@
   .candidate-profile-tab .cp-chip-grid .cp-chip{ margin: 0; }
 
   .lh-grid{
-    grid-template-columns: 1fr 1fr;   /* de 3→2 cols en móvil */
+    grid-template-columns: 1fr 1fr;
     gap: 10px 12px;
   }
-  .lh-field{ min-width: 0; }          /* evita overflow de selects largos */
+  .lh-field{ min-width: 0; }
 
   .lh-allergies-controls{
-    grid-template-columns: 1fr;       /* select arriba, botón abajo */
+    grid-template-columns: 1fr;
   }
   .lh-allergies-controls .cp-select{ width: 100%; }
   .lh-allergies-controls .cp-btn-add{ width: 100%; }
@@ -554,7 +558,7 @@
   .candidate-profile-tab .education-card .cv-card-actions{
     min-width: 0;
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Edit | Delete */
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
   .candidate-profile-tab .education-card .cv-card-actions > .btn{

@@ -2,11 +2,9 @@
 import React from 'react';
 
 export default function EmailPhoneRow({
-  // NEW: gender
-  gender = '', // 'male' | 'female' | ''
+  gender = '',
   onChangeGender,
 
-  // Existing props (unchanged behavior)
   email = '',
   onChangeEmail,
   phoneCC = '',
@@ -14,16 +12,11 @@ export default function EmailPhoneRow({
   phoneNum = '',
   onChangePhoneNum,
 
-  // NEW (optional) inline content at the end of the phone row (e.g., WhatsApp toggle)
   rightInline = null,
-  // NEW (optional) content below the phone row (e.g., extra WhatsApp fields)
   rightBelow = null,
 }) {
-  const labelNowrap = { whiteSpace: 'nowrap' };
-
   return (
     <div className="cp-row-email">
-      {/* LEFT COLUMN: one row with Gender + Email */}
       <div className="cp-col-left">
         <div className="cp-left-row">
           <div className="cp-cell-gender">
@@ -56,12 +49,11 @@ export default function EmailPhoneRow({
         </div>
       </div>
 
-      {/* RIGHT COLUMN: one row with CC + Number + (inline area at end) */}
       <div className="cp-col-right">
         <div className="cp-right-phone-row">
           <div className="cp-cell-cc">
-            <label className="cp-label" style={labelNowrap} htmlFor="pd-phone-cc">
-              Mobile (country code) <span aria-hidden="true">*</span>
+            <label className="cp-label cp-nowrap" htmlFor="pd-phone-cc">
+              Mobile <span className="cp-cc-sub">(code) <span aria-hidden="true">*</span></span>
             </label>
             <div className="cp-field-cc">
               <span className="cp-prefix">+</span>
@@ -93,7 +85,6 @@ export default function EmailPhoneRow({
             />
           </div>
 
-          {/* Inline area at the end of the row (e.g., “WhatsApp same as phone”) */}
           {rightInline ? (
             <div className="cp-right-inline">
               <span className="cp-label-inline">WhatsApp</span>
@@ -102,7 +93,6 @@ export default function EmailPhoneRow({
           ) : null}
         </div>
 
-        {/* Optional area below (e.g., extra WA fields when same=false) */}
         {rightBelow ? <div className="cp-right-below">{rightBelow}</div> : null}
       </div>
     </div>
