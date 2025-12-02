@@ -23,7 +23,7 @@
 .module-header-row span {
   font-family: 'Inter', sans-serif;
   font-size: 1.1rem;
-  color: #1c1c1c;
+  color: var(--text-color, #1c1c1c);
   line-height: 1.6;
 }
 

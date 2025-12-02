@@ -13,6 +13,15 @@ function CartPage() {
   const [showSellerModal, setShowSellerModal] = useState(false);
   const [sellerInfo, setSellerInfo] = useState([]);
 
+  const formatSellerDisplayName = (seller) => {
+    if (!seller) return 'Seller';
+    const parts = [seller.first_name, seller.last_name].filter(Boolean);
+    return parts.join(' ') || 'Seller';
+  };
+
+  const formatSellerEmail = (seller) => seller?.email || 'Not available';
+  const formatSellerPhone = (seller) => seller?.phone || 'Not available';
+
   const availableItems = cartItems.filter(item => item.status !== 'paused' && item.status !== 'deleted');
   const total = availableItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
@@ -78,17 +87,17 @@ function CartPage() {
           .eq('id', item.id);
       }
 
-      const sellerMap = {};
-      availableItems.forEach(item => {
-        const id = item.ownerInfo?.id;
-        if (id && !sellerMap[id]) {
+        const sellerMap = {};
+        availableItems.forEach(item => {
+          const ownerInfo = item.ownerInfo;
+          const id = ownerInfo?.id;
+          if (!id || sellerMap[id]) return;
           sellerMap[id] = {
-            email: item.ownerInfo?.email,
-            name: `${item.ownerInfo?.first_name} ${item.ownerInfo?.last_name}`,
-            phone: item.ownerInfo?.phone,
+            email: ownerInfo?.email,
+            name: formatSellerDisplayName(ownerInfo),
+            phone: formatSellerPhone(ownerInfo),
           };
-        }
-      });
+        });
 
       setSellerInfo(Object.values(sellerMap));
       setShowSellerModal(true);
@@ -98,24 +107,25 @@ function CartPage() {
       const buyerEmail = currentUser.email;
       const buyerPhone = currentUser.user_metadata?.phone || 'Not available';
 
-      const productsBySeller = {};
-      availableItems.forEach(item => {
-        const sellerId = item.owner;
-        if (!productsBySeller[sellerId]) {
-          productsBySeller[sellerId] = {
-            seller: item.ownerInfo,
-            products: []
-          };
-        }
-        productsBySeller[sellerId].products.push(item);
-      });
+        const productsBySeller = {};
+        availableItems.forEach(item => {
+          const sellerId = item.owner ?? '__unknown__';
+          if (!productsBySeller[sellerId]) {
+            productsBySeller[sellerId] = {
+              seller: item.ownerInfo || null,
+              products: []
+            };
+          }
+          productsBySeller[sellerId].products.push(item);
+        });
 
       let htmlToBuyer = `<h2>Thank you for your purchase, ${buyerName}!</h2>`;
       htmlToBuyer += `<p>You have purchased the following items:</p>`;
 
       for (const { seller, products } of Object.values(productsBySeller)) {
-        htmlToBuyer += `<h3>Seller: ${seller.first_name} ${seller.last_name}</h3>`;
-        htmlToBuyer += `<p>Email: ${seller.email}<br>Phone: ${seller.phone || 'Not available'}</p>`;
+        const safeSeller = seller || null;
+        htmlToBuyer += `<h3>Seller: ${formatSellerDisplayName(safeSeller)}</h3>`;
+        htmlToBuyer += `<p>Email: ${formatSellerEmail(safeSeller)}<br>Phone: ${formatSellerPhone(safeSeller)}</p>`;
         htmlToBuyer += `<ul>`;
         products.forEach(p => {
           htmlToBuyer += `<li>${p.name} — ${p.currency} ${p.price} × ${p.quantity}</li>`;
@@ -134,8 +144,10 @@ function CartPage() {
       });
 
       for (const { seller, products } of Object.values(productsBySeller)) {
+        const safeSeller = seller || null;
+        if (!safeSeller?.email) continue;
         const htmlToSeller = `
-          <h2>Hello ${seller.first_name},</h2>
+          <h2>Hello ${formatSellerDisplayName(safeSeller)},</h2>
           <p>You have received a new order from:</p>
           <p>
             Name: ${buyerName}<br>
@@ -152,7 +164,7 @@ function CartPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            to: seller.email,
+            to: safeSeller.email,
             subject: 'New Order Received - Yacht Daywork',
             html: htmlToSeller
           })

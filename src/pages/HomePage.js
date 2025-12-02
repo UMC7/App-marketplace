@@ -68,7 +68,7 @@ function HomePage() {
 
     if (selectedCity) {
       filtered = filtered.filter((product) =>
-        product.city.toLowerCase().includes(selectedCity.toLowerCase())
+        product.city?.toLowerCase().includes(selectedCity.toLowerCase())
       );
     }
 

@@ -44,14 +44,42 @@ export function CarritoProvider({ children }) {
     if (error) {
       console.error('Error al obtener el carrito:', error.message);
     } else {
-      const formattedCart = data.map((item) => ({
+      const productsData = data || [];
+      const ownerIds = [
+        ...new Set(
+          productsData
+            .map((item) => item.products?.owner)
+            .filter(Boolean)
+        ),
+      ];
+
+      let ownersMap = {};
+      if (ownerIds.length > 0) {
+        const { data: ownerRows, error: ownerError } = await supabase
+          .from('users')
+          .select('id, first_name, last_name, email, phone')
+          .in('id', ownerIds);
+
+        if (ownerError) {
+          console.error('Error al obtener propietarios del carrito:', ownerError.message);
+        } else {
+          ownersMap = Object.fromEntries(
+            (ownerRows || []).map((owner) => [owner.id, owner])
+          );
+        }
+      }
+
+      const formattedCart = productsData.map((item) => ({
         id: item.product_id,
         quantity: item.quantity,
         price: item.products?.price,
+        currency: item.products?.currency,
         name: item.products?.name,
         stock: item.products?.quantity,
         mainphoto: item.products?.mainphoto,
         status: item.products?.status,
+        owner: item.products?.owner,
+        ownerInfo: ownersMap[item.products?.owner] || null,
       }));
       setCartItems(formattedCart);
     }

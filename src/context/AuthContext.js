@@ -75,6 +75,24 @@ export function AuthProvider({ children }) {
         const user = session.user;
         const metadata = user.user_metadata || {};
 
+        const buildExtendedUser = (profileData) => {
+          const mergedAppMetadata = {
+            ...user.app_metadata,
+            ...(profileData || {}),
+          };
+          const resolvedRole =
+            profileData?.role ||
+            metadata.role ||
+            user.app_metadata?.role ||
+            user.role ||
+            'user';
+          return {
+            ...user,
+            role: resolvedRole,
+            app_metadata: mergedAppMetadata,
+          };
+        };
+
         const { data: existingUser, error: selectError } = await supabase
           .from('users')
           .select('*')
@@ -158,15 +176,9 @@ export function AuthProvider({ children }) {
 
         if (profileError) {
           console.warn('No se pudo obtener el perfil extendido:', profileError.message);
-          setCurrentUser(user);
+          setCurrentUser(buildExtendedUser(null));
         } else {
-          setCurrentUser({
-            ...user,
-            app_metadata: {
-              ...user.app_metadata,
-              ...userProfile,
-            },
-          });
+          setCurrentUser(buildExtendedUser(userProfile));
         }
       } catch (err) {
         console.error('Error inesperado al obtener sesión:', err.message);
@@ -225,10 +237,11 @@ export function AuthProvider({ children }) {
             if (!prev) return prev;
             return {
               ...prev,
-              app_metadata: {
-                ...prev.app_metadata,
-                ...row,
-              },
+            role: row.role ?? prev.role,
+            app_metadata: {
+              ...prev.app_metadata,
+              ...row,
+            },
             };
           });
         }
