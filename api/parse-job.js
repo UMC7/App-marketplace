@@ -1042,6 +1042,28 @@ Do not include comments, markdown, or extra text.
     `.trim();
 
     const schemaJson = JSON.stringify(schema, null, 2);
+    function validateParsedJob(obj) {
+      if (!obj || typeof obj !== "object" || Array.isArray(obj)) return false;
+      const expectedKeys = Object.keys(schema);
+      for (const key of expectedKeys) {
+        if (!(key in obj)) return false;
+      }
+      if (obj.visas && !Array.isArray(obj.visas)) return false;
+      const booleanLike = ["is_doe", "is_asap"];
+      for (const key of booleanLike) {
+        if (key in obj) {
+          const value = obj[key];
+          if (
+            typeof value !== "boolean" &&
+            typeof value !== "string" &&
+            typeof value !== "number"
+          ) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
 
     const prompt = `
 Return ONLY a JSON object with EXACTLY these keys and value types (no extra keys):
@@ -1077,12 +1099,18 @@ ${finalText}
     let data;
     try {
       data = JSON.parse(raw);
+      if (!validateParsedJob(data)) {
+        throw new Error("Parsed job JSON failed validation");
+      }
     } catch {
       const start = raw.indexOf("{");
       const end = raw.lastIndexOf("}");
       if (start !== -1 && end !== -1 && end > start) {
         const slice = raw.slice(start, end + 1);
         data = JSON.parse(slice);
+        if (!validateParsedJob(data)) {
+          throw new Error("Parsed job JSON failed validation");
+        }
       } else {
         throw new Error("Model did not return valid JSON.");
       }

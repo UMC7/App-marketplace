@@ -21,7 +21,7 @@ try {
     });
   }
 } catch (error) {
-  console.error("🛑 FIREBASE INIT ERROR:", error);
+  console.error("🛑 FIREBASE INIT ERROR:", error?.message || "initialization failed");
   throw new Error("Error al inicializar Firebase Admin SDK: " + error.message);
 }
 
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
       .single();
 
     if (insErr) {
-      console.error("DB insert notifications error:", insErr);
+      console.error("DB insert notifications error:", insErr?.message || "insert failed");
       return res.status(500).json({ error: "No se pudo guardar la notificación." });
     }
 
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
       .eq("is_valid", true);
 
     if (tokErr) {
-      console.error("DB select device_tokens error:", tokErr);
+      console.error("DB select device_tokens error:", tokErr?.message || "select failed");
       return res.status(500).json({ error: "No se pudieron obtener los tokens." });
     }
 
@@ -124,7 +124,7 @@ export default async function handler(req, res) {
       failed,
     });
   } catch (err) {
-    console.error("notifyUser ERROR:", err);
+    console.error("notifyUser ERROR:", err?.message || "unexpected failure");
     return res.status(500).json({ error: "Error interno al notificar", details: err.message });
   }
 }

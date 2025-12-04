@@ -59,6 +59,7 @@ const UnifiedImageUploader = ({
   const [images, setImages] = useState([]);  // urls (pueden ser 'blob:' mientras sube)
   const [cover, setCover] = useState('');    // url portada
   const [busy, setBusy] = useState(false);
+  const blobUrlsRef = useRef(new Set());
 
   // Para evitar bucle: recordamos lo último que emitimos al padre
   const lastEmittedRef = useRef({ cover: '', gallery: [] });
@@ -92,6 +93,13 @@ const UnifiedImageUploader = ({
 
   useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
 
+  useEffect(() => () => {
+    blobUrlsRef.current.forEach((url) => {
+      try { URL.revokeObjectURL(url); } catch {}
+    });
+    blobUrlsRef.current.clear();
+  }, []);
+
   const uploadFiles = useCallback(async (fileList) => {
     if (!fileList || fileList.length === 0) return;
 
@@ -110,6 +118,7 @@ const UnifiedImageUploader = ({
 
       // 1) Previews locales inmediatas
       const localPreviews = incoming.map(f => URL.createObjectURL(f));
+      localPreviews.forEach((url) => blobUrlsRef.current.add(url));
       setImages(prev => unique([...prev, ...localPreviews]));
       if (!cover && localPreviews[0]) setCover(localPreviews[0]);
 
@@ -137,6 +146,7 @@ const UnifiedImageUploader = ({
         if (cover === previewUrl) setCover(publicUrl);
 
         try { URL.revokeObjectURL(previewUrl); } catch {}
+        blobUrlsRef.current.delete(previewUrl);
       }
 
       // 3) Limpieza final: quitar cualquier 'blob:' remanente
@@ -156,6 +166,10 @@ const UnifiedImageUploader = ({
 
   const makeCover = (url) => setCover(url);
   const removeImage = (url) => {
+    if (url?.startsWith?.('blob:') && blobUrlsRef.current.has(url)) {
+      try { URL.revokeObjectURL(url); } catch {}
+      blobUrlsRef.current.delete(url);
+    }
     const next = images.filter(u => u !== url);
     setImages(next);
     if (cover === url) setCover(next[0] || '');
