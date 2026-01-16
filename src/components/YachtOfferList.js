@@ -22,12 +22,14 @@ const getRoleImage = (title) => {
   ].some(role => lowerTitle.includes(role))) return 'enginedepartment';
 
   if ([
-    'chief steward(ess)', '2nd steward(ess)', '3rd stewardess', 'solo steward(ess)', 'junior steward(ess)', 'cook/steward(ess)', 'stew/deck', 'laundry/steward(ess)', 'stew/masseur', 'masseur', 'hairdresser', 'barber'
-  ].some(role => lowerTitle.includes(role))) return 'interiordepartment';
-
-  if ([
-    'head chef', 'sous chef', 'solo chef', 'cook/crew chef'
+    'chef', 'head chef', 'sous chef', 'solo chef', 'cook/crew chef', 'cook/steward(ess)'
   ].some(role => lowerTitle.includes(role))) return 'galleydepartment';
+  if ([
+    'chief steward(ess)', '2nd steward(ess)', '2nd stewardess', '3rd steward(ess)', '3rd stewardess',
+    '4th steward(ess)', '4th stewardess', 'steward(ess)', 'stewardess', 'steward', 'solo steward(ess)',
+    'junior steward(ess)', 'stew/deck', 'laundry/steward(ess)', 'stew/masseur',
+    'masseur', 'hairdresser', 'barber'
+  ].some(role => lowerTitle.includes(role))) return 'interiordepartment';
 
   if (lowerTitle.includes('shore') || lowerTitle.includes('shore-based') || lowerTitle.includes('shorebased')) return 'shorebased';
 
@@ -557,8 +559,30 @@ useEffect(() => {
     }
 
     const allDays = Object.keys(dayToWeekMap);
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - 6);
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
 
-    if (allDays.length > 0) {
+    const newExpandedWeeks = {};
+    const newExpandedDays = {};
+
+    for (const dayKey of allDays) {
+      const dayDate = new Date(dayKey);
+      if (Number.isNaN(dayDate.getTime())) continue;
+      if (dayDate >= start && dayDate <= end) {
+        const weekName = dayToWeekMap[dayKey];
+        newExpandedWeeks[weekName] = true;
+        newExpandedDays[dayKey] = true;
+      }
+    }
+
+    if (Object.keys(newExpandedDays).length > 0) {
+      setExpandedWeeks(newExpandedWeeks);
+      setExpandedDays(newExpandedDays);
+    } else if (allDays.length > 0) {
       const sortedDays = allDays.sort((a, b) => new Date(b) - new Date(a));
       const mostRecentDay = sortedDays[0];
       const correspondingWeek = dayToWeekMap[mostRecentDay];
