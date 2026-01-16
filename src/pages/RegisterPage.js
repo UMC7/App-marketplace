@@ -1,6 +1,6 @@
 // src/pages/RegisterPage.js
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
@@ -26,12 +26,36 @@ function RegisterPage() {
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [isCandidate, setIsCandidate] = useState(false);
+  const [isCandidate, setIsCandidate] = useState(true);
+  const [showMissing, setShowMissing] = useState(false);
   const [error, setError] = useState('');
   const [nicknameError, setNicknameError] = useState('');
   const [showEmailConfirmModal, setShowEmailConfirmModal] = useState(false);
+  const formRef = useRef(null);
+  const signUpButtonRef = useRef(null);
+  const [signUpOverlayRect, setSignUpOverlayRect] = useState(null);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const updateRect = () => {
+      const formEl = formRef.current;
+      const btnEl = signUpButtonRef.current;
+      if (!formEl || !btnEl) return;
+      const formBox = formEl.getBoundingClientRect();
+      const btnBox = btnEl.getBoundingClientRect();
+      setSignUpOverlayRect({
+        top: btnBox.top - formBox.top,
+        left: btnBox.left - formBox.left,
+        width: btnBox.width,
+        height: btnBox.height,
+      });
+    };
+
+    updateRect();
+    window.addEventListener('resize', updateRect);
+    return () => window.removeEventListener('resize', updateRect);
+  }, []);
 
   const isPasswordValid = (password) => {
     return (
@@ -232,23 +256,42 @@ try {
 
   const birthYears = Array.from({ length: 80 }, (_, i) => 2025 - i);
 
+  const highlightStyle = {
+    border: '1px solid #e55353',
+    boxShadow: '0 0 0 2px rgba(229, 83, 83, 0.2)',
+  };
+
+  const nicknameOk =
+    /^[A-Za-z0-9]{1,7}$/.test(form.nickname || '') &&
+    ((form.nickname || '').match(/\d/g) || []).length <= 3 &&
+    !nicknameError;
+
+  const missing = {
+    firstName: !form.firstName.trim(),
+    lastName: !form.lastName.trim(),
+    birthYear: !form.birthYear,
+    nickname: !nicknameOk,
+    phoneCode: !form.phoneCode.trim() || !isNumeric(form.phoneCode),
+    phone: !form.phone.trim(),
+    email: !form.email.trim(),
+    password: !form.password || !isPasswordValid(form.password),
+    confirmPassword: !form.confirmPassword || form.password !== form.confirmPassword,
+    acceptedTerms: !acceptedTerms,
+  };
+
+  const shouldHighlight = (key) => showMissing && missing[key];
+
   const isFormComplete = () => {
     const {
       firstName,
       lastName,
       birthYear,
-      nickname,
       phoneCode,
       phone,
       email,
       password,
       confirmPassword,
     } = form;
-
-    const nicknameOk =
-    /^[A-Za-z0-9]{1,7}$/.test(nickname || '') &&
-    ((nickname || '').match(/\d/g) || []).length <= 3 &&
-    !nicknameError;
 
     return (
       firstName.trim() &&
@@ -265,6 +308,7 @@ try {
       acceptedTerms
     );
   };
+  const isComplete = isFormComplete();
 
   const handleCloseEmailModal = () => {
     setShowEmailConfirmModal(false);
@@ -283,7 +327,7 @@ try {
 
   return (
     <div className="container">
-      <div className="login-form">
+      <div className="login-form" ref={formRef} style={{ position: 'relative' }}>
         <h2>User Registration</h2>
 
     <div
@@ -324,17 +368,34 @@ try {
         <label>
           Name <span style={{ color: 'red' }}>*</span>
         </label>
-        <input name="firstName" placeholder="Name" onChange={handleChange} required />
+        <input
+          name="firstName"
+          placeholder="Name"
+          onChange={handleChange}
+          required
+          style={shouldHighlight('firstName') ? highlightStyle : undefined}
+        />
 
         <label>
           Last Name <span style={{ color: 'red' }}>*</span>
         </label>
-        <input name="lastName" placeholder="Last Name" onChange={handleChange} required />
+        <input
+          name="lastName"
+          placeholder="Last Name"
+          onChange={handleChange}
+          required
+          style={shouldHighlight('lastName') ? highlightStyle : undefined}
+        />
 
         <label>
           Year of Birth <span style={{ color: 'red' }}>*</span>
         </label>
-        <select name="birthYear" onChange={handleChange} required>
+        <select
+          name="birthYear"
+          onChange={handleChange}
+          required
+          style={shouldHighlight('birthYear') ? highlightStyle : undefined}
+        >
           <option value="">Year of Birth</option>
           {birthYears.map((year) => (
             <option key={year} value={year}>
@@ -353,6 +414,7 @@ try {
           onChange={handleNicknameChange}
           maxLength={7}
           required
+          style={shouldHighlight('nickname') ? highlightStyle : undefined}
         />
         {nicknameError ? (
           <p style={{ color: 'red', marginTop: -8, marginBottom: 8, fontSize: '0.9rem' }}>{nicknameError}</p>
@@ -371,14 +433,20 @@ try {
             name="phoneCode"
             placeholder="Code"
             onChange={handleChange}
-            style={{ width: '70px' }}
+            style={{
+              width: '70px',
+              ...(shouldHighlight('phoneCode') ? highlightStyle : null),
+            }}
             required
           />
           <input
             name="phone"
             placeholder="Primary Phone"
             onChange={handleChange}
-            style={{ flex: 1 }}
+            style={{
+              flex: 1,
+              ...(shouldHighlight('phone') ? highlightStyle : null),
+            }}
             required
           />
         </div>
@@ -403,7 +471,13 @@ try {
         <label>
           Primary Email <span style={{ color: 'red' }}>*</span>
         </label>
-        <input name="email" placeholder="Primary Email" onChange={handleChange} required />
+        <input
+          name="email"
+          placeholder="Primary Email"
+          onChange={handleChange}
+          required
+          style={shouldHighlight('email') ? highlightStyle : undefined}
+        />
 
         <label>Alternative Email (optional)</label>
         <input name="altEmail" placeholder="Alternative Email" onChange={handleChange} />
@@ -419,7 +493,10 @@ try {
             onChange={handleChange}
             value={form.password}
             required
-            style={{ flex: 1 }}
+            style={{
+              flex: 1,
+              ...(shouldHighlight('password') ? highlightStyle : null),
+            }}
           />
           {form.password && isPasswordValid(form.password) && (
             <span style={{ color: 'green', fontSize: '1.2rem' }}>✔️</span>
@@ -441,7 +518,10 @@ try {
             onChange={handleChange}
             value={form.confirmPassword}
             required
-            style={{ flex: 1 }}
+            style={{
+              flex: 1,
+              ...(shouldHighlight('confirmPassword') ? highlightStyle : null),
+            }}
           />
           {form.confirmPassword &&
             form.confirmPassword === form.password && (
@@ -488,6 +568,7 @@ try {
             id="terms"
             checked={acceptedTerms}
             onChange={(e) => setAcceptedTerms(e.target.checked)}
+            style={shouldHighlight('acceptedTerms') ? { outline: '2px solid #e55353', outlineOffset: 2 } : undefined}
             required
           />
           <label
@@ -511,14 +592,31 @@ try {
 
         <button
           onClick={handleRegister}
-          disabled={!isFormComplete()}
+          disabled={!isComplete}
           style={{
-            opacity: isFormComplete() ? 1 : 0.5,
-            cursor: isFormComplete() ? 'pointer' : 'not-allowed',
+            opacity: isComplete ? 1 : 0.5,
+            cursor: isComplete ? 'pointer' : 'not-allowed',
           }}
+          ref={signUpButtonRef}
         >
           Sign Up
         </button>
+        {!isComplete && signUpOverlayRect && (
+          <div
+            onClick={() => setShowMissing(true)}
+            style={{
+              position: 'absolute',
+              top: signUpOverlayRect.top,
+              left: signUpOverlayRect.left,
+              width: signUpOverlayRect.width,
+              height: signUpOverlayRect.height,
+              cursor: 'not-allowed',
+              background: 'transparent',
+              zIndex: 2,
+            }}
+            aria-hidden="true"
+          />
+        )}
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
