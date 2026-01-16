@@ -187,7 +187,7 @@ function ProductDetailPage(props) {
       <Slider {...sliderSettings}>
         {allPhotos.map((photo, idx) => (
           <div key={idx}>
-            <img src={photo} alt={`Image ${idx + 1}`} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
+            <img src={photo} alt={`Product ${idx + 1}`} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
           </div>
         ))}
       </Slider>

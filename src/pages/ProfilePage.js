@@ -14,7 +14,6 @@ import EditEventModal from '../components/EditEventModal';
 import Avatar from '../components/Avatar';
 import CandidateProfileTab from '../components/cv/CandidateProfileTab';
 import './ProfilePage.css';
-import { formatPhoneNumber } from '../utils/formatPhone';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import {
   confirmPurchase,
