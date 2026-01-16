@@ -94,6 +94,7 @@ useEffect(() => {
   }
 }, [initialValues]);
   const [loading, setLoading] = useState(false);
+  const [showMissing, setShowMissing] = useState(false);
   const [jobText, setJobText] = useState('');
   const [showPaste, setShowPaste] = useState(false);
   const [showVisas, setShowVisas] = useState(false);
@@ -211,8 +212,10 @@ const autoFillFromText = async () => {
 
   const isDayworker = formData.title === 'Dayworker';
 
-  const isOnboard = formData.work_environment === 'Onboard';
+const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
+
+const highlightClass = (missing) => (showMissing && missing ? 'missing-required' : '');
 
 const formReady = (() => {
   if (!formData.work_environment) return false;
@@ -488,6 +491,7 @@ const sanitizedData = {
       name="work_environment"
       value={formData.work_environment}
       onChange={handleChange}
+      className={highlightClass(!formData.work_environment)}
       required
     >
       <option value="">Select...</option>
@@ -515,8 +519,14 @@ const sanitizedData = {
     </select>
 
     {/* 2. Título del puesto */}
-    <label>Rank: *</label>
-    <select name="title" value={formData.title} onChange={handleChange} required>
+    <label>Rank: <span style={{ color: 'red' }}>*</span></label>
+    <select
+      name="title"
+      value={formData.title}
+      onChange={handleChange}
+      className={highlightClass(!formData.title)}
+      required
+    >
       <option value="">Select...</option>
       {titles.map((t) => <option key={t} value={t}>{t}</option>)}
     </select>
@@ -545,11 +555,12 @@ const sanitizedData = {
 {/* 6. Salary */}
 {!formData.is_doe && (
   <>
-    <label>Salary Currency: *</label>
+    <label>Salary Currency: <span style={{ color: 'red' }}>*</span></label>
     <select
       name="salary_currency"
       value={formData.salary_currency}
       onChange={handleChange}
+      className={highlightClass(!formData.salary_currency && !formData.is_doe)}
       required
     >
       <option value="">Select currency...</option>
@@ -559,8 +570,14 @@ const sanitizedData = {
       <option value="GBP">GBP</option>
     </select>
 
-    <label>Salary: *</label>
-    <input type="number" name="salary" value={formData.salary || ''} onChange={handleChange} />
+    <label>Salary: <span style={{ color: 'red' }}>*</span></label>
+    <input
+      type="number"
+      name="salary"
+      value={formData.salary || ''}
+      onChange={handleChange}
+      className={highlightClass(!formData.salary && !formData.is_doe)}
+    />
   </>
 )}
 
@@ -580,8 +597,13 @@ const sanitizedData = {
 {/* 6-8. Campos si Team === 'Yes' */}
 {formData.team === 'Yes' && (
   <>
-    <label>Teammate Rank: *</label>
-    <select name="teammate_rank" value={formData.teammate_rank} onChange={handleChange}>
+    <label>Teammate Rank: <span style={{ color: 'red' }}>*</span></label>
+    <select
+      name="teammate_rank"
+      value={formData.teammate_rank}
+      onChange={handleChange}
+      className={highlightClass(formData.team === 'Yes' && !formData.teammate_rank)}
+    >
       <option value="">Select...</option>
       {titles.map((t) => <option key={t} value={t}>{t}</option>)}
     </select>
@@ -596,7 +618,7 @@ const sanitizedData = {
 
     {!formData.is_doe && (
       <>
-        <label>Teammate Salary: *</label>
+        <label>Teammate Salary: <span style={{ color: 'red' }}>*</span></label>
 <div className="form-inline-group">
   <span>{formData.teammate_salary_currency}</span>
   <input
@@ -604,6 +626,7 @@ const sanitizedData = {
     name="teammate_salary"
     value={formData.teammate_salary || ''}
     onChange={handleChange}
+    className={highlightClass(formData.team === 'Yes' && !formData.is_doe && !formData.teammate_salary)}
   />
 </div>
       </>
@@ -699,11 +722,12 @@ const sanitizedData = {
 </div>
 
     {/* 9. Tipo */}
-    <label>Terms: *</label>
+    <label>Terms: <span style={{ color: 'red' }}>*</span></label>
 <select
   name="type"
   value={isDayworker ? 'DayWork' : formData.type}
   onChange={handleChange}
+  className={highlightClass(!isDayworker && !formData.type)}
   required
   disabled={isDayworker}
 >
@@ -754,8 +778,13 @@ const sanitizedData = {
     </select>
 
     {/* 10. Tipo de Yate */}
-    <label>Yacht Type: *</label>
-    <select name="yacht_type" value={formData.yacht_type} onChange={handleChange}>
+    <label>Yacht Type: <span style={{ color: 'red' }}>*</span></label>
+    <select
+      name="yacht_type"
+      value={formData.yacht_type}
+      onChange={handleChange}
+      className={highlightClass(!formData.yacht_type)}
+    >
       <option value="">Select...</option>
       <option value="Motor Yacht">Motor Yacht</option>
       <option value="Sailing Yacht">Sailing Yacht</option>
@@ -764,8 +793,13 @@ const sanitizedData = {
     </select>
 
     {/* 11. Tamaño del Yate */}
-<label>Yacht Size: *</label>
-<select name="yacht_size" value={formData.yacht_size} onChange={handleChange}>
+<label>Yacht Size: <span style={{ color: 'red' }}>*</span></label>
+<select
+  name="yacht_size"
+  value={formData.yacht_size}
+  onChange={handleChange}
+  className={highlightClass(!formData.yacht_size)}
+>
   <option value="">Select...</option>
   {yachtSizeOptions.map((size) => (
     <option key={size} value={size}>{size}</option>
@@ -805,12 +839,13 @@ const sanitizedData = {
     </select>
 
     {/* 13. Fecha de Inicio */}
-<label>Start Date: *</label>
+<label>Start Date: <span style={{ color: 'red' }}>*</span></label>
 <input
   type="date"
   name="start_date"
   value={formData.start_date}
   onChange={handleChange}
+  className={highlightClass(!formData.start_date && !formData.is_asap)}
   required={!formData.is_asap}
   disabled={formData.is_asap}
 />
@@ -854,11 +889,12 @@ const sanitizedData = {
     <input name="city" value={formData.city} onChange={handleChange} />
 
     {/* 16. Country/Region */}
-<label>Country/Region: *</label>
+<label>Country/Region: <span style={{ color: 'red' }}>*</span></label>
 <select
   name="country"
   value={formData.country}
   onChange={handleChange}
+  className={highlightClass(!formData.country)}
   required
 >
   <option value="">Select...</option>
@@ -897,22 +933,24 @@ const sanitizedData = {
     {formData.work_environment === 'Shore-based' && (
   <>
     {/* Position */}
-    <label>Position: *</label>
+    <label>Position: <span style={{ color: 'red' }}>*</span></label>
     <input
       name="title"
       value={formData.title}
       onChange={handleChange}
+      className={highlightClass(!formData.title)}
       required
     />
 
     {/* Salary */}
     {!formData.is_doe && (
       <>
-        <label>Salary Currency: *</label>
+        <label>Salary Currency: <span style={{ color: 'red' }}>*</span></label>
         <select
           name="salary_currency"
           value={formData.salary_currency}
           onChange={handleChange}
+          className={highlightClass(!formData.salary_currency && !formData.is_doe)}
           required
         >
           <option value="">Select currency...</option>
@@ -922,12 +960,13 @@ const sanitizedData = {
           <option value="GBP">GBP</option>
         </select>
 
-        <label>Salary: *</label>
+        <label>Salary: <span style={{ color: 'red' }}>*</span></label>
         <input
           type="number"
           name="salary"
           value={formData.salary || ''}
           onChange={handleChange}
+          className={highlightClass(!formData.salary && !formData.is_doe)}
         />
       </>
     )}
@@ -1001,12 +1040,13 @@ const sanitizedData = {
     </div>
 
     {/* Start Date */}
-    <label>Start Date: *</label>
+    <label>Start Date: <span style={{ color: 'red' }}>*</span></label>
     <input
       type="date"
       name="start_date"
       value={formData.start_date}
       onChange={handleChange}
+      className={highlightClass(!formData.start_date && !formData.is_asap)}
       required={!formData.is_asap}
       disabled={formData.is_asap}
     />
@@ -1034,8 +1074,13 @@ const sanitizedData = {
     />
 
     {/* Work Location */}
-    <label>Work Location: *</label>
-    <select name="work_location" value={formData.work_location} onChange={handleChange}>
+    <label>Work Location: <span style={{ color: 'red' }}>*</span></label>
+    <select
+      name="work_location"
+      value={formData.work_location}
+      onChange={handleChange}
+      className={highlightClass(!formData.work_location)}
+    >
       <option value="">Select...</option>
       <option value="Remote">Remote</option>
       <option value="On - site">On - site</option>
@@ -1044,11 +1089,23 @@ const sanitizedData = {
     {/* City & Country if On - site */}
     {formData.work_location === 'On - site' && (
       <>
-        <label>City: *</label>
-        <input name="city" value={formData.city} onChange={handleChange} required />
+        <label>City: <span style={{ color: 'red' }}>*</span></label>
+        <input
+          name="city"
+          value={formData.city}
+          onChange={handleChange}
+          className={highlightClass(formData.work_location === 'On - site' && !formData.city)}
+          required
+        />
 
-        <label>Country: *</label>
-        <select name="country" value={formData.country} onChange={handleChange} required>
+        <label>Country: <span style={{ color: 'red' }}>*</span></label>
+        <select
+          name="country"
+          value={formData.country}
+          onChange={handleChange}
+          className={highlightClass(formData.work_location === 'On - site' && !formData.country)}
+          required
+        >
           <option value="">Select...</option>
           {countries.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
@@ -1084,14 +1141,33 @@ const sanitizedData = {
 )}
 
     {/* Submit */}
-    <p style={{ fontStyle: 'italic', marginTop: '1.5em' }}>* Required</p>
-    <button
-  type="submit"
-  className="landing-button"
-  disabled={loading || !formReady}
->
-  {loading ? (mode === 'edit' ? 'Updating...' : 'Posting...') : (mode === 'edit' ? 'Update Offer' : 'Post Offer')}
-</button>
+    <p style={{ fontStyle: 'italic', marginTop: '1.5em' }}><span style={{ color: 'red' }}>*</span> Required</p>
+    <div style={{ position: 'relative' }}>
+      <button
+        type="submit"
+        className="landing-button"
+        disabled={loading || !formReady}
+      >
+        {loading ? (mode === 'edit' ? 'Updating...' : 'Posting...') : (mode === 'edit' ? 'Update Offer' : 'Post Offer')}
+      </button>
+      {!loading && !formReady && (
+        <div
+          onClick={() => setShowMissing(true)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            cursor: 'not-allowed',
+            background: 'transparent',
+          }}
+          aria-hidden="true"
+        />
+      )}
+    </div>
+    {showMissing && !formReady && (
+      <p style={{ marginTop: 8, color: '#b00020' }}>
+        Some required fields are missing. Please complete them to post the offer.
+      </p>
+    )}
   </form>
   </div>
   </div>
