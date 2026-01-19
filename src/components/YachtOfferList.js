@@ -636,7 +636,10 @@ useEffect(() => {
     <option value="Motor Yacht">Motor Yacht</option>
     <option value="Sailing Yacht">Sailing Yacht</option>
     <option value="Chase Boat">Chase Boat</option>
-    <option value="Catamaran">Catamaran</option>
+    <option value="Sailing Catamaran">Sailing Catamaran</option>
+    <option value="Motor Catamaran">Motor Catamaran</option>
+    <option value="Support Yacht">Support Yacht</option>
+    <option value="Expedition Yacht">Expedition Yacht</option>
   </select>
 
   {/* Size */}
@@ -661,8 +664,19 @@ useEffect(() => {
   >
     <option value="">Use</option>
     <option value="Private">Private</option>
-    <option value="Charter">Charter</option>
+    <option value="Charter (only)">Charter (only)</option>
     <option value="Private/Charter">Private/Charter</option>
+  </select>
+
+  {/* Flag */}
+  <select
+    className="category-select"
+    value={filters.flag}
+    onChange={(e) => setFilters({ ...filters, flag: e.target.value })}
+  >
+    <option value="">Flag</option>
+    <option value="Foreign Flag">Foreign Flag</option>
+    <option value="United States">United States</option>
   </select>
 
   {/* Salary From */}

@@ -4,19 +4,20 @@ import YachtOfferList from '../components/YachtOfferList';
 import '../yachtworkspage.css';
 
 const countriesByRegion = {
-  'North America': ['Canada', 'United States', 'Mexico'],
+  'North America': ['Bermuda (UK)', 'Canada', 'United States', 'Mexico'],
   'Central America': ['Belize', 'Costa Rica', 'El Salvador', 'Guatemala', 'Honduras', 'Nicaragua', 'Panama'],
   'South America': ['Argentina', 'Brazil', 'Chile', 'Colombia', 'Ecuador', 'Paraguay', 'Peru', 'Uruguay', 'Venezuela'],
   'Caribbean': [
-    'Anguilla', 'Antigua and Barbuda', 'Aruba', 'Bahamas', 'Barbados', 'Bonaire', 'Cuba', 'Curacao',
-    'Dominica', 'Dominican Republic', 'Grenada', 'Jamaica', 'Saint Kitts and Nevis', 'Saint Lucia',
-    'Saint Maarten', 'Saint Vincent and the Grenadines', 'Trinidad and Tobago'
+    'Anguilla', 'Antigua and Barbuda', 'Aruba', 'Bahamas', 'Barbados', 'Bonaire', 'BVI (UK)',
+    'Cayman Islands (UK)', 'Cuba', 'Curacao', 'Dominica', 'Dominican Republic', 'Grenada', 'Jamaica',
+    'Saint Barthélemy', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Maarten', 'Saint Vincent and the Grenadines',
+    'Trinidad and Tobago'
   ],
   'North and Baltic Seas': [
-    'Belgium', 'Denmark', 'Estonia', 'Finland', 'Germany', 'Latvia', 'Lithuania',
-    'Netherlands', 'Norway', 'Poland', 'Sweden', 'United Kingdom'
+    'Belgium', 'Denmark', 'Estonia', 'Finland', 'Germany', 'Guernsey (UK)', 'Isle of Man (UK)', 'Jersey (UK)',
+    'Latvia', 'Lithuania', 'Netherlands', 'Norway', 'Poland', 'Sweden', 'United Kingdom'
   ],
-  'Western Europe': ['France', 'Ireland', 'Italy', 'Malta', 'Monaco', 'Portugal', 'Spain'],
+  'Western Europe': ['France', 'Gibraltar (UK)', 'Ireland', 'Italy', 'Malta', 'Monaco', 'Portugal', 'Spain'],
   'Eastern Europe': ['Albania', 'Bulgaria', 'Croatia', 'Cyprus', 'Greece', 'Montenegro', 'Romania', 'Turkey'],
   'Asia': [
     'Brunei', 'China', 'India', 'Indonesia', 'Israel', 'Japan', 'Malaysia',
@@ -79,6 +80,7 @@ function YachtWorksPage() {
     yachtType: '',
     yachtSize: '',
     use: '',
+    flag: '',
     selectedOnly: false,
   });
 
@@ -166,6 +168,20 @@ function YachtWorksPage() {
       if (filters.yachtSize && offer.yacht_size !== filters.yachtSize) return false;
 
       if (filters.use && offer.uses !== filters.use) return false;
+
+      if (filters.flag) {
+        const offerFlag = String(offer.flag || '');
+        const offerCountry = String(offer.country || '');
+        const isUSFlag = ['United States', 'US Flag', 'USA'].includes(offerFlag);
+        const isUSCountry = ['United States', 'USA', 'US', 'United States of America'].includes(offerCountry);
+        if (filters.flag === 'United States') {
+          if (!isUSFlag) return false;
+        } else if (filters.flag === 'Foreign Flag') {
+          if (isUSFlag || isUSCountry) return false;
+        } else if (offerFlag !== filters.flag) {
+          return false;
+        }
+      }
 
       return true;
     });

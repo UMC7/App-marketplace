@@ -41,7 +41,7 @@ const initialState = {
   teammate_rank: '',
   teammate_salary: '',
   teammate_experience: '',
-  flag: '',
+  flag: 'Foreign Flag',
   yacht_size: '',
   yacht_type: '',
   propulsion_type: '',
@@ -51,8 +51,8 @@ const initialState = {
   season_type: '',
   holidays: '',
   is_asap: false,
-  language_1: '',
-  language_1_fluency: '',
+  language_1: 'English',
+  language_1_fluency: 'Fluent',
   language_2: '',
   language_2_fluency: '',
   salary_currency: '',
@@ -65,14 +65,13 @@ const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 
 const countries = [
   // 🌐 Countries
   "Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "Aruba", "Australia", "Bahamas", "Bahrain", "Barbados",
-  "Belgium", "Belize", "Bonaire", "Brazil", "Brunei", "Bulgaria", "BVI, UK", "Cambodia", "Canada", "Cape Verde",
+  "Belgium", "Belize", "Bermuda (UK)", "Bonaire", "Brazil", "Brunei", "Bulgaria", "BVI (UK)", "Cambodia", "Canada", "Cape Verde", "Cayman Islands (UK)",
   "Chile", "China", "Colombia", "Costa Rica", "Croatia", "Cuba", "Curacao", "Cyprus", "Denmark", "Dominica",
-  "Dominican Republic", "Ecuador", "Egypt", "Estonia", "Fiji", "Finland", "France", "Germany",
-  "Greece", "Grenada", "Guatemala", "Honduras", "India", "Indonesia", "Ireland", "Israel",
-  "Italy", "Jamaica", "Japan", "Kiribati", "Kuwait", "Latvia", "Libya", "Lithuania", "Madagascar",
+  "Dominican Republic", "Ecuador", "Egypt", "Estonia", "Fiji", "Finland", "France", "Germany", "Gibraltar (UK)", "Greece", "Grenada", "Guatemala", "Guernsey (UK)", "Honduras", "India", "Indonesia", "Ireland", "Israel", "Isle of Man (UK)",
+  "Italy", "Jamaica", "Japan", "Jersey (UK)", "Kiribati", "Kuwait", "Latvia", "Libya", "Lithuania", "Madagascar",
   "Malaysia", "Maldives", "Malta", "Marshall Islands", "Mauritius", "Mexico", "Micronesia",
   "Monaco", "Montenegro", "Morocco", "Myanmar", "Netherlands", "New Zealand", "Nicaragua",
-  "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Saint Kitts and Nevis",
+  "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Saint Barthélemy", "Saint Kitts and Nevis",
   "Saint Lucia", "Saint Maarten", "Saint Vincent and the Grenadines", "Samoa", "Saudi Arabia", "Seychelles",
   "Singapore", "Solomon Islands", "South Africa", "South Korea", "Spain", "Sweden", "Taiwan",
   "Thailand", "Trinidad and Tobago", "Tunisia", "Turkey", "United Arab Emirates", "United Kingdom",
@@ -216,6 +215,11 @@ const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
 
 const highlightClass = (missing) => (showMissing && missing ? 'missing-required' : '');
+const autoResizeTextarea = (e) => {
+  const el = e.target;
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
+};
 
 const formReady = (() => {
   if (!formData.work_environment) return false;
@@ -747,6 +751,7 @@ const sanitizedData = {
       <option value="No">No</option>
       <option value="Own Cabin">Own Cabin</option>
       <option value="Share Cabin">Share Cabin</option>
+      <option value="Flexible">Flexible</option>
     </select>
 
     {/* Use */}
@@ -759,7 +764,7 @@ const sanitizedData = {
 >
       <option value="">Select...</option>
       <option value="Private">Private</option>
-      <option value="Charter">Charter</option>
+      <option value="Charter (only)">Charter (only)</option>
       <option value="Private/Charter">Private/Charter</option>
     </select>
 
@@ -789,7 +794,10 @@ const sanitizedData = {
       <option value="Motor Yacht">Motor Yacht</option>
       <option value="Sailing Yacht">Sailing Yacht</option>
       <option value="Chase Boat">Chase Boat</option>
-      <option value="Catamaran">Catamaran</option>
+      <option value="Sailing Catamaran">Sailing Catamaran</option>
+      <option value="Motor Catamaran">Motor Catamaran</option>
+      <option value="Support Yacht">Support Yacht</option>
+      <option value="Expedition Yacht">Expedition Yacht</option>
     </select>
 
     {/* 11. Tamaño del Yate */}
@@ -833,7 +841,7 @@ const sanitizedData = {
     <label>Flag:</label>
     <select name="flag" value={formData.flag} onChange={handleChange}>
       <option value="">Select...</option>
-      {['Cayman Islands', 'Marshall Islands', 'Malta', 'Panama', 'Bermuda', 'BVI', 'UK', 'USA', 'France', 'Italy', 'Spain', 'Holland', 'Greece', 'Germany', 'Portugal', 'Cyprus', 'Isle of Man', 'Gibraltar', 'Jersey', 'Guernsey', 'Belgium', 'Australia', 'Poland', 'Delaware', 'Cook Islands', 'Langkawi', 'Jamaica', 'San Marino', 'Hong Kong', 'Singapore'].map((f) => (
+      {['Foreign Flag', 'United States', 'Cayman Islands', 'Marshall Islands', 'Malta', 'Panama', 'Bermuda', 'BVI', 'UK', 'France', 'Italy', 'Spain', 'Holland', 'Greece', 'Germany', 'Portugal', 'Cyprus', 'Isle of Man', 'Gibraltar', 'Jersey', 'Guernsey', 'Belgium', 'Australia', 'Poland', 'Delaware', 'Cook Islands', 'Langkawi', 'Jamaica', 'San Marino', 'Hong Kong', 'Singapore'].map((f) => (
         <option key={f} value={f}>{f}</option>
       ))}
     </select>
@@ -925,7 +933,15 @@ const sanitizedData = {
 
     {/* 19. Descripción */}
     <label>Remarks:</label>
-    <textarea name="description" value={formData.description} onChange={handleChange} />
+    <textarea
+      name="description"
+      rows={5}
+      value={formData.description}
+      onChange={handleChange}
+      onInput={autoResizeTextarea}
+      onFocus={autoResizeTextarea}
+      style={{ overflow: 'hidden' }}
+    />
 
           </>
     )}
@@ -1134,8 +1150,12 @@ const sanitizedData = {
 <label>Remarks:</label>
 <textarea
   name="description"
+  rows={5}
   value={formData.description}
   onChange={handleChange}
+  onInput={autoResizeTextarea}
+  onFocus={autoResizeTextarea}
+  style={{ overflow: 'hidden' }}
 />
   </>
 )}
