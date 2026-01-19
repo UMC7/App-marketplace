@@ -100,6 +100,7 @@ const safePrefs = {
   countries: [],
   minSalary: '',
   selectedRegion: null,
+  flag: '',
   ...(preferences || {}),
 };
 
@@ -110,7 +111,8 @@ const hasCompletePrefs = Boolean(
     (typeof safePrefs.selectedRegion === 'string' && safePrefs.selectedRegion.length > 0) ||
     (safePrefs.countries?.length > 0)
   ) &&
-  (safePrefs.minSalary !== '' && safePrefs.minSalary !== null && safePrefs.minSalary !== undefined)
+  (safePrefs.minSalary !== '' && safePrefs.minSalary !== null && safePrefs.minSalary !== undefined) &&
+  (typeof safePrefs.flag === 'string' && safePrefs.flag.length > 0)
 );
 
   const [authors, setAuthors] = useState({});
@@ -224,6 +226,7 @@ const clearPreferences = () => {
     countries: [],
     minSalary: '',
     selectedRegion: null,
+    flag: '',
   });
 };
 
@@ -653,7 +656,8 @@ useEffect(() => {
     <option value="31 - 40m">31 - 40m</option>
     <option value="41 - 50m">41 - 50m</option>
     <option value="51 - 70m">51 - 70m</option>
-    <option value="> 70m">{'> 70m'}</option>
+    <option value="71 - 100m">71 - 100m</option>
+    <option value=">100m">>100m</option>
   </select>
 
   {/* Use */}
@@ -955,6 +959,17 @@ useEffect(() => {
               })}
             </div>
           </details>
+
+          {/* Flag */}
+          <select
+            className="category-select"
+            value={safePrefs.flag}
+            onChange={(e) => setPreferences(prev => ({ ...prev, flag: e.target.value }))}
+          >
+            <option value="">Preferred Flag</option>
+            <option value="Foreign Flag">Foreign Flag</option>
+            <option value="United States">United States</option>
+          </select>
 
           {/* Minimum Salary */}
           <div style={{ gridColumn: '1 / -1' }}>

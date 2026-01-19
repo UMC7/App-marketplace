@@ -90,6 +90,7 @@ function YachtWorksPage() {
     countries: [],
     minSalary: '',
     selectedRegion: null,
+    flag: '',
   });
 
   useEffect(() => {
@@ -171,13 +172,11 @@ function YachtWorksPage() {
 
       if (filters.flag) {
         const offerFlag = String(offer.flag || '');
-        const offerCountry = String(offer.country || '');
         const isUSFlag = ['United States', 'US Flag', 'USA'].includes(offerFlag);
-        const isUSCountry = ['United States', 'USA', 'US', 'United States of America'].includes(offerCountry);
         if (filters.flag === 'United States') {
           if (!isUSFlag) return false;
         } else if (filters.flag === 'Foreign Flag') {
-          if (isUSFlag || isUSCountry) return false;
+          if (isUSFlag) return false;
         } else if (offerFlag !== filters.flag) {
           return false;
         }
@@ -195,7 +194,8 @@ function YachtWorksPage() {
       (preferences.countries || []).length > 0
     );
     const salOK  = preferences.minSalary !== '' && preferences.minSalary !== null && preferences.minSalary !== undefined;
-    return posOK && termOK && geoOK && salOK;
+    const flagOK = typeof preferences.flag === 'string' && preferences.flag.length > 0;
+    return posOK && termOK && geoOK && salOK && flagOK;
   }, [preferences]);
 
   const scoredOffers = useMemo(() => {
@@ -225,11 +225,21 @@ function YachtWorksPage() {
       const salaryNum = Number(o.salary || 0);
       const pPay = pct(wantsMin ? (isDOE || salaryNum >= Number(preferences.minSalary)) : false); // 10%
 
-      const primaryScore = Math.round(100 * (0.4*pPos + 0.3*pCountry + 0.2*pTerm + 0.1*pPay));
+      const offerFlag = String(o.flag || '');
+      const isUSFlag = ['United States', 'US Flag', 'USA'].includes(offerFlag);
+      const pFlag = pct(
+        preferences.flag === 'United States'
+          ? isUSFlag
+          : preferences.flag === 'Foreign Flag'
+            ? !isUSFlag
+            : false
+      );
+
+      const primaryScore = Math.round(100 * (0.35*pPos + 0.25*pCountry + 0.2*pTerm + 0.1*pPay + 0.1*pFlag));
 
       const tPos = pct(posMatch(o.teammate_rank, preferences.positions));
       const teammateScore = o.team && o.teammate_rank
-        ? Math.round(100 * (0.6*tPos + 0.3*pCountry + 0.1*pTerm))
+        ? Math.round(100 * (0.55*tPos + 0.25*pCountry + 0.1*pTerm + 0.1*pFlag))
         : 0;
 
       return {
