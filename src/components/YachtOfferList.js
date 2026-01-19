@@ -421,8 +421,11 @@ const handleCopy = (text, field) => {
   
 const [showAvatarMobile, setShowAvatarMobile] = useState(false);
 useEffect(() => {
-  if (!isMobile) return; const id = setInterval(() => setShowAvatarMobile(v => !v), 3500); return () => clearInterval(id);
-}, [isMobile]);
+  if (!isMobile) return;
+  const duration = showAvatarMobile ? 3000 : 5000;
+  const id = setTimeout(() => setShowAvatarMobile(v => !v), duration);
+  return () => clearTimeout(id);
+}, [isMobile, showAvatarMobile]);
 
   const handleStartChat = (offerId, employerId) => {
     setActiveChat({ offerId, receiverId: employerId });
