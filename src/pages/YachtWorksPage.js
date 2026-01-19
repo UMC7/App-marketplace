@@ -80,7 +80,10 @@ function YachtWorksPage() {
   const [user, setUser] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 820);
   const [showPrefsIntro, setShowPrefsIntro] = useState(false);
+  const [prefsIntroSeen, setPrefsIntroSeen] = useState(false);
   const PREFS_INTRO_KEY = 'seajobs_prefs_intro_seen';
+  const PREFS_INTRO_DELAY_MS = 20000;
+  const prefsIntroTimer = React.useRef(null);
 
   // -------- Acordeón exclusivo --------
   // 'filters' | 'prefs' | null
@@ -138,9 +141,35 @@ function YachtWorksPage() {
   useEffect(() => {
     try {
       const seen = localStorage.getItem(PREFS_INTRO_KEY);
-      if (!seen) setShowPrefsIntro(true);
-    } catch {}
+      setPrefsIntroSeen(!!seen);
+      if (!seen) {
+        prefsIntroTimer.current = setTimeout(() => {
+          setShowPrefsIntro(true);
+        }, PREFS_INTRO_DELAY_MS);
+      }
+    } catch {
+      prefsIntroTimer.current = setTimeout(() => {
+        setShowPrefsIntro(true);
+      }, PREFS_INTRO_DELAY_MS);
+    }
+    return () => {
+      if (prefsIntroTimer.current) {
+        clearTimeout(prefsIntroTimer.current);
+        prefsIntroTimer.current = null;
+      }
+    };
   }, []);
+
+  useEffect(() => {
+    if (prefsIntroSeen || showPrefsIntro) return;
+    if (openPanel === 'prefs') {
+      if (prefsIntroTimer.current) {
+        clearTimeout(prefsIntroTimer.current);
+        prefsIntroTimer.current = null;
+      }
+      setShowPrefsIntro(true);
+    }
+  }, [openPanel, prefsIntroSeen, showPrefsIntro]);
 
   useEffect(() => {
     const fetchOffers = async () => {
@@ -324,6 +353,11 @@ function YachtWorksPage() {
       localStorage.setItem(PREFS_INTRO_KEY, '1');
     } catch {}
     setShowPrefsIntro(false);
+    setPrefsIntroSeen(true);
+    if (prefsIntroTimer.current) {
+      clearTimeout(prefsIntroTimer.current);
+      prefsIntroTimer.current = null;
+    }
   };
 
   return (

@@ -104,6 +104,8 @@ const safePrefs = {
   ...(preferences || {}),
 };
 
+const prefsDisabled = !currentUser;
+
 const hasCompletePrefs = Boolean(
   (safePrefs.positions?.length > 0) &&
   (safePrefs.terms?.length > 0) &&
@@ -112,16 +114,25 @@ const hasCompletePrefs = Boolean(
     (safePrefs.countries?.length > 0)
   ) &&
   (safePrefs.minSalary !== '' && safePrefs.minSalary !== null && safePrefs.minSalary !== undefined) &&
-  (typeof safePrefs.flag === 'string' && safePrefs.flag.length > 0)
+  (typeof safePrefs.flag === 'string' && safePrefs.flag.length > 0) &&
+  !prefsDisabled
 );
 
   const [authors, setAuthors] = useState({});
   const [authorAvatars, setAuthorAvatars] = useState({});
   const [expandedOfferId, setExpandedOfferId] = useState(null);
+  const [showChatIntro, setShowChatIntro] = useState(false);
+  const [showChatLoginInfo, setShowChatLoginInfo] = useState(false);
+  const [chatIntroSeen, setChatIntroSeen] = useState(false);
+  const [pendingChat, setPendingChat] = useState(null);
   const [openJobId, setOpenJobId] = useState(null);
   const [openHandled, setOpenHandled] = useState(false);
   const cardRefs = useRef({});
+  const chatIntroTimerRef = useRef(null);
+  const chatIntroScheduledRef = useRef(false);
   const SCROLL_OFFSET = 12;
+  const CHAT_INTRO_KEY = 'seajobs_private_chat_intro_seen';
+  const CHAT_INTRO_DELAY_MS = 5000;
 
 useEffect(() => {
   if (!expandedOfferId) return;
@@ -130,6 +141,32 @@ useEffect(() => {
   const top = el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
   window.scrollTo({ top, behavior: 'smooth' });
 }, [expandedOfferId]);
+
+useEffect(() => {
+  try {
+    const seen = localStorage.getItem(CHAT_INTRO_KEY);
+    setChatIntroSeen(!!seen);
+  } catch {}
+}, []);
+
+useEffect(() => {
+  if (!expandedOfferId) return;
+  if (chatIntroSeen || showChatIntro || chatIntroScheduledRef.current) return;
+  chatIntroScheduledRef.current = true;
+  chatIntroTimerRef.current = setTimeout(() => {
+    chatIntroScheduledRef.current = false;
+    setShowChatIntro(true);
+  }, CHAT_INTRO_DELAY_MS);
+}, [expandedOfferId, chatIntroSeen, showChatIntro]);
+
+useEffect(() => {
+  return () => {
+    if (chatIntroTimerRef.current) {
+      clearTimeout(chatIntroTimerRef.current);
+      chatIntroTimerRef.current = null;
+    }
+  };
+}, []);
 
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
@@ -429,6 +466,47 @@ useEffect(() => {
 
   const handleStartChat = (offerId, employerId) => {
     setActiveChat({ offerId, receiverId: employerId });
+  };
+
+  const handleRequestChat = (offerId, employerId) => {
+    if (!chatIntroSeen) {
+      if (chatIntroTimerRef.current) {
+        clearTimeout(chatIntroTimerRef.current);
+        chatIntroTimerRef.current = null;
+      }
+      chatIntroScheduledRef.current = false;
+      setPendingChat({ offerId, receiverId: employerId });
+      setShowChatIntro(true);
+      return;
+    }
+    handleStartChat(offerId, employerId);
+  };
+
+  const handleShowChatLoginInfo = () => {
+    setShowChatIntro(false);
+    setShowChatLoginInfo(true);
+  };
+
+  const handleCloseChatLoginInfo = () => {
+    setShowChatLoginInfo(false);
+  };
+
+  const handleCloseChatIntro = () => {
+    try {
+      localStorage.setItem(CHAT_INTRO_KEY, '1');
+    } catch {}
+    setChatIntroSeen(true);
+    setShowChatIntro(false);
+    if (chatIntroTimerRef.current) {
+      clearTimeout(chatIntroTimerRef.current);
+      chatIntroTimerRef.current = null;
+    }
+    chatIntroScheduledRef.current = false;
+    if (pendingChat) {
+      const next = pendingChat;
+      setPendingChat(null);
+      handleStartChat(next.offerId, next.receiverId);
+    }
   };
 
   const toggleWeek = (week) => {
@@ -841,7 +919,7 @@ useEffect(() => {
 )}
 
 {/* ======================= Job Preferences (controlado por openPanel) ======================= */}
-{currentUser && (
+{(
   <>
     {/* Toggle SOLO para mobile. En desktop el título vive en YachtWorksPage */}
     {isMobile && (
@@ -862,13 +940,18 @@ useEffect(() => {
               fontSize: 12,
               padding: '2px 8px',
               borderRadius: 999,
-              background: hasCompletePrefs ? '#e6ffed' : '#fff5f5',
-              color: hasCompletePrefs ? '#067d3f' : '#a40000',
-              border: `1px solid ${hasCompletePrefs ? '#a9e6bc' : '#f0b3b3'}`
+              background: prefsDisabled ? '#f5f5f5' : hasCompletePrefs ? '#e6ffed' : '#fff5f5',
+              color: prefsDisabled ? '#666' : hasCompletePrefs ? '#067d3f' : '#a40000',
+              border: `1px solid ${prefsDisabled ? '#ddd' : hasCompletePrefs ? '#a9e6bc' : '#f0b3b3'}`
             }}>
-              {hasCompletePrefs ? 'Ready' : 'Complete all fields'}
+              {prefsDisabled ? 'Sign in to use' : hasCompletePrefs ? 'Ready' : 'Complete all fields'}
             </span>
           </h3>
+          {prefsDisabled && (
+            <p style={{ gridColumn: '1 / -1', marginTop: -2, color: '#666' }}>
+              Sign in to enable and save your preferences.
+            </p>
+          )}
 
           {/* Positions (max 3) */}
           <details style={{ gridColumn: '1 / -1' }}>
@@ -889,7 +972,7 @@ useEffect(() => {
                       type="checkbox"
                       checked={selected}
                       onChange={() => togglePrefMulti('positions', rank)}
-                      disabled={atCap}
+                      disabled={prefsDisabled || atCap}
                     />
                     {rank}
                   </label>
@@ -913,7 +996,7 @@ useEffect(() => {
                       type="checkbox"
                       checked={selected}
                       onChange={() => togglePrefMulti('terms', term)}
-                      disabled={atCap}
+                      disabled={prefsDisabled || atCap}
                     />
                     {term}
                   </label>
@@ -945,6 +1028,7 @@ useEffect(() => {
                           checked={regionActive}
                           onClick={(e) => e.stopPropagation()}
                           onChange={() => handleToggleRegion(region)}
+                          disabled={prefsDisabled}
                         />
                         {region}
                       </span>
@@ -965,7 +1049,7 @@ useEffect(() => {
                               type="checkbox"
                               checked={selected}
                               onChange={() => toggleCountryPreference(country)}
-                              disabled={anyRegionActive || atCap}
+                              disabled={prefsDisabled || anyRegionActive || atCap}
                             />
                             {country}
                           </label>
@@ -983,6 +1067,7 @@ useEffect(() => {
             className="category-select"
             value={safePrefs.flag}
             onChange={(e) => setPreferences(prev => ({ ...prev, flag: e.target.value }))}
+            disabled={prefsDisabled}
           >
             <option value="">Preferred Flag</option>
             <option value="Foreign Flag">Foreign Flag</option>
@@ -1000,6 +1085,7 @@ useEffect(() => {
                 value={safePrefs.minSalary || ''}
                 onChange={(e) => setPrefMinSalary(e.target.value)}
                 style={{ maxWidth: 200 }}
+                disabled={prefsDisabled}
               />
             </label>
           </div>
@@ -1017,6 +1103,7 @@ useEffect(() => {
               fontWeight: 600,
             }}
             onClick={clearPreferences}
+            disabled={prefsDisabled}
           >
             Clear Preferences
           </button>
@@ -1445,13 +1532,20 @@ useEffect(() => {
 )}
 
     <div className="expanded-block block7">
-  {!isOwner && currentUser && (
+  {!isOwner && (
     <button
       className="start-chat-btn"
       onClick={(e) => {
         e.stopPropagation();
-        handleStartChat(offer.id, offer.user_id);
+        if (currentUser) {
+          handleRequestChat(offer.id, offer.user_id);
+        } else {
+          handleShowChatLoginInfo();
+        }
       }}
+      aria-disabled={!currentUser}
+      title={!currentUser ? 'Sign in to start a private chat.' : undefined}
+      style={!currentUser ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
     >
       Start private chat
     </button>
@@ -1776,6 +1870,35 @@ useEffect(() => {
   <p style={{ marginTop: '20px', fontStyle: 'italic' }}>
     No matching offers found.
   </p>
+)}
+
+      {showChatIntro && (
+  <Modal onClose={handleCloseChatIntro}>
+    <div style={{ maxWidth: 520 }}>
+      <h3 style={{ marginTop: 0 }}>🔒 Private Chat – How it works</h3>
+      <p>Use Private Chat to contact employers directly and professionally.</p>
+      <p>💬 Start a private conversation with the person who posted the job.</p>
+      <p>📎 Share your CV, references, and additional information securely.</p>
+      <p>🔐 Your communication stays private inside Yacht Daywork — no phone numbers or personal contact details required.</p>
+      <p>This is the ideal first step to connect with employers before moving to direct communication if requested.</p>
+      <p>👉 Chat safely. Connect professionally.</p>
+      <button className="landing-button" onClick={handleCloseChatIntro}>
+        Got it
+      </button>
+    </div>
+  </Modal>
+)}
+
+      {showChatLoginInfo && (
+  <Modal onClose={handleCloseChatLoginInfo}>
+    <div style={{ maxWidth: 520 }}>
+      <h3 style={{ marginTop: 0 }}>Sign in required</h3>
+      <p>Private Chat is available only for registered users. Please sign in to start a private conversation.</p>
+      <button className="landing-button" onClick={handleCloseChatLoginInfo}>
+        Close
+      </button>
+    </div>
+  </Modal>
 )}
 
       {activeChat && (
