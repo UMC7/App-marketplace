@@ -60,7 +60,7 @@ const initialState = {
   visas: [],
 };
 
-const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain', 'Chief Officer', '2nd Officer', '3rd Officer', 'Bosun', 'Deck/Engineer', 'Mate', 'Lead Deckhand', 'Deckhand', 'Deck/Steward(ess)', 'Deck/Carpenter', 'Deck/Divemaster', 'Dayworker', 'Chief Engineer', '2nd Engineer', '3rd Engineer', 'Solo Engineer', 'Electrician', 'Chef', 'Head Chef', 'Sous Chef', 'Solo Chef', 'Cook/Crew Chef', 'Crew Chef/Stew', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Steward(ess)', '4th Steward(ess)', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Cook/Steward(ess)', 'Stew/Deck', 'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny', 'Videographer', 'Yoga/Pilates Instructor', 'Personal Trainer', 'Dive Instrutor', 'Water Sport Instrutor', 'Nurse', 'Other']; // ajusta según lista oficial
+const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain', 'Chief Officer', '2nd Officer', '3rd Officer', 'Bosun', 'Deck/Engineer', 'Mate', 'Lead Deckhand', 'Deckhand', 'Deck/Steward(ess)', 'Deck/Carpenter', 'Deck/Divemaster', 'Dayworker', 'Chief Engineer', '2nd Engineer', '3rd Engineer', 'Solo Engineer', 'Electrician', 'Chef', 'Head Chef', 'Sous Chef', 'Solo Chef', 'Cook/Crew Chef', 'Crew Chef/Stew', 'Butler', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Steward(ess)', '4th Steward(ess)', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Cook/Steward(ess)', 'Stew/Deck', 'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny', 'Videographer', 'Yoga/Pilates Instructor', 'Personal Trainer', 'Dive Instrutor', 'Water Sport Instrutor', 'Nurse', 'Other']; // ajusta según lista oficial
 
 const countries = [
   // 🌐 Countries
@@ -934,13 +934,14 @@ const sanitizedData = {
     {/* 19. Descripción */}
     <label>Remarks:</label>
     <textarea
+      className="remarks-textarea"
       name="description"
       rows={5}
       value={formData.description}
       onChange={handleChange}
       onInput={autoResizeTextarea}
       onFocus={autoResizeTextarea}
-      style={{ overflow: 'hidden' }}
+      style={{ overflow: 'hidden', resize: 'none' }}
     />
 
           </>
@@ -1149,13 +1150,14 @@ const sanitizedData = {
     {/* Remarks */}
 <label>Remarks:</label>
 <textarea
+  className="remarks-textarea"
   name="description"
   rows={5}
   value={formData.description}
   onChange={handleChange}
   onInput={autoResizeTextarea}
   onFocus={autoResizeTextarea}
-  style={{ overflow: 'hidden' }}
+  style={{ overflow: 'hidden', resize: 'none' }}
 />
   </>
 )}
