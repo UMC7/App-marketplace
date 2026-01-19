@@ -30,9 +30,11 @@ function RegisterPage() {
   const [showMissing, setShowMissing] = useState(false);
   const [error, setError] = useState('');
   const [nicknameError, setNicknameError] = useState('');
+  const [nicknameStatus, setNicknameStatus] = useState('idle'); // idle | checking | available | taken | invalid
   const [showEmailConfirmModal, setShowEmailConfirmModal] = useState(false);
   const formRef = useRef(null);
   const signUpButtonRef = useRef(null);
+  const nicknameCheckId = useRef(0);
   const [signUpOverlayRect, setSignUpOverlayRect] = useState(null);
 
   const navigate = useNavigate();
@@ -76,22 +78,62 @@ const handleNicknameChange = (e) => {
   v = v.replace(/[^A-Za-z0-9]/g, '').slice(0, 7);
 
   const digits = (v.match(/\d/g) || []).length;
+  const letters = (v.match(/[A-Za-z]/g) || []).length;
 
   setForm((prev) => ({ ...prev, nickname: v }));
 
   if (!v) {
     setNicknameError('Nickname is required.');
-  } else if (!/^[A-Za-z0-9]{1,7}$/.test(v)) {
-    setNicknameError('Only letters and numbers, up to 7 chars.');
+    setNicknameStatus('invalid');
+  } else if (!/^[A-Za-z0-9]{3,7}$/.test(v)) {
+    setNicknameError('Only letters and numbers, 3-7 chars.');
+    setNicknameStatus('invalid');
+  } else if (letters < 3) {
+    setNicknameError('At least 3 letters required.');
+    setNicknameStatus('invalid');
   } else if (digits > 3) {
     setNicknameError('Maximum of 3 digits allowed.');
+    setNicknameStatus('invalid');
   } else {
     setNicknameError('');
+    setNicknameStatus('checking');
   }
 };
 
+  useEffect(() => {
+    const nick = form.nickname || '';
+    if (!nick || nicknameError) return;
+    const checkId = ++nicknameCheckId.current;
+    const t = setTimeout(async () => {
+      try {
+        const { data: existingNickname, error: nickErr } = await supabase
+          .from('users')
+          .select('id')
+          .ilike('nickname', nick)
+          .maybeSingle();
+
+        if (checkId !== nicknameCheckId.current) return;
+        if (nickErr) {
+          setNicknameStatus('invalid');
+          return;
+        }
+        setNicknameStatus(existingNickname ? 'taken' : 'available');
+      } catch {
+        if (checkId === nicknameCheckId.current) setNicknameStatus('invalid');
+      }
+    }, 400);
+
+    return () => clearTimeout(t);
+  }, [form.nickname, nicknameError]);
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (['phoneCode', 'phone', 'altPhoneCode', 'altPhone'].includes(name)) {
+      const digitsOnly = value.replace(/\D/g, '');
+      setForm({ ...form, [name]: digitsOnly });
+      return;
+    }
+    setForm({ ...form, [name]: value });
   };
 
   const handleAvatarChange = (e) => {
@@ -128,8 +170,12 @@ const clearAvatar = () => {
   const handleRegister = async () => {
     setError('');
 
-    if (!/^[A-Za-z0-9]{1,7}$/.test(form.nickname || '')) {
-      setError('Nickname must be up to 7 characters, letters and numbers only.');
+    if (!/^[A-Za-z0-9]{3,7}$/.test(form.nickname || '')) {
+      setError('Nickname must be 3-7 characters, letters and numbers only.');
+      return;
+    }
+    if (((form.nickname || '').match(/[A-Za-z]/g) || []).length < 3) {
+      setError('Nickname must include at least 3 letters.');
       return;
     }
     if (((form.nickname || '').match(/\d/g) || []).length > 3) {
@@ -262,9 +308,11 @@ try {
   };
 
   const nicknameOk =
-    /^[A-Za-z0-9]{1,7}$/.test(form.nickname || '') &&
+    /^[A-Za-z0-9]{3,7}$/.test(form.nickname || '') &&
+    ((form.nickname || '').match(/[A-Za-z]/g) || []).length >= 3 &&
     ((form.nickname || '').match(/\d/g) || []).length <= 3 &&
-    !nicknameError;
+    !nicknameError &&
+    nicknameStatus !== 'taken';
 
   const missing = {
     firstName: !form.firstName.trim(),
@@ -416,11 +464,31 @@ try {
           required
           style={shouldHighlight('nickname') ? highlightStyle : undefined}
         />
+        {!nicknameError && form.nickname && (
+          <p
+            style={{
+              color:
+                nicknameStatus === 'available'
+                  ? '#1f7a1f'
+                  : nicknameStatus === 'taken'
+                  ? '#c00000'
+                  : '#666',
+              marginTop: -8,
+              marginBottom: 8,
+              fontSize: '0.9rem',
+            }}
+          >
+            {nicknameStatus === 'checking' && 'Checking availability...'}
+            {nicknameStatus === 'available' && 'Nickname available.'}
+            {nicknameStatus === 'taken' && 'Nickname already taken.'}
+            {nicknameStatus === 'invalid' && 'Nickname not valid.'}
+          </p>
+        )}
         {nicknameError ? (
           <p style={{ color: 'red', marginTop: -8, marginBottom: 8, fontSize: '0.9rem' }}>{nicknameError}</p>
         ) : (
           <p style={{ color: '#666', marginTop: -8, marginBottom: 8, fontSize: '0.9rem' }}>
-            Up to 7 characters. Letters and numbers only. Max 3 digits.
+            3-7 characters. At least 3 letters. Max 3 digits.
           </p>
         )}
 
@@ -433,6 +501,9 @@ try {
             name="phoneCode"
             placeholder="Code"
             onChange={handleChange}
+            value={form.phoneCode}
+            inputMode="numeric"
+            pattern="[0-9]*"
             style={{
               width: '70px',
               ...(shouldHighlight('phoneCode') ? highlightStyle : null),
@@ -443,6 +514,9 @@ try {
             name="phone"
             placeholder="Primary Phone"
             onChange={handleChange}
+            value={form.phone}
+            inputMode="numeric"
+            pattern="[0-9]*"
             style={{
               flex: 1,
               ...(shouldHighlight('phone') ? highlightStyle : null),
@@ -458,12 +532,18 @@ try {
             name="altPhoneCode"
             placeholder="Code"
             onChange={handleChange}
+            value={form.altPhoneCode}
+            inputMode="numeric"
+            pattern="[0-9]*"
             style={{ width: '70px' }}
           />
           <input
             name="altPhone"
             placeholder="Alternative Phone"
             onChange={handleChange}
+            value={form.altPhone}
+            inputMode="numeric"
+            pattern="[0-9]*"
             style={{ flex: 1 }}
           />
         </div>
