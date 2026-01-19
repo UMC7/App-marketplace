@@ -300,7 +300,7 @@ try {
     }
   };
 
-  const birthYears = Array.from({ length: 80 }, (_, i) => 2025 - i);
+  const birthYears = Array.from({ length: 80 }, (_, i) => 2008 - i);
 
   const highlightStyle = {
     border: '1px solid #e55353',
