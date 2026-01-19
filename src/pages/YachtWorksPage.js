@@ -1,7 +1,38 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import supabase from '../supabase';
 import YachtOfferList from '../components/YachtOfferList';
+import Modal from '../components/Modal';
 import '../yachtworkspage.css';
+
+const getOfferDepartment = (offer) => {
+  const title = String(offer?.title || '').toLowerCase();
+  const workEnv = String(offer?.work_environment || '').toLowerCase();
+
+  if (workEnv === 'shore-based') return 'Shore-based';
+
+  if ([
+    'captain', 'captain/engineer', 'skipper', 'chase boat captain', 'relief captain', 'chief officer',
+    '2nd officer', '3rd officer', 'bosun', 'deck/engineer', 'mate', 'lead deckhand', 'deckhand',
+    'deck/steward(ess)', 'deck/carpenter', 'deck/divemaster'
+  ].some(role => title.includes(role))) return 'Deck';
+
+  if ([
+    'chief engineer', '2nd engineer', '3rd engineer', 'solo engineer', 'electrician'
+  ].some(role => title.includes(role))) return 'Engine';
+
+  if ([
+    'chef', 'head chef', 'sous chef', 'solo chef', 'cook/crew chef', 'cook/steward(ess)'
+  ].some(role => title.includes(role))) return 'Galley';
+
+  if ([
+    'chief steward(ess)', '2nd steward(ess)', '2nd stewardess', '3rd steward(ess)', '3rd stewardess',
+    '4th steward(ess)', '4th stewardess', 'steward(ess)', 'stewardess', 'steward', 'solo steward(ess)',
+    'junior steward(ess)', 'stew/deck', 'laundry/steward(ess)', 'stew/masseur',
+    'masseur', 'hairdresser', 'barber', 'butler'
+  ].some(role => title.includes(role))) return 'Interior';
+
+  return 'Others';
+};
 
 const countriesByRegion = {
   'North America': ['Bermuda (UK)', 'Canada', 'United States', 'Mexico'],
@@ -48,6 +79,8 @@ function YachtWorksPage() {
   const [offers, setOffers] = useState([]);
   const [user, setUser] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 820);
+  const [showPrefsIntro, setShowPrefsIntro] = useState(false);
+  const PREFS_INTRO_KEY = 'seajobs_prefs_intro_seen';
 
   // -------- Acordeón exclusivo --------
   // 'filters' | 'prefs' | null
@@ -71,6 +104,7 @@ function YachtWorksPage() {
   // country como array
   const [filters, setFilters] = useState({
     rank: '',
+    department: '',
     city: '',
     country: [],
     minSalary: '',
@@ -99,6 +133,13 @@ function YachtWorksPage() {
       setUser(user);
     };
     getUser();
+  }, []);
+
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem(PREFS_INTRO_KEY);
+      if (!seen) setShowPrefsIntro(true);
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -148,6 +189,11 @@ function YachtWorksPage() {
           offer.teammate_rank?.toLowerCase().includes(filters.rank.toLowerCase())
         )
       ) return false;
+
+      if (filters.department) {
+        const dept = getOfferDepartment(offer);
+        if (dept !== filters.department) return false;
+      }
 
       if (filters.city && !offer.city?.toLowerCase().includes(filters.city.toLowerCase())) return false;
 
@@ -273,8 +319,31 @@ function YachtWorksPage() {
     }));
   };
 
+  const handleClosePrefsIntro = () => {
+    try {
+      localStorage.setItem(PREFS_INTRO_KEY, '1');
+    } catch {}
+    setShowPrefsIntro(false);
+  };
+
   return (
     <div className="container">
+      {showPrefsIntro && (
+        <Modal onClose={handleClosePrefsIntro}>
+          <div style={{ maxWidth: 520 }}>
+            <h3 style={{ marginTop: 0 }}>🔔 Job Preferences – How it works</h3>
+            <p>Set your Job Preferences to help SeaJobs work for you.</p>
+            <p>📝 Choose the positions, terms, locations, and conditions you’re interested in.</p>
+            <p>✨ Jobs that match your preferences will be highlighted in the list.</p>
+            <p>🔔 You’ll also receive notifications when new opportunities fit what you’re looking for.</p>
+            <p>Unlike filters, Job Preferences stay active and help you discover the best opportunities automatically.</p>
+            <p>👉 Update your preferences anytime.</p>
+            <button className="landing-button" onClick={handleClosePrefsIntro}>
+              Got it
+            </button>
+          </div>
+        </Modal>
+      )}
       <div className="module-header-wrapper">
         <div className="module-header-row">
           <h1>SeaJobs</h1>

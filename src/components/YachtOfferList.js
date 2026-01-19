@@ -632,6 +632,21 @@ useEffect(() => {
     onChange={(e) => setFilters({ ...filters, rank: e.target.value })}
   />
 
+  {/* Department */}
+  <select
+    className="category-select"
+    value={filters.department}
+    onChange={(e) => setFilters({ ...filters, department: e.target.value })}
+  >
+    <option value="">Department</option>
+    <option value="Deck">Deck</option>
+    <option value="Engine">Engine</option>
+    <option value="Interior">Interior</option>
+    <option value="Galley">Galley</option>
+    <option value="Shore-based">Shore-based</option>
+    <option value="Others">Others</option>
+  </select>
+
   {/* Yacht Type */}
   <select
     className="category-select"
