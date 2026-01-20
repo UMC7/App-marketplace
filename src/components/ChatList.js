@@ -1,10 +1,12 @@
 // src/components/ChatList.js
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import Avatar from './Avatar';
 
-function ChatList({ currentUser, onOpenChat }) {
+function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
   const [chatSummaries, setChatSummaries] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -105,65 +107,109 @@ function ChatList({ currentUser, onOpenChat }) {
     fetchChats();
   }, [currentUser]);
 
+  const groups = [];
+  const groupIndex = new Map();
+  for (const chat of chatSummaries) {
+    const key = String(chat.offer_id);
+    let group = groupIndex.get(key);
+    if (!group) {
+      group = { key, title: chat.offerTitle, items: [] };
+      groupIndex.set(key, group);
+      groups.push(group);
+    }
+    group.items.push(chat);
+  }
+
   return (
     <div>
       <h3>Active Chats</h3>
       {chatSummaries.length === 0 ? (
         <p>No chats yet.</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {chatSummaries.map((chat) => (
-            <li key={`${chat.offer_id}_${chat.user_id}`} style={{ marginBottom: '10px' }}>
+        <div>
+          {groups.map((group) => (
+            <div key={group.key} style={{ marginBottom: '12px' }}>
               <button
                 style={{
-                  padding: '10px',
-                  borderRadius: '5px',
-                  background: '#eef5ff',
-                  border: '1px solid #ccc',
-                  width: '100%',
+                  display: 'inline-block',
+                  padding: '4px 10px',
+                  borderRadius: '999px',
+                  background: '#1b2430',
+                  color: '#e2e8f0',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  marginBottom: '8px',
+                  cursor: group.key === '__external__' ? 'default' : 'pointer',
                   textAlign: 'left',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
                 }}
-                onClick={() => onOpenChat(chat.offer_id, chat.user_id)}
+                title={group.title}
+                type="button"
+                onClick={() => {
+                  if (group.key === '__external__') return;
+                  if (onOpenOffer) onOpenOffer();
+                  navigate(`/yacht-works?open=${group.key}`);
+                }}
+                disabled={group.key === '__external__'}
               >
-                <Avatar
-                  nickname={chat.nickname || 'User'}
-                  srcUrl={chat.avatar_url || null}
-                  size={28}
-                  shape="circle"
-                />
-                <span
-                  style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: '6px',
-                    minWidth: 0,
-                    flex: 1,
-                  }}
-                >
-                  <strong style={{ flex: '0 0 auto' }}>{chat.nickname}</strong>
-                  <span style={{ flex: '0 0 auto' }}>–</span>
-                  <em
-                    style={{
-                      flex: '1 1 auto',
-                      minWidth: 0,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: 'block',
-                    }}
-                    title={chat.offerTitle}
-                  >
-                    {chat.offerTitle}
-                  </em>
-                </span>
+                {group.title}
               </button>
-            </li>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {group.items.map((chat) => (
+                  <li key={`${chat.offer_id}_${chat.user_id}`} style={{ marginBottom: '10px' }}>
+                    <button
+                      style={{
+                        padding: '10px',
+                        borderRadius: '5px',
+                        background: '#eef5ff',
+                        border: '1px solid #ccc',
+                        width: '100%',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                      }}
+                      onClick={() => onOpenChat(chat.offer_id, chat.user_id)}
+                    >
+                      <Avatar
+                        nickname={chat.nickname || 'User'}
+                        srcUrl={chat.avatar_url || null}
+                        size={28}
+                        shape="circle"
+                      />
+                      <span
+                        style={{
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          gap: '6px',
+                          minWidth: 0,
+                          flex: 1,
+                        }}
+                      >
+                        <strong style={{ flex: '0 0 auto' }}>{chat.nickname}</strong>
+                        <span style={{ flex: '0 0 auto' }}> - </span>
+                        <em
+                          style={{
+                            flex: '1 1 auto',
+                            minWidth: 0,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: 'block',
+                          }}
+                          title={chat.offerTitle}
+                        >
+                          {chat.offerTitle}
+                        </em>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

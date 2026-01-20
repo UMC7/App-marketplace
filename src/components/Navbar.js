@@ -415,7 +415,14 @@ const handleOpenChat = (offerId, receiverId) => {
       {showChatList && (
         <Modal onClose={() => { setActiveChat(null); setShowChatList(false); }}>
           {!activeChat ? (
-  <ChatList currentUser={currentUser} onOpenChat={handleOpenChat} />
+  <ChatList
+    currentUser={currentUser}
+    onOpenChat={handleOpenChat}
+    onOpenOffer={() => {
+      setActiveChat(null);
+      setShowChatList(false);
+    }}
+  />
 ) : activeChat.external ? (
   <ChatPage
     mode="external"
