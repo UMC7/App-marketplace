@@ -5,6 +5,29 @@ import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../supabase';
 import '../components/chat.css';
 
+const renderMessageText = (text) => {
+  if (!text) return null;
+  const normalized = text.replace(/\r\n/g, '\n');
+  const paragraphs = normalized.split(/\n{2,}/);
+  return paragraphs.map((para, idx) => {
+    const lines = para.split('\n');
+    return (
+      <p
+        key={idx}
+        className="chat-message-text"
+        style={idx ? { marginTop: 8 } : undefined}
+      >
+        {lines.map((line, i) => (
+          <React.Fragment key={i}>
+            {line}
+            {i < lines.length - 1 && <br />}
+          </React.Fragment>
+        ))}
+      </p>
+    );
+  });
+};
+
 export default function ExternalChatPage() {
   const { handle, threadId } = useParams();
   const [qs] = useSearchParams();
@@ -103,7 +126,7 @@ export default function ExternalChatPage() {
                   </div>
                   <div className={`chat-message ${own ? 'own' : 'other'}`}>
                     <div className="chat-message-sender">{own ? 'You' : 'Candidate'}</div>
-                    {m.content && <p className="chat-message-text">{m.content}</p>}
+                    {m.content && renderMessageText(m.content)}
                     <div className="chat-message-time">
                       {new Date(m.created_at).toLocaleString()}
                     </div>

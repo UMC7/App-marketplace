@@ -5,6 +5,29 @@ import { useUnreadMessages } from '../context/UnreadMessagesContext';
 import './chat.css';
 import Avatar from './Avatar';
 
+const renderMessageText = (text) => {
+  if (!text) return null;
+  const normalized = text.replace(/\r\n/g, '\n');
+  const paragraphs = normalized.split(/\n{2,}/);
+  return paragraphs.map((para, idx) => {
+    const lines = para.split('\n');
+    return (
+      <p
+        key={idx}
+        className="chat-message-text"
+        style={idx ? { marginTop: 8 } : undefined}
+      >
+        {lines.map((line, i) => (
+          <React.Fragment key={i}>
+            {line}
+            {i < lines.length - 1 && <br />}
+          </React.Fragment>
+        ))}
+      </p>
+    );
+  });
+};
+
 function ChatPage({ offerId, receiverId, onBack, mode, externalThreadId }) {
   const [messages, setMessages] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -237,7 +260,7 @@ function ChatPage({ offerId, receiverId, onBack, mode, externalThreadId }) {
               <div className="chat-message-sender">
                 {isOwnMessage ? 'You' : (isExternal ? 'Anonymous' : otherNickname)}
               </div>
-              {text && <p className="chat-message-text">{text}</p>}
+              {text && renderMessageText(text)}
               {!isExternal && msg.file_url && (
                 <a
                   href={msg.file_url}
