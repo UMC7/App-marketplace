@@ -8,11 +8,17 @@ import supabase from '../supabase';
 import { toast } from 'react-toastify';
 import { submitUserReview } from '../lib/reviewUtils';
 import EditProductModal from '../components/EditProductModal';
-import EditServiceModal from '../components/EditServiceModal';
 import EditJobModal from '../components/EditJobModal';
-import EditEventModal from '../components/EditEventModal';
-import Avatar from '../components/Avatar';
 import CandidateProfileTab from '../components/cv/CandidateProfileTab';
+import ProfileProductsTab from '../components/profile/ProfileProductsTab';
+import ProfileServicesTab from '../components/profile/ProfileServicesTab';
+import ProfileJobsTab from '../components/profile/ProfileJobsTab';
+import ProfileEventsTab from '../components/profile/ProfileEventsTab';
+import ProfileDeletedTab from '../components/profile/ProfileDeletedTab';
+import ProfileRatingsTab from '../components/profile/ProfileRatingsTab';
+import ProfileSalesTab from '../components/profile/ProfileSalesTab';
+import ProfilePurchasesTab from '../components/profile/ProfilePurchasesTab';
+import ProfileUserTab from '../components/profile/ProfileUserTab';
 import './ProfilePage.css';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import {
@@ -810,548 +816,143 @@ if (wantsPasswordChange) {
     switch (activeTab) {
       case 'productos':
         return (
-          <>
-            <h2>My Posted Products</h2>
-            {products.length === 0 ? (
-              <p>You have not posted any products.</p>
-            ) : (
-              <div className="profile-products-container">
-                {products.map((product) => (
-                  <div key={product.id} className="profile-card">
-                    <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} />
-                    <h3>{product.name}</h3>
-                    <p><strong>Price:</strong> {product.currency || ''} {product.price}</p>
-                    <p><strong>Status:</strong> {product.status}</p>
-                    <div className="profile-action-buttons">
-                      <button className="edit-btn" onClick={() => setEditingProductId(product.id)}>Edit</button>
-                      <button className="pause-btn" onClick={() => handlePauseToggle(product.id, product.status)}>
-                      {product.status === 'paused' ? 'Reactivate' : 'Pause'}
-                      </button>
-                      <button className="delete-btn" onClick={() => handleDelete(product.id)}>Delete</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
+          <ProfileProductsTab
+            products={products}
+            onEdit={setEditingProductId}
+            onTogglePause={handlePauseToggle}
+            onDelete={handleDelete}
+          />
         );
-  case 'servicios':
-  return (
-    <>
-      <h2>My Posted Services</h2>
-      {services.length === 0 ? (
-        <p>You have not posted any services.</p>
-      ) : (
-        <div className="profile-products-container">
-          {services.map((service) => (
-            <div key={service.id} className="profile-card">
-              <img src={service.mainphoto || 'https://via.placeholder.com/250'} alt={service.company_name} />
-              <h3>{service.company_name}</h3>
-              <p><strong>City:</strong> {service.city}</p>
-              <p><strong>Country:</strong> {service.country}</p>
-              <p><strong>Category:</strong> {service.category_id}</p>
-              <p><strong>Status:</strong> {service.status}</p>
-              <div className="profile-action-buttons">
-                <button className="edit-btn" onClick={() => setEditingServiceId(service.id)}>Edit</button>
-                <button className="pause-btn" onClick={() => handlePauseToggleService(service.id, service.status)}>
-                  {service.status === 'paused' ? 'Reactivate' : 'Pause'}
-                </button>
-                <button className="delete-btn" onClick={() => handleDeleteService(service.id)}>Delete</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      {editingServiceId && (
-        <EditServiceModal
-          serviceId={editingServiceId}
-          onClose={() => setEditingServiceId(null)}
-          onUpdate={fetchServices}
-        />
-      )}
-    </>
-  );
+      case 'servicios':
+        return (
+          <ProfileServicesTab
+            services={services}
+            onEdit={setEditingServiceId}
+            onTogglePause={handlePauseToggleService}
+            onDelete={handleDeleteService}
+            editingServiceId={editingServiceId}
+            onCloseEdit={() => setEditingServiceId(null)}
+            onUpdate={fetchServices}
+          />
+        );
 
-  case 'empleos':
-  return (
-    <>
-      <h2>My Posted Jobs</h2>
-      {jobOffers.length === 0 ? (
-        <p>You have not posted any job offers yet.</p>
-      ) : (
-        <div className="profile-products-container">
-          {jobOffers.map((offer) => (
-            <div key={offer.id} className="profile-card">
-              <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-                {offer.title}
-              </div>
-              {offer.teammate_rank && (
-                <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-                  {offer.teammate_rank}
-                </div>
-              )}
-              <p style={{ margin: '4px 0' }}>
-                {offer.city}, {offer.country}
-              </p>
-              <p style={{ margin: '4px 0', fontWeight: '500', fontSize: '0.95rem', color: '#333' }}>
-                <strong>Posted:</strong> {new Date(offer.created_at).toLocaleDateString('en-GB')}
-              </p>
-              <div className="profile-action-buttons">
-                <button className="pause-btn" onClick={() => handlePauseToggleJob(offer.id, offer.status)}>
-                  {offer.status === 'paused' ? 'Reactivate' : 'Pause'}
-                </button>
-                <button className="edit-btn" onClick={() => setEditingJobId(offer.id)}>Edit</button>
-                <button className="delete-btn" onClick={() => handleDeleteJob(offer.id)}>Delete</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </>
-  );
+      case 'empleos':
+        return (
+          <ProfileJobsTab
+            jobOffers={jobOffers}
+            onTogglePause={handlePauseToggleJob}
+            onEdit={setEditingJobId}
+            onDelete={handleDeleteJob}
+          />
+        );
 
-case 'eventos':
-  return (
-    <>
-      <h2>My Posted Events</h2>
-      {events.length === 0 ? (
-        <p>You have not posted any events.</p>
-      ) : (
-        <div className="profile-products-container">
-          {events.map((event) => (
-            <div key={event.id} className="profile-card">
-              <img src={event.mainphoto || 'https://via.placeholder.com/250'} alt={event.event_name} />
-              <h3>{event.event_name}</h3>
-              <p><strong>City:</strong> {event.city}</p>
-              <p><strong>Country:</strong> {event.country}</p>
-              <p><strong>Category:</strong> {event.category_id}</p>
-              <p><strong>Status:</strong> {event.status}</p>
-              <div className="profile-action-buttons">
-                <button className="edit-btn" onClick={() => setEditingEventId(event.id)}>Edit</button>
-                <button className="cancel-btn" onClick={() => updateEventStatus(event.id, 'cancelled')}>Cancel</button>
-                <button className="postpone-btn" onClick={() => updateEventStatus(event.id, 'postponed')}>Postpone</button>
-                <button className="delete-btn" onClick={() => deleteEvent(event.id)}>Delete</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      {editingEventId && (
-        <EditEventModal
-          eventId={editingEventId}
-          onClose={() => setEditingEventId(null)}
-          onUpdate={fetchEvents}
-        />
-      )}
-    </>
-  );
+      case 'eventos':
+        return (
+          <ProfileEventsTab
+            events={events}
+            onEdit={setEditingEventId}
+            onCancel={(eventId) => updateEventStatus(eventId, 'cancelled')}
+            onPostpone={(eventId) => updateEventStatus(eventId, 'postponed')}
+            onDelete={deleteEvent}
+            editingEventId={editingEventId}
+            onCloseEdit={() => setEditingEventId(null)}
+            onUpdate={fetchEvents}
+          />
+        );
 
-  case 'eliminados':
-  return (
-    <>
-      <h2>Deleted Posts</h2>
-      {deletedProducts.length === 0 && deletedJobs.length === 0 ? (
-        <p>You have no deleted posts.</p>
-      ) : (
-        <>
-          {deletedProducts.length > 0 && (
-            <>
-              <h3>Deleted Products</h3>
-              <div className="profile-products-container">
-                {deletedProducts.map((product) => (
-                  <div key={product.id} className="profile-card" style={{ border: '1px dashed red' }}>
-                    <img src={product.mainphoto || 'https://via.placeholder.com/250'} alt={product.name} />
-                    <h4>{product.name}</h4>
-                    <p><strong>Price:</strong> {product.currency || ''} {product.price}</p>
-                    <p><strong>Deleted on:</strong> {new Date(product.deleted_at).toLocaleDateString()}</p>
-                    <div className="profile-action-buttons">
-                      <button className="restore-btn" onClick={() => handleRestore(product.id)}>Restore</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-          {deletedJobs.length > 0 && (
-            <>
-              <h3>Deleted Jobs</h3>
-              <div className="profile-products-container">
-                {deletedJobs.map((job) => (
-                  <div key={job.id} style={{ border: '1px dashed red', padding: '10px', borderRadius: '8px', width: '280px' }}>
-                    <h4>{job.title}</h4>
-                    <p><strong>Location:</strong> {job.city}, {job.country}</p>
-                    <p><strong>Type:</strong> {job.type}</p>
-                    <p><strong>Start Date:</strong> {new Date(job.start_date).toLocaleDateString()}</p>
-                    {job.end_date && <p><strong>End Date:</strong> {new Date(job.end_date).toLocaleDateString()}</p>}
-                    {job.is_doe ? (
-                      <p><strong>Salary:</strong> DOE</p>
-                    ) : (
-                      job.salary && <p><strong>Salary:</strong> ${job.salary}</p>
-                    )}
-                    {job.deleted_at && (
-                      <p><strong>Deleted on:</strong> {new Date(job.deleted_at).toLocaleDateString()}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </>
-      )}
-    </>
-  );
+      case 'eliminados':
+        return (
+          <ProfileDeletedTab
+            deletedProducts={deletedProducts}
+            deletedJobs={deletedJobs}
+            onRestore={handleRestore}
+          />
+        );
 
-  case 'valoracion':
-  return (
-    <>
-      <h2>Received Ratings</h2>
-
-      {averageRating ? (
-        <p><strong>⭐ Overall Average:</strong> {averageRating} / 5</p>
-      ) : (
-        <p>You have not received any ratings yet.</p>
-      )}
-
-      {receivedReviews.length > 0 && (
-        <div style={{ marginTop: '20px' }}>
-          <h3>Received Comments:</h3>
-          <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
-            {receivedReviews.map((review) => {
-  const productPhoto = review.purchases?.purchase_items?.[0]?.products?.mainphoto;
-  const productName = review.purchases?.purchase_items?.[0]?.products?.name;
-
-  return (
-    <li
-      key={review.id}
-      style={{
-        marginBottom: '15px',
-        borderBottom: '1px solid #ccc',
-        paddingBottom: '10px',
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: '15px',
-      }}
-    >
-      {productPhoto && (
-        <img
-          src={productPhoto}
-          alt={productName || 'Producto'}
-          style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }}
-        />
-      )}
-      <div>
-        <p><strong>⭐ Rating:</strong> {review.rating} / 5</p>
-        {review.comment && (
-          <p><strong>📝 Comment:</strong> {review.comment}</p>
-        )}
-        <p style={{ fontSize: '0.9em', color: '#666' }}>
-          Date: {new Date(review.created_at).toLocaleDateString()}
-        </p>
-      </div>
-    </li>
-  );
-})}
-          </ul>
-        </div>
-      )}
-    </>
-  );
+      case 'valoracion':
+        return (
+          <ProfileRatingsTab
+            averageRating={averageRating}
+            receivedReviews={receivedReviews}
+          />
+        );
 
       case 'ventas':
-  return (
-    <>
-      <h2>My Sales</h2>
-      {sales.length === 0 ? (
-        <p>You have not made any sales yet.</p>
-      ) : (
-        <div className="profile-products-container">
-          {sales.map((item) => (
-            <div key={item.id} className="profile-card">
-              <img src={item.products?.mainphoto || 'https://via.placeholder.com/250'} alt={item.products?.name || 'Product'} />
-              <p><strong>Product:</strong> {item.products?.name || 'Name not available'}</p>
-              <p><strong>Quantity:</strong> {item.quantity}</p>
-              <p><strong>Total:</strong> ${item.total_price}</p>
-              <p><strong>Buyer:</strong> {item.purchases?.users?.first_name} {item.purchases?.users?.last_name}</p>
-              <p><strong>Phone:</strong> {item.purchases?.users?.phone || 'Not available'}</p>
-              <p><strong>Email:</strong> {item.purchases?.users?.email || 'Not available'}</p>
-              <p><strong>Sale Date:</strong> {new Date(item.purchases?.created_at).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </>
-  );
+        return <ProfileSalesTab sales={sales} />;
 
-case 'compras':
-  return (
-    <>
-      <h2>My Purchases</h2>
-      {purchases.length === 0 ? (
-        <p>You have not made any purchases yet.</p>
-      ) : (
-        <div className="profile-products-container">
-          {purchases.map((item) => {
-            const status = updatedPurchaseStatuses[item.purchases?.id] || item.purchases?.status;
-            const reviewed = sentReviews.some(r =>
-              r.purchase_id === item.purchases?.id &&
-              r.product_id === item.product_id
-            );
-            return (
-              <div key={item.id} className="profile-card">
-                <img src={item.products?.mainphoto || 'https://via.placeholder.com/250'}
-                     alt={item.products?.name || 'Product'} />
-                <p><strong>Product:</strong> {item.products?.name || 'Name not available'}</p>
-                <p><strong>Quantity:</strong> {item.quantity}</p>
-                <p><strong>Total:</strong> ${item.total_price}</p>
-                <p><strong>Seller:</strong> {item.products?.users?.first_name} {item.products?.users?.last_name}</p>
-                <p><strong>Phone:</strong> {item.products?.users?.phone || 'Not available'}</p>
-                <p><strong>Email:</strong> {item.products?.users?.email || 'Not available'}</p>
-                <p><strong>City:</strong> {item.products?.city || 'Not available'}</p>
-                <p><strong>Purchase Date:</strong> {new Date(item.purchases?.created_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}</p>
-
-                {['completed', 'cancelled', 'problem_reported'].includes(status) && (
-                  <div style={{ marginTop: '10px', color:
-                    status === 'completed' ? '#2e7d32' :
-                    status === 'cancelled' ? '#aa7b00' : '#b00020' }}>
-                    <strong>✅ Action recorded:</strong> {status === 'completed' ? 'Purchase confirmed'
-                      : status === 'cancelled' ? 'Purchase cancelled'
-                      : 'Problem reported'}
-                  </div>
-                )}
-
-                {['completed', 'cancelled', 'problem_reported'].includes(item.purchases?.status) && !reviewed && (
-                  <div style={{ marginTop: '10px' }}>
-                    <form onSubmit={(e) => handleReviewSubmit(e, item)}>
-                      <p><strong>Leave your rating for the seller:</strong></p>
-                      <label>
-                        Score (1–5):
-                        <input type="number" name="rating" min="1" max="5" required />
-                      </label>
-                      <br />
-                      <label>
-                        Comment:
-                        <textarea name="comment" rows="3" style={{ width: '100%' }} />
-                      </label>
-                      <br />
-                      <button className="profile-action-buttons action-btn" type="submit">
-                        Submit Rating
-                      </button>
-                    </form>
-                  </div>
-                )}
-
-                {!['completed', 'cancelled', 'problem_reported'].includes(status) && (
-                  <div className="profile-action-buttons" style={{ marginTop: '10px' }}>
-                    <p><strong>How did this transaction end?</strong></p>
-                    <button className="success-btn" onClick={async () => {
-                      await confirmPurchase(item.purchases.id);
-                      toast.error('Purchase confirmed.');
-                      setPurchases(prev => prev.map(p =>
-                        p.purchases.id === item.purchases.id
-                          ? { ...p, purchases: { ...p.purchases, status: 'completed', buyer_confirmed: true } }
-                          : p
-                      ));
-                      setUpdatedPurchaseStatuses(prev => ({ ...prev, [item.purchases.id]: 'completed' }));
-                    }}>Received successfully</button>
-
-                    <button className="warning-btn" onClick={async () => {
-                      await reportProblem(item.purchases.id);
-                      toast.error('Problem reported.');
-                      setPurchases(prev => prev.map(p =>
-                        p.purchases.id === item.purchases.id
-                          ? { ...p, purchases: { ...p.purchases, status: 'problem_reported' } }
-                          : p
-                      ));
-                      setUpdatedPurchaseStatuses(prev => ({ ...prev, [item.purchases.id]: 'problem_reported' }));
-                    }}>There was a problem</button>
-
-                    <button className="danger-btn" onClick={async () => {
-                      await cancelPurchase(item.purchases.id);
-                      toast.error('Purchase cancelled.');
-                      setPurchases(prev => prev.map(p =>
-                        p.purchases.id === item.purchases.id
-                          ? { ...p, purchases: { ...p.purchases, status: 'cancelled' } }
-                          : p
-                      ));
-                      setUpdatedPurchaseStatuses(prev => ({ ...prev, [item.purchases.id]: 'cancelled' }));
-                    }}>Cancel purchase</button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </>
-  );
+      case 'compras':
+        return (
+          <ProfilePurchasesTab
+            purchases={purchases}
+            updatedPurchaseStatuses={updatedPurchaseStatuses}
+            sentReviews={sentReviews}
+            onReviewSubmit={handleReviewSubmit}
+            onConfirmPurchase={handleConfirmPurchase}
+            onReportProblem={handleReportProblem}
+            onCancelPurchase={handleCancelPurchase}
+          />
+        );
 
       case 'usuario':
-  return (
-    <div className="user-info-form">
-      <h2>User Information</h2>
-      <div
-  style={{
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 12,
-    margin: '12px 0 16px'
-  }}
->
-  <Avatar nickname={nickname} srcUrl={localAvatarUrl} size="xl" />
+        return (
+          <ProfileUserTab
+            nickname={nickname}
+            localAvatarUrl={localAvatarUrl}
+            onChangeAvatar={handleChangeAvatar}
+            onRemoveAvatar={handleRemoveAvatar}
+            candidateEnabled={candidateEnabled}
+            onCandidateToggle={handleCandidateToggle}
+            onSubmit={handleUserFormSubmit}
+            userDetails={userDetails}
+            userForm={userForm}
+            onChange={handleUserFormChange}
+            updateMessage={updateMessage}
+          />
+        );
 
-  <div style={{ width: '100%', maxWidth: 360 }}>
-    <input
-      id="avatar-upload-input"
-      type="file"
-      accept="image/png,image/jpeg,image/webp"
-      onChange={handleChangeAvatar}
-      style={{ width: '100%' }}
-    />
-    {localAvatarUrl ? (
-      <div style={{ marginTop: 6, textAlign: 'center' }}>
-        <button type="button" onClick={handleRemoveAvatar}>Remove photo</button>
-      </div>
-    ) : (
-      <p style={{ fontSize: '0.85rem', margin: '6px 0 0 0', textAlign: 'center' }}>
-        No photo: your nickname will be shown inside a circle.
-      </p>
-    )}
-  </div>
-</div>
-<div
-  style={{
-    margin: '8px 0 16px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  }}
->
-  <input
-    type="checkbox"
-    id="enable-candidate"
-    checked={candidateEnabled}
-    onChange={handleCandidateToggle}
-    style={{ width: '18px', height: '18px', margin: 0, alignSelf: 'center' }}
-  />
-  <label
-    htmlFor="enable-candidate"
-    style={{ margin: 0, lineHeight: '1', alignSelf: 'center' }}
-  >
-    Enable Candidate Profile
-  </label>
-</div>
-      <form onSubmit={handleUserFormSubmit}>
-        <div className="static-info"><strong>Name:</strong> {userDetails.first_name || ''}</div>
-        <div className="static-info"><strong>Last Name:</strong> {userDetails.last_name || ''}</div>
-        <div className="static-info"><strong>Date of Birth:</strong> {userDetails.birth_year || ''}</div>
-        <div className="static-info"><strong>Nickname:</strong> {userDetails.nickname || ''}</div>
-
-        <label>Main Phone</label>
-<div style={{ display: 'flex', gap: '8px' }}>
-  <input
-    type="text"
-    value="+"
-    disabled
-    style={{
-      width: '40px',
-      textAlign: 'center',
-      background: '#1e1e1e',
-      border: '1px solid #555',
-      borderRadius: '4px',
-      color: '#fff',
-      fontWeight: 'bold',
-    }}
-  />
-  <input
-    name="phoneCode"
-    placeholder="Code"
-    value={userForm.phoneCode}
-    onChange={handleUserFormChange}
-    style={{ width: '70px' }}
-    required
-  />
-  <input
-    name="phone"
-    placeholder="Phone Number"
-    value={userForm.phone}
-    onChange={handleUserFormChange}
-    style={{ flex: 1 }}
-    required
-  />
-</div>
-
-        <label>Alternative Phone</label>
-<div style={{ display: 'flex', gap: '8px' }}>
-  <input
-    type="text"
-    value="+"
-    disabled
-    style={{
-      width: '40px',
-      textAlign: 'center',
-      background: '#1e1e1e',
-      border: '1px solid #555',
-      borderRadius: '4px',
-      color: '#fff',
-      fontWeight: 'bold',
-    }}
-  />
-  <input
-    name="altPhoneCode"
-    placeholder="Code"
-    value={userForm.altPhoneCode}
-    onChange={handleUserFormChange}
-    style={{ width: '70px' }}
-  />
-  <input
-    name="altPhone"
-    placeholder="Alternative Number"
-    value={userForm.altPhone}
-    onChange={handleUserFormChange}
-    style={{ flex: 1 }}
-  />
-</div>
-
-        <label htmlFor="email">Main Email</label>
-        <input id="email" name="email" value={userForm.email} onChange={handleUserFormChange} />
-
-        <label htmlFor="altEmail">Alternative Email</label>
-        <input id="altEmail" name="altEmail" value={userForm.altEmail} onChange={handleUserFormChange} />
-
-        <label htmlFor="password">Password</label>
-        <input id="password" type="password" name="password" value={userForm.password} onChange={handleUserFormChange} />
-
-        <label htmlFor="confirmPassword">Confirm Password</label>
-        <input
-          id="confirmPassword"
-          type="password"
-          name="confirmPassword"
-          value={userForm.confirmPassword}
-          onChange={handleUserFormChange}
-        />
-
-        <button type="submit">Update Information</button>
-        {updateMessage && <p style={{ marginTop: '10px', color: '#007700' }}>{updateMessage}</p>}
-      </form>
-    </div>
-  );
-  
-  case 'cv':
-  return <CandidateProfileTab />;
+      case 'cv':
+        return <CandidateProfileTab />;
 
       default:
         return null;
     }
   };
+
+const handleConfirmPurchase = async (item) => {
+  await confirmPurchase(item.purchases.id);
+  toast.error('Purchase confirmed.');
+  setPurchases(prev =>
+    prev.map(p =>
+      p.purchases.id === item.purchases.id
+        ? { ...p, purchases: { ...p.purchases, status: 'completed', buyer_confirmed: true } }
+        : p
+    ));
+  setUpdatedPurchaseStatuses(prev => ({ ...prev, [item.purchases.id]: 'completed' }));
+};
+
+const handleReportProblem = async (item) => {
+  await reportProblem(item.purchases.id);
+  toast.error('Problem reported.');
+  setPurchases(prev =>
+    prev.map(p =>
+      p.purchases.id === item.purchases.id
+        ? { ...p, purchases: { ...p.purchases, status: 'problem_reported' } }
+        : p
+    ));
+  setUpdatedPurchaseStatuses(prev => ({ ...prev, [item.purchases.id]: 'problem_reported' }));
+};
+
+const handleCancelPurchase = async (item) => {
+  await cancelPurchase(item.purchases.id);
+  toast.error('Purchase cancelled.');
+  setPurchases(prev =>
+    prev.map(p =>
+      p.purchases.id === item.purchases.id
+        ? { ...p, purchases: { ...p.purchases, status: 'cancelled' } }
+        : p
+    ));
+  setUpdatedPurchaseStatuses(prev => ({ ...prev, [item.purchases.id]: 'cancelled' }));
+};
 const handleReviewSubmit = async (e, item) => {
   e.preventDefault();
   const form = e.target;
