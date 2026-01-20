@@ -104,6 +104,7 @@
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.4;
+  white-space: pre-wrap;
 }
 
 .chat-file-link {
