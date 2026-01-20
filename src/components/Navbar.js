@@ -424,6 +424,10 @@ const handleOpenChat = (offerId, receiverId) => {
       setActiveChat(null);
       setShowChatList(true);
     }}
+    onClose={() => {
+      setActiveChat(null);
+      setShowChatList(false);
+    }}
   />
 ) : (
   <ChatPage
@@ -432,6 +436,10 @@ const handleOpenChat = (offerId, receiverId) => {
     onBack={() => {
       setActiveChat(null);
       setShowChatList(true);
+    }}
+    onClose={() => {
+      setActiveChat(null);
+      setShowChatList(false);
     }}
   />
 )}

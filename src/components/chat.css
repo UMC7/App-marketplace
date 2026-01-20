@@ -13,8 +13,8 @@
 /* Botón para volver atrás */
 .chat-back-btn {
   border: none;
-  background: transparent;
-  color: var(--primary-color);
+  background: inherit;
+  color: white;
   font-size: 0.9rem;
   padding: 10px;
   cursor: pointer;
@@ -22,6 +22,11 @@
 }
 .chat-back-btn:hover {
   color: var(--accent-color);
+}
+
+.chat-back-bar {
+  background: var(--primary-color);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ======== Encabezado ======== */
@@ -32,6 +37,39 @@
   font-weight: 600;
   font-size: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-offer-link {
+  border: none;
+  background: #cfe5e1;
+  color: #0f172a;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chat-offer-link:hover {
+  background: #dce9e7;
+}
+
+.dark-mode .chat-offer-link {
+  background: #1c2a3a;
+  color: #cbd5e1;
+}
+
+.dark-mode .chat-offer-link:hover {
+  background: #243041;
+}
+
+.dark-mode .chat-back-bar {
+  background: #111827;
+  border-bottom: 1px solid #222;
+}
+
+body.dark-mode .chat-back-btn {
+  background-color: #111827 !important;
+  color: #fff !important;
 }
 
 /* ======== Mensajes ======== */
@@ -211,7 +249,7 @@
   }
   .chat-back-btn {
     width: 100%;
-    background-color: var(--primary-color);
+    background-color: inherit;
     color: white;
     padding: 14px;
     font-size: 1rem;

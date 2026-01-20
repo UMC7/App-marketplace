@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import supabase from '../supabase';
 import Modal from './Modal';
 import ChatPage from './ChatPage';
@@ -65,6 +66,7 @@ function YachtOfferList({
   openPanel,
   setOpenPanel,
 }) {
+  const location = useLocation();
 
 const isPrefsOpen = openPanel === 'prefs';
 const togglePrefs = () => setOpenPanel(prev => (prev === 'prefs' ? null : 'prefs'));
@@ -130,7 +132,7 @@ const hasCompletePrefs = Boolean(
   const cardRefs = useRef({});
   const chatIntroTimerRef = useRef(null);
   const chatIntroScheduledRef = useRef(false);
-  const SCROLL_OFFSET = 12;
+  const SCROLL_OFFSET = 120;
   const CHAT_INTRO_KEY = 'seajobs_private_chat_intro_seen';
   const CHAT_INTRO_DELAY_MS = 5000;
 
@@ -169,10 +171,15 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(location.search);
   const q = params.get('open');
-  if (q) setOpenJobId(q);
-}, []);
+  if (q) {
+    setOpenJobId(q);
+    setOpenHandled(false);
+  } else {
+    setOpenJobId(null);
+  }
+}, [location.search]);
 
 useEffect(() => {
   if (!openJobId || openHandled || !offers?.length) return;
@@ -1906,7 +1913,8 @@ useEffect(() => {
     <ChatPage
       offerId={activeChat.offerId}
       receiverId={activeChat.receiverId}
-      onBack={() => setActiveChat(null)} // ✅ ESTO ES LO QUE FALTABA
+      onBack={() => setActiveChat(null)} // ?. ESTO ES LO QUE FALTABA
+      onClose={() => setActiveChat(null)}
     />
   </Modal>
 )}

@@ -1,5 +1,6 @@
 // src/components/ChatPage.js
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import { useUnreadMessages } from '../context/UnreadMessagesContext';
 import './chat.css';
@@ -28,7 +29,7 @@ const renderMessageText = (text) => {
   });
 };
 
-function ChatPage({ offerId, receiverId, onBack, mode, externalThreadId }) {
+function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId }) {
   const [messages, setMessages] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [message, setMessage] = useState('');
@@ -36,10 +37,12 @@ function ChatPage({ offerId, receiverId, onBack, mode, externalThreadId }) {
   const [otherNickname, setOtherNickname] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const fileInputRef = useRef();
+  const navigate = useNavigate();
 
   // Avatars
   const [otherAvatar, setOtherAvatar] = useState(null);
   const [myAvatar, setMyAvatar] = useState(null);
+  const [offerMeta, setOfferMeta] = useState(null);
 
   // External/anonymous mode flag
   const isExternal = mode === 'external' && !!externalThreadId;
@@ -97,6 +100,24 @@ function ChatPage({ offerId, receiverId, onBack, mode, externalThreadId }) {
     };
     loadOther();
   }, [isExternal, receiverId]);
+
+  useEffect(() => {
+    const loadOffer = async () => {
+      if (isExternal || !offerId) {
+        setOfferMeta(null);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('yacht_work_offers')
+        .select('id, title, teammate_rank')
+        .eq('id', offerId)
+        .single();
+      if (!error && data) {
+        setOfferMeta(data);
+      }
+    };
+    loadOffer();
+  }, [isExternal, offerId]);
 
   // Load messages (internal vs external)
   useEffect(() => {
@@ -303,11 +324,28 @@ function ChatPage({ offerId, receiverId, onBack, mode, externalThreadId }) {
   );
 
   const headerLabel = isExternal ? 'Anonymous chat' : `Offer private chat – ${otherNickname}`;
+  const offerLabel = offerMeta?.teammate_rank || offerMeta?.title;
+  const handleOpenOffer = () => {
+    if (!offerId) return;
+    if (onClose) {
+      onClose();
+    } else if (onBack) {
+      onBack();
+    }
+    navigate(`/yacht-works?open=${offerId}`);
+  };
 
   if (isMobile) {
     return (
       <div className="chat-container chat-mobile-fullscreen">
-        <button className="chat-back-btn" onClick={onBack}>⬅ Back</button>
+        <div className="chat-back-bar">
+          <button className="chat-back-btn" onClick={onBack}>⬅ Back</button>
+        </div>
+        {!isExternal && offerLabel && (
+          <button className="chat-offer-link" type="button" onClick={handleOpenOffer}>
+            Position: {offerLabel} · View job
+          </button>
+        )}
         <div className="chat-header">{headerLabel}</div>
         {renderMessages()}
         {renderInput()}
@@ -317,7 +355,16 @@ function ChatPage({ offerId, receiverId, onBack, mode, externalThreadId }) {
 
   return (
     <div className="chat-container">
-      {onBack && <button className="chat-back-btn" onClick={onBack}>⬅ Back</button>}
+      {onBack && (
+        <div className="chat-back-bar">
+          <button className="chat-back-btn" onClick={onBack}>⬅ Back</button>
+        </div>
+      )}
+      {!isExternal && offerLabel && (
+        <button className="chat-offer-link" type="button" onClick={handleOpenOffer}>
+          Position: {offerLabel} · View job
+        </button>
+      )}
       <div className="chat-header">{headerLabel}</div>
       {renderMessages()}
       {renderInput()}
