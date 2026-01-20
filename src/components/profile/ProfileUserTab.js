@@ -1,6 +1,16 @@
 import React from 'react';
 import Avatar from '../Avatar';
 
+const isPasswordValid = (value) => {
+  if (!value) return false;
+  if (value.length < 8) return false;
+  if (!/[A-Z]/.test(value)) return false;
+  if (!/[a-z]/.test(value)) return false;
+  if (!/[0-9]/.test(value)) return false;
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) return false;
+  return true;
+};
+
 const ProfileUserTab = ({
   nickname,
   localAvatarUrl,
@@ -14,7 +24,7 @@ const ProfileUserTab = ({
   onChange,
   updateMessage,
 }) => (
-  <div className="user-info-form">
+  <div className="user-info-form" style={{ maxWidth: 460 }}>
     <h2>User Information</h2>
     <div
       style={{
@@ -105,6 +115,8 @@ const ProfileUserTab = ({
           placeholder="Code"
           value={userForm.phoneCode}
           onChange={onChange}
+          inputMode="numeric"
+          pattern="[0-9]*"
           style={{ width: '70px' }}
           required
         />
@@ -113,6 +125,8 @@ const ProfileUserTab = ({
           placeholder="Phone Number"
           value={userForm.phone}
           onChange={onChange}
+          inputMode="numeric"
+          pattern="[0-9]*"
           style={{ flex: 1 }}
           required
         />
@@ -139,6 +153,8 @@ const ProfileUserTab = ({
           placeholder="Code"
           value={userForm.altPhoneCode}
           onChange={onChange}
+          inputMode="numeric"
+          pattern="[0-9]*"
           style={{ width: '70px' }}
         />
         <input
@@ -146,6 +162,8 @@ const ProfileUserTab = ({
           placeholder="Alternative Number"
           value={userForm.altPhone}
           onChange={onChange}
+          inputMode="numeric"
+          pattern="[0-9]*"
           style={{ flex: 1 }}
         />
       </div>
@@ -162,22 +180,42 @@ const ProfileUserTab = ({
       />
 
       <label htmlFor="password">Password</label>
-      <input
-        id="password"
-        type="password"
-        name="password"
-        value={userForm.password}
-        onChange={onChange}
-      />
+      <div>
+        <input
+          id="password"
+          type="password"
+          name="password"
+          value={userForm.password}
+          onChange={onChange}
+        />
+      </div>
+      <p style={{ fontSize: '0.85rem', marginBottom: '8px' }}>
+        Password must be at least 8 characters and include one uppercase letter, one lowercase letter,
+        one number, and one special character.
+      </p>
 
       <label htmlFor="confirmPassword">Confirm Password</label>
-      <input
-        id="confirmPassword"
-        type="password"
-        name="confirmPassword"
-        value={userForm.confirmPassword}
-        onChange={onChange}
-      />
+      <div>
+        <input
+          id="confirmPassword"
+          type="password"
+          name="confirmPassword"
+          value={userForm.confirmPassword}
+          onChange={onChange}
+        />
+      </div>
+      {userForm.confirmPassword &&
+        userForm.confirmPassword === userForm.password && (
+          <p style={{ fontSize: '0.85rem', color: 'green', marginBottom: '8px' }}>
+            Passwords match.
+          </p>
+        )}
+      {userForm.confirmPassword &&
+        userForm.confirmPassword !== userForm.password && (
+          <p style={{ fontSize: '0.85rem', color: '#b00020', marginBottom: '8px' }}>
+            Passwords do not match.
+          </p>
+        )}
 
       <button type="submit">Update Information</button>
       {updateMessage && (

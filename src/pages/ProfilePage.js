@@ -5,8 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import supabase from '../supabase';
-import { toast } from 'react-toastify';
-import { submitUserReview } from '../lib/reviewUtils';
 import EditProductModal from '../components/EditProductModal';
 import EditJobModal from '../components/EditJobModal';
 import CandidateProfileTab from '../components/cv/CandidateProfileTab';
@@ -19,13 +17,14 @@ import ProfileRatingsTab from '../components/profile/ProfileRatingsTab';
 import ProfileSalesTab from '../components/profile/ProfileSalesTab';
 import ProfilePurchasesTab from '../components/profile/ProfilePurchasesTab';
 import ProfileUserTab from '../components/profile/ProfileUserTab';
+import useProfileProducts from '../hooks/profile/useProfileProducts';
+import useProfileServices from '../hooks/profile/useProfileServices';
+import useProfileJobs from '../hooks/profile/useProfileJobs';
+import useProfileEvents from '../hooks/profile/useProfileEvents';
+import useProfilePurchasesSales from '../hooks/profile/useProfilePurchasesSales';
+import useProfileUser from '../hooks/profile/useProfileUser';
+import useProfileReviews from '../hooks/profile/useProfileReviews';
 import './ProfilePage.css';
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
-import {
-  confirmPurchase,
-  reportProblem,
-  cancelPurchase,
-} from '../lib/purchaseStatus';
 
 const ALLOWED_TABS = new Set([
   'productos','servicios','empleos','eventos',
@@ -34,79 +33,73 @@ const ALLOWED_TABS = new Set([
 
 function ProfilePage() {
   const { currentUser } = useAuth();
-  const [products, setProducts] = useState([]);
-  const [deletedProducts, setDeletedProducts] = useState([]);
-  const [sales, setSales] = useState([]);
-  const [purchases, setPurchases] = useState([]);
-  const [updatedPurchaseStatuses, setUpdatedPurchaseStatuses] = useState({});
-  const [services, setServices] = useState([]); // ✅ Nuevo estado para servicios
-  const [jobOffers, setJobOffers] = useState([]);
-  const [deletedJobs, setDeletedJobs] = useState([]);
-  const [events, setEvents] = useState([]);
-  
-  const fetchEvents = async () => {
-  if (!currentUser) return;
-
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('owner', currentUser.id);
-
-  if (error) {
-    console.error('Error fetching events:', error.message);
-  } else {
-    setEvents(data);
-  }
-};
-const fetchServices = async () => {
-  if (!currentUser) return;
-
-  const { data, error } = await supabase
-    .from('services')
-    .select('*')
-    .eq('owner', currentUser.id);
-
-  if (error) {
-    console.error('Error fetching services:', error.message);
-  } else {
-    setServices(data);
-  }
-};
-  const [deletedEvents, setDeletedEvents] = useState([]);
-  const [userDetails, setUserDetails] = useState({});
-  const [candidateEnabled, setCandidateEnabled] = useState(false);
+  const {
+    products,
+    deletedProducts,
+    setProductsData,
+    handlePauseToggle,
+    handleDelete,
+    handleRestore,
+    refetchProducts,
+  } = useProfileProducts({ currentUser });
+  const {
+    sales,
+    purchases,
+    updatedPurchaseStatuses,
+    sentReviews,
+    setPurchasesSalesData,
+    setSentReviewsData,
+    handleConfirmPurchase,
+    handleReportProblem,
+    handleCancelPurchase,
+    handleReviewSubmit,
+  } = useProfilePurchasesSales({ currentUser });
+  const {
+    services,
+    setServicesData,
+    fetchServices,
+    handlePauseToggleService,
+    handleDeleteService,
+    refetchServices,
+  } = useProfileServices({ currentUser });
+  const {
+    jobOffers,
+    deletedJobs,
+    setJobsData,
+    handlePauseToggleJob,
+    handleDeleteJob,
+    refetchJobOffers,
+  } = useProfileJobs({ currentUser });
+  const {
+    events,
+    setEventsData,
+    fetchEvents,
+    updateEventStatus,
+    deleteEvent,
+    refetchEvents,
+  } = useProfileEvents({ currentUser });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('productos');
   const [editingProductId, setEditingProductId] = useState(null);
   const [editingServiceId, setEditingServiceId] = useState(null);
   const [editingJobId, setEditingJobId] = useState(null);
   const [editingEventId, setEditingEventId] = useState(null);
-  const [receivedReviews, setReceivedReviews] = useState([]);
-  const [sentReviews, setSentReviews] = useState([]);
-  const [averageRating, setAverageRating] = useState(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // 🔧 Para menú hamburguesa
-  const [userForm, setUserForm] = useState({
-    email: '',
-    nickname: '',
-    phone: '',
-    phoneCode: '',
-    altPhone: '',
-    altPhoneCode: '',
-    altEmail: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [updateMessage, setUpdateMessage] = useState('');
-
-const [localAvatarUrl, setLocalAvatarUrl] = useState(
-  currentUser?.app_metadata?.avatar_url || null
-);
-const nickname = userDetails?.nickname || currentUser?.app_metadata?.nickname || 'User';
-
-useEffect(() => {
-  setLocalAvatarUrl(currentUser?.app_metadata?.avatar_url || null);
-}, [currentUser?.app_metadata?.avatar_url]);
-
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const {
+    userDetails,
+    candidateEnabled,
+    localAvatarUrl,
+    userForm,
+    updateMessage,
+    nickname,
+    setUserData,
+    handleChangeAvatar,
+    handleRemoveAvatar,
+    handleUserFormChange,
+    handleUserFormSubmit,
+    handleCandidateToggle,
+  } = useProfileUser({ currentUser, activeTab, setActiveTab });
+  const { receivedReviews, averageRating, setReviewsData } = useProfileReviews();
 const navigate = useNavigate();
 const location = useLocation();
 
@@ -302,69 +295,31 @@ const { data: myReviewsData, error: myReviewsError } = await supabase
 if (myReviewsError) {
   console.error('Failed to load submitted ratings:', myReviewsError.message);
 } else {
-  setSentReviews(myReviewsData || []);
+  setSentReviewsData(myReviewsData);
 }
 
 if (reviewsError) {
   console.error('Failed to load received ratings:', reviewsError.message);
 }
-setReceivedReviews(reviewsData || []);
+setReviewsData(reviewsData);
 
-const totalRatings = (reviewsData || []).reduce((sum, r) => sum + r.rating, 0);
-const avgRating = reviewsData && reviewsData.length > 0
-  ? (totalRatings / reviewsData.length).toFixed(1)
-  : null;
-
-setAverageRating(avgRating);
     
         if (deletedJobsError) throw deletedJobsError;
-        setDeletedJobs(deletedJobData || []);
-
         if (offersError) throw offersError;
-        setJobOffers(offersData || []);
+        setJobsData(offersData, deletedJobData);
 
         if (userError) throw userError;
-        setUserDetails(userData);
-        setCandidateEnabled(!!userData?.is_candidate);
-        const splitPhone = (fullPhone) => {
-  if (!fullPhone) return { code: '', number: '' };
+        setUserData(userData);
 
-  const parsed = parsePhoneNumberFromString(fullPhone);
-  if (!parsed) return { code: '', number: fullPhone };
-
-  return {
-    code: parsed.countryCallingCode,
-    number: parsed.nationalNumber,
-  };
-};
-
-const main = splitPhone(userData.phone);
-const alt = splitPhone(userData.alt_phone);
-
-setUserForm((prev) => ({
-  ...prev,
-  email: currentUser.email,
-  nickname: userData.nickname || '',
-  phone: main.number,
-  phoneCode: main.code,
-  altPhone: alt.number,
-  altPhoneCode: alt.code,
-  altEmail: userData.alt_email || '',
-}));
     
         if (eventError) {
   console.error('Failed to load events:', eventError.message);
-  setEvents([]);
-} else {
-  setEvents(eventData || []);
 }
 
         if (deletedEventError) {
   console.error('Failed to load deleted events:', deletedEventError.message);
-  setDeletedEvents([]);
-} else {
-  setDeletedEvents(deletedEventData || []);
 }
+        setEventsData(eventData, deletedEventData);
 
         const filteredSales = (soldItems || []).filter(
   item => String(item.products?.owner) === String(currentUser?.id)
@@ -384,12 +339,9 @@ setUserForm((prev) => ({
     
         console.log('🗑️ Deleted Products:', deletedData);
     
-        setProducts(productData || []);
-        setDeletedProducts(deletedData || []);
-        setSales(filteredSales);
-        setPurchases(filteredPurchases);
-        setServices(serviceData || []);
-        setReceivedReviews(reviewsData || []);
+        setProductsData(productData, deletedData);
+        setPurchasesSalesData(filteredSales, filteredPurchases);
+        setServicesData(serviceData);
       } catch (error) {
         console.error('General error loading data:', error.message);
       } finally {
@@ -405,412 +357,9 @@ useEffect(() => {
 }, [currentUser]);
 
 
-  const handlePauseToggle = async (productId, currentStatus) => {
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ status: currentStatus === 'active' ? 'paused' : 'active' })
-        .eq('id', productId);
 
-      if (error) throw error;
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === productId ? { ...p, status: currentStatus === 'active' ? 'paused' : 'active' } : p
-        )
-      );
-    } catch (error) {
-      console.error('Failed to update product status:', error.message);
-      toast.error('Could not update product status.');
-    }
-  };
 
-  const handleDelete = async (productId) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this product? This action will hide it from all users.');
-    if (!confirmDelete) return;
 
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ status: 'deleted', deleted_at: new Date().toISOString() })
-        .eq('id', productId);
-
-      if (error) throw error;
-
-      setProducts((prev) => prev.filter((p) => p.id !== productId));
-      const { data: updatedDeleted } = await supabase
-        .from('products')
-        .select('*')
-        .eq('owner', currentUser.id)
-        .eq('status', 'deleted')
-        .order('deleted_at', { ascending: false });
-      setDeletedProducts(updatedDeleted);
-      toast.error('Product deleted successfully.');
-    } catch (error) {
-      console.error('Failed to delete product:', error.message);
-      toast.error('Could not delete the product.');
-    }
-  };
-
-  const handleRestore = async (productId) => {
-    const confirmRestore = window.confirm('Do you want to restore this product as paused?');
-    if (!confirmRestore) return;
-
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update({ status: 'paused', deleted_at: null })
-        .eq('id', productId);
-
-      if (error) throw error;
-
-      setDeletedProducts((prev) => prev.filter((p) => p.id !== productId));
-      const { data: updatedProducts } = await supabase
-        .from('products')
-        .select('*')
-        .eq('owner', currentUser.id)
-        .not('status', 'eq', 'deleted')
-        .order('created_at', { ascending: false });
-      setProducts(updatedProducts);
-      toast.error('Product restored successfully.');
-    } catch (error) {
-      console.error('Failed to restore product:', error.message);
-      toast.error('Could not restore the product.');
-    }
-  };
-
-  const handlePauseToggleService = async (serviceId, currentStatus) => {
-  try {
-    const { error } = await supabase
-      .from('services')
-      .update({ status: currentStatus === 'active' ? 'paused' : 'active' })
-      .eq('id', serviceId);
-
-    if (error) throw error;
-
-    setServices((prev) =>
-      prev.map((s) =>
-        s.id === serviceId ? { ...s, status: currentStatus === 'active' ? 'paused' : 'active' } : s
-      )
-    );
-  } catch (error) {
-    console.error('Failed to update service status:', error.message);
-    toast.error('Could not update service status.');
-  }
-};
-
-const handleDeleteService = async (serviceId) => {
-  const confirmDelete = window.confirm('Are you sure you want to delete this service? This action will hide it from all users.');
-  if (!confirmDelete) return;
-
-  try {
-    const { error } = await supabase
-      .from('services')
-      .update({ status: 'deleted', deleted_at: new Date().toISOString() })
-      .eq('id', serviceId);
-
-    if (error) throw error;
-
-    setServices((prev) => prev.filter((s) => s.id !== serviceId));
-    toast.error('Service deleted successfully.');
-  } catch (error) {
-    console.error('Failed to delete service:', error.message);
-    toast.error('Could not delete the service.');
-  }
-};
-
-  const handlePauseToggleJob = async (offerId, currentStatus) => {
-  try {
-    const { error } = await supabase
-      .from('yacht_work_offers')
-      .update({ status: currentStatus === 'active' ? 'paused' : 'active' })
-      .eq('id', offerId);
-
-    if (error) throw error;
-
-    setJobOffers((prev) =>
-      prev.map((o) =>
-        o.id === offerId ? { ...o, status: currentStatus === 'active' ? 'paused' : 'active' } : o
-      )
-    );
-  } catch (error) {
-    console.error('Failed to update job status:', error.message);
-    toast.error('Could not update the job status.');
-  }
-};
-
-const handleDeleteJob = async (offerId) => {
-  const confirmDelete = window.confirm('Are you sure you want to delete this job offer?');
-  if (!confirmDelete) return;
-
-  try {
-    const { error } = await supabase
-      .from('yacht_work_offers')
-      .update({ status: 'deleted', deleted_at: new Date().toISOString() })
-      .eq('id', offerId);
-
-    if (error) throw error;
-
-    setJobOffers((prev) => prev.filter((o) => o.id !== offerId));
-    toast.error('Job deleted successfully.');
-  } catch (error) {
-    console.error('Failed to delete job:', error.message);
-    toast.error('Could not delete the job offer.');
-  }
-};
-
-const updateEventStatus = async (eventId, newStatus) => {
-  try {
-    const { error } = await supabase
-      .from('events')
-      .update({ status: newStatus })
-      .eq('id', eventId);
-
-    if (error) throw error;
-
-    setEvents((prev) =>
-      prev.map((e) =>
-        e.id === eventId ? { ...e, status: newStatus } : e
-      )
-    );
-  } catch (error) {
-    toast.error(`Failed to update status: ${error.message}`);
-  }
-};
-
-const deleteEvent = async (eventId) => {
-  const confirmDelete = window.confirm('Are you sure you want to delete this event?');
-  if (!confirmDelete) return;
-
-  try {
-    const { error } = await supabase
-      .from('events')
-      .update({ status: 'deleted', updated_at: new Date().toISOString() })
-      .eq('id', eventId);
-
-    if (error) throw error;
-
-    setEvents((prev) => prev.filter((e) => e.id !== eventId));
-    const { data: updatedDeleted } = await supabase
-      .from('events')
-      .select('*')
-      .eq('owner', currentUser.id)
-      .eq('status', 'deleted')
-      .order('updated_at', { ascending: false });
-    setDeletedEvents(updatedDeleted);
-    toast.error('Event deleted successfully.');
-  } catch (error) {
-    toast.error('Could not delete the event.');
-  }
-};
-
-// Extrae la ruta interna del bucket desde la URL pública
-const extractPathFromPublicUrl = (url) => {
-  if (!url) return null;
-  const m = url.match(/\/object\/public\/avatars\/(.+)$/);
-  return m ? m[1] : null; // ej: `${user.id}/avatar_123.webp`
-};
-
-const handleRemoveAvatar = async () => {
-  try {
-    // 1) Borrar del Storage si conocemos la ruta
-    const path = extractPathFromPublicUrl(localAvatarUrl);
-    if (path) {
-      const { error: delErr } = await supabase.storage.from('avatars').remove([path]);
-      if (delErr) console.warn('No se pudo borrar del storage (continuo):', delErr.message);
-    }
-
-    // 2) Poner avatar_url = NULL en BD
-    const { error: dbErr } = await supabase
-      .from('users')
-      .update({ avatar_url: null, updated_at: new Date().toISOString() })
-      .eq('id', currentUser.id);
-
-    if (dbErr) {
-      toast.error('Could not delete the photo.');
-      return;
-    }
-
-    // 3) Refrescar UI local
-    setLocalAvatarUrl(null);
-    toast.success('Photo removed. We will use your nickname inside a circle.');
-  } catch (e) {
-    console.error(e);
-    toast.error('An error occurred while removing the photo.');
-  }
-};
-
-const handleChangeAvatar = async (e) => {
-  try {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const okTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!okTypes.includes(file.type)) {
-      toast.error('Formato inválido. Usa JPG, PNG o WEBP.');
-      e.target.value = '';
-      return;
-    }
-    const maxBytes = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxBytes) {
-      toast.error('Imagen muy grande. Máx 5MB.');
-      e.target.value = '';
-      return;
-    }
-
-    // Construir ruta: {auth.uid}/avatar_timestamp.ext
-    const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
-    const path = `${currentUser.id}/avatar_${Date.now()}.${ext}`;
-
-    // Subir al bucket
-    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, {
-      upsert: true,
-      contentType: file.type,
-    });
-    if (upErr) throw upErr;
-
-    // URL pública
-    const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
-    const avatarUrl = pub?.publicUrl;
-    if (!avatarUrl) throw new Error('No se pudo obtener la URL pública.');
-
-    // Guardar en BD
-    const { error: dbErr } = await supabase
-      .from('users')
-      .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
-      .eq('id', currentUser.id);
-    if (dbErr) throw dbErr;
-
-    // Refrescar UI
-    setLocalAvatarUrl(avatarUrl);
-    toast.success('Foto actualizada.');
-  } catch (err) {
-    console.error(err);
-    toast.error('No se pudo cambiar la foto.');
-  } finally {
-    // limpiar input para permitir volver a seleccionar el mismo archivo si se desea
-    if (e?.target) e.target.value = '';
-  }
-};
-
-  const handleUserFormChange = (e) => {
-    const { name, value } = e.target;
-    setUserForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleUserFormSubmit = async (e) => {
-  e.preventDefault();
-  const confirm = window.confirm('Do you want to update your user information?');
-  if (!confirm) return;
-
-  setUpdateMessage('');
-
-  const wantsEmailChange = userForm.email && userForm.email !== currentUser.email;
-  const wantsPasswordChange = userForm.password && userForm.password.trim() !== '';
-
-if (wantsPasswordChange) {
-  if (userForm.password !== userForm.confirmPassword) {
-    const msg = 'Passwords do not match.';
-    toast.error(msg);
-    setUpdateMessage(msg);
-    return;
-  }
-  const strongPwd = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-  if (!strongPwd.test(userForm.password)) {
-    const ruleMsg = 'Password must be at least 8 characters and include one uppercase letter, one lowercase letter, one number, and one special character.';
-    toast.error(ruleMsg);
-    setUpdateMessage(ruleMsg);
-    return;
-  }
-}
-
-  const wantsContactChange =
-    (userForm.phone ?? '') !== (userDetails.phone ?? '') ||
-    (userForm.altPhone ?? '') !== (userDetails.alt_phone ?? '') ||
-    (userForm.altEmail ?? '') !== (userDetails.alt_email ?? '');
-
-  const authUpdates = {};
-  if (wantsEmailChange) authUpdates.email = userForm.email.trim();
-  if (wantsPasswordChange) authUpdates.password = userForm.password;
-
-  let samePwdWarning = false;
-  let authChanged = false;
-  let contactChanged = false;
-
-  try {
-    if (wantsEmailChange || wantsPasswordChange) {
-      const { error: authError } = await supabase.auth.updateUser(authUpdates);
-
-      if (authError) {
-        const msg = (authError.message || '').toLowerCase();
-        const isSamePwd =
-          msg.includes('new password should be different') ||
-          msg.includes('new password should be different from the old password');
-
-        if (isSamePwd) {
-          samePwdWarning = true;
-          toast.info('Password must be different from the current one. We will keep your current password.');
-        } else {
-          throw authError;
-        }
-      } else {
-        authChanged = true;
-      }
-    }
-
-    if (wantsContactChange) {
-      const fullPhone = userForm.phone && userForm.phoneCode ? `+${userForm.phoneCode}${userForm.phone}` : null;
-      const fullAltPhone = userForm.altPhone && userForm.altPhoneCode ? `+${userForm.altPhoneCode}${userForm.altPhone}` : null;
-
-  const { error: dbError } = await supabase
-    .from('users')
-    .update({
-      phone: fullPhone,
-      alt_phone: fullAltPhone,
-      alt_email: userForm.altEmail || null,
-    })
-        .eq('id', currentUser.id);
-
-      if (dbError) throw dbError;
-      contactChanged = true;
-    }
-
-    if (contactChanged && samePwdWarning) {
-      setUpdateMessage('Contact details updated. Password unchanged because it matches your current one.');
-    } else if (contactChanged && authChanged) {
-      setUpdateMessage('Information updated successfully.');
-    } else if (contactChanged) {
-      setUpdateMessage('Contact details updated.');
-    } else if (authChanged) {
-      setUpdateMessage('Account updated.');
-    } else if (samePwdWarning) {
-      setUpdateMessage('No changes saved. Choose a new password to update it.');
-    } else {
-      setUpdateMessage('No changes to save.');
-    }
-
-    setUserForm((prev) => ({ ...prev, password: '', confirmPassword: '' }));
-  } catch (error) {
-    console.error('Failed to update information:', error.message);
-    setUpdateMessage('Failed to update information.');
-  }
-};
-
-  const handleCandidateToggle = async (e) => {
-  const next = e.target.checked;
-  try {
-    const { error } = await supabase
-      .from('users')
-      .update({ is_candidate: next, updated_at: new Date().toISOString() })
-      .eq('id', currentUser.id);
-    if (error) throw error;
-    setCandidateEnabled(next);
-    // Si se desactiva estando en la pestaña CV, volvemos a User Details
-    if (!next && activeTab === 'cv') setActiveTab('usuario');
-    toast.success(next ? 'Candidate profile enabled.' : 'Candidate profile disabled.');
-  } catch (err) {
-    toast.error('Could not update Candidate profile setting.');
-  }
-};
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -918,143 +467,6 @@ if (wantsPasswordChange) {
     }
   };
 
-const handleConfirmPurchase = async (item) => {
-  await confirmPurchase(item.purchases.id);
-  toast.error('Purchase confirmed.');
-  setPurchases(prev =>
-    prev.map(p =>
-      p.purchases.id === item.purchases.id
-        ? { ...p, purchases: { ...p.purchases, status: 'completed', buyer_confirmed: true } }
-        : p
-    ));
-  setUpdatedPurchaseStatuses(prev => ({ ...prev, [item.purchases.id]: 'completed' }));
-};
-
-const handleReportProblem = async (item) => {
-  await reportProblem(item.purchases.id);
-  toast.error('Problem reported.');
-  setPurchases(prev =>
-    prev.map(p =>
-      p.purchases.id === item.purchases.id
-        ? { ...p, purchases: { ...p.purchases, status: 'problem_reported' } }
-        : p
-    ));
-  setUpdatedPurchaseStatuses(prev => ({ ...prev, [item.purchases.id]: 'problem_reported' }));
-};
-
-const handleCancelPurchase = async (item) => {
-  await cancelPurchase(item.purchases.id);
-  toast.error('Purchase cancelled.');
-  setPurchases(prev =>
-    prev.map(p =>
-      p.purchases.id === item.purchases.id
-        ? { ...p, purchases: { ...p.purchases, status: 'cancelled' } }
-        : p
-    ));
-  setUpdatedPurchaseStatuses(prev => ({ ...prev, [item.purchases.id]: 'cancelled' }));
-};
-const handleReviewSubmit = async (e, item) => {
-  e.preventDefault();
-  const form = e.target;
-  const rating = parseInt(form.rating.value, 10);
-  const comment = form.comment.value;
-
-  const reviewerId = currentUser.id;
-  const reviewedUserId = item.products?.owner;
-
-console.log('🧾 Review submit: Purchase ID =', item.purchases?.id);
-
-    const { success } = await submitUserReview({
-    reviewerId,
-    reviewedUserId,
-    rating,
-    comment,
-    role: 'buyer',
-    purchaseId: item.purchases?.id,
-    productId: item.product_id,
-  });
-
-  if (success) {
-  toast.error('Rating submitted successfully.');
-  form.reset();
-  setPurchases(prev =>
-    prev.map(p =>
-      p.purchases.id === item.purchases.id
-        ? {
-            ...p,
-            purchases: {
-              ...p.purchases,
-              buyer_confirmed: true,
-              status: 'completed'
-            }
-          }
-        : p
-    )
-  );
-} else {
-  toast.error('An error occurred while submitting the rating.');
-}
-};
-const refetchJobOffers = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('yacht_work_offers')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .not('status', 'eq', 'deleted')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    setJobOffers(data || []);
-  } catch (error) {
-    console.error('Error refreshing job offers:', error.message);
-  }
-};
-const refetchProducts = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('owner', currentUser.id)
-      .not('status', 'eq', 'deleted')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    setProducts(data || []);
-  } catch (error) {
-    console.error('Error refreshing products:', error.message);
-  }
-};
-const refetchServices = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('services')
-      .select('*')
-      .eq('owner', currentUser.id)
-      .not('status', 'eq', 'deleted')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    setServices(data || []);
-  } catch (error) {
-    console.error('Error refreshing services:', error.message);
-  }
-};
-const refetchEvents = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('events')
-      .select('*')
-      .eq('owner', currentUser.id)
-      .not('status', 'eq', 'deleted')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    setEvents(data || []);
-  } catch (error) {
-    console.error('Error refreshing events:', error.message);
-  }
-};
   return (
   <div className="container">
     <h1>My Profile</h1>
