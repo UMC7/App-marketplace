@@ -173,10 +173,30 @@ const useProfileUser = ({ currentUser, activeTab, setActiveTab }) => {
   const handleUserFormSubmit = useCallback(
     async (e) => {
       e.preventDefault();
+      setUpdateMessage('');
+
+      const normalizeEmail = (email) => (email || '').trim().toLowerCase();
+      const primaryEmailValue = normalizeEmail(userForm.email);
+      const altEmailValue = normalizeEmail(userForm.altEmail);
+      const primaryPhoneValue =
+        userForm.phoneCode && userForm.phone ? `${userForm.phoneCode}${userForm.phone}` : '';
+      const altPhoneValue =
+        userForm.altPhoneCode && userForm.altPhone
+          ? `${userForm.altPhoneCode}${userForm.altPhone}`
+          : '';
+
+      if (altPhoneValue && primaryPhoneValue && altPhoneValue === primaryPhoneValue) {
+        toast.error('Alternative phone must be different from main phone.');
+        return;
+      }
+
+      if (altEmailValue && primaryEmailValue && altEmailValue === primaryEmailValue) {
+        toast.error('Alternative email must be different from main email.');
+        return;
+      }
+
       const confirm = window.confirm('Do you want to update your user information?');
       if (!confirm) return;
-
-      setUpdateMessage('');
 
       const wantsEmailChange =
         userForm.email && userForm.email !== currentUser.email;

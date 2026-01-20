@@ -4,15 +4,71 @@ import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import Avatar from './Avatar';
 
+const LockClosedIcon = ({ size = 16 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="3" y="11" width="18" height="11" rx="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
+const LockOpenIcon = ({ size = 16 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="3" y="11" width="18" height="11" rx="2" />
+    <path d="M7 11V7a5 5 0 0 1 9.5-2" />
+  </svg>
+);
+
+const TrashIcon = ({ size = 16 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6" />
+    <path d="M14 11v6" />
+    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+  </svg>
+);
+
+const getChatKey = (offerId, userId) => `${offerId}_${userId}`;
+
 function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
   const [chatSummaries, setChatSummaries] = useState([]);
+  const [actionBusy, setActionBusy] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchChats = async () => {
       if (!currentUser) return;
 
-      // ---------- INTERNAL (tu lógica original) ----------
       const { data: messages, error } = await supabase
         .from('yacht_work_messages')
         .select('id, offer_id, sender_id, receiver_id, sent_at')
@@ -24,7 +80,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
       }
 
       const uniqueChats = {};
-      for (let msg of messages || []) {
+      for (const msg of messages || []) {
         const otherUser =
           msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
         const key = `${msg.offer_id}_${otherUser}`;
@@ -46,9 +102,33 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
       const offerIds = [...new Set(chatArray.map((c) => c.offer_id))];
 
       const [{ data: users }, { data: offers }] = await Promise.all([
-        supabase.from('users').select('id, nickname, avatar_url').in('id', userIds),
-        supabase.from('yacht_work_offers').select('id, title').in('id', offerIds),
+        userIds.length
+          ? supabase.from('users').select('id, nickname, avatar_url').in('id', userIds)
+          : Promise.resolve({ data: [] }),
+        offerIds.length
+          ? supabase.from('yacht_work_offers').select('id, title').in('id', offerIds)
+          : Promise.resolve({ data: [] }),
       ]);
+
+      let stateMap = {};
+      if (offerIds.length) {
+        const { data: states, error: stateError } = await supabase
+          .from('yacht_work_chat_state')
+          .select('offer_id, other_user_id, locked, deleted_at')
+          .eq('user_id', currentUser.id)
+          .in('offer_id', offerIds);
+
+        if (stateError) {
+          console.error('Error fetching chat state:', stateError);
+        } else {
+          stateMap = Object.fromEntries(
+            (states || []).map((state) => [
+              getChatKey(state.offer_id, state.other_user_id),
+              state,
+            ])
+          );
+        }
+      }
 
       const usersMap = Object.fromEntries(
         (users || []).map((u) => [u.id, { nickname: u.nickname, avatar_url: u.avatar_url }])
@@ -57,12 +137,17 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
         (offers || []).map((o) => [o.id, o.title])
       );
 
-      const internalRows = chatArray.map((chat) => ({
-        ...chat,
-        nickname: usersMap[chat.user_id]?.nickname || 'User',
-        avatar_url: usersMap[chat.user_id]?.avatar_url || null,
-        offerTitle: offersMap[chat.offer_id] || 'Deleted offer',
-      }));
+      const internalRows = chatArray.map((chat) => {
+        const state = stateMap[getChatKey(chat.offer_id, chat.user_id)];
+        return {
+          ...chat,
+          nickname: usersMap[chat.user_id]?.nickname || 'User',
+          avatar_url: usersMap[chat.user_id]?.avatar_url || null,
+          offerTitle: offersMap[chat.offer_id] || 'Deleted offer',
+          locked: !!state?.locked,
+          deleted_at: state?.deleted_at || null,
+        };
+      });
 
       const { data: threads, error: extErr } = await supabase
         .from('external_threads')
@@ -76,7 +161,6 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
 
       const externalRows = [];
       for (const t of threads || []) {
-        // último mensaje para ordenar
         const { data: last } = await supabase
           .from('external_messages')
           .select('created_at')
@@ -86,26 +170,151 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
           .maybeSingle();
 
         externalRows.push({
-          // mapeo compatible con tu UI y onOpenChat
           offer_id: '__external__',
-          user_id: t.id, // usamos el threadId en el segundo argumento
+          user_id: t.id,
           sent_at: last?.created_at || t.created_at,
           nickname: 'Anonymous',
           avatar_url: null,
           offerTitle: 'CV chat',
+          locked: false,
+          deleted_at: null,
         });
       }
 
-      // Merge + sort por fecha, manteniendo idéntica estructura
-      const merged = [...internalRows, ...externalRows].sort(
-        (a, b) => new Date(b.sent_at) - new Date(a.sent_at)
-      );
+      const merged = [...internalRows, ...externalRows]
+        .filter((row) => row.offer_id === '__external__' || !row.deleted_at)
+        .sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at));
 
       setChatSummaries(merged);
     };
 
     fetchChats();
   }, [currentUser]);
+
+  const handleOpenOffer = (offerId) => {
+    if (onOpenOffer) onOpenOffer();
+    navigate(`/yacht-works?open=${offerId}`);
+  };
+
+  const handleToggleLock = async (chat) => {
+    if (!currentUser || chat.offer_id === '__external__') return;
+    const key = getChatKey(chat.offer_id, chat.user_id);
+    if (actionBusy[key]) return;
+
+    const nextLocked = !chat.locked;
+    setActionBusy((prev) => ({ ...prev, [key]: true }));
+
+    const { error } = await supabase
+      .from('yacht_work_chat_state')
+      .upsert(
+        {
+          offer_id: chat.offer_id,
+          user_id: currentUser.id,
+          other_user_id: chat.user_id,
+          locked: nextLocked,
+          deleted_at: chat.deleted_at || null,
+        },
+        { onConflict: 'offer_id,user_id,other_user_id' }
+      );
+
+    if (error) {
+      console.error('Error updating lock state:', error);
+    } else {
+      setChatSummaries((prev) =>
+        prev.map((item) =>
+          item.offer_id === chat.offer_id && item.user_id === chat.user_id
+            ? { ...item, locked: nextLocked }
+            : item
+        )
+      );
+    }
+
+    setActionBusy((prev) => ({ ...prev, [key]: false }));
+  };
+
+  const handleDelete = async (chat) => {
+    if (!currentUser || chat.offer_id === '__external__') return;
+    if (chat.locked) return;
+
+    const confirmed = window.confirm('Delete this conversation?');
+    if (!confirmed) return;
+
+    const key = getChatKey(chat.offer_id, chat.user_id);
+    if (actionBusy[key]) return;
+    setActionBusy((prev) => ({ ...prev, [key]: true }));
+
+    const nowIso = new Date().toISOString();
+
+    const { error: stateError } = await supabase
+      .from('yacht_work_chat_state')
+      .upsert(
+        {
+          offer_id: chat.offer_id,
+          user_id: currentUser.id,
+          other_user_id: chat.user_id,
+          locked: false,
+          deleted_at: nowIso,
+        },
+        { onConflict: 'offer_id,user_id,other_user_id' }
+      );
+
+    if (stateError) {
+      console.error('Error deleting chat (state):', stateError);
+      setActionBusy((prev) => ({ ...prev, [key]: false }));
+      return;
+    }
+
+    const { data: otherState, error: otherStateError } = await supabase
+      .from('yacht_work_chat_state')
+      .select('deleted_at')
+      .eq('offer_id', chat.offer_id)
+      .eq('user_id', chat.user_id)
+      .eq('other_user_id', currentUser.id)
+      .maybeSingle();
+
+    if (otherStateError) {
+      console.error('Error checking other chat state:', otherStateError);
+    }
+
+    const otherDeletedAt = otherState?.deleted_at;
+
+    if (!otherDeletedAt) {
+      const { error: notifyError } = await supabase
+        .from('yacht_work_messages')
+        .insert({
+          offer_id: chat.offer_id,
+          sender_id: currentUser.id,
+          receiver_id: chat.user_id,
+          message: 'The other user has deleted this conversation.',
+          sent_at: nowIso,
+          read: false,
+        });
+
+      if (notifyError) {
+        console.error('Error sending delete notice:', notifyError);
+      }
+    } else {
+      const { error: deleteError } = await supabase
+        .from('yacht_work_messages')
+        .delete()
+        .eq('offer_id', chat.offer_id)
+        .or(
+          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${chat.user_id}),` +
+            `and(sender_id.eq.${chat.user_id},receiver_id.eq.${currentUser.id})`
+        );
+
+      if (deleteError) {
+        console.error('Error deleting chat messages:', deleteError);
+      }
+    }
+
+    setChatSummaries((prev) =>
+      prev.filter(
+        (item) => !(item.offer_id === chat.offer_id && item.user_id === chat.user_id)
+      )
+    );
+    setActionBusy((prev) => ({ ...prev, [key]: false }));
+  };
 
   const groups = [];
   const groupIndex = new Map();
@@ -147,65 +356,122 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                 type="button"
                 onClick={() => {
                   if (group.key === '__external__') return;
-                  if (onOpenOffer) onOpenOffer();
-                  navigate(`/yacht-works?open=${group.key}`);
+                  handleOpenOffer(group.key);
                 }}
                 disabled={group.key === '__external__'}
               >
                 {group.title}
               </button>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {group.items.map((chat) => (
-                  <li key={`${chat.offer_id}_${chat.user_id}`} style={{ marginBottom: '10px' }}>
-                    <button
-                      style={{
-                        padding: '10px',
-                        borderRadius: '5px',
-                        background: '#eef5ff',
-                        border: '1px solid #ccc',
-                        width: '100%',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                      }}
-                      onClick={() => onOpenChat(chat.offer_id, chat.user_id)}
-                    >
-                      <Avatar
-                        nickname={chat.nickname || 'User'}
-                        srcUrl={chat.avatar_url || null}
-                        size={28}
-                        shape="circle"
-                      />
-                      <span
+                {group.items.map((chat) => {
+                  const chatKey = getChatKey(chat.offer_id, chat.user_id);
+                  const isExternal = chat.offer_id === '__external__';
+                  const isBusy = !!actionBusy[chatKey];
+
+                  return (
+                    <li key={chatKey} style={{ marginBottom: '10px' }}>
+                      <div
                         style={{
-                          display: 'flex',
-                          alignItems: 'baseline',
-                          gap: '6px',
-                          minWidth: 0,
-                          flex: 1,
+                          position: 'relative',
                         }}
                       >
-                        <strong style={{ flex: '0 0 auto' }}>{chat.nickname}</strong>
-                        <span style={{ flex: '0 0 auto' }}> - </span>
-                        <em
+                        <button
                           style={{
-                            flex: '1 1 auto',
-                            minWidth: 0,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: 'block',
+                            padding: '10px',
+                            borderRadius: '5px',
+                            background: '#eef5ff',
+                            border: '1px solid #ccc',
+                            width: '100%',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            flex: 1,
+                            paddingRight: isExternal ? '10px' : '72px',
                           }}
-                          title={chat.offerTitle}
+                          onClick={() => onOpenChat(chat.offer_id, chat.user_id)}
                         >
-                          {chat.offerTitle}
-                        </em>
-                      </span>
-                    </button>
-                  </li>
-                ))}
+                          <Avatar
+                            nickname={chat.nickname || 'User'}
+                            srcUrl={chat.avatar_url || null}
+                            size={28}
+                            shape="circle"
+                          />
+                          <span
+                            style={{
+                              display: 'flex',
+                              alignItems: 'baseline',
+                              gap: '6px',
+                              minWidth: 0,
+                              flex: 1,
+                            }}
+                          >
+                            <strong style={{ flex: '0 0 auto' }}>{chat.nickname}</strong>
+                            <span style={{ flex: '0 0 auto' }}> - </span>
+                            <em
+                              style={{
+                                flex: '1 1 auto',
+                                minWidth: 0,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: 'block',
+                              }}
+                              title={chat.offerTitle}
+                            >
+                              {chat.offerTitle}
+                            </em>
+                          </span>
+                        </button>
+                        {!isExternal && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              right: '8px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                            }}
+                          >
+                            <button
+                              type="button"
+                              title={chat.locked ? 'Unlock chat' : 'Lock chat'}
+                              onClick={() => handleToggleLock(chat)}
+                              disabled={isBusy}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: isBusy ? 'not-allowed' : 'pointer',
+                                color: '#0f172a',
+                                padding: '6px',
+                              }}
+                            >
+                              {chat.locked ? <LockClosedIcon /> : <LockOpenIcon />}
+                            </button>
+                            <button
+                              type="button"
+                              title={chat.locked ? 'Unlock to delete' : 'Delete chat'}
+                              onClick={() => handleDelete(chat)}
+                              disabled={isBusy || chat.locked}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: isBusy || chat.locked ? 'not-allowed' : 'pointer',
+                                color: chat.locked ? '#6b7280' : '#b91c1c',
+                                padding: '6px',
+                              }}
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

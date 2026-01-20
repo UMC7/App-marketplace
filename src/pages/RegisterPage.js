@@ -226,6 +226,16 @@ const clearAvatar = () => {
       return;
     }
 
+    if (altPhoneValue && primaryPhoneValue && altPhoneValue === primaryPhoneValue) {
+      setError('Alternative phone must be different from primary phone.');
+      return;
+    }
+
+    if (altEmailValue && primaryEmailValue && altEmailValue === primaryEmailValue) {
+      setError('Alternative email must be different from primary email.');
+      return;
+    }
+
     if (!acceptedTerms) {
       setError('You must accept the Terms of Use and Privacy Policy.');
       return;
@@ -307,12 +317,26 @@ try {
     boxShadow: '0 0 0 2px rgba(229, 83, 83, 0.2)',
   };
 
+  const normalizeEmail = (email) => (email || '').trim().toLowerCase();
+
   const nicknameOk =
     /^[A-Za-z0-9]{3,7}$/.test(form.nickname || '') &&
     ((form.nickname || '').match(/[A-Za-z]/g) || []).length >= 3 &&
     ((form.nickname || '').match(/\d/g) || []).length <= 3 &&
     !nicknameError &&
     nicknameStatus !== 'taken';
+
+  const primaryEmailValue = normalizeEmail(form.email);
+  const altEmailValue = normalizeEmail(form.altEmail);
+  const primaryPhoneValue =
+    form.phoneCode && form.phone ? `${form.phoneCode}${form.phone}` : '';
+  const altPhoneValue =
+    form.altPhoneCode && form.altPhone ? `${form.altPhoneCode}${form.altPhone}` : '';
+
+  const isAltEmailDuplicate =
+    !!form.altEmail.trim() && !!primaryEmailValue && altEmailValue === primaryEmailValue;
+  const isAltPhoneDuplicate =
+    !!altPhoneValue && !!primaryPhoneValue && altPhoneValue === primaryPhoneValue;
 
   const missing = {
     firstName: !form.firstName.trim(),
@@ -353,7 +377,9 @@ try {
       password &&
       confirmPassword &&
       password === confirmPassword &&
-      acceptedTerms
+      acceptedTerms &&
+      !isAltPhoneDuplicate &&
+      !isAltEmailDuplicate
     );
   };
   const isComplete = isFormComplete();
@@ -535,7 +561,10 @@ try {
             value={form.altPhoneCode}
             inputMode="numeric"
             pattern="[0-9]*"
-            style={{ width: '70px' }}
+            style={{
+              width: '70px',
+              ...(isAltPhoneDuplicate ? highlightStyle : null),
+            }}
           />
           <input
             name="altPhone"
@@ -544,9 +573,17 @@ try {
             value={form.altPhone}
             inputMode="numeric"
             pattern="[0-9]*"
-            style={{ flex: 1 }}
+            style={{
+              flex: 1,
+              ...(isAltPhoneDuplicate ? highlightStyle : null),
+            }}
           />
         </div>
+        {isAltPhoneDuplicate && (
+          <p style={{ color: 'red', marginTop: 6, marginBottom: 8, fontSize: '0.9rem' }}>
+            Alternative phone must be different from primary phone.
+          </p>
+        )}
 
         <label>
           Primary Email <span style={{ color: 'red' }}>*</span>
@@ -560,7 +597,17 @@ try {
         />
 
         <label>Alternative Email (optional)</label>
-        <input name="altEmail" placeholder="Alternative Email" onChange={handleChange} />
+        <input
+          name="altEmail"
+          placeholder="Alternative Email"
+          onChange={handleChange}
+          style={isAltEmailDuplicate ? highlightStyle : undefined}
+        />
+        {isAltEmailDuplicate && (
+          <p style={{ color: 'red', marginTop: 6, marginBottom: 8, fontSize: '0.9rem' }}>
+            Alternative email must be different from primary email.
+          </p>
+        )}
 
         <label>
           Password <span style={{ color: 'red' }}>*</span>

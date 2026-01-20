@@ -23,8 +23,29 @@ const ProfileUserTab = ({
   userForm,
   onChange,
   updateMessage,
-}) => (
-  <div className="user-info-form" style={{ maxWidth: 460 }}>
+}) => {
+  const highlightStyle = {
+    border: '1px solid #e55353',
+    boxShadow: '0 0 0 2px rgba(229, 83, 83, 0.2)',
+  };
+
+  const normalizeEmail = (email) => (email || '').trim().toLowerCase();
+  const primaryEmailValue = normalizeEmail(userForm.email);
+  const altEmailValue = normalizeEmail(userForm.altEmail);
+  const primaryPhoneValue =
+    userForm.phoneCode && userForm.phone ? `${userForm.phoneCode}${userForm.phone}` : '';
+  const altPhoneValue =
+    userForm.altPhoneCode && userForm.altPhone
+      ? `${userForm.altPhoneCode}${userForm.altPhone}`
+      : '';
+
+  const isAltEmailDuplicate =
+    !!userForm.altEmail?.trim() && !!primaryEmailValue && altEmailValue === primaryEmailValue;
+  const isAltPhoneDuplicate =
+    !!altPhoneValue && !!primaryPhoneValue && altPhoneValue === primaryPhoneValue;
+
+  return (
+    <div className="user-info-form" style={{ maxWidth: 460 }}>
     <h2>User Information</h2>
     <div
       style={{
@@ -155,7 +176,10 @@ const ProfileUserTab = ({
           onChange={onChange}
           inputMode="numeric"
           pattern="[0-9]*"
-          style={{ width: '70px' }}
+          style={{
+            width: '70px',
+            ...(isAltPhoneDuplicate ? highlightStyle : null),
+          }}
         />
         <input
           name="altPhone"
@@ -164,9 +188,17 @@ const ProfileUserTab = ({
           onChange={onChange}
           inputMode="numeric"
           pattern="[0-9]*"
-          style={{ flex: 1 }}
+          style={{
+            flex: 1,
+            ...(isAltPhoneDuplicate ? highlightStyle : null),
+          }}
         />
       </div>
+      {isAltPhoneDuplicate && (
+        <p style={{ color: '#b00020', marginTop: 6, marginBottom: 8, fontSize: '0.9rem' }}>
+          Alternative phone must be different from main phone.
+        </p>
+      )}
 
       <label htmlFor="email">Main Email</label>
       <input id="email" name="email" value={userForm.email} onChange={onChange} />
@@ -177,7 +209,13 @@ const ProfileUserTab = ({
         name="altEmail"
         value={userForm.altEmail}
         onChange={onChange}
+        style={isAltEmailDuplicate ? highlightStyle : undefined}
       />
+      {isAltEmailDuplicate && (
+        <p style={{ color: '#b00020', marginTop: 6, marginBottom: 8, fontSize: '0.9rem' }}>
+          Alternative email must be different from main email.
+        </p>
+      )}
 
       <label htmlFor="password">Password</label>
       <div>
@@ -223,6 +261,7 @@ const ProfileUserTab = ({
       )}
     </form>
   </div>
-);
+  );
+};
 
 export default ProfileUserTab;
