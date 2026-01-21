@@ -103,6 +103,20 @@
   padding: 6px 4px;
 }
 
+.asap-flex-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.salary-extra-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 /* =========================
    Dark Mode (coincide con el resto del formulario)
    ========================= */

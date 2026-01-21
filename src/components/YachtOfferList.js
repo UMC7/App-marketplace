@@ -9,6 +9,19 @@ import '../styles/YachtOfferList.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import MatchBorder from '../components/MatchBorder';
 
+const formatSalaryValue = (currency, amount, withTips) => {
+  const base = `${currency || ''} ${Number(amount).toLocaleString('en-US')}`;
+  return withTips ? `${base} + Tips` : base;
+};
+
+const formatSalary = (offer) => {
+  if (!offer) return '';
+  const base = offer.is_doe
+    ? 'DOE'
+    : formatSalaryValue(offer.salary_currency, offer.salary, false);
+  return offer.is_tips ? `${base} + Tips` : base;
+};
+
 const getRoleImage = (title) => {
   if (!title) return 'others';
 
@@ -29,7 +42,7 @@ const getRoleImage = (title) => {
     'chief steward(ess)', '2nd steward(ess)', '2nd stewardess', '3rd steward(ess)', '3rd stewardess',
     '4th steward(ess)', '4th stewardess', 'steward(ess)', 'stewardess', 'steward', 'solo steward(ess)',
     'junior steward(ess)', 'stew/deck', 'laundry/steward(ess)', 'stew/masseur',
-    'masseur', 'hairdresser', 'barber', 'butler', 'housekeeper'
+    'masseur', 'hairdresser', 'barber', 'butler', 'housekeeper', 'cook/stew/deck'
   ].some(role => lowerTitle.includes(role))) return 'interiordepartment';
 
   if (lowerTitle.includes('shore') || lowerTitle.includes('shore-based') || lowerTitle.includes('shorebased')) return 'shorebased';
@@ -237,7 +250,7 @@ const RANKS = [
   "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster",
   "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Electrician", "Chef",
   "Head Chef", "Sous Chef", "Solo Chef", "Cook/Crew Chef", "Crew Chef/Stew", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
-  "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Housekeeper", "Cook/Steward(ess)", "Stew/Deck",
+  "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Housekeeper", "Cook/Stew/Deck", "Cook/Steward(ess)", "Stew/Deck",
   "Laundry/Steward(ess)", "Stew/Masseur", "Masseur", "Hairdresser/Barber", "Nanny", "Videographer", "Yoga/Pilates Instructor",
   "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
 ];
@@ -1195,9 +1208,7 @@ useEffect(() => {
     {(offer.is_doe || offer.salary) && (
       <div className="field-group salary">
         <div className="field-label">Salary</div>
-        <div className="field-value">
-          {offer.is_doe ? 'DOE' : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
-        </div>
+        <div className="field-value">{formatSalary(offer)}</div>
       </div>
     )}
 
@@ -1209,12 +1220,12 @@ useEffect(() => {
 )}
 
 {(offer.teammate_experience === null || offer.teammate_experience === undefined) && offer.teammate_salary && (
-  <div className="field-group salary2">
-    <div className="field-label">Salary (2)</div>
-    <div className="field-value">
-      {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+    <div className="field-group salary2">
+      <div className="field-label">Salary (2)</div>
+      <div className="field-value">
+      {formatSalaryValue(offer.salary_currency, offer.teammate_salary, offer.is_tips)}
+      </div>
     </div>
-  </div>
 )}
 
 {(offer.teammate_experience !== null && offer.teammate_experience !== undefined) && (
@@ -1230,7 +1241,7 @@ useEffect(() => {
   <div className="field-group salary2">
     <div className="field-label">Salary (2)</div>
     <div className="field-value">
-      {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+      {formatSalaryValue(offer.salary_currency, offer.teammate_salary, offer.is_tips)}
     </div>
   </div>
 )}
@@ -1689,9 +1700,7 @@ useEffect(() => {
     {/* Salary */}
     <div className="salary-line">
       <strong>Salary:</strong>{' '}
-      {offer.is_doe
-        ? 'DOE'
-        : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
+      {formatSalary(offer)}
     </div>
 
     {/* Rank 2 */}
@@ -1704,7 +1713,7 @@ useEffect(() => {
     {offer.team && offer.teammate_salary && (
       <div className="salary-line">
         <strong>Salary:</strong>{' '}
-        {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+        {formatSalaryValue(offer.salary_currency, offer.teammate_salary, offer.is_tips)}
       </div>
     )}
 
@@ -1783,9 +1792,7 @@ useEffect(() => {
         {/* Línea 1: Salary */}
         <div className="salary-line">
           <strong>Salary:</strong>{' '}
-          {offer.is_doe
-            ? 'DOE'
-            : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
+          {formatSalary(offer)}
         </div>
 
         {/* Línea 2: Teammate Salary o espacio vacío */}
@@ -1793,7 +1800,7 @@ useEffect(() => {
           {offer.teammate_salary ? (
             <>
               <strong>Salary:</strong>{' '}
-              {`${offer.salary_currency || ''} ${Number(offer.teammate_salary).toLocaleString('en-US')}`}
+              {formatSalaryValue(offer.salary_currency, offer.teammate_salary, offer.is_tips)}
             </>
           ) : (
             '\u00A0'
@@ -1823,9 +1830,7 @@ useEffect(() => {
         {/* Línea 1: Salary */}
         <div className="salary-line">
           <strong>Salary:</strong>{' '}
-          {offer.is_doe
-            ? 'DOE'
-            : `${offer.salary_currency || ''} ${Number(offer.salary).toLocaleString('en-US')}`}
+          {formatSalary(offer)}
         </div>
 
         {/* Línea 2: Size (reservada si shore-based) */}

@@ -29,6 +29,8 @@ const initialState = {
   end_date: '',
   salary: '',
   is_doe: false,
+  is_tips: false,
+  is_flexible: false,
   years_in_rank: '',
   gender: '',
   description: '',
@@ -60,7 +62,7 @@ const initialState = {
   visas: [],
 };
 
-const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain', 'Chief Officer', '2nd Officer', '3rd Officer', 'Bosun', 'Deck/Engineer', 'Mate', 'Lead Deckhand', 'Deckhand', 'Deck/Steward(ess)', 'Deck/Carpenter', 'Deck/Divemaster', 'Dayworker', 'Chief Engineer', '2nd Engineer', '3rd Engineer', 'Solo Engineer', 'Electrician', 'Chef', 'Head Chef', 'Sous Chef', 'Solo Chef', 'Cook/Crew Chef', 'Crew Chef/Stew', 'Butler', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Steward(ess)', '4th Steward(ess)', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Housekeeper', 'Cook/Steward(ess)', 'Stew/Deck', 'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny', 'Videographer', 'Yoga/Pilates Instructor', 'Personal Trainer', 'Dive Instrutor', 'Water Sport Instrutor', 'Nurse', 'Other']; // ajusta según lista oficial
+const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain', 'Chief Officer', '2nd Officer', '3rd Officer', 'Bosun', 'Deck/Engineer', 'Mate', 'Lead Deckhand', 'Deckhand', 'Deck/Steward(ess)', 'Deck/Carpenter', 'Deck/Divemaster', 'Dayworker', 'Chief Engineer', '2nd Engineer', '3rd Engineer', 'Solo Engineer', 'Electrician', 'Chef', 'Head Chef', 'Sous Chef', 'Solo Chef', 'Cook/Crew Chef', 'Crew Chef/Stew', 'Butler', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Steward(ess)', '4th Steward(ess)', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Housekeeper', 'Cook/Stew/Deck', 'Cook/Steward(ess)', 'Stew/Deck', 'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny', 'Videographer', 'Yoga/Pilates Instructor', 'Personal Trainer', 'Dive Instrutor', 'Water Sport Instrutor', 'Nurse', 'Other']; // ajusta según lista oficial
 
 const countries = [
   // 🌐 Countries
@@ -158,7 +160,7 @@ const autoFillFromText = async () => {
         }
 
         // booleanos
-        if (k === "is_asap" || k === "is_doe") {
+        if (k === "is_asap" || k === "is_doe" || k === "is_flexible" || k === "is_tips") {
           if (typeof v === "boolean" && v !== merged[k]) merged[k] = v;
           continue;
         }
@@ -232,7 +234,7 @@ const formReady = (() => {
       !formData.type ||
       !formData.yacht_type ||
       !formData.yacht_size ||
-      (!formData.start_date && !formData.is_asap) ||
+      (!formData.start_date && !formData.is_asap && !formData.is_flexible) ||
       !formData.country ||
       (formData.team === 'Yes' && (!formData.teammate_rank || (!formData.teammate_salary && !formData.is_doe)))
     ) return false;
@@ -243,7 +245,7 @@ const formReady = (() => {
       !formData.title ||
       (!formData.salary_currency && !formData.is_doe) ||
       (!formData.salary && !formData.is_doe) ||
-      (!formData.start_date && !formData.is_asap) ||
+      (!formData.start_date && !formData.is_asap && !formData.is_flexible) ||
       !formData.work_location ||
       (formData.work_location === 'On - site' && (!formData.city || !formData.country))
     ) return false;
@@ -286,11 +288,22 @@ const formReady = (() => {
       // 🔹 Si marca ASAP → limpiar fecha
       if (name === 'is_asap') {
         newState.start_date = checked ? '' : prev.start_date;
+        if (checked) {
+          newState.is_flexible = false;
+        }
+      }
+
+      if (name === 'is_flexible') {
+        newState.start_date = checked ? '' : prev.start_date;
+        if (checked) {
+          newState.is_asap = false;
+        }
       }
 
       // 🔹 Si cambia Start Date → desmarcar ASAP
       if (name === 'start_date' && value) {
         newState.is_asap = false;
+        newState.is_flexible = false;
       }
 
       return newState;
@@ -316,7 +329,7 @@ if (isOnboard) {
     !formData.type ||
     !formData.yacht_type ||
     !formData.yacht_size ||
-    (!formData.start_date && !formData.is_asap) ||
+    (!formData.start_date && !formData.is_asap && !formData.is_flexible) ||
     !formData.country ||
     (formData.team === 'Yes' && (!formData.teammate_rank || (!formData.teammate_salary && !formData.is_doe)))
   ) {
@@ -330,7 +343,7 @@ if (isShoreBased) {
     !formData.title ||
     !formData.salary_currency && !formData.is_doe ||
     !formData.salary && !formData.is_doe ||
-    (!formData.start_date && !formData.is_asap) ||
+    (!formData.start_date && !formData.is_asap && !formData.is_flexible) ||
     !formData.work_location ||
     (formData.work_location === 'On - site' && (!formData.city || !formData.country))
   ) {
@@ -372,6 +385,8 @@ const sanitizedData = {
     type: sanitizedData.type || null,
     start_date: sanitizedData.is_asap
       ? new Date().toISOString().split('T')[0]
+      : sanitizedData.is_flexible
+      ? null
       : sanitizedData.start_date || null,
     end_date:
       sanitizedData.type === 'Permanent'
@@ -397,6 +412,8 @@ const sanitizedData = {
     liveaboard: sanitizedData.liveaboard || null,
     season_type: sanitizedData.season_type || null,
     is_asap: sanitizedData.is_asap,
+    is_tips: sanitizedData.is_tips,
+    is_flexible: sanitizedData.is_flexible,
     holidays: sanitizedData.holidays ? Number(sanitizedData.holidays) : null,
     language_1: sanitizedData.language_1 || null,
     language_1_fluency: sanitizedData.language_1_fluency || null,
@@ -586,7 +603,7 @@ const sanitizedData = {
 )}
 
 {/* 5. DOE */}
-<div className="form-group"> 
+<div className="form-group salary-extra-row"> 
   <label className="form-checkbox-label"> 
     <input
       type="checkbox"
@@ -595,6 +612,15 @@ const sanitizedData = {
       onChange={handleChange}
     />
     <span>DOE (Salary)</span>
+  </label>
+  <label className="form-checkbox-label"> 
+    <input
+      type="checkbox"
+      name="is_tips"
+      checked={formData.is_tips}
+      onChange={handleChange}
+    />
+    <span>+ Tips</span>
   </label>
 </div>
 
@@ -853,21 +879,32 @@ const sanitizedData = {
   name="start_date"
   value={formData.start_date}
   onChange={handleChange}
-  className={highlightClass(!formData.start_date && !formData.is_asap)}
-  required={!formData.is_asap}
-  disabled={formData.is_asap}
+  className={highlightClass(!formData.start_date && !formData.is_asap && !formData.is_flexible)}
+  required={!formData.is_asap && !formData.is_flexible}
+  disabled={formData.is_asap || formData.is_flexible}
 />
 
 {/* ASAP Option */}
-<div className="form-group">
+<div className="form-group asap-flex-row">
   <label className="form-checkbox-label">
     <input
       type="checkbox"
       name="is_asap"
       checked={formData.is_asap}
       onChange={handleChange}
+      disabled={formData.is_flexible}
     />
     <span>ASAP</span>
+  </label>
+  <label className="form-checkbox-label">
+    <input
+      type="checkbox"
+      name="is_flexible"
+      checked={formData.is_flexible}
+      onChange={handleChange}
+      disabled={formData.is_asap}
+    />
+    <span>Flexible</span>
   </label>
 </div>
 
@@ -990,7 +1027,7 @@ const sanitizedData = {
     )}
 
     {/* DOE */}
-    <div className="form-group"> 
+    <div className="form-group salary-extra-row"> 
   <label className="form-checkbox-label"> 
     <input
       type="checkbox"
@@ -999,6 +1036,15 @@ const sanitizedData = {
       onChange={handleChange}
     />
     <span>DOE (Salary)</span>
+  </label>
+  <label className="form-checkbox-label"> 
+    <input
+      type="checkbox"
+      name="is_tips"
+      checked={formData.is_tips}
+      onChange={handleChange}
+    />
+    <span>+ Tips</span>
   </label>
 </div>
 
@@ -1064,23 +1110,34 @@ const sanitizedData = {
       name="start_date"
       value={formData.start_date}
       onChange={handleChange}
-      className={highlightClass(!formData.start_date && !formData.is_asap)}
-      required={!formData.is_asap}
-      disabled={formData.is_asap}
+      className={highlightClass(!formData.start_date && !formData.is_asap && !formData.is_flexible)}
+      required={!formData.is_asap && !formData.is_flexible}
+      disabled={formData.is_asap || formData.is_flexible}
     />
 
     {/* ASAP */}
-    <div className="form-group">
-  <label className="form-checkbox-label">
-    <input
-      type="checkbox"
-      name="is_asap"
-      checked={formData.is_asap}
-      onChange={handleChange}
-    />
-    <span>ASAP</span>
-  </label>
-</div>
+    <div className="form-group asap-flex-row">
+      <label className="form-checkbox-label">
+        <input
+          type="checkbox"
+          name="is_asap"
+          checked={formData.is_asap}
+          onChange={handleChange}
+          disabled={formData.is_flexible}
+        />
+        <span>ASAP</span>
+      </label>
+      <label className="form-checkbox-label">
+        <input
+          type="checkbox"
+          name="is_flexible"
+          checked={formData.is_flexible}
+          onChange={handleChange}
+          disabled={formData.is_asap}
+        />
+        <span>Flexible</span>
+      </label>
+    </div>
 
     {/* End Date */}
     <label>End Date:</label>
@@ -1199,4 +1256,8 @@ const sanitizedData = {
 }
 
 export default YachtOfferForm;
+
+
+
+
 
