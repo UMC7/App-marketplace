@@ -270,7 +270,8 @@
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  gap: var(--spacing-xxs);
+  flex-wrap: nowrap;
+  gap: var(--spacing-xs);
   width: 100%;
   box-sizing: border-box;
 }
@@ -289,14 +290,15 @@
 .block4,
 .block5 {
   flex: 1 1 0;
-  min-width: 150px;
+  min-width: 180px;
   max-width: 100%;
 }
 
 .block1 p {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-word;
 }
 
 .block6 {
@@ -336,9 +338,11 @@
 
 .field-value {
   margin-bottom: var(--spacing-md);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .field-value.email {
@@ -561,6 +565,147 @@ body:not(.dark-mode) .filters-panel h3 {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 6px 12px;
     padding-top: 8px;
+  }
+}
+
+/* Desktop screens - Keep 5 columns horizontal with text wrapping */
+@media (min-width: 1000px) {
+  .top-row {
+    flex-wrap: nowrap;
+  }
+
+  .expanded-block {
+    min-width: 180px;
+  }
+
+  .block1,
+  .block2,
+  .block3,
+  .block4,
+  .block5 {
+    min-width: 180px;
+  }
+}
+
+/* Tablet screens - Change to mobile behavior when columns don't fit */
+@media (min-width: 769px) and (max-width: 999px) {
+  .offer-card.expanded {
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .expanded-block,
+  .block1,
+  .block2,
+  .block3,
+  .block4,
+  .block5,
+  .block6,
+  .block7 {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .top-row {
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    gap: 0 !important;
+  }
+
+  .field-value,
+  .remarks-content {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  .expanded-block:not(.block6) {
+    border-top: 1px solid #bca987;
+    padding-top: var(--spacing-md);
+    margin-top: var(--spacing-md);
+  }
+
+  .block1 p {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  .field-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md) var(--spacing-xl);
+  }
+}
+
+/* Mobile screens - Use mobile behavior */
+@media (max-width: 768px) {
+  .offer-card.expanded {
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .expanded-block,
+  .block1,
+  .block2,
+  .block3,
+  .block4,
+  .block5,
+  .block6,
+  .block7 {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .top-row {
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    gap: 0 !important;
+  }
+
+  .field-value,
+  .remarks-content {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  .expanded-block:not(.block6) {
+    border-top: 1px solid #bca987;
+    padding-top: var(--spacing-md);
+    margin-top: var(--spacing-md);
+  }
+
+  .block1 p {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  .field-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md) var(--spacing-xl);
   }
 }
 
