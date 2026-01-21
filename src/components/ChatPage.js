@@ -43,6 +43,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   const [otherAvatar, setOtherAvatar] = useState(null);
   const [myAvatar, setMyAvatar] = useState(null);
   const [offerMeta, setOfferMeta] = useState(null);
+  const [isChatClosed, setIsChatClosed] = useState(false);
 
   // External/anonymous mode flag
   const isExternal = mode === 'external' && !!externalThreadId;
@@ -125,6 +126,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
     const fetchMessages = async () => {
       if (isExternal) {
+        setIsChatClosed(false);
         const { data, error } = await supabase
           .from('external_messages')
           .select('*')
@@ -166,12 +168,34 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
           fetchUnreadMessages();
         }
       }
+
+      const { data: otherState, error: otherStateError } = await supabase
+        .from('yacht_work_chat_state')
+        .select('deleted_at')
+        .eq('offer_id', offerId)
+        .eq('user_id', receiverId)
+        .eq('other_user_id', currentUser.id)
+        .maybeSingle();
+
+      if (otherStateError) {
+        console.error('Error checking chat closed state:', otherStateError);
+      }
+
+      const hasDeleteNotice = Array.isArray(data)
+        && data.some((msg) => {
+          const text = msg?.message;
+          return typeof text === 'string'
+            && (text.startsWith('[system] ') || text === 'The other user has deleted this conversation.');
+        });
+
+      setIsChatClosed(!!otherState?.deleted_at || hasDeleteNotice);
     };
 
     fetchMessages();
   }, [isExternal, externalThreadId, offerId, receiverId, currentUser, fetchUnreadMessages]);
 
   const handleSend = async () => {
+    if (isChatClosed) return;
     if (!message && !file) return;
 
     // External (anonymous) chat: text only (MVP)
@@ -257,10 +281,26 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
           : msg.sender_id === currentUser.id;
 
         const text = isExternal ? msg.content : msg.message;
+        const isSystemMessage = !isExternal && typeof text === 'string'
+          && (text.startsWith('[system] ') || text === 'The other user has deleted this conversation.');
+        const systemText = isSystemMessage
+          ? text.replace(/^\[system\]\s*/, '')
+          : null;
 
         const time = isExternal
           ? new Date(msg.created_at).toLocaleString()
           : new Date(msg.sent_at).toLocaleString();
+
+        if (isSystemMessage) {
+          return (
+            <div key={msg.id} className="chat-message-row system">
+              <div className="chat-message system">
+                {systemText && renderMessageText(systemText)}
+                <div className="chat-message-time">{time}</div>
+              </div>
+            </div>
+          );
+        }
 
         return (
           <div key={msg.id} className={`chat-message-row ${isOwnMessage ? 'own' : 'other'}`}>
@@ -302,6 +342,11 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
   const renderInput = () => (
     <div className="chat-input">
+      {isChatClosed && (
+        <div className="chat-closed-note">
+          This chat was closed. Open a new private chat to send messages.
+        </div>
+      )}
       {!isExternal && (
         <>
           <label className="file-clip" htmlFor="file-input">📎</label>
@@ -310,6 +355,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
             type="file"
             ref={fileInputRef}
             onChange={(e) => setFile(e.target.files[0])}
+            disabled={isChatClosed}
           />
         </>
       )}
@@ -318,8 +364,9 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         rows={2}
+        disabled={isChatClosed}
       />
-      <button onClick={handleSend}>Send</button>
+      <button onClick={handleSend} disabled={isChatClosed}>Send</button>
     </div>
   );
 

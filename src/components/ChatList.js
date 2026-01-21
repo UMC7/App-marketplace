@@ -285,7 +285,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
           offer_id: chat.offer_id,
           sender_id: currentUser.id,
           receiver_id: chat.user_id,
-          message: 'The other user has deleted this conversation.',
+          message: '[system] The other user has deleted this conversation.',
           sent_at: nowIso,
           read: false,
         });
