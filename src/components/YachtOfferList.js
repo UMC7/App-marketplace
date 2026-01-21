@@ -29,7 +29,7 @@ const getRoleImage = (title) => {
     'chief steward(ess)', '2nd steward(ess)', '2nd stewardess', '3rd steward(ess)', '3rd stewardess',
     '4th steward(ess)', '4th stewardess', 'steward(ess)', 'stewardess', 'steward', 'solo steward(ess)',
     'junior steward(ess)', 'stew/deck', 'laundry/steward(ess)', 'stew/masseur',
-    'masseur', 'hairdresser', 'barber', 'butler'
+    'masseur', 'hairdresser', 'barber', 'butler', 'housekeeper'
   ].some(role => lowerTitle.includes(role))) return 'interiordepartment';
 
   if (lowerTitle.includes('shore') || lowerTitle.includes('shore-based') || lowerTitle.includes('shorebased')) return 'shorebased';
@@ -237,7 +237,7 @@ const RANKS = [
   "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster",
   "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Electrician", "Chef",
   "Head Chef", "Sous Chef", "Solo Chef", "Cook/Crew Chef", "Crew Chef/Stew", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
-  "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Cook/Steward(ess)", "Stew/Deck",
+  "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Housekeeper", "Cook/Steward(ess)", "Stew/Deck",
   "Laundry/Steward(ess)", "Stew/Masseur", "Masseur", "Hairdresser/Barber", "Nanny", "Videographer", "Yoga/Pilates Instructor",
   "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
 ];
@@ -1565,20 +1565,22 @@ useEffect(() => {
   {isMobile ? (
     offer.team ? (
       showAvatarMobile ? (
-        <div className="mobile-team-avatar role-icon">
-          <Avatar
-            nickname={authors[offer.user_id] || 'User'}
-            srcUrl={authorAvatars[offer.user_id] || null}
-            size={96}
-            shape="square"
-            radius={0}
-            style={{
-            width: '100%',
-            height: '100%',
-            display: 'block'
-          }}
-        />
-        </div>
+        <MatchBorder score={primaryScore}>
+          <div className="mobile-team-avatar role-icon">
+            <Avatar
+              nickname={authors[offer.user_id] || 'User'}
+              srcUrl={authorAvatars[offer.user_id] || null}
+              size={96}
+              shape="square"
+              radius={0}
+              style={{
+              width: '100%',
+              height: '100%',
+              display: 'block'
+            }}
+          />
+          </div>
+        </MatchBorder>
       ) : (
         <>
   <MatchBorder score={primaryScore}>
@@ -1604,20 +1606,22 @@ useEffect(() => {
       )
     ) : (
     showAvatarMobile ? (
-    <div className="mobile-avatar-slot role-icon">
-      <Avatar
-        nickname={authors[offer.user_id] || 'User'}
-        srcUrl={authorAvatars[offer.user_id] || null}
-        size={96}
-        shape="square"
-        radius={0}
-        style={{
-        width: '100%',
-        height: '100%',
-        display: 'block'
-      }}
-    />
-    </div>
+    <MatchBorder score={primaryScore}>
+      <div className="mobile-avatar-slot role-icon">
+        <Avatar
+          nickname={authors[offer.user_id] || 'User'}
+          srcUrl={authorAvatars[offer.user_id] || null}
+          size={96}
+          shape="square"
+          radius={0}
+          style={{
+          width: '100%',
+          height: '100%',
+          display: 'block'
+        }}
+      />
+      </div>
+    </MatchBorder>
       ) : (
         <MatchBorder score={primaryScore}>
       <ThemeLogo
