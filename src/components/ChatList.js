@@ -101,13 +101,18 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
       const userIds = [...new Set(chatArray.map((c) => c.user_id))];
       const offerIds = [...new Set(chatArray.map((c) => c.offer_id))];
 
-      const [{ data: users }, { data: offers }] = await Promise.all([
+      const [{ data: users }, { data: offers }, { data: unreadRows }] = await Promise.all([
         userIds.length
           ? supabase.from('users').select('id, nickname, avatar_url').in('id', userIds)
           : Promise.resolve({ data: [] }),
         offerIds.length
           ? supabase.from('yacht_work_offers').select('id, title').in('id', offerIds)
           : Promise.resolve({ data: [] }),
+        supabase
+          .from('yacht_work_messages')
+          .select('offer_id, sender_id')
+          .eq('receiver_id', currentUser.id)
+          .eq('read', false),
       ]);
 
       let stateMap = {};
@@ -136,6 +141,11 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
       const offersMap = Object.fromEntries(
         (offers || []).map((o) => [o.id, o.title])
       );
+      const unreadMap = (unreadRows || []).reduce((acc, row) => {
+        const key = getChatKey(row.offer_id, row.sender_id);
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
 
       const internalRows = chatArray.map((chat) => {
         const state = stateMap[getChatKey(chat.offer_id, chat.user_id)];
@@ -146,6 +156,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
           offerTitle: offersMap[chat.offer_id] || 'Deleted offer',
           locked: !!state?.locked,
           deleted_at: state?.deleted_at || null,
+          unreadCount: unreadMap[getChatKey(chat.offer_id, chat.user_id)] || 0,
         };
       });
 
@@ -178,6 +189,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
           offerTitle: 'CV chat',
           locked: false,
           deleted_at: null,
+          unreadCount: 0,
         });
       }
 
@@ -367,6 +379,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                   const chatKey = getChatKey(chat.offer_id, chat.user_id);
                   const isExternal = chat.offer_id === '__external__';
                   const isBusy = !!actionBusy[chatKey];
+                  const unreadCount = chat.unreadCount || 0;
 
                   return (
                     <li key={chatKey} style={{ marginBottom: '10px' }}>
@@ -388,7 +401,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                             alignItems: 'center',
                             gap: '10px',
                             flex: 1,
-                            paddingRight: isExternal ? '10px' : '72px',
+                            paddingRight: isExternal ? '10px' : '104px',
                           }}
                           onClick={() => onOpenChat(chat.offer_id, chat.user_id)}
                         >
@@ -436,6 +449,27 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                               gap: '6px',
                             }}
                           >
+                            {unreadCount > 0 && (
+                              <span
+                                style={{
+                                  minWidth: '20px',
+                                  height: '20px',
+                                  padding: '0 6px',
+                                  borderRadius: '999px',
+                                  background: '#ef4444',
+                                  color: '#fff',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 700,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                                aria-label={`${unreadCount} unread messages`}
+                                title={`${unreadCount} unread messages`}
+                              >
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                              </span>
+                            )}
                             <button
                               type="button"
                               title={chat.locked ? 'Unlock chat' : 'Lock chat'}
