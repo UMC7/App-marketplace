@@ -383,10 +383,8 @@ const sanitizedData = {
     city: sanitizedData.city,
     country: sanitizedData.country,
     type: sanitizedData.type || null,
-    start_date: sanitizedData.is_asap
+    start_date: sanitizedData.is_asap || sanitizedData.is_flexible
       ? new Date().toISOString().split('T')[0]
-      : sanitizedData.is_flexible
-      ? null
       : sanitizedData.start_date || null,
     end_date:
       sanitizedData.type === 'Permanent'
