@@ -95,6 +95,15 @@ body.dark-mode .chat-back-btn {
 .chat-message-row.system {
   justify-content: center;
 }
+.chat-card {
+  background: #eef5ff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+.chat-card-button {
+  background: transparent;
+  border: none;
+}
 
 /* ── NUEVO: contenedor del avatar circular ── */
 .chat-message-avatar {
@@ -252,6 +261,7 @@ body.dark-mode .chat-back-btn {
 .dark-mode .chat-message-sender { color: #bbb; }
 .dark-mode .chat-file-link { color: #FFD700 !important; }
 .dark-mode .chat-message.other .chat-file-link { color: #FFD700 !important; }
+.dark-mode .chat-card { background: var(--primary-color); border-color: transparent; }
 .dark-mode .chat-input { background-color: #1e1e1e; border-top: 1px solid #333; }
 .dark-mode .chat-closed-note { color: #cbd5e1; background: #1f2937; }
 .dark-mode .chat-input textarea { background-color: #2a2a2a; color: #fff; border: 1px solid #444; }

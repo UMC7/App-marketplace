@@ -384,24 +384,27 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                   return (
                     <li key={chatKey} style={{ marginBottom: '10px' }}>
                       <div
+                        className="chat-card"
                         style={{
-                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '6px 8px',
                         }}
                       >
                         <button
+                          className="chat-card-button"
                           style={{
-                            padding: '10px',
-                            borderRadius: '5px',
-                            background: '#eef5ff',
-                            border: '1px solid #ccc',
+                            padding: '4px 6px',
+                            borderRadius: '4px',
                             width: '100%',
                             textAlign: 'left',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '10px',
-                            flex: 1,
-                            paddingRight: isExternal ? '10px' : '104px',
+                            flex: '1 1 auto',
+                            minWidth: 0,
                           }}
                           onClick={() => onOpenChat(chat.offer_id, chat.user_id)}
                         >
@@ -414,39 +417,23 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                           <span
                             style={{
                               display: 'flex',
-                              alignItems: 'baseline',
-                              gap: '6px',
+                              flexDirection: 'column',
+                              alignItems: 'flex-start',
+                              gap: '2px',
                               minWidth: 0,
-                              flex: 1,
+                              flex: '1 1 auto',
                             }}
                           >
                             <strong style={{ flex: '0 0 auto' }}>{chat.nickname}</strong>
-                            <span style={{ flex: '0 0 auto' }}> - </span>
-                            <em
-                              style={{
-                                flex: '1 1 auto',
-                                minWidth: 0,
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: 'block',
-                              }}
-                              title={chat.offerTitle}
-                            >
-                              {chat.offerTitle}
-                            </em>
                           </span>
                         </button>
                         {!isExternal && (
                           <div
                             style={{
-                              position: 'absolute',
-                              right: '8px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '6px',
+                              flex: '0 0 auto',
                             }}
                           >
                             {unreadCount > 0 && (
