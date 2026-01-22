@@ -1376,7 +1376,11 @@ useEffect(() => {
       <div className="field-group">
         <div className="field-label">Start Date</div>
         <div className="field-value">
-          {offer.is_asap ? 'ASAP' : formatDate(offer.start_date, offer.start_date_month_only)}
+          {offer.is_asap
+            ? 'ASAP'
+            : offer.is_flexible
+              ? formatDate(new Date().toISOString().split('T')[0])
+              : formatDate(offer.start_date, offer.start_date_month_only)}
         </div>
       </div>
     )}
