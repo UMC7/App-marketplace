@@ -1379,7 +1379,7 @@ useEffect(() => {
           {offer.is_asap
             ? 'ASAP'
             : offer.is_flexible
-              ? formatDate(new Date().toISOString().split('T')[0])
+              ? 'Flexible'
               : formatDate(offer.start_date, offer.start_date_month_only)}
         </div>
       </div>
