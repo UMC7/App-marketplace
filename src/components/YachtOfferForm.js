@@ -49,6 +49,60 @@ const getDaysInMonth = (monthValue) => {
   return new Date(year, month, 0).getDate();
 };
 
+const COMMAND_RANKS = [
+  'Captain',
+  'Skipper',
+  'Relief Captain',
+  'Chase Boat Captain',
+  'Captain/Engineer'
+];
+
+const COMMAND_LICENSE_OPTIONS = [
+  'Master Unlimited (STCW II/2)',
+  'Master (Yachts) 3000 GT',
+  'Master (Yachts) 500 GT',
+  'Master / Yachtmaster 200 GT',
+  'Yachtmaster <24 m',
+];
+
+const REQUIRED_DOCUMENT_GROUPS = [
+  {
+    label: 'Commonly Required',
+    options: [
+      'Valid Passport (>=6 months validity)',
+      "Seaman's Book",
+      'ENG1 Seafarer Medical Certificate',
+      'STCW Basic Training (A-VI/1)',
+      "Driver's License",
+    ],
+  },
+  {
+    label: 'Navigation & Communication',
+    options: [
+      'RADAR / ARPA',
+      'ECDIS',
+      'GMDSS GOC',
+      'GMDSS ROC',
+      'RYA SRC (VHF)',
+    ],
+  },
+  {
+    label: 'Security',
+    options: ['Ship Security Officer (SSO)'],
+  },
+  {
+    label: 'Administrative / Compliance',
+    options: [
+      'Flag State Endorsement',
+      'Background Check - DBS / Police Clearance',
+    ],
+  },
+  {
+    label: 'Travel & Health',
+    options: ['Vaccination - Yellow Fever'],
+  },
+];
+
 const initialState = {
   work_environment: '',
   title: '',
@@ -59,6 +113,8 @@ const initialState = {
   start_month: '',
   start_day: '',
   end_date: '',
+  required_license: '',
+  required_documents: [],
   salary: '',
   is_doe: false,
   is_tips: false,
@@ -139,22 +195,46 @@ useEffect(() => {
     start_day: initialValues.start_date_month_only ? '' : day,
   }));
 }, [initialValues]);
+
+useEffect(() => {
+  if (!Array.isArray(initialValues?.required_licenses)) return;
+  setFormData(prev => ({
+    ...prev,
+    required_license: initialValues.required_licenses[0] || '',
+  }));
+}, [initialValues]);
+
+useEffect(() => {
+  if (!Array.isArray(initialValues?.required_documents)) return;
+  setFormData(prev => ({
+    ...prev,
+    required_documents: initialValues.required_documents || [],
+  }));
+}, [initialValues]);
   const [loading, setLoading] = useState(false);
   const [showMissing, setShowMissing] = useState(false);
   const [jobText, setJobText] = useState('');
   const [showPaste, setShowPaste] = useState(false);
   const [showVisas, setShowVisas] = useState(false);
+  const [showRequiredDocs, setShowRequiredDocs] = useState(false);
 
   // close the visas dropdown on outside click or ESC
 const visasRef = useRef(null);
+const requiredDocsRef = useRef(null);
 useEffect(() => {
   const handleClickOutside = (e) => {
     if (visasRef.current && !visasRef.current.contains(e.target)) {
       setShowVisas(false);
     }
+    if (requiredDocsRef.current && !requiredDocsRef.current.contains(e.target)) {
+      setShowRequiredDocs(false);
+    }
   };
   const handleEsc = (e) => {
-    if (e.key === 'Escape') setShowVisas(false);
+    if (e.key === 'Escape') {
+      setShowVisas(false);
+      setShowRequiredDocs(false);
+    }
   };
   document.addEventListener('click', handleClickOutside);
   document.addEventListener('keydown', handleEsc);
@@ -268,6 +348,7 @@ const autoFillFromText = async () => {
 };
 
   const isDayworker = formData.title === 'Dayworker';
+  const needsCommandLicense = COMMAND_RANKS.includes(formData.title);
 
 const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
@@ -338,6 +419,17 @@ const formReady = (() => {
     return;
   }
 
+  if (name === 'required_documents') {
+    setFormData(prev => {
+      const current = prev.required_documents || [];
+      const next = checked
+        ? [...current, value]
+        : current.filter((v) => v !== value);
+      return { ...prev, required_documents: next };
+    });
+    return;
+  }
+
   if (name === 'visas') {
     setFormData(prev => {
       const currentVisas = prev.visas || [];
@@ -361,6 +453,10 @@ const formReady = (() => {
       // 🔹 Si selecciona Dayworker → autoasigna DayWork
       if (name === 'title' && value === 'Dayworker') {
         newState.type = 'DayWork';
+      }
+      if (name === 'title' && !COMMAND_RANKS.includes(value)) {
+        newState.required_license = '';
+        newState.required_documents = [];
       }
 
       // 🔹 Si marca ASAP → limpiar fecha
@@ -427,8 +523,9 @@ if (isShoreBased) {
   }
 }
 
-const { start_month, start_day, ...restForm } = formData;
+const { start_month, start_day, required_license, required_documents, ...restForm } = formData;
 const startDateMonthOnly = !!start_month && !start_day;
+const requiredLicenses = required_license ? [required_license] : [];
 const derivedStartDate = (() => {
   if (!start_month) return null;
   const year = getInferredYear(start_month);
@@ -442,6 +539,8 @@ const sanitizedData = {
   ...restForm,
   start_date: derivedStartDate,
   start_date_month_only: startDateMonthOnly,
+  required_licenses: requiredLicenses,
+  required_documents: Array.isArray(required_documents) ? required_documents : [],
   years_in_rank:
     formData.years_in_rank === 'Green'
       ? 0
@@ -495,6 +594,8 @@ const sanitizedData = {
     yacht_size: sanitizedData.yacht_size || null,
     yacht_type: sanitizedData.yacht_type || null,
     uses: sanitizedData.uses || null,
+    required_licenses: sanitizedData.required_licenses || [],
+    required_documents: sanitizedData.required_documents || [],
     homeport: sanitizedData.homeport || null,
     liveaboard: sanitizedData.liveaboard || null,
     season_type: sanitizedData.season_type || null,
@@ -638,6 +739,64 @@ const sanitizedData = {
       <option value="">Select...</option>
       {titles.map((t) => <option key={t} value={t}>{t}</option>)}
     </select>
+
+    {needsCommandLicense && (
+      <>
+        <label>Required License:</label>
+        <select
+          name="required_license"
+          value={formData.required_license}
+          onChange={handleChange}
+        >
+          <option value="">Select...</option>
+          {COMMAND_LICENSE_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      </>
+    )}
+
+    {needsCommandLicense && (
+      <>
+        <label htmlFor="required-docs-trigger">Required Documents / Certifications:</label>
+        <div
+          className={`custom-multiselect ${showRequiredDocs ? 'open' : ''}`}
+          ref={requiredDocsRef}
+        >
+          <button
+            type="button"
+            id="required-docs-trigger"
+            className="multiselect-trigger"
+            onClick={() => setShowRequiredDocs((v) => !v)}
+          >
+            {(formData.required_documents || []).length > 0
+              ? (formData.required_documents || []).join(', ')
+              : 'Select...'}
+            <span className={`caret ${showRequiredDocs ? 'up' : ''}`} aria-hidden>?</span>
+          </button>
+
+          <div className="multiselect-options">
+            {REQUIRED_DOCUMENT_GROUPS.map((group) => (
+              <div key={group.label} style={{ marginBottom: 8 }}>
+                <div style={{ fontWeight: 700, margin: '4px 0' }}>{group.label}</div>
+                {group.options.map((opt) => (
+                  <label key={opt} className="form-checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="required_documents"
+                      value={opt}
+                      checked={(formData.required_documents || []).includes(opt)}
+                      onChange={handleChange}
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    )}
 
     {/* 3. Años en el cargo */}
     <label>Time in Rank:</label>

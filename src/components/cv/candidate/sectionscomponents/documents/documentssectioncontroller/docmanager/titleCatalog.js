@@ -1,4 +1,4 @@
-// src/components/cv/candidate/sectionscomponents/documents/documentssectioncontroller/docmanager/titleCatalog.js
+﻿// src/components/cv/candidate/sectionscomponents/documents/documentssectioncontroller/docmanager/titleCatalog.js
 
 const TITLE_CATALOG = [
   /* ---------------- Core documents ---------------- */
@@ -62,13 +62,13 @@ const TITLE_CATALOG = [
       },
       {
         id: "coc_master_500",
-        label: "Master (Yachts) 500 GT — MCA CoC (STCW II/2 Yachts)",
+        label: "Master (Yachts) 500 GT - MCA CoC (STCW II/2 Yachts)",
         aliases: ["Master 500 GT", "MCA Master <500 GT", "II/2 <500 GT"],
       },
       {
-        id: "rya_yachtmaster_500",
-        label: "Yachtmaster 500 GT — RYA/MCA / IYT",
-        aliases: ["Master of Yachts 500", "Yacht Master 500", "IYT MOY 500"],
+        id: "coc_master_200",
+        label: "Master (Yachts) 200 GT - MCA CoC (STCW II/2 Yachts)",
+        aliases: ["Master 200 GT", "MCA Master 200 GT", "II/2 200 GT"],
       },
       {
         id: "rya_yachtmaster_ocean",

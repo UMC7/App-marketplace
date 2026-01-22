@@ -1,4 +1,4 @@
-// src/components/cv/candidate/sectionscomponents/documents/documentssectioncontroller/docmanager/DocumentTitleOptions.js
+﻿// src/components/cv/candidate/sectionscomponents/documents/documentssectioncontroller/docmanager/DocumentTitleOptions.js
 
 export const DOCUMENT_TITLE_OPTIONS = [
   /* --------- DECK CoC (highest first) --------- */
@@ -6,13 +6,13 @@ export const DOCUMENT_TITLE_OPTIONS = [
   { value: "Chief Mate Unlimited CoC", group: "Deck — Certificates of Competency" },
   { value: "OOW Unlimited CoC", group: "Deck — Certificates of Competency" },
 
-  { value: "Master 3000 GT (Yachts) CoC", group: "Deck — Yacht CoC" },
-  { value: "Chief Mate 3000 GT (Yachts) CoC", group: "Deck — Yacht CoC" },
-  { value: "OOW 3000 GT (Yachts) CoC", group: "Deck — Yacht CoC" },
+  { value: "Master 3000 GT (Yachts) CoC", group: "Deck - Yacht CoC" },
+  { value: "Chief Mate 3000 GT (Yachts) CoC", group: "Deck - Yacht CoC" },
+  { value: "OOW 3000 GT (Yachts) CoC", group: "Deck - Yacht CoC" },
+  { value: "Master (Yachts) 200 GT - MCA CoC (STCW II/2 Yachts)", group: "Deck - Yacht CoC" },
 
   { value: "Yachtmaster Ocean (RYA/MCA)", group: "Deck — Yachtmasters" },
   { value: "Yachtmaster Offshore (RYA/MCA)", group: "Deck — Yachtmasters" },
-  { value: "Yacht Master 500", group: "Deck — Yachtmasters" },
   { value: "Yacht Master 200 Tons", group: "Deck — Yachtmasters" },
 
   /* --------- ENGINE CoC --------- */

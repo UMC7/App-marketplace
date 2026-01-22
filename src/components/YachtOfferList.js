@@ -1177,7 +1177,7 @@ useEffect(() => {
                         {isExpanded ? (
   <div className="offer-content">
     <div className="top-row">
-      <div className={`expanded-block block1 ${
+    <div className={`expanded-block block1 ${
   offer.team
     ? offer.is_doe
       ? offer.years_in_rank !== null && offer.years_in_rank !== undefined
@@ -1187,7 +1187,7 @@ useEffect(() => {
         ? 'case1'
         : 'case2'
     : ''
-} ${offer.teammate_rank && (offer.teammate_experience === null || offer.teammate_experience === undefined) ? 'no-rank2' : ''}`}>
+} ${offer.teammate_rank && (offer.teammate_experience === null || offer.teammate_experience === undefined) ? 'no-rank2' : ''} ${Array.isArray(offer.required_licenses) && offer.required_licenses.length > 0 ? 'has-license' : ''} ${(offer.years_in_rank !== null && offer.years_in_rank !== undefined) ? 'has-time-in-rank' : ''}`}>
   <div className="field-pair">
     {offer.title && (
       <div className="field-group position">
@@ -1196,6 +1196,12 @@ useEffect(() => {
       </div>
     )}
 
+    {Array.isArray(offer.required_licenses) && offer.required_licenses.length > 0 && (
+      <div className="field-group license">
+        <div className="field-label">License</div>
+        <div className="field-value">{offer.required_licenses[0]}</div>
+      </div>
+    )}
     {(offer.years_in_rank !== null && offer.years_in_rank !== undefined) && (
       <div className="field-group time-in-rank">
         <div className="field-label">Time in Rank</div>
