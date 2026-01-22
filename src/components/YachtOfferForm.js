@@ -865,7 +865,7 @@ const sanitizedData = {
     <label>Flag:</label>
     <select name="flag" value={formData.flag} onChange={handleChange}>
       <option value="">Select...</option>
-      {['Foreign Flag', 'United States', 'Cayman Islands', 'Marshall Islands', 'Malta', 'Panama', 'Bermuda', 'BVI', 'UK', 'France', 'Italy', 'Spain', 'Holland', 'Greece', 'Germany', 'Portugal', 'Cyprus', 'Isle of Man', 'Gibraltar', 'Jersey', 'Guernsey', 'Belgium', 'Australia', 'Poland', 'Delaware', 'Cook Islands', 'Langkawi', 'Jamaica', 'San Marino', 'Hong Kong', 'Singapore'].map((f) => (
+      {['Foreign Flag', 'United States', 'Australia', 'Bahamas', 'Belgium', 'Bermuda', 'BVI', 'Cayman Islands', 'Cook Islands', 'Cyprus', 'Delaware', 'France', 'Germany', 'Gibraltar', 'Greece', 'Guernsey', 'Holland', 'Hong Kong', 'Isle of Man', 'Italy', 'Jamaica', 'Jersey', 'Langkawi', 'Malta', 'Marshall Islands', 'Panama', 'Poland', 'Portugal', 'San Marino', 'Singapore', 'Spain', 'UK'].map((f) => (
         <option key={f} value={f}>{f}</option>
       ))}
     </select>
