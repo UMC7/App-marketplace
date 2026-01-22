@@ -221,7 +221,7 @@ export default function ProfileAnalyticsPage() {
           )}
 
           {loading ? (
-            <LoadingState title="Actions funnel" rows={6} height={220} />
+            <LoadingState title="What people did" rows={6} height={220} />
           ) : (
             <ActionsFunnel funnel={funnel} loading={loading} />
           )}

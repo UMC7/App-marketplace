@@ -15,12 +15,49 @@ import { formatInt, formatPercent } from '../../../utils/analytics/formatters';
 export default function ReferrersTable({
   items = [],
   loading = false,
-  title = 'Top referrers',
+  title = 'Where your views come from',
   limit = 10,
 }) {
+  const getSourceInfo = (raw) => {
+    const s = String(raw || '').trim().toLowerCase();
+    if (!s || s === 'direct') {
+      return { label: 'Direct / No referrer', iconDomain: null };
+    }
+    if (s.includes('facebook.com')) {
+      return { label: 'Facebook', iconDomain: 'facebook.com' };
+    }
+    if (s.includes('instagram.com')) {
+      return { label: 'Instagram', iconDomain: 'instagram.com' };
+    }
+    if (s.includes('google.com')) {
+      return { label: 'Google', iconDomain: 'google.com' };
+    }
+    return { label: raw, iconDomain: domainFromSource(raw) };
+  };
+
   const data = useMemo(() => {
     const arr = Array.isArray(items) ? items : [];
-    return arr.slice(0, Math.max(1, limit));
+    const grouped = new Map();
+    for (const it of arr) {
+      const { label, iconDomain } = getSourceInfo(it?.source);
+      const views = Number(it?.views) || 0;
+      const unique = Number(it?.unique_viewers) || 0;
+      const prev = grouped.get(label) || {
+        source: label,
+        views: 0,
+        unique_viewers: 0,
+        iconDomain: null,
+      };
+      grouped.set(label, {
+        source: label,
+        views: prev.views + views,
+        unique_viewers: prev.unique_viewers + unique,
+        iconDomain: prev.iconDomain || iconDomain,
+      });
+    }
+    return Array.from(grouped.values())
+      .sort((a, b) => b.views - a.views)
+      .slice(0, Math.max(1, limit));
   }, [items, limit]);
 
   const totalViews = useMemo(
@@ -85,7 +122,7 @@ export default function ReferrersTable({
               <Th label="Source" align="left" compact={isMobile} />
               {/* En móvil mantenemos el mismo encabezado pero el contenido apila Views/Unique/% */}
               <Th label="Views" align="right" compact={isMobile} />
-              {!isMobile && <Th label="Unique" align="right" />}
+              {!isMobile && <Th label="People" align="right" />}
               {!isMobile && <Th label="% of views" align="right" />}
             </tr>
           </thead>
@@ -134,7 +171,7 @@ export default function ReferrersTable({
                           minWidth: 140,
                         }}
                       >
-                        <Favicon source={it.source} />
+                        <Favicon domain={it.iconDomain} />
                         <span
                           title={String(it.source || '')}
                           style={{
@@ -146,7 +183,7 @@ export default function ReferrersTable({
                             lineHeight: 1.25,
                           }}
                         >
-                          {normalizeSource(it.source)}
+                          {it.source}
                         </span>
                       </div>
                     </Td>
@@ -229,15 +266,15 @@ function Td({ children, align = 'left', colSpan, compact = false }) {
  * - Si es URL → muestra dominio
  * - Si está vacío → "Direct"
  */
-function normalizeSource(source) {
+function domainFromSource(source) {
   const s = String(source || '').trim();
-  if (!s) return 'Direct';
+  if (!s) return '';
   try {
     const hasProto = /^https?:\/\//i.test(s);
     const url = new URL(hasProto ? s : `https://${s}`);
     return url.hostname.replace(/^www\./i, '');
   } catch {
-    return s;
+    return '';
   }
 }
 
@@ -245,21 +282,11 @@ function normalizeSource(source) {
  * Favicon simple (opcional) usando el dominio.
  * Si no puede resolverse, muestra un punto.
  */
-function Favicon({ source }) {
-  const domain = useMemo(() => {
-    const s = String(source || '').trim();
-    if (!s) return '';
-    try {
-      const hasProto = /^https?:\/\//i.test(s);
-      const url = new URL(hasProto ? s : `https://${s}`);
-      return url.hostname.replace(/^www\./i, '');
-    } catch {
-      return '';
-    }
-  }, [source]);
+function Favicon({ domain }) {
+  const resolved = useMemo(() => String(domain || '').trim(), [domain]);
 
   // Usamos Google s2 para favicon; si falla, mostramos un círculo.
-  const src = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null;
+  const src = resolved ? `https://www.google.com/s2/favicons?domain=${resolved}&sz=32` : null;
 
   return src ? (
     <img

@@ -297,8 +297,9 @@ function YachtWorksPage() {
 
       const wantsMin = preferences.minSalary !== '' && preferences.minSalary !== null && preferences.minSalary !== undefined;
       const isDOE = !!o.is_doe;
+      const isTips = !!o.is_tips;
       const salaryNum = Number(o.salary || 0);
-      const pPay = pct(wantsMin ? (isDOE || salaryNum >= Number(preferences.minSalary)) : false); // 10%
+      const pPay = pct(wantsMin ? (isDOE || isTips || salaryNum >= Number(preferences.minSalary)) : false); // 10%
 
       const offerFlag = String(o.flag || '');
       const isUSFlag = ['United States', 'US Flag', 'USA'].includes(offerFlag);

@@ -1,5 +1,5 @@
 // src/components/cv/analytics/TrafficTrendsChart.js
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { formatDateShort, formatInt } from '../../../utils/analytics/formatters';
 
 export default function TrafficTrendsChart({
@@ -10,7 +10,7 @@ export default function TrafficTrendsChart({
 }) {
   const safe = Array.isArray(data) ? data : [];
 
-  const { pointsViews, pointsUnique, xTicks, maxY } = useMemo(() => {
+  const { pointsViews, pointsUnique, xTicks, maxY, dataPoints } = useMemo(() => {
     const arr = safe.map((d) => ({
       date: d?.date ? String(d.date) : '',
       views: Number(d?.views || 0),
@@ -50,6 +50,7 @@ export default function TrafficTrendsChart({
       pointsUnique: pathUnique,
       xTicks: ticks,
       maxY: maxVal,
+      dataPoints: arr,
     };
   }, [safe]);
 
@@ -62,6 +63,22 @@ export default function TrafficTrendsChart({
 
   const n = safe.length || 1;
   const xPos = (i) => P.l + (n <= 1 ? 0 : (i / (n - 1)) * innerW);
+  const yPos = (v) => P.t + (innerH - (v / maxY) * innerH);
+
+  const [activeIndex, setActiveIndex] = useState(null);
+  const svgRef = useRef(null);
+
+  const clamp = (val, min, max) => Math.min(max, Math.max(min, val));
+  const getIndexFromClientX = (clientX) => {
+    const svg = svgRef.current;
+    if (!svg) return 0;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = rect.width ? W / rect.width : 1;
+    const xSvg = (clientX - rect.left) * scaleX;
+    const rel = clamp(xSvg, P.l, P.l + innerW);
+    const ratio = innerW ? (rel - P.l) / innerW : 0;
+    return clamp(Math.round(ratio * (n - 1)), 0, n - 1);
+  };
 
   return (
     <section
@@ -87,7 +104,13 @@ export default function TrafficTrendsChart({
       </header>
 
       <div style={{ padding: '6px 10px 12px' }}>
-        <svg width="100%" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Line chart of views and unique viewers">
+        <svg
+          ref={svgRef}
+          width="100%"
+          viewBox={`0 0 ${W} ${H}`}
+          role="img"
+          aria-label="Line chart of views and unique viewers"
+        >
           {/* fondo */}
           <rect x="0" y="0" width={W} height={H} fill="var(--ana-card-bg)" rx="10" ry="10" />
 
@@ -103,6 +126,80 @@ export default function TrafficTrendsChart({
 
           {/* Views (línea sólida) */}
           <path d={pointsViews} fill="none" stroke="#10b981" strokeWidth="2.5" />
+
+          {/* Overlay interactivo */}
+          <rect
+            x={P.l}
+            y={P.t}
+            width={innerW}
+            height={innerH}
+            fill="transparent"
+            style={{ cursor: 'crosshair' }}
+            onMouseMove={(e) => {
+              if (!dataPoints.length) return;
+              setActiveIndex(getIndexFromClientX(e.clientX));
+            }}
+            onMouseLeave={() => setActiveIndex(null)}
+            onTouchStart={(e) => {
+              if (!dataPoints.length) return;
+              const touch = e.touches?.[0];
+              if (!touch) return;
+              setActiveIndex(getIndexFromClientX(touch.clientX));
+            }}
+            onTouchMove={(e) => {
+              if (!dataPoints.length) return;
+              const touch = e.touches?.[0];
+              if (!touch) return;
+              setActiveIndex(getIndexFromClientX(touch.clientX));
+            }}
+            onTouchEnd={() => setActiveIndex(null)}
+          />
+
+          {activeIndex !== null && dataPoints[activeIndex] && (() => {
+            const d = dataPoints[activeIndex];
+            const cx = xPos(activeIndex);
+            const yViews = yPos(d.views);
+            const yUnique = yPos(d.unique);
+            const tipW = 150;
+            const tipH = 52;
+            const tipX = clamp(cx - tipW / 2, P.l, W - P.r - tipW);
+            const tipY = P.t + 4;
+            return (
+              <g>
+                <line
+                  x1={cx}
+                  y1={P.t}
+                  x2={cx}
+                  y2={P.t + innerH}
+                  stroke="var(--ana-line)"
+                  strokeWidth="1"
+                />
+                <circle cx={cx} cy={yViews} r="4" fill="#10b981" />
+                <circle cx={cx} cy={yUnique} r="4" fill="#60a5fa" />
+
+                <rect
+                  x={tipX}
+                  y={tipY}
+                  width={tipW}
+                  height={tipH}
+                  rx="8"
+                  ry="8"
+                  fill="var(--ana-card-bg)"
+                  stroke="var(--ana-line)"
+                  strokeWidth="1"
+                />
+                <text x={tipX + 8} y={tipY + 16} fontSize="11" fill="var(--ana-muted)">
+                  {formatDateShort(d.date)}
+                </text>
+                <text x={tipX + 8} y={tipY + 32} fontSize="12" fill="var(--ana-text)">
+                  Views: {formatInt(d.views)}
+                </text>
+                <text x={tipX + 8} y={tipY + 46} fontSize="12" fill="var(--ana-text)">
+                  People: {formatInt(d.unique)}
+                </text>
+              </g>
+            );
+          })()}
 
           {/* Eje X labels (máx 8 labels para no saturar) */}
           {xTicks

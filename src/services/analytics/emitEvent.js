@@ -251,7 +251,7 @@ async function _fetchShareReady({ handle, ownerUserId }) {
 }
 
 async function _shouldEmitAnalytics({ handle, ownerUserId }) {
-  if (_isPreviewMode()) return true; // allow in preview
+  if (_isPreviewMode()) return false;
   const key = _cacheKey(handle, ownerUserId);
   const now = Date.now();
   const cached = _shareReadyCache.map.get(key);
@@ -289,6 +289,18 @@ export async function emitEvent({
 } = {}) {
   try {
     if (!type) return { ok: false };
+
+    if (ownerUserId) {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const currentUserId = data?.user?.id || null;
+        if (currentUserId && currentUserId === ownerUserId) {
+          return { ok: true };
+        }
+      } catch {
+        /* no-op */
+      }
+    }
 
     const allowPublic = await _shouldEmitAnalytics({ handle, ownerUserId });
     if (!allowPublic) {

@@ -29,6 +29,15 @@ serve(async (req: Request) => {
       user_id,
       referrer,
       user_agent,
+      session_id,
+      viewer_id,
+      language,
+      device,
+      browser,
+      os,
+      country: bodyCountry,
+      city: bodyCity,
+      extra_data,
     } = body;
 
     const ip =
@@ -37,44 +46,63 @@ serve(async (req: Request) => {
       "unknown";
 
     // --- Geolocalización básica (usa API pública de ipapi.co) ---
-    let country = "Unknown";
-    let city = "Unknown";
-    try {
-      const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
-      if (geoRes.ok) {
-        const geo = await geoRes.json();
-        country = geo.country_name || "Unknown";
-        city = geo.city || "Unknown";
+    let country = (bodyCountry && String(bodyCountry).trim()) || "Unknown";
+    let city = (bodyCity && String(bodyCity).trim()) || "Unknown";
+    if (country === "Unknown" || city === "Unknown") {
+      try {
+        const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
+        if (geoRes.ok) {
+          const geo = await geoRes.json();
+          country = country === "Unknown" ? (geo.country_name || "Unknown") : country;
+          city = city === "Unknown" ? (geo.city || "Unknown") : city;
+        }
+      } catch {
+        // no problem
       }
-    } catch {
-      // no problem
     }
 
     // Analiza user agent
     const ua = user_agent || "";
-    const browser =
+    const browserDetected = browser || (
       /chrome/i.test(ua) ? "Chrome"
       : /safari/i.test(ua) ? "Safari"
       : /firefox/i.test(ua) ? "Firefox"
       : /edge/i.test(ua) ? "Edge"
-      : "Unknown";
+      : "Unknown"
+    );
 
-    const device = /mobile/i.test(ua)
+    const deviceDetected = device || (
+      /mobile/i.test(ua)
       ? "Mobile"
       : /tablet/i.test(ua)
       ? "Tablet"
-      : "Desktop";
+      : "Desktop"
+    );
+
+    const osDetected = os || "Unknown";
+
+    const ipHash = await crypto.subtle
+      .digest("SHA-256", new TextEncoder().encode(ip))
+      .then((buf) => Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join(""))
+      .catch(() => null);
 
     const payload = {
       event_type,
       handle,
-      user_id,
-      referrer: referrer || "direct",
+      owner_user_id: user_id || null,
+      referrer: (referrer && String(referrer).trim()) || "Direct",
       ip,
       country,
       city,
-      browser,
-      device,
+      user_agent: user_agent || null,
+      browser: browserDetected,
+      device: deviceDetected,
+      os: osDetected,
+      language: language || null,
+      session_id: session_id || null,
+      viewer_id: viewer_id || null,
+      ip_hash: ipHash,
+      extra_data: extra_data || null,
       created_at: new Date().toISOString(),
     };
 

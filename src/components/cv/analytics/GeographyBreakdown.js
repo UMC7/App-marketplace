@@ -2,6 +2,96 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { formatInt } from '../../../utils/analytics/formatters';
 
+const REGION_CODES = [
+  'AF','AX','AL','DZ','AS','AD','AO','AI','AQ','AG','AR','AM','AW','AU','AT','AZ','BS','BH','BD','BB',
+  'BY','BE','BZ','BJ','BM','BT','BO','BQ','BA','BW','BV','BR','IO','BN','BG','BF','BI','CV','KH','CM',
+  'CA','KY','CF','TD','CL','CN','CX','CC','CO','KM','CG','CD','CK','CR','CI','HR','CU','CW','CY','CZ',
+  'DK','DJ','DM','DO','EC','EG','SV','GQ','ER','EE','SZ','ET','FK','FO','FJ','FI','FR','GF','PF','TF',
+  'GA','GM','GE','DE','GH','GI','GR','GL','GD','GP','GU','GT','GG','GN','GW','GY','HT','HM','VA','HN',
+  'HK','HU','IS','IN','ID','IR','IQ','IE','IM','IL','IT','JM','JP','JE','JO','KZ','KE','KI','KP','KR',
+  'KW','KG','LA','LV','LB','LS','LR','LY','LI','LT','LU','MO','MG','MW','MY','MV','ML','MT','MH','MQ',
+  'MR','MU','YT','MX','FM','MD','MC','MN','ME','MS','MA','MZ','MM','NA','NR','NP','NL','NC','NZ','NI',
+  'NE','NG','NU','NF','MK','MP','NO','OM','PK','PW','PS','PA','PG','PY','PE','PH','PN','PL','PT','PR',
+  'QA','RE','RO','RU','RW','BL','SH','KN','LC','MF','PM','VC','WS','SM','ST','SA','SN','RS','SC','SL',
+  'SG','SX','SK','SI','SB','SO','ZA','GS','SS','ES','LK','SD','SR','SJ','SE','CH','SY','TW','TJ','TZ',
+  'TH','TL','TG','TK','TO','TT','TN','TR','TM','TC','TV','UG','UA','AE','GB','US','UM','UY','UZ','VU',
+  'VE','VN','VG','VI','WF','EH','YE','ZM','ZW','XK',
+];
+
+const REGION_NAMES = (() => {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' });
+  } catch {
+    return null;
+  }
+})();
+
+const SPECIAL_NAME_TO_CODE = {
+  unitedstates: 'US',
+  unitedstatesofamerica: 'US',
+  usa: 'US',
+  uk: 'GB',
+  unitedkingdom: 'GB',
+  russia: 'RU',
+  russianfederation: 'RU',
+  southkorea: 'KR',
+  northkorea: 'KP',
+  czechrepublic: 'CZ',
+  czechia: 'CZ',
+  vietnam: 'VN',
+  laos: 'LA',
+  iran: 'IR',
+  syria: 'SY',
+  tanzania: 'TZ',
+  bolivia: 'BO',
+  venezuela: 'VE',
+  moldova: 'MD',
+  micronesia: 'FM',
+  palestine: 'PS',
+  kosovo: 'XK',
+  ivorycoast: 'CI',
+  cotedivoire: 'CI',
+};
+
+function normalizeCountryName(name) {
+  if (!name) return '';
+  try {
+    return name
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z]/g, '');
+  } catch {
+    return String(name).toLowerCase().replace(/[^a-z]/g, '');
+  }
+}
+
+const NAME_TO_CODE = (() => {
+  const map = new Map();
+  if (!REGION_NAMES) return map;
+  REGION_CODES.forEach((code) => {
+    const name = REGION_NAMES.of(code);
+    if (!name) return;
+    const key = normalizeCountryName(name);
+    if (key && !map.has(key)) {
+      map.set(key, code);
+    }
+  });
+  return map;
+})();
+
+function countryNameToFlag(name) {
+  if (!name || String(name).toLowerCase() === 'unknown') return '';
+  const key = normalizeCountryName(name);
+  const code = SPECIAL_NAME_TO_CODE[key] || NAME_TO_CODE.get(key);
+  if (!code || code.length !== 2) return '';
+  const upper = code.toUpperCase();
+  const A = 0x1f1e6;
+  const chars = [...upper].map((c) => A + c.charCodeAt(0) - 65);
+  return String.fromCodePoint(...chars);
+}
+
 export default function GeographyBreakdown({
   data = { countries: [], cities: [] },
   loading = false,
@@ -42,7 +132,11 @@ export default function GeographyBreakdown({
         <GeoTable
           isMobile={isMobile}
           headers={['Country', 'Views']}
-          rows={countries.map((c) => [c.country || '—', formatInt(c.views || 0)])}
+          rows={countries.map((c) => {
+            const name = c.country || 'Unknown';
+            const flag = countryNameToFlag(name);
+            return [flag ? `${flag} ${name}` : name, formatInt(c.views || 0)];
+          })}
           emptyLabel="No country data."
         />
       </Card>
@@ -52,8 +146,8 @@ export default function GeographyBreakdown({
           isMobile={isMobile}
           headers={['City', 'Country', 'Views']}
           rows={cities.map((c) => [
-            c.city || '—',
-            c.country || '—',
+            c.city || 'Unknown',
+            countryNameToFlag(c.country || '') || 'Unknown',
             formatInt(c.views || 0),
           ])}
           emptyLabel="No city data."
@@ -223,3 +317,5 @@ function Td({ children, align = 'left', colSpan, compact = false }) {
     </td>
   );
 }
+
+

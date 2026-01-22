@@ -6,7 +6,7 @@ export default function ActionsFunnel({
   // Puede venir cv_downloads en el objeto, pero no se muestra
   funnel = { views: 0, profile_opens: 0, contact_opens: 0, chat_starts: 0, cv_downloads: 0 },
   loading = false,
-  title = 'Actions funnel',
+  title = 'What people did',
 }) {
   const base = useMemo(() => {
     const v = Number(funnel?.views || funnel?.profile_opens || 0);
