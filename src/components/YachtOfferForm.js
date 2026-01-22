@@ -113,6 +113,8 @@ const initialState = {
   start_month: '',
   start_day: '',
   end_date: '',
+  end_month: '',
+  end_day: '',
   required_license: '',
   required_documents: [],
   salary: '',
@@ -193,6 +195,19 @@ useEffect(() => {
     ...prev,
     start_month: month,
     start_day: initialValues.start_date_month_only ? '' : day,
+  }));
+}, [initialValues]);
+
+useEffect(() => {
+  if (!initialValues?.end_date) return;
+  const parsed = new Date(initialValues.end_date);
+  if (Number.isNaN(parsed.getTime())) return;
+  const month = String(parsed.getMonth() + 1);
+  const day = String(parsed.getDate());
+  setFormData(prev => ({
+    ...prev,
+    end_month: month,
+    end_day: day,
   }));
 }, [initialValues]);
 
@@ -419,6 +434,24 @@ const formReady = (() => {
     return;
   }
 
+  if (name === 'end_month' || name === 'end_day') {
+    setFormData(prev => {
+      const next = { ...prev, [name]: value };
+      if (name === 'end_month') {
+        if (!value) {
+          next.end_day = '';
+        } else {
+          const maxDay = getDaysInMonth(value);
+          if (next.end_day && Number(next.end_day) > maxDay) {
+            next.end_day = '';
+          }
+        }
+      }
+      return next;
+    });
+    return;
+  }
+
   if (name === 'required_documents') {
     setFormData(prev => {
       const current = prev.required_documents || [];
@@ -440,9 +473,13 @@ const formReady = (() => {
     });
   } else {
     setFormData(prev => {
+      const nextValue =
+        name === 'contact_email' && typeof value === 'string'
+          ? value.trim()
+          : value;
       const newState = {
         ...prev,
-        [name]: type === 'checkbox' ? checked : value,
+        [name]: type === 'checkbox' ? checked : nextValue,
       };
 
       // 🔹 Si cambia salary_currency y hay team
@@ -523,7 +560,15 @@ if (isShoreBased) {
   }
 }
 
-const { start_month, start_day, required_license, required_documents, ...restForm } = formData;
+const {
+  start_month,
+  start_day,
+  end_month,
+  end_day,
+  required_license,
+  required_documents,
+  ...restForm
+} = formData;
 const startDateMonthOnly = !!start_month && !start_day;
 const requiredLicenses = required_license ? [required_license] : [];
 const derivedStartDate = (() => {
@@ -534,10 +579,19 @@ const derivedStartDate = (() => {
   const day = start_day ? String(start_day).padStart(2, '0') : '01';
   return `${year}-${month}-${day}`;
 })();
+const derivedEndDate = (() => {
+  if (!end_month) return null;
+  const year = getInferredYear(end_month);
+  if (!year) return null;
+  const month = String(end_month).padStart(2, '0');
+  const day = end_day ? String(end_day).padStart(2, '0') : '01';
+  return `${year}-${month}-${day}`;
+})();
 
 const sanitizedData = {
   ...restForm,
   start_date: derivedStartDate,
+  end_date: derivedEndDate,
   start_date_month_only: startDateMonthOnly,
   required_licenses: requiredLicenses,
   required_documents: Array.isArray(required_documents) ? required_documents : [],
@@ -1145,10 +1199,10 @@ const sanitizedData = {
       <option key={d} value={d}>{d}</option>
     ))}
   </select>
+  <p style={{ marginTop: -10, marginBottom: 6, fontSize: 12, color: '#666', width: '100%' }}>
+    Leave day empty to indicate flexible within the month.
+  </p>
 </div>
-<p style={{ marginTop: 6, fontSize: 12, color: '#666' }}>
-  Leave day empty to indicate flexible within the month.
-</p>
 
 {/* ASAP Option */}
 <div className="form-group asap-flex-row">
@@ -1175,14 +1229,34 @@ const sanitizedData = {
 </div>
 
     {/* 14. Fecha de Finalización */}
-    <label>End Date:</label>
-    <input
-      type="date"
-      name="end_date"
-      value={formData.end_date}
-      onChange={handleChange}
-      disabled={formData.type === 'Permanent'}
-    />
+    <label>End Date (Month/Day):</label>
+    <div className="form-inline-group">
+      <select
+        name="end_month"
+        value={formData.end_month}
+        onChange={handleChange}
+        disabled={formData.type === 'Permanent'}
+      >
+        <option value="">Month...</option>
+        {MONTHS.map((m) => (
+          <option key={m.value} value={m.value}>{m.label}</option>
+        ))}
+      </select>
+      <select
+        name="end_day"
+        value={formData.end_day}
+        onChange={handleChange}
+        disabled={!formData.end_month || formData.type === 'Permanent'}
+      >
+        <option value="">Day (optional)</option>
+        {Array.from({ length: getDaysInMonth(formData.end_month || '0') }, (_, i) => i + 1).map((d) => (
+          <option key={d} value={d}>{d}</option>
+        ))}
+      </select>
+      <p style={{ marginTop: -10, marginBottom: 16, fontSize: 12, color: '#666', width: '100%' }}>
+        Leave day empty to indicate flexible within the month.
+      </p>
+    </div>
 
     {/* Holidays */}
     <label>Holidays (Days per year):</label>
@@ -1397,7 +1471,7 @@ const sanitizedData = {
         ))}
       </select>
     </div>
-    <p style={{ marginTop: 6, fontSize: 12, color: '#666' }}>
+    <p style={{ marginTop: -4, marginBottom: 16, fontSize: 12, color: '#666' }}>
       Leave day empty to indicate flexible within the month.
     </p>
 
@@ -1426,13 +1500,33 @@ const sanitizedData = {
     </div>
 
     {/* End Date */}
-    <label>End Date:</label>
-    <input
-      type="date"
-      name="end_date"
-      value={formData.end_date}
-      onChange={handleChange}
-    />
+    <label>End Date (Month/Day):</label>
+    <div className="form-inline-group">
+      <select
+        name="end_month"
+        value={formData.end_month}
+        onChange={handleChange}
+      >
+        <option value="">Month...</option>
+        {MONTHS.map((m) => (
+          <option key={m.value} value={m.value}>{m.label}</option>
+        ))}
+      </select>
+      <select
+        name="end_day"
+        value={formData.end_day}
+        onChange={handleChange}
+        disabled={!formData.end_month}
+      >
+        <option value="">Day (optional)</option>
+        {Array.from({ length: getDaysInMonth(formData.end_month || '0') }, (_, i) => i + 1).map((d) => (
+          <option key={d} value={d}>{d}</option>
+        ))}
+      </select>
+      <p style={{ marginTop: -10, marginBottom: 16, fontSize: 12, color: '#666', width: '100%' }}>
+        Leave day empty to indicate flexible within the month.
+      </p>
+    </div>
 
     {/* Work Location */}
     <label>Work Location: <span style={{ color: 'red' }}>*</span></label>
