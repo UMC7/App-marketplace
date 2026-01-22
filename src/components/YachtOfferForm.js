@@ -19,6 +19,36 @@ const visaOptions = [
   'European Passport'
 ];
 
+const MONTHS = [
+  { value: '1', label: 'January' },
+  { value: '2', label: 'February' },
+  { value: '3', label: 'March' },
+  { value: '4', label: 'April' },
+  { value: '5', label: 'May' },
+  { value: '6', label: 'June' },
+  { value: '7', label: 'July' },
+  { value: '8', label: 'August' },
+  { value: '9', label: 'September' },
+  { value: '10', label: 'October' },
+  { value: '11', label: 'November' },
+  { value: '12', label: 'December' }
+];
+
+const getInferredYear = (monthValue) => {
+  const month = Number(monthValue);
+  if (!month) return null;
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  return month >= currentMonth ? now.getFullYear() : now.getFullYear() + 1;
+};
+
+const getDaysInMonth = (monthValue) => {
+  const month = Number(monthValue);
+  if (!month) return 31;
+  const year = getInferredYear(monthValue) || new Date().getFullYear();
+  return new Date(year, month, 0).getDate();
+};
+
 const initialState = {
   work_environment: '',
   title: '',
@@ -26,6 +56,8 @@ const initialState = {
   country: '',
   type: '',
   start_date: '',
+  start_month: '',
+  start_day: '',
   end_date: '',
   salary: '',
   is_doe: false,
@@ -93,6 +125,19 @@ useEffect(() => {
       team: (initialValues.team === true || initialValues.team === 'Yes') ? 'Yes' : 'No',
     }));
   }
+}, [initialValues]);
+
+useEffect(() => {
+  if (!initialValues?.start_date) return;
+  const parsed = new Date(initialValues.start_date);
+  if (Number.isNaN(parsed.getTime())) return;
+  const month = String(parsed.getMonth() + 1);
+  const day = String(parsed.getDate());
+  setFormData(prev => ({
+    ...prev,
+    start_month: month,
+    start_day: initialValues.start_date_month_only ? '' : day,
+  }));
 }, [initialValues]);
   const [loading, setLoading] = useState(false);
   const [showMissing, setShowMissing] = useState(false);
@@ -174,6 +219,17 @@ const autoFillFromText = async () => {
           continue;
         }
 
+        if (k === "start_date" && v) {
+          const parsed = new Date(v);
+          if (!Number.isNaN(parsed.getTime())) {
+            const month = String(parsed.getMonth() + 1);
+            const day = String(parsed.getDate());
+            if (!merged.start_month) merged.start_month = month;
+            if (!merged.start_day) merged.start_day = day;
+          }
+          continue;
+        }
+
         // regla general: no sobreescribir si ya hay valor
         const cur = merged[k];
         const isEmpty =
@@ -234,7 +290,7 @@ const formReady = (() => {
       !formData.type ||
       !formData.yacht_type ||
       !formData.yacht_size ||
-      (!formData.start_date && !formData.is_asap && !formData.is_flexible) ||
+      (!formData.start_month && !formData.is_asap && !formData.is_flexible) ||
       !formData.country ||
       (formData.team === 'Yes' && (!formData.teammate_rank || (!formData.teammate_salary && !formData.is_doe)))
     ) return false;
@@ -245,7 +301,7 @@ const formReady = (() => {
       !formData.title ||
       (!formData.salary_currency && !formData.is_doe) ||
       (!formData.salary && !formData.is_doe) ||
-      (!formData.start_date && !formData.is_asap && !formData.is_flexible) ||
+      (!formData.start_month && !formData.is_asap && !formData.is_flexible) ||
       !formData.work_location ||
       (formData.work_location === 'On - site' && (!formData.city || !formData.country))
     ) return false;
@@ -259,6 +315,28 @@ const formReady = (() => {
 
   const handleChange = (e) => {
   const { name, value, type, checked } = e.target;
+
+  if (name === 'start_month' || name === 'start_day') {
+    setFormData(prev => {
+      const next = { ...prev, [name]: value };
+      if (name === 'start_month') {
+        if (!value) {
+          next.start_day = '';
+        } else {
+          const maxDay = getDaysInMonth(value);
+          if (next.start_day && Number(next.start_day) > maxDay) {
+            next.start_day = '';
+          }
+        }
+      }
+      if (value) {
+        next.is_asap = false;
+        next.is_flexible = false;
+      }
+      return next;
+    });
+    return;
+  }
 
   if (name === 'visas') {
     setFormData(prev => {
@@ -287,25 +365,22 @@ const formReady = (() => {
 
       // 🔹 Si marca ASAP → limpiar fecha
       if (name === 'is_asap') {
-        newState.start_date = checked ? '' : prev.start_date;
+        newState.start_month = checked ? '' : prev.start_month;
+        newState.start_day = checked ? '' : prev.start_day;
         if (checked) {
           newState.is_flexible = false;
         }
       }
 
       if (name === 'is_flexible') {
-        newState.start_date = checked ? '' : prev.start_date;
+        newState.start_month = checked ? '' : prev.start_month;
+        newState.start_day = checked ? '' : prev.start_day;
         if (checked) {
           newState.is_asap = false;
         }
       }
 
       // 🔹 Si cambia Start Date → desmarcar ASAP
-      if (name === 'start_date' && value) {
-        newState.is_asap = false;
-        newState.is_flexible = false;
-      }
-
       return newState;
     });
   }
@@ -329,7 +404,7 @@ if (isOnboard) {
     !formData.type ||
     !formData.yacht_type ||
     !formData.yacht_size ||
-    (!formData.start_date && !formData.is_asap && !formData.is_flexible) ||
+    (!formData.start_month && !formData.is_asap && !formData.is_flexible) ||
     !formData.country ||
     (formData.team === 'Yes' && (!formData.teammate_rank || (!formData.teammate_salary && !formData.is_doe)))
   ) {
@@ -343,7 +418,7 @@ if (isShoreBased) {
     !formData.title ||
     !formData.salary_currency && !formData.is_doe ||
     !formData.salary && !formData.is_doe ||
-    (!formData.start_date && !formData.is_asap && !formData.is_flexible) ||
+    (!formData.start_month && !formData.is_asap && !formData.is_flexible) ||
     !formData.work_location ||
     (formData.work_location === 'On - site' && (!formData.city || !formData.country))
   ) {
@@ -352,8 +427,21 @@ if (isShoreBased) {
   }
 }
 
+const { start_month, start_day, ...restForm } = formData;
+const startDateMonthOnly = !!start_month && !start_day;
+const derivedStartDate = (() => {
+  if (!start_month) return null;
+  const year = getInferredYear(start_month);
+  if (!year) return null;
+  const month = String(start_month).padStart(2, '0');
+  const day = start_day ? String(start_day).padStart(2, '0') : '01';
+  return `${year}-${month}-${day}`;
+})();
+
 const sanitizedData = {
-  ...formData,
+  ...restForm,
+  start_date: derivedStartDate,
+  start_date_month_only: startDateMonthOnly,
   years_in_rank:
     formData.years_in_rank === 'Green'
       ? 0
@@ -383,9 +471,10 @@ const sanitizedData = {
     city: sanitizedData.city,
     country: sanitizedData.country,
     type: sanitizedData.type || null,
-    start_date: sanitizedData.is_asap || sanitizedData.is_flexible
+    start_date: sanitizedData.is_asap || (sanitizedData.is_flexible && !sanitizedData.start_date)
       ? new Date().toISOString().split('T')[0]
       : sanitizedData.start_date || null,
+    start_date_month_only: !!sanitizedData.start_date_month_only,
     end_date:
       sanitizedData.type === 'Permanent'
         ? null
@@ -871,16 +960,36 @@ const sanitizedData = {
     </select>
 
     {/* 13. Fecha de Inicio */}
-<label>Start Date: <span style={{ color: 'red' }}>*</span></label>
-<input
-  type="date"
-  name="start_date"
-  value={formData.start_date}
-  onChange={handleChange}
-  className={highlightClass(!formData.start_date && !formData.is_asap && !formData.is_flexible)}
-  required={!formData.is_asap && !formData.is_flexible}
-  disabled={formData.is_asap || formData.is_flexible}
-/>
+<label>Start Date (Month/Day): <span style={{ color: 'red' }}>*</span></label>
+<div className="form-inline-group">
+  <select
+    name="start_month"
+    value={formData.start_month}
+    onChange={handleChange}
+    className={highlightClass(!formData.start_month && !formData.is_asap && !formData.is_flexible)}
+    required={!formData.is_asap && !formData.is_flexible}
+    disabled={formData.is_asap || formData.is_flexible}
+  >
+    <option value="">Month...</option>
+    {MONTHS.map((m) => (
+      <option key={m.value} value={m.value}>{m.label}</option>
+    ))}
+  </select>
+  <select
+    name="start_day"
+    value={formData.start_day}
+    onChange={handleChange}
+    disabled={!formData.start_month || formData.is_asap || formData.is_flexible}
+  >
+    <option value="">Day (optional)</option>
+    {Array.from({ length: getDaysInMonth(formData.start_month || '0') }, (_, i) => i + 1).map((d) => (
+      <option key={d} value={d}>{d}</option>
+    ))}
+  </select>
+</div>
+<p style={{ marginTop: 6, fontSize: 12, color: '#666' }}>
+  Leave day empty to indicate flexible within the month.
+</p>
 
 {/* ASAP Option */}
 <div className="form-group asap-flex-row">
@@ -1102,16 +1211,36 @@ const sanitizedData = {
     </div>
 
     {/* Start Date */}
-    <label>Start Date: <span style={{ color: 'red' }}>*</span></label>
-    <input
-      type="date"
-      name="start_date"
-      value={formData.start_date}
-      onChange={handleChange}
-      className={highlightClass(!formData.start_date && !formData.is_asap && !formData.is_flexible)}
-      required={!formData.is_asap && !formData.is_flexible}
-      disabled={formData.is_asap || formData.is_flexible}
-    />
+    <label>Start Date (Month/Day): <span style={{ color: 'red' }}>*</span></label>
+    <div className="form-inline-group">
+      <select
+        name="start_month"
+        value={formData.start_month}
+        onChange={handleChange}
+        className={highlightClass(!formData.start_month && !formData.is_asap && !formData.is_flexible)}
+        required={!formData.is_asap && !formData.is_flexible}
+        disabled={formData.is_asap || formData.is_flexible}
+      >
+        <option value="">Month...</option>
+        {MONTHS.map((m) => (
+          <option key={m.value} value={m.value}>{m.label}</option>
+        ))}
+      </select>
+      <select
+        name="start_day"
+        value={formData.start_day}
+        onChange={handleChange}
+        disabled={!formData.start_month || formData.is_asap || formData.is_flexible}
+      >
+        <option value="">Day (optional)</option>
+        {Array.from({ length: getDaysInMonth(formData.start_month || '0') }, (_, i) => i + 1).map((d) => (
+          <option key={d} value={d}>{d}</option>
+        ))}
+      </select>
+    </div>
+    <p style={{ marginTop: 6, fontSize: 12, color: '#666' }}>
+      Leave day empty to indicate flexible within the month.
+    </p>
 
     {/* ASAP */}
     <div className="form-group asap-flex-row">

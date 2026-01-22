@@ -1376,7 +1376,7 @@ useEffect(() => {
       <div className="field-group">
         <div className="field-label">Start Date</div>
         <div className="field-value">
-          {offer.is_asap ? 'ASAP' : formatDate(offer.start_date)}
+          {offer.is_asap ? 'ASAP' : formatDate(offer.start_date, offer.start_date_month_only)}
         </div>
       </div>
     )}
@@ -1932,9 +1932,14 @@ useEffect(() => {
   );
 }
 
-const formatDate = (dateStr) => {
-  const options = { day: '2-digit', month: 'short', year: '2-digit' };
-  return new Date(dateStr).toLocaleDateString('en-US', options);
+const formatDate = (dateStr, monthOnly = false) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return String(dateStr);
+  const options = monthOnly
+    ? { month: 'short', year: 'numeric' }
+    : { day: '2-digit', month: 'short', year: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
 };
 
 const formatTime = (timestamp) => {
