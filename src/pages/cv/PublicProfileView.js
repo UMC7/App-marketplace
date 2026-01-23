@@ -1,6 +1,6 @@
 // src/pages/cv/PublicProfileView.js
 import React, { useEffect, useMemo, useState, useCallback, useRef, useLayoutEffect } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import supabase from '../../supabase';
 import './PublicProfileView.css';
 import PublicCertDocsSection from './sections/certdocs';
@@ -227,6 +227,7 @@ function formatYachtingExperienceLabel(totalMonths) {
 }
 
 export default function PublicProfileView() {
+  const navigate = useNavigate();
   const { handle } = useParams();
   const { search } = useLocation();
   const isPreview = useMemo(() => qs(search).has('preview'), [search]);
@@ -256,6 +257,7 @@ export default function PublicProfileView() {
   const [metaTop, setMetaTop] = useState(null);
   const [pageScale, setPageScale] = useState(1);
   const wrapRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
   const lastWidthRef = useRef(typeof window !== 'undefined' ? window.innerWidth : BASE_A4_WIDTH);
   const hasLockedMetaTopRef = useRef(false);
 
@@ -302,6 +304,14 @@ export default function PublicProfileView() {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onOrientation);
     };
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 720px)');
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener?.('change', apply);
+    return () => mq.removeEventListener?.('change', apply);
   }, []);
 
   useEffect(() => {
@@ -917,6 +927,17 @@ if (!isPreview && profile && profile.share_ready === false) {
       )}
 
       {/* Sticky action bar */}
+      {isPreview && isMobile && (
+        <div className="ppv-previewBack">
+          <button
+            type="button"
+            className="ppv-btn ppv-back-btn"
+            onClick={() => navigate('/profile?tab=cv')}
+          >
+            Back to Candidate Profile
+          </button>
+        </div>
+      )}
       <div className="ppv-stickyBar" role="region" aria-label="Actions">
         <div className="ppv-stickyActions">
           <button className="ppv-btn" onClick={() => scrollTo('ppv-summary')}>Summary</button>

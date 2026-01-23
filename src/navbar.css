@@ -750,7 +750,9 @@
 
 /* === AI multicolor navbar lines (light + dark) === */
 body:not(.dark-mode) .navbar-container::after,
-body.dark-mode .navbar-container::after {
+body.dark-mode .navbar-container::after,
+[data-theme='light'] .navbar-container::after,
+[data-theme='dark'] .navbar-container::after {
   content: "";
   position: absolute;
   left: 0;
@@ -773,7 +775,9 @@ body.dark-mode .navbar-container::after {
 }
 
 body:not(.dark-mode) .navbar-bottom::before,
-body.dark-mode .navbar-bottom::before {
+body.dark-mode .navbar-bottom::before,
+[data-theme='light'] .navbar-bottom::before,
+[data-theme='dark'] .navbar-bottom::before {
   content: "";
   position: absolute;
   left: 0;
@@ -796,7 +800,9 @@ body.dark-mode .navbar-bottom::before {
 }
 
 body.dark-mode .navbar-container::after,
-body.dark-mode .navbar-bottom::before {
+body.dark-mode .navbar-bottom::before,
+[data-theme='dark'] .navbar-container::after,
+[data-theme='dark'] .navbar-bottom::before {
   height: 1px;
 }
 
@@ -809,8 +815,12 @@ body.dark-mode .navbar-bottom::before {
 @media (prefers-reduced-motion: reduce) {
   body:not(.dark-mode) .navbar-container::after,
   body.dark-mode .navbar-container::after,
+  [data-theme='light'] .navbar-container::after,
+  [data-theme='dark'] .navbar-container::after,
   body:not(.dark-mode) .navbar-bottom::before,
-  body.dark-mode .navbar-bottom::before {
+  body.dark-mode .navbar-bottom::before,
+  [data-theme='light'] .navbar-bottom::before,
+  [data-theme='dark'] .navbar-bottom::before {
     animation: none;
   }
 }

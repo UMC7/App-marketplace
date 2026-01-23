@@ -533,6 +533,11 @@ useEffect(() => {
 
   const handlePreview = () => {
     if (!publicUrl) return;
+    const isMobile = window.innerWidth <= 720;
+    if (isMobile) {
+      window.location.href = `${publicUrl}?preview=1`;
+      return;
+    }
     window.open(`${publicUrl}?preview=1`, '_blank', 'noopener,noreferrer');
   };
 

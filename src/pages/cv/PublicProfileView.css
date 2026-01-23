@@ -81,6 +81,14 @@
 .ppv-btn:active { transform: translateY(1px); }
 .ppv-btn:disabled { opacity: .6; cursor: not-allowed; }
 .ppv-btn.primary { background: #e6f4ff; }
+.ppv-previewBack {
+  display: flex;
+  justify-content: flex-start;
+  margin: 8px 0 10px;
+}
+.ppv-back-btn {
+  border-color: rgba(0,0,0,.22);
+}
 
 .ppv-body {
   background: transparent; border: 0; padding: 0;
@@ -291,6 +299,9 @@
     border-radius: 6px !important;
     font-size: 12px !important;
     line-height: 1.2 !important;
+  }
+  .ppv-previewBack .ppv-back-btn {
+    width: 100%;
   }
 }
 

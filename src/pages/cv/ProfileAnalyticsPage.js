@@ -1,6 +1,6 @@
 // src/pages/cv/ProfileAnalyticsPage.js
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import supabase from '../../supabase';
 
 import './ProfileAnalyticsPage.css';
@@ -24,6 +24,7 @@ function useQuery() {
 }
 
 export default function ProfileAnalyticsPage() {
+  const navigate = useNavigate();
   const qs = useQuery();
   const handleFromQuery = qs.get('handle');
 
@@ -127,6 +128,10 @@ export default function ProfileAnalyticsPage() {
   }, [resolvedHandle, ownerUserId]);
 
   // Estados base para empty/guard
+  const handleBack = () => {
+    navigate('/profile?tab=cv');
+  };
+
   if (!authChecked) {
     return (
       <div className="cv-analytics">
@@ -144,7 +149,7 @@ export default function ProfileAnalyticsPage() {
             <div className="cv-analytics__subtitle">Sign in to view your CV analytics</div>
           </div>
           <div className="cv-analytics__actions"></div>
-          <button className="cv-analytics__back" onClick={() => window.history.back()}>Back</button>
+          <button className="cv-analytics__back" onClick={handleBack}>Back</button>
         </header>
 
         <EmptyState
@@ -170,7 +175,7 @@ export default function ProfileAnalyticsPage() {
 
         {/* En móvil el botón Back se mostrará junto a Refresh dentro de FiltersBar */}
         {!isMobile && (
-          <button className="cv-analytics__back" onClick={() => window.history.back()}>
+          <button className="cv-analytics__back" onClick={handleBack}>
             Back
           </button>
         )}
@@ -186,7 +191,7 @@ export default function ProfileAnalyticsPage() {
           onRefresh={refetch}
           /* Para móvil: pedir al FiltersBar que pinte el botón Back a su lado */
           showBackInline={isMobile}
-          onBack={() => window.history.back()}
+          onBack={handleBack}
         />
 
         {/* KPIs */}
