@@ -61,37 +61,45 @@ function LandingPage() {
       <p>Choose your Option to Continue:</p>
 
       <div className="logo-grid">
-        <Link to="/marketplace">
-          <ThemeLogo
-            light="/logos/seamarket.png"
-            dark="/logos/seamarketDM.png"
-            alt="SeaMarket"
-            className="module-logo"
-          />
+        <Link to="/marketplace" className="module-link">
+          <div className="module-tile">
+            <ThemeLogo
+              light="/logos/seamarket.png"
+              dark="/logos/seamarketDM.png"
+              alt="SeaMarket"
+              className="module-logo"
+            />
+          </div>
         </Link>
-        <Link to="/yacht-services">
-          <ThemeLogo
-            light="/logos/seaservices.png"
-            dark="/logos/seaservicesDM.png"
-            alt="SeaServices"
-            className="module-logo"
-          />
+        <Link to="/yacht-services" className="module-link">
+          <div className="module-tile">
+            <ThemeLogo
+              light="/logos/seaservices.png"
+              dark="/logos/seaservicesDM.png"
+              alt="SeaServices"
+              className="module-logo"
+            />
+          </div>
         </Link>
-        <Link to="/yacht-works">
-          <ThemeLogo
-            light="/logos/seajobs.png"
-            dark="/logos/seajobsDM.png"
-            alt="SeaJobs"
-            className="module-logo"
-          />
+        <Link to="/yacht-works" className="module-link">
+          <div className="module-tile">
+            <ThemeLogo
+              light="/logos/seajobs.png"
+              dark="/logos/seajobsDM.png"
+              alt="SeaJobs"
+              className="module-logo"
+            />
+          </div>
         </Link>
-        <Link to="/events">
-          <ThemeLogo
-            light="/logos/seaevents.png"
-            dark="/logos/seaeventsDM.png"
-            alt="SeaEvents"
-            className="module-logo"
-          />
+        <Link to="/events" className="module-link">
+          <div className="module-tile">
+            <ThemeLogo
+              light="/logos/seaevents.png"
+              dark="/logos/seaeventsDM.png"
+              alt="SeaEvents"
+              className="module-logo"
+            />
+          </div>
         </Link>
       </div>
 
