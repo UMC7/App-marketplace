@@ -79,6 +79,7 @@ function YachtWorksPage() {
   const [offers, setOffers] = useState([]);
   const [user, setUser] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 820);
+  const [offersLoading, setOffersLoading] = useState(true);
   const [showPrefsIntro, setShowPrefsIntro] = useState(false);
   const [prefsIntroSeen, setPrefsIntroSeen] = useState(false);
   const PREFS_INTRO_KEY = 'seajobs_prefs_intro_seen';
@@ -173,6 +174,7 @@ function YachtWorksPage() {
 
   useEffect(() => {
     const fetchOffers = async () => {
+      setOffersLoading(true);
       const { data, error } = await supabase
         .from('yacht_work_offers')
         .select('*')
@@ -183,6 +185,7 @@ function YachtWorksPage() {
       } else {
         setOffers(data);
       }
+      setOffersLoading(false);
     };
     fetchOffers();
   }, []);
@@ -418,10 +421,11 @@ function YachtWorksPage() {
         </button>
       )}
 
-      <YachtOfferList
-        offers={scoredOffers}
-        currentUser={user}
-        filters={filters}
+        <YachtOfferList
+          offers={scoredOffers}
+          offersLoading={offersLoading}
+          currentUser={user}
+          filters={filters}
         setFilters={setFilters}
 
         setShowFilters={setShowFilters}

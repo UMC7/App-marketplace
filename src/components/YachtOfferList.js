@@ -65,6 +65,7 @@ const getRoleImage = (title) => {
 
 function YachtOfferList({
   offers,
+  offersLoading = false,
   currentUser,
   filters,
   setFilters,
@@ -1892,11 +1893,16 @@ useEffect(() => {
         </div>
       ))}
 
-      {Object.keys(groupedOffers).length === 0 && (
-  <p style={{ marginTop: '20px', fontStyle: 'italic' }}>
-    No matching offers found.
-  </p>
-)}
+      {offersLoading && (
+        <p style={{ marginTop: '20px', fontStyle: 'italic' }}>
+          Loading offers...
+        </p>
+      )}
+      {!offersLoading && Object.keys(groupedOffers).length === 0 && (
+        <p style={{ marginTop: '20px', fontStyle: 'italic' }}>
+          No matching offers found.
+        </p>
+      )}
 
       {showChatIntro && (
   <Modal onClose={handleCloseChatIntro}>
