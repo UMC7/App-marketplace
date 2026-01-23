@@ -54,7 +54,11 @@ export default function WhatsAppRow({
           className="cp-input"
           placeholder="612345678"
           value={waNum}
-          onChange={(e) => onChangeWaNum && onChangeWaNum(e.target.value)}
+          onChange={(e) =>
+            onChangeWaNum && onChangeWaNum(e.target.value.replace(/[^\d]/g, ''))
+          }
+          inputMode="numeric"
+          pattern="[0-9]*"
         />
       </div>
     );
@@ -93,7 +97,11 @@ export default function WhatsAppRow({
               className="cp-input"
               placeholder="612345678"
               value={waNum}
-              onChange={(e) => onChangeWaNum && onChangeWaNum(e.target.value)}
+              onChange={(e) =>
+                onChangeWaNum && onChangeWaNum(e.target.value.replace(/[^\d]/g, ''))
+              }
+              inputMode="numeric"
+              pattern="[0-9]*"
             />
           </>
         )}

@@ -79,8 +79,12 @@ export default function EmailPhoneRow({
               id="pd-phone-num"
               className="cp-input"
               value={phoneNum}
-              onChange={(e) => onChangePhoneNum && onChangePhoneNum(e.target.value)}
+              onChange={(e) =>
+                onChangePhoneNum && onChangePhoneNum(e.target.value.replace(/[^\d]/g, ''))
+              }
               placeholder="612345678"
+              inputMode="numeric"
+              pattern="[0-9]*"
               aria-required="true"
             />
           </div>
