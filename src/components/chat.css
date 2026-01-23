@@ -213,6 +213,7 @@ body.dark-mode .chat-back-btn {
   z-index: 10000;
 }
 .chat-avatar-modal-dialog {
+  position: relative;
   background: #0b1220;
   padding: 16px;
   border-radius: 12px;
@@ -229,12 +230,19 @@ body.dark-mode .chat-back-btn {
   object-fit: contain;
 }
 .chat-avatar-modal-close {
-  align-self: flex-end;
-  border: none;
-  background: transparent;
+  all: unset;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 1.6rem;
+  line-height: 1;
   color: #fff;
-  font-size: 1.2rem;
   cursor: pointer;
+  z-index: 1;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
 
 /* ======== Área de Input ======== */

@@ -56,6 +56,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   const [otherNickname, setOtherNickname] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const fileInputRef = useRef();
+  const bottomRef = useRef(null);
   const navigate = useNavigate();
 
   // Avatars
@@ -104,6 +105,14 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     else document.body.classList.remove('chat-fullscreen-active');
     return () => document.body.classList.remove('chat-fullscreen-active');
   }, [isMobile]);
+
+  useEffect(() => {
+    if (!messages.length) return;
+    const handle = setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+    }, 30);
+    return () => clearTimeout(handle);
+  }, [messages]);
 
   // Load current user + my avatar
   useEffect(() => {
@@ -281,9 +290,10 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         console.error('Error uploading file:', uploadError);
         return;
       }
+      const oneWeekSeconds = 60 * 60 * 24 * 7;
       const { data, error: signError } = await supabase.storage
         .from('chat-uploads')
-        .createSignedUrl(path, 60 * 60);
+        .createSignedUrl(path, oneWeekSeconds);
       if (signError || !data?.signedUrl) {
         setUploading(false);
         setFileError(signError?.message || 'Failed to sign file.');
@@ -425,6 +435,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
         return rows;
       })()}
+      <div ref={bottomRef} />
     </div>
   );
 
@@ -490,8 +501,15 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
             className="chat-avatar-modal-close"
             onClick={closeAvatarPreview}
             aria-label="Close"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              boxShadow: 'none',
+              padding: 0,
+              color: '#fff',
+            }}
           >
-            x
+            ✕
           </button>
           <img
             src={avatarPreview.url}

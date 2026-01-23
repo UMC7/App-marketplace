@@ -63,11 +63,13 @@ const getChatKey = (offerId, userId) => `${offerId}_${userId}`;
 function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
   const [chatSummaries, setChatSummaries] = useState([]);
   const [actionBusy, setActionBusy] = useState({});
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchChats = async () => {
       if (!currentUser) return;
+      setLoading(true);
 
       const { data: messages, error } = await supabase
         .from('yacht_work_messages')
@@ -76,6 +78,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
 
       if (error) {
         console.error('Error fetching messages:', error);
+        setLoading(false);
         return;
       }
 
@@ -198,6 +201,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
         .sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at));
 
       setChatSummaries(merged);
+      setLoading(false);
     };
 
     fetchChats();
@@ -344,7 +348,9 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
   return (
     <div>
       <h3>Active Chats</h3>
-      {chatSummaries.length === 0 ? (
+      {loading ? (
+        <p>Loading chats...</p>
+      ) : chatSummaries.length === 0 ? (
         <p>No chats yet.</p>
       ) : (
         <div>
