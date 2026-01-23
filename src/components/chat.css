@@ -187,11 +187,17 @@ body.dark-mode .chat-back-btn {
 /* ======== Área de Input ======== */
 .chat-input {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
   padding: 10px;
   background-color: white;
   border-top: 1px solid #ddd;
+}
+.chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .chat-closed-note {
   flex: 1 1 100%;
@@ -200,6 +206,34 @@ body.dark-mode .chat-back-btn {
   background: #e2e8f0;
   border-radius: 8px;
   padding: 6px 10px;
+}
+.chat-input-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #334155;
+}
+.chat-file-pill {
+  display: inline-block;
+  max-width: 70%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #e2e8f0;
+  padding: 4px 8px;
+  border-radius: 10px;
+}
+.chat-file-remove {
+  border: none;
+  background: transparent;
+  color: #b91c1c;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.chat-file-error {
+  font-size: 0.85rem;
+  color: #b91c1c;
 }
 
 .chat-input textarea {
@@ -219,7 +253,7 @@ body.dark-mode .chat-back-btn {
   box-shadow: 0 0 0 2px rgba(104, 173, 168, 0.2);
 }
 
-/* Ícono de clip */
+/* Icono de clip */
 .chat-input .file-clip {
   flex: 0 0 auto;
   font-size: 1.4rem;
@@ -232,7 +266,7 @@ body.dark-mode .chat-back-btn {
   display: none;
 }
 
-/* Botón enviar */
+/* Boton enviar */
 .chat-input button {
   flex-shrink: 0;
   height: 40px;
@@ -263,6 +297,10 @@ body.dark-mode .chat-back-btn {
 .dark-mode .chat-message.other .chat-file-link { color: #FFD700 !important; }
 .dark-mode .chat-card { background: var(--primary-color); border-color: transparent; }
 .dark-mode .chat-input { background-color: #1e1e1e; border-top: 1px solid #333; }
+.dark-mode .chat-input-meta { color: #cbd5e1; }
+.dark-mode .chat-file-pill { background: #1f2937; }
+.dark-mode .chat-file-remove { color: #fca5a5; }
+.dark-mode .chat-file-error { color: #fca5a5; }
 .dark-mode .chat-closed-note { color: #cbd5e1; background: #1f2937; }
 .dark-mode .chat-input textarea { background-color: #2a2a2a; color: #fff; border: 1px solid #444; }
 .dark-mode .chat-input button { background-color: var(--accent-color); }
@@ -297,6 +335,9 @@ body.dark-mode .chat-back-btn {
     padding: 8px;
     gap: 6px;
   }
+  .chat-input-row {
+    gap: 6px;
+  }
   .chat-input .file-clip {
     font-size: 1.3rem;
     flex: 0 0 28px; /* ancho fijo para el clip */
@@ -319,7 +360,6 @@ body.dark-mode .chat-back-btn {
     border-top: 1px solid #333;
   }
 }
-
 /* ======== Pantalla Completa en Móvil ======== */
 .chat-mobile-fullscreen {
   position: fixed;
@@ -334,3 +374,8 @@ body.dark-mode .chat-back-btn {
   flex-direction: column;
 }
 .dark-mode .chat-mobile-fullscreen { background-color: #1e1e1e; }
+
+
+
+
+

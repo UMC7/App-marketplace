@@ -6,6 +6,8 @@ import { useUnreadMessages } from '../context/UnreadMessagesContext';
 import './chat.css';
 import Avatar from './Avatar';
 
+const MAX_CHAT_FILE_MB = 50;
+
 const renderMessageText = (text) => {
   if (!text) return null;
   const normalized = text.replace(/\r\n/g, '\n');
@@ -34,6 +36,8 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   const [currentUser, setCurrentUser] = useState(null);
   const [message, setMessage] = useState('');
   const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [fileError, setFileError] = useState('');
   const [otherNickname, setOtherNickname] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const fileInputRef = useRef();
@@ -49,6 +53,22 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   const isExternal = mode === 'external' && !!externalThreadId;
 
   const { fetchUnreadMessages } = useUnreadMessages();
+
+  const resetFileInput = () => {
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = null;
+  };
+
+  const validateFile = (nextFile) => {
+    if (!nextFile) return true;
+    const maxBytes = MAX_CHAT_FILE_MB * 1024 * 1024;
+    if (nextFile.size > maxBytes) {
+      setFileError(`File too large. Max ${MAX_CHAT_FILE_MB}MB.`);
+      resetFileInput();
+      return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -212,8 +232,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       const { error } = await supabase.from('external_messages').insert([payload]);
       if (!error) {
         setMessage('');
-        setFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = null;
+        resetFileInput();
 
         const { data: updated } = await supabase
           .from('external_messages')
@@ -228,18 +247,29 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     // Internal (existing flow)
     let fileUrl = null;
     if (file) {
+      if (!validateFile(file)) return;
+      setUploading(true);
       const path = `chat/${offerId}/${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from('chat-uploads')
         .upload(path, file);
       if (uploadError) {
+        setUploading(false);
+        setFileError(uploadError.message || 'Upload failed.');
         console.error('Error uploading file:', uploadError);
         return;
       }
-      const { data } = await supabase.storage
+      const { data, error: signError } = await supabase.storage
         .from('chat-uploads')
         .createSignedUrl(path, 60 * 60);
+      if (signError || !data?.signedUrl) {
+        setUploading(false);
+        setFileError(signError?.message || 'Failed to sign file.');
+        console.error('Error signing file:', signError);
+        return;
+      }
       fileUrl = data.signedUrl;
+      setUploading(false);
     }
 
     const { error } = await supabase.from('yacht_work_messages').insert({
@@ -254,8 +284,8 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
     if (!error) {
       setMessage('');
-      setFile(null);
-      fileInputRef.current.value = null;
+      resetFileInput();
+      setFileError('');
 
       const { data: updated } = await supabase
         .from('yacht_work_messages')
@@ -268,6 +298,9 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         .order('sent_at', { ascending: true });
 
       setMessages(updated);
+    } else {
+      setFileError(error.message || 'Failed to send message.');
+      console.error('Error sending message:', error);
     }
   };
 
@@ -340,33 +373,52 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     </div>
   );
 
-  const renderInput = () => (
+    const renderInput = () => (
     <div className="chat-input">
       {isChatClosed && (
         <div className="chat-closed-note">
           This chat was closed. Open a new private chat to send messages.
         </div>
       )}
-      {!isExternal && (
-        <>
-          <label className="file-clip" htmlFor="file-input">📎</label>
-          <input
-            id="file-input"
-            type="file"
-            ref={fileInputRef}
-            onChange={(e) => setFile(e.target.files[0])}
-            disabled={isChatClosed}
-          />
-        </>
+      <div className="chat-input-row">
+        {!isExternal && (
+          <>
+            <label className="file-clip" htmlFor="file-input" title="Attach file">📎</label>
+            <input
+              id="file-input"
+              type="file"
+              ref={fileInputRef}
+              onChange={(e) => {
+                const nextFile = e.target.files?.[0] || null;
+                setFileError('');
+                if (validateFile(nextFile)) setFile(nextFile);
+              }}
+              disabled={isChatClosed || uploading}
+            />
+          </>
+        )}
+        <textarea
+          placeholder="Type your message..."
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={2}
+          disabled={isChatClosed || uploading}
+        />
+        <button onClick={handleSend} disabled={isChatClosed || uploading}>
+          {uploading ? 'Uploading...' : 'Send'}
+        </button>
+      </div>
+      {!isExternal && file && (
+        <div className="chat-input-meta">
+          <span className="chat-file-pill" title={file.name}>
+            {file.name} ({Math.round(file.size / 1024)} KB)
+          </span>
+          <button type="button" className="chat-file-remove" onClick={resetFileInput}>
+            Remove
+          </button>
+        </div>
       )}
-      <textarea
-        placeholder="Type your message..."
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        rows={2}
-        disabled={isChatClosed}
-      />
-      <button onClick={handleSend} disabled={isChatClosed}>Send</button>
+      {fileError && <div className="chat-file-error">{fileError}</div>}
     </div>
   );
 
@@ -420,3 +472,4 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 }
 
 export default ChatPage;
+
