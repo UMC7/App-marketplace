@@ -183,6 +183,59 @@ body.dark-mode .chat-back-btn {
   opacity: 0.6;
   text-align: right;
 }
+.chat-date-separator {
+  display: flex;
+  justify-content: center;
+  margin: 6px 0;
+}
+.chat-date-separator span {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.chat-avatar-button {
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+}
+.chat-avatar-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+.chat-avatar-modal-dialog {
+  background: #0b1220;
+  padding: 16px;
+  border-radius: 12px;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chat-avatar-modal-dialog img {
+  max-width: 80vw;
+  max-height: 80vh;
+  border-radius: 10px;
+  object-fit: contain;
+}
+.chat-avatar-modal-close {
+  align-self: flex-end;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
 
 /* ======== Área de Input ======== */
 .chat-input {
@@ -295,6 +348,7 @@ body.dark-mode .chat-back-btn {
 .dark-mode .chat-message-sender { color: #bbb; }
 .dark-mode .chat-file-link { color: #FFD700 !important; }
 .dark-mode .chat-message.other .chat-file-link { color: #FFD700 !important; }
+.dark-mode .chat-date-separator span { background: #1f2937; color: #e5e7eb; }
 .dark-mode .chat-card { background: var(--primary-color); border-color: transparent; }
 .dark-mode .chat-input { background-color: #1e1e1e; border-top: 1px solid #333; }
 .dark-mode .chat-input-meta { color: #cbd5e1; }
@@ -374,6 +428,10 @@ body.dark-mode .chat-back-btn {
   flex-direction: column;
 }
 .dark-mode .chat-mobile-fullscreen { background-color: #1e1e1e; }
+
+
+
+
 
 
 

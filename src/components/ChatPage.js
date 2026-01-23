@@ -31,6 +31,20 @@ const renderMessageText = (text) => {
   });
 };
 
+const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+const getDateLabel = (date) => {
+  const today = startOfDay(new Date());
+  const target = startOfDay(date);
+  const diffDays = Math.round((today - target) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
+const formatTime = (date) =>
+  date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
 function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId }) {
   const [messages, setMessages] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -38,6 +52,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState('');
+  const [avatarPreview, setAvatarPreview] = useState(null);
   const [otherNickname, setOtherNickname] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const fileInputRef = useRef();
@@ -69,6 +84,13 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     }
     return true;
   };
+
+  const openAvatarPreview = (url, name) => {
+    if (!url) return;
+    setAvatarPreview({ url, name });
+  };
+
+  const closeAvatarPreview = () => setAvatarPreview(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -308,72 +330,105 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
   const renderMessages = () => (
     <div className="chat-messages">
-      {messages.map((msg) => {
-        const isOwnMessage = isExternal
-          ? msg.sender_role === 'candidate'
-          : msg.sender_id === currentUser.id;
+      {(() => {
+        let lastDateKey = null;
+        const rows = [];
+        messages.forEach((msg) => {
+          const isOwnMessage = isExternal
+            ? msg.sender_role === 'candidate'
+            : msg.sender_id === currentUser.id;
 
-        const text = isExternal ? msg.content : msg.message;
-        const isSystemMessage = !isExternal && typeof text === 'string'
-          && (text.startsWith('[system] ') || text === 'The other user has deleted this conversation.');
-        const systemText = isSystemMessage
-          ? text.replace(/^\[system\]\s*/, '')
-          : null;
+          const text = isExternal ? msg.content : msg.message;
+          const isSystemMessage = !isExternal && typeof text === 'string'
+            && (text.startsWith('[system] ') || text === 'The other user has deleted this conversation.');
+          const systemText = isSystemMessage
+            ? text.replace(/^\[system\]\s*/, '')
+            : null;
 
-        const time = isExternal
-          ? new Date(msg.created_at).toLocaleString()
-          : new Date(msg.sent_at).toLocaleString();
+          const timestamp = isExternal
+            ? new Date(msg.created_at)
+            : new Date(msg.sent_at);
+          const dateKey = startOfDay(timestamp).toISOString();
+          if (dateKey !== lastDateKey) {
+            rows.push(
+              <div key={`date-${dateKey}`} className="chat-date-separator">
+                <span>{getDateLabel(timestamp)}</span>
+              </div>
+            );
+            lastDateKey = dateKey;
+          }
 
-        if (isSystemMessage) {
-          return (
-            <div key={msg.id} className="chat-message-row system">
-              <div className="chat-message system">
-                {systemText && renderMessageText(systemText)}
+          const time = formatTime(timestamp);
+          const avatarUrl = isOwnMessage ? myAvatar : (isExternal ? null : otherAvatar);
+          const avatarName = isOwnMessage
+            ? 'You'
+            : (isExternal ? 'Anonymous' : (otherNickname || 'User'));
+
+          if (isSystemMessage) {
+            rows.push(
+              <div key={msg.id} className="chat-message-row system">
+                <div className="chat-message system">
+                  {systemText && renderMessageText(systemText)}
+                  <div className="chat-message-time">{time}</div>
+                </div>
+              </div>
+            );
+            return;
+          }
+
+          const avatar = (
+            <Avatar
+              nickname={avatarName}
+              srcUrl={avatarUrl || null}
+              size={32}
+              shape="circle"
+            />
+          );
+
+          rows.push(
+            <div key={msg.id} className={`chat-message-row ${isOwnMessage ? 'own' : 'other'}`}>
+              <div className="chat-message-avatar">
+                {avatarUrl ? (
+                  <button
+                    type="button"
+                    className="chat-avatar-button"
+                    onClick={() => openAvatarPreview(avatarUrl, avatarName)}
+                    aria-label={`View avatar for ${avatarName}`}
+                  >
+                    {avatar}
+                  </button>
+                ) : (
+                  avatar
+                )}
+              </div>
+
+              <div className={`chat-message ${isOwnMessage ? 'own' : 'other'}`}>
+                <div className="chat-message-sender">
+                  {isOwnMessage ? 'You' : (isExternal ? 'Anonymous' : otherNickname)}
+                </div>
+                {text && renderMessageText(text)}
+                {!isExternal && msg.file_url && (
+                  <a
+                    href={msg.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="chat-file-link"
+                  >
+                    📎 View file
+                  </a>
+                )}
                 <div className="chat-message-time">{time}</div>
               </div>
             </div>
           );
-        }
+        });
 
-        return (
-          <div key={msg.id} className={`chat-message-row ${isOwnMessage ? 'own' : 'other'}`}>
-            <div className="chat-message-avatar">
-              {isOwnMessage ? (
-                <Avatar nickname={'You'} srcUrl={myAvatar || null} size={32} shape="circle" />
-              ) : (
-                <Avatar
-                  nickname={isExternal ? 'Anonymous' : (otherNickname || 'User')}
-                  srcUrl={isExternal ? null : (otherAvatar || null)}
-                  size={32}
-                  shape="circle"
-                />
-              )}
-            </div>
-
-            <div className={`chat-message ${isOwnMessage ? 'own' : 'other'}`}>
-              <div className="chat-message-sender">
-                {isOwnMessage ? 'You' : (isExternal ? 'Anonymous' : otherNickname)}
-              </div>
-              {text && renderMessageText(text)}
-              {!isExternal && msg.file_url && (
-                <a
-                  href={msg.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="chat-file-link"
-                >
-                  📎 View file
-                </a>
-              )}
-              <div className="chat-message-time">{time}</div>
-            </div>
-          </div>
-        );
-      })}
+        return rows;
+      })()}
     </div>
   );
 
-    const renderInput = () => (
+  const renderInput = () => (
     <div className="chat-input">
       {isChatClosed && (
         <div className="chat-closed-note">
@@ -422,6 +477,31 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     </div>
   );
 
+  const renderAvatarModal = () => {
+    if (!avatarPreview?.url) return null;
+    return (
+      <div className="chat-avatar-modal" onClick={closeAvatarPreview}>
+        <div
+          className="chat-avatar-modal-dialog"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="chat-avatar-modal-close"
+            onClick={closeAvatarPreview}
+            aria-label="Close"
+          >
+            x
+          </button>
+          <img
+            src={avatarPreview.url}
+            alt={`Avatar of ${avatarPreview.name || 'user'}`}
+          />
+        </div>
+      </div>
+    );
+  };
+
   const headerLabel = isExternal ? 'Anonymous chat' : `Offer private chat – ${otherNickname}`;
   const offerLabel = offerMeta?.teammate_rank || offerMeta?.title;
   const handleOpenOffer = () => {
@@ -448,6 +528,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         <div className="chat-header">{headerLabel}</div>
         {renderMessages()}
         {renderInput()}
+        {renderAvatarModal()}
       </div>
     );
   }
@@ -467,9 +548,11 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       <div className="chat-header">{headerLabel}</div>
       {renderMessages()}
       {renderInput()}
+      {renderAvatarModal()}
     </div>
   );
 }
 
 export default ChatPage;
+
 
