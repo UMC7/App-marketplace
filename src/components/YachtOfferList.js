@@ -154,7 +154,7 @@ const hasCompletePrefs = Boolean(
 const getScrollOffset = () => {
   const nav = document.querySelector('.navbar-container');
   const navHeight = nav ? nav.getBoundingClientRect().height : 0;
-  const base = window.innerWidth <= 768 ? 8 : SCROLL_OFFSET;
+  const base = 8;
   return navHeight + base;
 };
 
