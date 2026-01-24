@@ -2,10 +2,7 @@ import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const stripTrailingZeros = (n) => {
-  const s = n.toFixed(1);
-  return s.endsWith(".0") ? s.slice(0, -2) : s;
-};
+const roundNumber = (n) => String(Math.round(n));
 
 const ensureLengthConversions = (text) => {
   let out = text;
@@ -14,14 +11,14 @@ const ensureLengthConversions = (text) => {
     const tail = out.slice(offset + match.length, offset + match.length + 18);
     if (/\(\s*\d/.test(tail) && /\b(m|meter|metre)/i.test(tail)) return match;
     const meters = parseFloat(num) * 0.3048;
-    return `${match} (${stripTrailingZeros(meters)} m)`;
+    return `${match} (${roundNumber(meters)} m)`;
   };
 
   const addFeet = (match, num, unit, offset) => {
     const tail = out.slice(offset + match.length, offset + match.length + 18);
     if (/\(\s*\d/.test(tail) && /\b(ft|feet)\b/i.test(tail)) return match;
     const feet = parseFloat(num) / 0.3048;
-    return `${match} (${stripTrailingZeros(feet)} ft)`;
+    return `${match} (${roundNumber(feet)} ft)`;
   };
 
   out = out.replace(/\b(\d{1,3}(?:\.\d+)?)\s*(ft|feet)\b/gi, addMeters);
@@ -63,6 +60,10 @@ const dedupeBlocksAndBullets = (text) => {
   }
 
   return cleanedBlocks.join("\n\n");
+};
+
+const removeApplyHere = (text) => {
+  return String(text || "").replace(/\[\s*apply\s*here\s*\]/gi, "").replace(/\s{2,}/g, " ").trim();
 };
 
 export default async function handler(req, res) {
@@ -117,7 +118,7 @@ export default async function handler(req, res) {
 
     const suggestionRaw = completion.choices?.[0]?.message?.content?.trim();
     const suggestion = suggestionRaw
-      ? dedupeBlocksAndBullets(ensureLengthConversions(suggestionRaw))
+      ? dedupeBlocksAndBullets(removeApplyHere(ensureLengthConversions(suggestionRaw)))
       : "";
     if (!suggestion) {
       return res.status(500).json({ error: "No suggestion returned" });

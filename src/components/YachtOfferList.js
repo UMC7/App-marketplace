@@ -147,14 +147,33 @@ const hasCompletePrefs = Boolean(
   const chatIntroTimerRef = useRef(null);
   const chatIntroScheduledRef = useRef(false);
   const SCROLL_OFFSET = 120;
+  const collapseTargetRef = useRef(null);
   const CHAT_INTRO_KEY = 'seajobs_private_chat_intro_seen';
   const CHAT_INTRO_DELAY_MS = 5000;
+
+const getScrollOffset = () => {
+  const nav = document.querySelector('.navbar-container');
+  const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+  const base = window.innerWidth <= 768 ? 8 : SCROLL_OFFSET;
+  return navHeight + base;
+};
 
 useEffect(() => {
   if (!expandedOfferId) return;
   const el = cardRefs.current[expandedOfferId];
   if (!el) return;
-  const top = el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+  const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+  window.scrollTo({ top, behavior: 'smooth' });
+}, [expandedOfferId]);
+
+useEffect(() => {
+  if (expandedOfferId) return;
+  const id = collapseTargetRef.current;
+  if (!id) return;
+  collapseTargetRef.current = null;
+  const el = cardRefs.current[id] || document.getElementById(`offer-${id}`);
+  if (!el) return;
+  const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
   window.scrollTo({ top, behavior: 'smooth' });
 }, [expandedOfferId]);
 
@@ -230,7 +249,7 @@ useEffect(() => {
   setTimeout(() => {
     const el = cardRefs.current[target.id] || document.getElementById(`offer-${target.id}`);
     if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+      const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
       window.scrollTo({ top, behavior: 'smooth' });
     }
   }, 50);
@@ -700,7 +719,13 @@ useEffect(() => {
 
 
   const toggleExpanded = (id) => {
-    setExpandedOfferId((prev) => (prev === id ? null : id));
+    setExpandedOfferId((prev) => {
+      if (prev === id) {
+        collapseTargetRef.current = id;
+        return null;
+      }
+      return id;
+    });
   };
 
   return (
