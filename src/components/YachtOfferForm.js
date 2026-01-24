@@ -1425,15 +1425,17 @@ const sanitizedData = {
       />
       <button
         type="button"
-        onClick={improveRemarks}
+        onClick={previousRemarks ? undoRemarks : improveRemarks}
         className="remarks-ai-button"
-        disabled={rewriteLoading || remarksAiUsed}
-        aria-label="Improve with AI"
-        title="Improve with AI"
+        disabled={rewriteLoading || (!previousRemarks && remarksAiUsed)}
+        aria-label={previousRemarks ? 'Undo AI change' : 'Improve with AI'}
+        title={previousRemarks ? 'Undo' : 'Improve with AI'}
         data-typing={remarksTyping ? 'true' : 'false'}
       >
         {rewriteLoading ? (
           <span className="remarks-ai-text">...</span>
+        ) : previousRemarks ? (
+          <span className="remarks-ai-text">Undo</span>
         ) : (
           <>
             <span className="remarks-ai-spark">✦</span>
@@ -1442,19 +1444,6 @@ const sanitizedData = {
         )}
       </button>
     </div>
-    {previousRemarks && (
-      <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          onClick={undoRemarks}
-          className="btn btn-light"
-          style={{ width: 'auto', padding: '8px 12px' }}
-          disabled={rewriteLoading}
-        >
-          Undo
-        </button>
-      </div>
-    )}
 
           </>
     )}
@@ -1735,15 +1724,17 @@ const sanitizedData = {
   />
   <button
     type="button"
-    onClick={improveRemarks}
+    onClick={previousRemarks ? undoRemarks : improveRemarks}
     className="remarks-ai-button"
-    disabled={rewriteLoading || remarksAiUsed}
-    aria-label="Improve with AI"
-    title="Improve with AI"
+    disabled={rewriteLoading || (!previousRemarks && remarksAiUsed)}
+    aria-label={previousRemarks ? 'Undo AI change' : 'Improve with AI'}
+    title={previousRemarks ? 'Undo' : 'Improve with AI'}
     data-typing={remarksTyping ? 'true' : 'false'}
   >
     {rewriteLoading ? (
       <span className="remarks-ai-text">...</span>
+    ) : previousRemarks ? (
+      <span className="remarks-ai-text">Undo</span>
     ) : (
       <>
         <span className="remarks-ai-spark">✦</span>
@@ -1752,19 +1743,6 @@ const sanitizedData = {
     )}
   </button>
 </div>
-{previousRemarks && (
-  <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-    <button
-      type="button"
-      onClick={undoRemarks}
-      className="btn btn-light"
-      style={{ width: 'auto', padding: '8px 12px' }}
-      disabled={rewriteLoading}
-    >
-      Undo
-    </button>
-  </div>
-)}
   </>
 )}
 

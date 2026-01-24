@@ -2,6 +2,69 @@ import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+const stripTrailingZeros = (n) => {
+  const s = n.toFixed(1);
+  return s.endsWith(".0") ? s.slice(0, -2) : s;
+};
+
+const ensureLengthConversions = (text) => {
+  let out = text;
+
+  const addMeters = (match, num, unit, offset) => {
+    const tail = out.slice(offset + match.length, offset + match.length + 18);
+    if (/\(\s*\d/.test(tail) && /\b(m|meter|metre)/i.test(tail)) return match;
+    const meters = parseFloat(num) * 0.3048;
+    return `${match} (${stripTrailingZeros(meters)} m)`;
+  };
+
+  const addFeet = (match, num, unit, offset) => {
+    const tail = out.slice(offset + match.length, offset + match.length + 18);
+    if (/\(\s*\d/.test(tail) && /\b(ft|feet)\b/i.test(tail)) return match;
+    const feet = parseFloat(num) / 0.3048;
+    return `${match} (${stripTrailingZeros(feet)} ft)`;
+  };
+
+  out = out.replace(/\b(\d{1,3}(?:\.\d+)?)\s*(ft|feet)\b/gi, addMeters);
+  out = out.replace(/\b(\d{1,3}(?:\.\d+)?)\s*(m|meter|metre)s?\b/gi, addFeet);
+
+  return out;
+};
+
+const dedupeBlocksAndBullets = (text) => {
+  const blocks = text
+    .split(/\n{2,}/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+
+  const seen = new Set();
+  const cleanedBlocks = [];
+
+  for (const block of blocks) {
+    const lines = block.split("\n");
+    const outLines = [];
+    const seenLine = new Set();
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      const key = trimmed.toLowerCase();
+      if (!trimmed) continue;
+      if ((trimmed.startsWith("•") || trimmed.startsWith("✔")) && seenLine.has(key)) {
+        continue;
+      }
+      seenLine.add(key);
+      outLines.push(trimmed);
+    }
+
+    const joined = outLines.join("\n");
+    const key = joined.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    cleanedBlocks.push(joined);
+  }
+
+  return cleanedBlocks.join("\n\n");
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -52,7 +115,10 @@ export default async function handler(req, res) {
       ]
     });
 
-    const suggestion = completion.choices?.[0]?.message?.content?.trim();
+    const suggestionRaw = completion.choices?.[0]?.message?.content?.trim();
+    const suggestion = suggestionRaw
+      ? dedupeBlocksAndBullets(ensureLengthConversions(suggestionRaw))
+      : "";
     if (!suggestion) {
       return res.status(500).json({ error: "No suggestion returned" });
     }
