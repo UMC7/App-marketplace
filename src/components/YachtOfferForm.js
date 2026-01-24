@@ -152,7 +152,7 @@ const initialState = {
   visas: [],
 };
 
-const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain', 'Chief Officer', '2nd Officer', '3rd Officer', 'Bosun', 'Deck/Engineer', 'Mate', 'Lead Deckhand', 'Deckhand', 'Deck/Steward(ess)', 'Deck/Carpenter', 'Deck/Divemaster', 'Dayworker', 'Chief Engineer', '2nd Engineer', '3rd Engineer', 'Solo Engineer', 'Electrician', 'Chef', 'Head Chef', 'Sous Chef', 'Solo Chef', 'Cook/Crew Chef', 'Crew Chef/Stew', 'Butler', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Steward(ess)', '4th Steward(ess)', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Housekeeper', 'Head of Housekeeping', 'Cook/Stew/Deck', 'Cook/Steward(ess)', 'Stew/Deck', 'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny', 'Videographer', 'Yoga/Pilates Instructor', 'Personal Trainer', 'Dive Instrutor', 'Water Sport Instrutor', 'Nurse', 'Other']; // ajusta según lista oficial
+const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain', 'Chief Officer', '2nd Officer', '3rd Officer', 'Bosun', 'Deck/Engineer', 'Mate', 'Lead Deckhand', 'Deckhand', 'Deck/Steward(ess)', 'Deck/Carpenter', 'Deck/Divemaster', 'Dayworker', 'Chief Engineer', '2nd Engineer', '3rd Engineer', 'Solo Engineer', 'Electrician', 'Chef', 'Head Chef', 'Sous Chef', 'Solo Chef', 'Cook/Crew Chef', 'Crew Chef/Stew', 'Chef/Steward(ess)', 'Butler', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Steward(ess)', '4th Steward(ess)', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Housekeeper', 'Head of Housekeeping', 'Cook/Stew/Deck', 'Cook/Steward(ess)', 'Stew/Deck', 'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Nanny', 'Videographer', 'Yoga/Pilates Instructor', 'Personal Trainer', 'Dive Instrutor', 'Water Sport Instrutor', 'Nurse', 'Other']; // ajusta según lista oficial
 
 const countries = [
   // 🌐 Countries
@@ -227,6 +227,9 @@ useEffect(() => {
   }));
 }, [initialValues]);
   const [loading, setLoading] = useState(false);
+  const [rewriteLoading, setRewriteLoading] = useState(false);
+  const [previousRemarks, setPreviousRemarks] = useState('');
+  const [remarksAiUsed, setRemarksAiUsed] = useState(false);
   const [showMissing, setShowMissing] = useState(false);
   const [jobText, setJobText] = useState('');
   const [showPaste, setShowPaste] = useState(false);
@@ -236,6 +239,7 @@ useEffect(() => {
   // close the visas dropdown on outside click or ESC
 const visasRef = useRef(null);
 const requiredDocsRef = useRef(null);
+const remarksRef = useRef(null);
 useEffect(() => {
   const handleClickOutside = (e) => {
     if (visasRef.current && !visasRef.current.contains(e.target)) {
@@ -259,6 +263,24 @@ useEffect(() => {
   };
 }, []);
 
+const readJsonResponse = async (res) => {
+  const contentType = res.headers.get('content-type') || '';
+  const text = await res.text();
+
+  if (!contentType.includes('application/json')) {
+    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<!doctype')) {
+      throw new Error('API not available in local dev. Use Vercel dev or deploy.');
+    }
+    throw new Error('Unexpected API response.');
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error('Invalid JSON response.');
+  }
+};
+
 // YachtOfferForm.js
 const autoFillFromText = async () => {
   if (!jobText.trim()) {
@@ -274,7 +296,7 @@ const autoFillFromText = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: jobText }),
     });
-    const data = await res.json();
+    const data = await readJsonResponse(res);
     if (!res.ok) throw new Error(data.error || 'Parse failed.');
 
     setFormData(prev => {
@@ -360,6 +382,71 @@ const autoFillFromText = async () => {
   } finally {
     setLoading(false);
   }
+};
+
+const improveRemarks = async () => {
+  if (remarksAiUsed) {
+    toast.error('AI improvement already used for this form.');
+    return;
+  }
+  const current = String(formData.description || '').trim();
+  if (!current) {
+    toast.error('Add remarks first.');
+    return;
+  }
+
+  const context = [
+    formData.work_environment ? `Work environment: ${formData.work_environment}` : '',
+    formData.title ? `Position: ${formData.title}` : '',
+    formData.yacht_type ? `Yacht type: ${formData.yacht_type}` : '',
+    formData.yacht_size ? `Yacht size: ${formData.yacht_size}` : '',
+    formData.city ? `City: ${formData.city}` : '',
+    formData.country ? `Country: ${formData.country}` : ''
+  ].filter(Boolean).join(' | ');
+
+  setRewriteLoading(true);
+  try {
+    const res = await fetch('/api/rewrite-remarks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: current, context }),
+    });
+    const data = await readJsonResponse(res);
+    if (!res.ok) throw new Error(data.error || 'Rewrite failed.');
+
+    const nextText = String(data.text || '').trim();
+    if (!nextText) throw new Error('Empty suggestion.');
+
+    setPreviousRemarks(current);
+    setRemarksAiUsed(true);
+    setFormData(prev => ({ ...prev, description: nextText }));
+    toast.success('Remarks updated with AI suggestion.');
+
+    setTimeout(() => {
+      if (remarksRef.current) {
+        remarksRef.current.style.height = 'auto';
+        remarksRef.current.style.height = `${remarksRef.current.scrollHeight}px`;
+      }
+    }, 0);
+  } catch (err) {
+    console.error(err);
+    toast.error(err.message || 'Could not rewrite remarks.');
+  } finally {
+    setRewriteLoading(false);
+  }
+};
+
+const undoRemarks = () => {
+  if (!previousRemarks) return;
+  setFormData(prev => ({ ...prev, description: previousRemarks }));
+  setPreviousRemarks('');
+  toast.success('Remarks restored.');
+  setTimeout(() => {
+    if (remarksRef.current) {
+      remarksRef.current.style.height = 'auto';
+      remarksRef.current.style.height = `${remarksRef.current.scrollHeight}px`;
+    }
+  }, 0);
 };
 
   const isDayworker = formData.title === 'Dayworker';
@@ -1315,12 +1402,33 @@ const sanitizedData = {
       className="remarks-textarea"
       name="description"
       rows={5}
+      ref={remarksRef}
       value={formData.description}
       onChange={handleChange}
       onInput={autoResizeTextarea}
       onFocus={autoResizeTextarea}
       style={{ overflow: 'hidden', resize: 'none' }}
     />
+    <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <button
+        type="button"
+        onClick={improveRemarks}
+        className="btn btn-light"
+        style={{ width: 'auto', padding: '8px 12px' }}
+        disabled={rewriteLoading || remarksAiUsed}
+      >
+        {rewriteLoading ? 'Improving...' : 'Improve with AI'}
+      </button>
+      <button
+        type="button"
+        onClick={undoRemarks}
+        className="btn btn-light"
+        style={{ width: 'auto', padding: '8px 12px' }}
+        disabled={!previousRemarks || rewriteLoading}
+      >
+        Undo
+      </button>
+    </div>
 
           </>
     )}
@@ -1591,12 +1699,33 @@ const sanitizedData = {
   className="remarks-textarea"
   name="description"
   rows={5}
+  ref={remarksRef}
   value={formData.description}
   onChange={handleChange}
   onInput={autoResizeTextarea}
   onFocus={autoResizeTextarea}
   style={{ overflow: 'hidden', resize: 'none' }}
 />
+<div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+  <button
+    type="button"
+    onClick={improveRemarks}
+    className="btn btn-light"
+    style={{ width: 'auto', padding: '8px 12px' }}
+    disabled={rewriteLoading || remarksAiUsed}
+  >
+    {rewriteLoading ? 'Improving...' : 'Improve with AI'}
+  </button>
+  <button
+    type="button"
+    onClick={undoRemarks}
+    className="btn btn-light"
+    style={{ width: 'auto', padding: '8px 12px' }}
+    disabled={!previousRemarks || rewriteLoading}
+  >
+    Undo
+  </button>
+</div>
   </>
 )}
 
