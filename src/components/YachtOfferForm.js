@@ -230,6 +230,7 @@ useEffect(() => {
   const [rewriteLoading, setRewriteLoading] = useState(false);
   const [previousRemarks, setPreviousRemarks] = useState('');
   const [remarksAiUsed, setRemarksAiUsed] = useState(false);
+  const [remarksTyping, setRemarksTyping] = useState(false);
   const [showMissing, setShowMissing] = useState(false);
   const [jobText, setJobText] = useState('');
   const [showPaste, setShowPaste] = useState(false);
@@ -240,6 +241,7 @@ useEffect(() => {
 const visasRef = useRef(null);
 const requiredDocsRef = useRef(null);
 const remarksRef = useRef(null);
+const remarksTypingTimer = useRef(null);
 useEffect(() => {
   const handleClickOutside = (e) => {
     if (visasRef.current && !visasRef.current.contains(e.target)) {
@@ -460,6 +462,17 @@ const autoResizeTextarea = (e) => {
   const el = e.target;
   el.style.height = 'auto';
   el.style.height = `${el.scrollHeight}px`;
+};
+
+const handleRemarksInput = (e) => {
+  autoResizeTextarea(e);
+  setRemarksTyping(true);
+  if (remarksTypingTimer.current) {
+    clearTimeout(remarksTypingTimer.current);
+  }
+  remarksTypingTimer.current = setTimeout(() => {
+    setRemarksTyping(false);
+  }, 600);
 };
 
 const formReady = (() => {
@@ -1398,37 +1411,50 @@ const sanitizedData = {
 
     {/* 19. Descripción */}
     <label>Remarks:</label>
-    <textarea
-      className="remarks-textarea"
-      name="description"
-      rows={5}
-      ref={remarksRef}
-      value={formData.description}
-      onChange={handleChange}
-      onInput={autoResizeTextarea}
-      onFocus={autoResizeTextarea}
-      style={{ overflow: 'hidden', resize: 'none' }}
-    />
-    <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+    <div className="remarks-field">
+      <textarea
+        className="remarks-textarea"
+        name="description"
+        rows={5}
+        ref={remarksRef}
+        value={formData.description}
+        onChange={handleChange}
+        onInput={handleRemarksInput}
+        onFocus={autoResizeTextarea}
+        style={{ overflow: 'hidden', resize: 'none' }}
+      />
       <button
         type="button"
         onClick={improveRemarks}
-        className="btn btn-light"
-        style={{ width: 'auto', padding: '8px 12px' }}
+        className="remarks-ai-button"
         disabled={rewriteLoading || remarksAiUsed}
+        aria-label="Improve with AI"
+        title="Improve with AI"
+        data-typing={remarksTyping ? 'true' : 'false'}
       >
-        {rewriteLoading ? 'Improving...' : 'Improve with AI'}
-      </button>
-      <button
-        type="button"
-        onClick={undoRemarks}
-        className="btn btn-light"
-        style={{ width: 'auto', padding: '8px 12px' }}
-        disabled={!previousRemarks || rewriteLoading}
-      >
-        Undo
+        {rewriteLoading ? (
+          <span className="remarks-ai-text">...</span>
+        ) : (
+          <>
+            <span className="remarks-ai-spark">✦</span>
+            <span className="remarks-ai-text">AI</span>
+          </>
+        )}
       </button>
     </div>
+    {previousRemarks && (
+      <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={undoRemarks}
+          className="btn btn-light"
+          style={{ width: 'auto', padding: '8px 12px' }}
+          disabled={rewriteLoading}
+        >
+          Undo
+        </button>
+      </div>
+    )}
 
           </>
     )}
@@ -1695,37 +1721,50 @@ const sanitizedData = {
 
     {/* Remarks */}
 <label>Remarks:</label>
-<textarea
-  className="remarks-textarea"
-  name="description"
-  rows={5}
-  ref={remarksRef}
-  value={formData.description}
-  onChange={handleChange}
-  onInput={autoResizeTextarea}
-  onFocus={autoResizeTextarea}
-  style={{ overflow: 'hidden', resize: 'none' }}
-/>
-<div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+<div className="remarks-field">
+  <textarea
+    className="remarks-textarea"
+    name="description"
+    rows={5}
+    ref={remarksRef}
+    value={formData.description}
+    onChange={handleChange}
+    onInput={handleRemarksInput}
+    onFocus={autoResizeTextarea}
+    style={{ overflow: 'hidden', resize: 'none' }}
+  />
   <button
     type="button"
     onClick={improveRemarks}
-    className="btn btn-light"
-    style={{ width: 'auto', padding: '8px 12px' }}
+    className="remarks-ai-button"
     disabled={rewriteLoading || remarksAiUsed}
+    aria-label="Improve with AI"
+    title="Improve with AI"
+    data-typing={remarksTyping ? 'true' : 'false'}
   >
-    {rewriteLoading ? 'Improving...' : 'Improve with AI'}
-  </button>
-  <button
-    type="button"
-    onClick={undoRemarks}
-    className="btn btn-light"
-    style={{ width: 'auto', padding: '8px 12px' }}
-    disabled={!previousRemarks || rewriteLoading}
-  >
-    Undo
+    {rewriteLoading ? (
+      <span className="remarks-ai-text">...</span>
+    ) : (
+      <>
+        <span className="remarks-ai-spark">✦</span>
+        <span className="remarks-ai-text">AI</span>
+      </>
+    )}
   </button>
 </div>
+{previousRemarks && (
+  <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+    <button
+      type="button"
+      onClick={undoRemarks}
+      className="btn btn-light"
+      style={{ width: 'auto', padding: '8px 12px' }}
+      disabled={rewriteLoading}
+    >
+      Undo
+    </button>
+  </div>
+)}
   </>
 )}
 

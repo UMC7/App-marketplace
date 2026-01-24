@@ -334,6 +334,82 @@ body {
   resize: none !important;
 }
 
+.remarks-field {
+  position: relative;
+  width: 100%;
+}
+
+.remarks-ai-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  height: 22px;
+  padding: 0 8px 0 7px;
+  width: auto !important;
+  min-width: 0;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)) padding-box,
+    linear-gradient(90deg, #35c4c0, #7ae7b6, #ffd36b) border-box;
+  color: var(--primary-color);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+  z-index: 2;
+  opacity: 0.45;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.remarks-ai-button:hover {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)) padding-box,
+    linear-gradient(90deg, #2ab3af, #6bd8a8, #f3c458) border-box;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  opacity: 1;
+}
+
+.remarks-ai-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+body:not(.dark-mode) .remarks-ai-button {
+  opacity: 0.85;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)) padding-box,
+    linear-gradient(90deg, #35c4c0, #7ae7b6, #ffd36b) border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  color: #0f3b3a;
+}
+
+body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.96);
+}
+
+.remarks-ai-button[data-typing='true'] {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.96);
+}
+
+.remarks-ai-spark {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.remarks-ai-text {
+  line-height: 1;
+}
+
 .login-form label + input,
 .login-form label + select,
 .login-form label + textarea {
