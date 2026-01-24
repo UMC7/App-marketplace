@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+﻿import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -7,22 +7,35 @@ const roundNumber = (n) => String(Math.round(n));
 const ensureLengthConversions = (text) => {
   let out = text;
 
-  const addMeters = (match, num, unit, offset) => {
-    const tail = out.slice(offset + match.length, offset + match.length + 18);
-    if (/\(\s*\d/.test(tail) && /\b(m|meter|metre)/i.test(tail)) return match;
+  const isInsideParens = (idx) => {
+    const before = out.slice(0, idx);
+    const lastOpen = before.lastIndexOf('(');
+    const lastClose = before.lastIndexOf(')');
+    return lastOpen > lastClose;
+  };
+
+  const hasUnitInTail = (offset, unitRe) => {
+    const tail = out.slice(offset + 1, offset + 24);
+    return /\(\s*\d/.test(tail) && unitRe.test(tail);
+  };
+
+  const addMeters = (match, num, offset) => {
+    if (isInsideParens(offset)) return match;
+    if (hasUnitInTail(offset + match.length, /\b(m|meter|metre)\b/i)) return match;
     const meters = parseFloat(num) * 0.3048;
     return `${match} (${roundNumber(meters)} m)`;
   };
 
-  const addFeet = (match, num, unit, offset) => {
-    const tail = out.slice(offset + match.length, offset + match.length + 18);
-    if (/\(\s*\d/.test(tail) && /\b(ft|feet)\b/i.test(tail)) return match;
+  const addFeet = (match, num, offset) => {
+    if (isInsideParens(offset)) return match;
+    if (hasUnitInTail(offset + match.length, /\b(ft|feet)\b/i)) return match;
     const feet = parseFloat(num) / 0.3048;
     return `${match} (${roundNumber(feet)} ft)`;
   };
 
-  out = out.replace(/\b(\d{1,3}(?:\.\d+)?)\s*(ft|feet)\b/gi, addMeters);
-  out = out.replace(/\b(\d{1,3}(?:\.\d+)?)\s*(m|meter|metre)s?\b/gi, addFeet);
+  out = out.replace(/\b(\d{1,3}(?:\.\d+)?)\s*(ft|feet)\b/gi, (m, num, unit, offset) => addMeters(m, num, offset));
+  out = out.replace(/\b(\d{1,3}(?:\.\d+)?)\s*['’′](?!\w)/g, (m, num, offset) => addMeters(m, num, offset));
+  out = out.replace(/\b(\d{1,3}(?:\.\d+)?)\s*(m|meter|metre)s?\b/gi, (m, num, unit, offset) => addFeet(m, num, offset));
 
   return out;
 };
@@ -89,7 +102,9 @@ export default async function handler(req, res) {
       "Do not add facts or requirements that are not in the source.",
       "Preserve important details like dates, locations, salaries, visas, and certificates.",
       "Format for readability: use short paragraphs separated by a blank line.",
-      "Use tasteful, professional emojis to improve readability (e.g., role, location, requirements, contact).",
+      "Avoid repeating the same information or section twice.",
+      "Use tasteful, professional emojis to improve readability (role, location, requirements, benefits, start date, itinerary, contact).",
+      "Use plain text only (no markdown bold).",
       "If requirements are present, list each on its own line and prefix with '•'.",
       "If employer benefits or package details are listed, put each on its own line and prefix with '✔'.",
       "Treat requirements as must-have conditions (e.g., 'must', 'required', 'need', visas, certificates, experience).",
@@ -130,3 +145,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Failed to rewrite remarks" });
   }
 }
+
