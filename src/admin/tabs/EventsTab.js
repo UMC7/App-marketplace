@@ -132,6 +132,10 @@ function EventsTab() {
     return numbers;
   }
 
+  const selectedEvent = selectedEventId
+    ? events.find(e => e.id === selectedEventId)
+    : null;
+
   return (
     <div>
       <h3>Events</h3>
@@ -250,11 +254,27 @@ function EventsTab() {
       )}
 
       {/* Botones únicos debajo de la tabla */}
-      <div style={{ marginTop: 12 }}>
-        <button onClick={handleEdit} disabled={!selectedEventId}>Edit</button>
-        <button onClick={handleDelete} disabled={!selectedEventId}>Delete</button>
-        <button onClick={handleToggleBlock} disabled={!selectedEventId}>
-          {selectedEventId && events.find(e => e.id === selectedEventId)?.status === 'blocked' ? 'Unblock' : 'Block'}
+      <div className="admin-actions">
+        <button
+          className="admin-action-button admin-action-edit"
+          onClick={handleEdit}
+          disabled={!selectedEventId}
+        >
+          Edit
+        </button>
+        <button
+          className="admin-action-button admin-action-delete"
+          onClick={handleDelete}
+          disabled={!selectedEventId}
+        >
+          Delete
+        </button>
+        <button
+          className={`admin-action-button ${selectedEvent?.status === 'blocked' ? 'admin-action-unblock' : 'admin-action-block'}`}
+          onClick={handleToggleBlock}
+          disabled={!selectedEventId}
+        >
+          {selectedEvent?.status === 'blocked' ? 'Unblock' : 'Block'}
         </button>
       </div>
 

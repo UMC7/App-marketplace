@@ -132,6 +132,10 @@ function ProductsTab() {
     return numbers;
   }
 
+  const selectedProduct = selectedProductId
+    ? products.find(e => e.id === selectedProductId)
+    : null;
+
   return (
     <div>
       <h3>Products</h3>
@@ -250,11 +254,27 @@ function ProductsTab() {
       )}
 
       {/* Botones únicos debajo de la tabla */}
-      <div style={{ marginTop: 12 }}>
-        <button onClick={handleEdit} disabled={!selectedProductId}>Edit</button>
-        <button onClick={handleDelete} disabled={!selectedProductId}>Delete</button>
-        <button onClick={handleToggleBlock} disabled={!selectedProductId}>
-          {selectedProductId && products.find(e => e.id === selectedProductId)?.status === 'blocked' ? 'Unblock' : 'Block'}
+      <div className="admin-actions">
+        <button
+          className="admin-action-button admin-action-edit"
+          onClick={handleEdit}
+          disabled={!selectedProductId}
+        >
+          Edit
+        </button>
+        <button
+          className="admin-action-button admin-action-delete"
+          onClick={handleDelete}
+          disabled={!selectedProductId}
+        >
+          Delete
+        </button>
+        <button
+          className={`admin-action-button ${selectedProduct?.status === 'blocked' ? 'admin-action-unblock' : 'admin-action-block'}`}
+          onClick={handleToggleBlock}
+          disabled={!selectedProductId}
+        >
+          {selectedProduct?.status === 'blocked' ? 'Unblock' : 'Block'}
         </button>
       </div>
 

@@ -132,6 +132,10 @@ function ServicesTab() {
     return numbers;
   }
 
+  const selectedService = selectedServiceId
+    ? services.find(e => e.id === selectedServiceId)
+    : null;
+
   return (
     <div>
       <h3>Services</h3>
@@ -250,11 +254,27 @@ function ServicesTab() {
       )}
 
       {/* Botones únicos debajo de la tabla */}
-      <div style={{ marginTop: 12 }}>
-        <button onClick={handleEdit} disabled={!selectedServiceId}>Edit</button>
-        <button onClick={handleDelete} disabled={!selectedServiceId}>Delete</button>
-        <button onClick={handleToggleBlock} disabled={!selectedServiceId}>
-          {selectedServiceId && services.find(e => e.id === selectedServiceId)?.status === 'blocked' ? 'Unblock' : 'Block'}
+      <div className="admin-actions">
+        <button
+          className="admin-action-button admin-action-edit"
+          onClick={handleEdit}
+          disabled={!selectedServiceId}
+        >
+          Edit
+        </button>
+        <button
+          className="admin-action-button admin-action-delete"
+          onClick={handleDelete}
+          disabled={!selectedServiceId}
+        >
+          Delete
+        </button>
+        <button
+          className={`admin-action-button ${selectedService?.status === 'blocked' ? 'admin-action-unblock' : 'admin-action-block'}`}
+          onClick={handleToggleBlock}
+          disabled={!selectedServiceId}
+        >
+          {selectedService?.status === 'blocked' ? 'Unblock' : 'Block'}
         </button>
       </div>
 

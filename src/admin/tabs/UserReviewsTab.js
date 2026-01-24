@@ -132,6 +132,10 @@ function UserReviewsTab() {
     return numbers;
   }
 
+  const selectedUserReview = selectedReviewId
+    ? userReviews.find(e => e.id === selectedReviewId)
+    : null;
+
   return (
     <div>
       <h3>User Reviews</h3>
@@ -250,11 +254,27 @@ function UserReviewsTab() {
       )}
 
       {/* Botones únicos debajo de la tabla */}
-      <div style={{ marginTop: 12 }}>
-        <button onClick={handleEdit} disabled={!selectedReviewId}>Edit</button>
-        <button onClick={handleDelete} disabled={!selectedReviewId}>Delete</button>
-        <button onClick={handleToggleBlock} disabled={!selectedReviewId}>
-          {selectedReviewId && userReviews.find(e => e.id === selectedReviewId)?.status === 'blocked' ? 'Unblock' : 'Block'}
+      <div className="admin-actions">
+        <button
+          className="admin-action-button admin-action-edit"
+          onClick={handleEdit}
+          disabled={!selectedReviewId}
+        >
+          Edit
+        </button>
+        <button
+          className="admin-action-button admin-action-delete"
+          onClick={handleDelete}
+          disabled={!selectedReviewId}
+        >
+          Delete
+        </button>
+        <button
+          className={`admin-action-button ${selectedUserReview?.status === 'blocked' ? 'admin-action-unblock' : 'admin-action-block'}`}
+          onClick={handleToggleBlock}
+          disabled={!selectedReviewId}
+        >
+          {selectedUserReview?.status === 'blocked' ? 'Unblock' : 'Block'}
         </button>
       </div>
 

@@ -137,6 +137,10 @@ function UsersTab({ currentUser }) {
     return numbers;
   }
 
+  const selectedUser = selectedUserId
+    ? users.find(e => e.id === selectedUserId)
+    : null;
+
   return (
     <div>
       <h3>Users</h3>
@@ -263,13 +267,29 @@ function UsersTab({ currentUser }) {
       )}
 
       {/* Botones únicos debajo de la tabla */}
-      <div style={{ marginTop: 12 }}>
-  <button onClick={handleEdit} disabled={!selectedUserId}>Edit</button>
-  <button onClick={handleDelete} disabled={!selectedUserId}>Delete</button>
-  <button onClick={handleToggleBlock} disabled={!selectedUserId}>
-    {selectedUserId && users.find(e => e.id === selectedUserId)?.is_blocked ? 'Unblock' : 'Block'}
-  </button>
-</div>
+      <div className="admin-actions">
+        <button
+          className="admin-action-button admin-action-edit"
+          onClick={handleEdit}
+          disabled={!selectedUserId}
+        >
+          Edit
+        </button>
+        <button
+          className="admin-action-button admin-action-delete"
+          onClick={handleDelete}
+          disabled={!selectedUserId}
+        >
+          Delete
+        </button>
+        <button
+          className={`admin-action-button ${selectedUser?.is_blocked ? 'admin-action-unblock' : 'admin-action-block'}`}
+          onClick={handleToggleBlock}
+          disabled={!selectedUserId}
+        >
+          {selectedUser?.is_blocked ? 'Unblock' : 'Block'}
+        </button>
+      </div>
 
       {/* Modal de edición */}
       {showEditModal && (

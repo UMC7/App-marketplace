@@ -27,6 +27,7 @@ const TABS = [
 
 function AdminPanel() {
   const [activeTab, setActiveTab] = useState('users');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -47,20 +48,21 @@ function AdminPanel() {
   return (
     <div className="admin-panel">
       <h2>Admin Panel</h2>
-      <nav style={{ marginBottom: '20px' }}>
+      <button
+        type="button"
+        className="admin-menu-toggle"
+        onClick={() => setIsMenuOpen((prev) => !prev)}
+        aria-expanded={isMenuOpen ? 'true' : 'false'}
+        aria-controls="admin-tabs-panel"
+      >
+        ☰ Menu
+      </button>
+      <nav id="admin-tabs-panel" className={`admin-tabs ${isMenuOpen ? 'active' : ''}`}>
         {TABS.map(tab => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            style={{
-              marginRight: '8px',
-              padding: '6px 12px',
-              backgroundColor: activeTab === tab.key ? '#333' : '#ddd',
-              color: activeTab === tab.key ? '#fff' : '#333',
-              borderRadius: '4px',
-              border: 'none',
-              cursor: 'pointer'
-            }}
+            onClick={() => { setActiveTab(tab.key); setIsMenuOpen(false); }}
+            className={`admin-tab ${activeTab === tab.key ? 'active' : ''}`}
           >
             {tab.label}
           </button>

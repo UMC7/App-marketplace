@@ -132,6 +132,10 @@ function MessagesTab() {
     return numbers;
   }
 
+  const selectedMessage = selectedMessageId
+    ? messages.find(e => e.id === selectedMessageId)
+    : null;
+
   return (
     <div>
       <h3>Messages</h3>
@@ -250,11 +254,27 @@ function MessagesTab() {
       )}
 
       {/* Botones únicos debajo de la tabla */}
-      <div style={{ marginTop: 12 }}>
-        <button onClick={handleEdit} disabled={!selectedMessageId}>Edit</button>
-        <button onClick={handleDelete} disabled={!selectedMessageId}>Delete</button>
-        <button onClick={handleToggleBlock} disabled={!selectedMessageId}>
-          {selectedMessageId && messages.find(e => e.id === selectedMessageId)?.status === 'blocked' ? 'Unblock' : 'Block'}
+      <div className="admin-actions">
+        <button
+          className="admin-action-button admin-action-edit"
+          onClick={handleEdit}
+          disabled={!selectedMessageId}
+        >
+          Edit
+        </button>
+        <button
+          className="admin-action-button admin-action-delete"
+          onClick={handleDelete}
+          disabled={!selectedMessageId}
+        >
+          Delete
+        </button>
+        <button
+          className={`admin-action-button ${selectedMessage?.status === 'blocked' ? 'admin-action-unblock' : 'admin-action-block'}`}
+          onClick={handleToggleBlock}
+          disabled={!selectedMessageId}
+        >
+          {selectedMessage?.status === 'blocked' ? 'Unblock' : 'Block'}
         </button>
       </div>
 

@@ -235,9 +235,21 @@ function LogsTab() {
       )}
 
       {/* Botones únicos debajo de la tabla */}
-      <div style={{ marginTop: 12 }}>
-        <button onClick={handleEdit} disabled={!selectedLogId}>Edit</button>
-        <button onClick={handleDelete} disabled={!selectedLogId}>Delete</button>
+      <div className="admin-actions">
+        <button
+          className="admin-action-button admin-action-edit"
+          onClick={handleEdit}
+          disabled={!selectedLogId}
+        >
+          Edit
+        </button>
+        <button
+          className="admin-action-button admin-action-delete"
+          onClick={handleDelete}
+          disabled={!selectedLogId}
+        >
+          Delete
+        </button>
       </div>
 
       {/* Modal de edición */}

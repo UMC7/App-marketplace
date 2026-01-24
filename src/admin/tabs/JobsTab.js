@@ -132,6 +132,10 @@ function JobsTab() {
     return numbers;
   }
 
+  const selectedJob = selectedJobId
+    ? jobs.find(e => e.id === selectedJobId)
+    : null;
+
   return (
     <div>
       <h3>Jobs</h3>
@@ -250,11 +254,27 @@ function JobsTab() {
       )}
 
       {/* Botones únicos debajo de la tabla */}
-      <div style={{ marginTop: 12 }}>
-        <button onClick={handleEdit} disabled={!selectedJobId}>Edit</button>
-        <button onClick={handleDelete} disabled={!selectedJobId}>Delete</button>
-        <button onClick={handleToggleBlock} disabled={!selectedJobId}>
-          {selectedJobId && jobs.find(e => e.id === selectedJobId)?.status === 'blocked' ? 'Unblock' : 'Block'}
+      <div className="admin-actions">
+        <button
+          className="admin-action-button admin-action-edit"
+          onClick={handleEdit}
+          disabled={!selectedJobId}
+        >
+          Edit
+        </button>
+        <button
+          className="admin-action-button admin-action-delete"
+          onClick={handleDelete}
+          disabled={!selectedJobId}
+        >
+          Delete
+        </button>
+        <button
+          className={`admin-action-button ${selectedJob?.status === 'blocked' ? 'admin-action-unblock' : 'admin-action-block'}`}
+          onClick={handleToggleBlock}
+          disabled={!selectedJobId}
+        >
+          {selectedJob?.status === 'blocked' ? 'Unblock' : 'Block'}
         </button>
       </div>
 
