@@ -964,10 +964,10 @@ const derivedEndDate = (() => {
       ))}
     </select>
 
-    {/* 3.5. Gender Requirement (solo si Team === 'No') */}
+    {/* 3.5. Sex Requirement (solo si Team === 'No') */}
       {formData.team === 'No' && (
         <>
-          <label>Gender:</label>
+          <label>Sex:</label>
           <select name="gender" value={formData.gender} onChange={handleChange}>
             <option value="">Any</option>
             <option value="Male">Male</option>

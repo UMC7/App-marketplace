@@ -1276,10 +1276,10 @@ useEffect(() => {
         <div className="field-value">{offer.type}</div>
       </div>
     )}
-    {/* Gender (al final del bloque 1) */}
+    {/* Sex (al final del bloque 1) */}
 {!offer.team && offer.gender && (
   <div className="field-group gender">
-    <div className="field-label">Gender</div>
+    <div className="field-label">Sex</div>
     <div className="field-value">{offer.gender}</div>
   </div>
 )}
