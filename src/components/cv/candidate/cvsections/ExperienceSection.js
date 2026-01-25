@@ -252,6 +252,8 @@ export default function ExperienceSection({
   onCountChange,
   onProgressChange,
   targetForFull = 3,
+  mode = 'professional',
+  showAllFields = false,
 }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -261,12 +263,17 @@ export default function ExperienceSection({
   const scrollEditorIntoView = () => {
     const el = editBoxRef.current;
     if (!el || typeof window === 'undefined') return;
-    const rect = el.getBoundingClientRect();
+    const target = el.querySelector('select, input, textarea') || el;
+    const rect = target.getBoundingClientRect();
     const y = rect.top + window.scrollY;
-    const mobileOffset = window.innerWidth <= 768 ? 84 : 0;
+    const header = document.querySelector('.navbar, .site-navbar, header');
+    const headerHeight = header ? header.getBoundingClientRect().height : 96;
+    const desktopOffset = headerHeight + 120;
+    const mobileOffset = 104;
+    const offset = window.innerWidth <= 768 ? mobileOffset : desktopOffset;
 
     window.scrollTo({
-      top: Math.max(0, y - mobileOffset),
+      top: Math.max(0, y - offset),
       behavior: 'smooth',
     });
   };
@@ -817,13 +824,28 @@ export default function ExperienceSection({
 
           {/* Hasta elegir tipo no mostramos formularios */}
           {editing.type === 'yacht' && (
-            <YachtFields editing={editing} setEditing={setEditing} />
+            <YachtFields
+              editing={editing}
+              setEditing={setEditing}
+              mode={mode}
+              showAllFields={showAllFields}
+            />
           )}
           {editing.type === 'merchant' && (
-            <MerchantFields editing={editing} setEditing={setEditing} />
+            <MerchantFields
+              editing={editing}
+              setEditing={setEditing}
+              mode={mode}
+              showAllFields={showAllFields}
+            />
           )}
           {editing.type === 'shore' && (
-            <ShoreFields editing={editing} setEditing={setEditing} />
+            <ShoreFields
+              editing={editing}
+              setEditing={setEditing}
+              mode={mode}
+              showAllFields={showAllFields}
+            />
           )}
 
           {/* Acciones */}

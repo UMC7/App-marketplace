@@ -56,164 +56,181 @@ const COUNTRIES = [
   'Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
 ];
 
-export default function ShoreFields({ editing, setEditing }) {
+export default function ShoreFields({ editing, setEditing, mode = 'professional', showAllFields = false }) {
+  const isLite = mode === 'lite';
+  const isProfessional = mode === 'professional';
+  const showRequired = !isProfessional;
+  const showOptional = showAllFields ? true : !isLite;
+  const showLiteLabels = mode === 'lite';
+  const reqLabel = (text) => (showLiteLabels ? text : `${text} *`);
+  const optLabel = (text) => (showLiteLabels ? `${text} (Optional)` : text);
   if (!editing || editing.type !== 'shore') return null;
 
   const remarksLen = (editing?.remarks || '').length;
+  const remarksLabel = showLiteLabels
+    ? `Remarks (${remarksLen}/200) (Optional)`
+    : `Remarks (${remarksLen}/200)`;
 
   return (
     <>
-      {/* Fila 1 */}
-      <div className="cp-row-exp-a">
-        <div>
-          <label className="cp-label">Employer / Company *</label>
-          <input
-            className="cp-input"
-            placeholder="e.g., Four Seasons, Nobu"
-            value={editing.vessel_or_employer || ''}
-            onChange={(e) => setEditing({ ...editing, vessel_or_employer: e.target.value })}
-          />
-        </div>
+      {showRequired ? (
+        <>
+          <div className="cp-row-exp-a">
+            <div>
+              <label className="cp-label">{reqLabel('Employer / Company')}</label>
+              <input
+                className="cp-input"
+                placeholder="e.g., Four Seasons, Nobu"
+                value={editing.vessel_or_employer || ''}
+                onChange={(e) => setEditing({ ...editing, vessel_or_employer: e.target.value })}
+              />
+            </div>
 
-        <div>
-          <label className="cp-label">Role / Rank *</label>
-          <input
-            className="cp-input"
-            placeholder="e.g., Head Chef, Front Desk Supervisor"
-            value={editing.role || ''}
-            onChange={(e) => setEditing({ ...editing, role: e.target.value })}
-          />
-        </div>
+            <div>
+              <label className="cp-label">{reqLabel('Role / Rank')}</label>
+              <input
+                className="cp-input"
+                placeholder="e.g., Head Chef, Front Desk Supervisor"
+                value={editing.role || ''}
+                onChange={(e) => setEditing({ ...editing, role: e.target.value })}
+              />
+            </div>
 
-        <div>
-          <label className="cp-label">Contract *</label>
-          <select
-            className="cp-input"
-            value={editing.contract || ''}
-            onChange={(e) => setEditing({ ...editing, contract: e.target.value })}
-          >
-            <option value="">—</option>
-            {SHORE_TERMS.map((c) => (
-              <Opt key={c} value={c} />
-            ))}
-          </select>
-        </div>
+            <div>
+              <label className="cp-label">{reqLabel('Contract')}</label>
+              <select
+                className="cp-input"
+                value={editing.contract || ''}
+                onChange={(e) => setEditing({ ...editing, contract: e.target.value })}
+              >
+                <option value="">—</option>
+                {SHORE_TERMS.map((c) => (
+                  <Opt key={c} value={c} />
+                ))}
+              </select>
+            </div>
 
-        <div>
-          <label className="cp-label">Industry *</label>
-          <select
-            className="cp-input"
-            value={editing.vessel_type || ''}
-            onChange={(e) => setEditing({ ...editing, vessel_type: e.target.value })}
-          >
-            <option value="">—</option>
-            {INDUSTRIES.map((i) => (
-              <Opt key={i} value={i} />
-            ))}
-          </select>
-        </div>
-      </div>
+            <div>
+              <label className="cp-label">{reqLabel('Industry')}</label>
+              <select
+                className="cp-input"
+                value={editing.vessel_type || ''}
+                onChange={(e) => setEditing({ ...editing, vessel_type: e.target.value })}
+              >
+                <option value="">—</option>
+                {INDUSTRIES.map((i) => (
+                  <Opt key={i} value={i} />
+                ))}
+              </select>
+            </div>
+          </div>
 
-      {/* Fila 2 */}
-      <div className="cp-row-exp-a">
-        <div>
-          <label className="cp-label">Employees supervised</label>
-          <select
-            className="cp-input"
-            value={editing.supervisedBucket || ''}
-            onChange={(e) => setEditing({ ...editing, supervisedBucket: e.target.value })}
-          >
-            <option value="">—</option>
-            {['0', '<5', '<10', '10+'].map((v) => (
-              <Opt key={v} value={v} />
-            ))}
-          </select>
-        </div>
+          <div className="cp-row-exp-a">
+            <div>
+              <label className="cp-label">{reqLabel('Location (country)')}</label>
+              <select
+                className="cp-input"
+                value={editing.location_country || ''}
+                onChange={(e) => setEditing({ ...editing, location_country: e.target.value })}
+              >
+                <option value="">— Select country —</option>
+                {COUNTRIES.map((c) => (
+                  <Opt key={c} value={c} />
+                ))}
+              </select>
+            </div>
 
-        <div>
-          <label className="cp-label">Location (country) *</label>
-          <select
-            className="cp-input"
-            value={editing.location_country || ''}
-            onChange={(e) => setEditing({ ...editing, location_country: e.target.value })}
-          >
-            <option value="">— Select country —</option>
-            {COUNTRIES.map((c) => (
-              <Opt key={c} value={c} />
-            ))}
-          </select>
-        </div>
+            <div>
+              <label className="cp-label">{reqLabel('Start date')}</label>
+              <input
+                className="cp-input"
+                placeholder="YYYY-MM"
+                inputMode="numeric"
+                maxLength={7}
+                value={editing.start_month || ''}
+                onChange={(e) => {
+                  const v = ymFormatOnChange(e.target.value);
+                  setEditing({ ...editing, start_month: v });
+                }}
+                onBlur={(e) => {
+                  const v = ymNormalize(e.target.value);
+                  setEditing({ ...editing, start_month: v });
+                }}
+              />
+            </div>
 
-        <div>
-          <label className="cp-label">Start date *</label>
-          <input
-            className="cp-input"
-            placeholder="YYYY-MM"
-            inputMode="numeric"
-            maxLength={7}
-            value={editing.start_month || ''}
-            onChange={(e) => {
-              const v = ymFormatOnChange(e.target.value);
-              setEditing({ ...editing, start_month: v });
-            }}
-            onBlur={(e) => {
-              const v = ymNormalize(e.target.value);
-              setEditing({ ...editing, start_month: v });
-            }}
-          />
-        </div>
+            <div>
+              <label className="cp-label">{reqLabel('End date')}</label>
+              <input
+                className="cp-input"
+                placeholder="YYYY-MM"
+                inputMode="numeric"
+                maxLength={7}
+                value={editing.is_current ? '' : editing.end_month || ''}
+                disabled={editing.is_current}
+                onChange={(e) => {
+                  const v = ymFormatOnChange(e.target.value);
+                  setEditing({ ...editing, end_month: v });
+                }}
+                onBlur={(e) => {
+                  if (editing.is_current) return;
+                  const v = ymNormalize(e.target.value);
+                  setEditing({ ...editing, end_month: v });
+                }}
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                <input
+                  id="exp-current-shore"
+                  type="checkbox"
+                  checked={!!editing.is_current}
+                  onChange={(e) => setEditing({ ...editing, is_current: e.target.checked })}
+                />
+                <label htmlFor="exp-current-shore">Current position</label>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : null}
 
-        <div>
-          <label className="cp-label">End date *</label>
-          <input
-            className="cp-input"
-            placeholder="YYYY-MM"
-            inputMode="numeric"
-            maxLength={7}
-            value={editing.is_current ? '' : editing.end_month || ''}
-            disabled={editing.is_current}
-            onChange={(e) => {
-              const v = ymFormatOnChange(e.target.value);
-              setEditing({ ...editing, end_month: v });
-            }}
-            onBlur={(e) => {
-              if (editing.is_current) return;
-              const v = ymNormalize(e.target.value);
-              setEditing({ ...editing, end_month: v });
-            }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-            <input
-              id="exp-current-shore"
-              type="checkbox"
-              checked={!!editing.is_current}
-              onChange={(e) => setEditing({ ...editing, is_current: e.target.checked })}
-            />
-            <label htmlFor="exp-current-shore">Current position</label>
+      {showOptional ? (
+        <div className="cp-row-exp-a">
+          <div>
+            <label className="cp-label">{optLabel('Employees supervised')}</label>
+            <select
+              className="cp-input"
+              value={editing.supervisedBucket || ''}
+              onChange={(e) => setEditing({ ...editing, supervisedBucket: e.target.value })}
+            >
+              <option value="">—</option>
+              {['0', '<5', '<10', '10+'].map((v) => (
+                <Opt key={v} value={v} />
+              ))}
+            </select>
           </div>
         </div>
-      </div>
+      ) : null}
 
-      {/* Remarks (ancho completo, 2 líneas) */}
-      <div className="cp-row-exp-c">
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label className="cp-label">{`Remarks (${remarksLen}/200)`}</label>
-          <textarea
-            className="cp-textarea"
-            rows="2"
-            maxLength={200}
-            placeholder="Brief notes (max ~2 lines)"
-            value={editing.remarks || ''}
-            onChange={(e) =>
-              setEditing({
-                ...editing,
-                remarks: e.target.value.slice(0, 200),
-              })
-            }
-            style={{ lineHeight: 1.3 }}
-          />
+      {showOptional ? (
+        <div className="cp-row-exp-c">
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label className="cp-label">{remarksLabel}</label>
+            <textarea
+              className="cp-textarea"
+              rows="2"
+              maxLength={200}
+              placeholder="Brief notes (max ~2 lines)"
+              value={editing.remarks || ''}
+              onChange={(e) =>
+                setEditing({
+                  ...editing,
+                  remarks: e.target.value.slice(0, 200),
+                })
+              }
+              style={{ lineHeight: 1.3 }}
+            />
+          </div>
         </div>
-      </div>
+      ) : null}
     </>
   );
 }

@@ -14,6 +14,7 @@ export default function AvailabilityPicker({
   value = '',
   onChange,
   options = DEFAULT_OPTIONS,
+  showRequiredMark = true,
 }) {
   const isDateSpecific = (val) => String(val || '').startsWith('Date specific');
   const dateFromValue = (val) => {
@@ -37,7 +38,7 @@ export default function AvailabilityPicker({
 
   return (
     <div>
-      <label className="cp-label">Availability *</label>
+      <label className="cp-label">Availability {showRequiredMark ? '*' : ''}</label>
       <select className="cp-input" value={value || ''} onChange={handleSelect}>
         <option value="">—</option>
         {options.map((opt) => (

@@ -9,6 +9,7 @@ export default function ReferencesEditor({
   max = 5,
   onUpsert,
   onDelete,
+  showRequiredMark = true,
 }) {
   const [items, setItems] = useState(Array.isArray(value) ? value : []);
   const [editingIndex, setEditingIndex] = useState(-1);
@@ -86,6 +87,7 @@ export default function ReferencesEditor({
           initialValue={items[editingIndex]}
           onCancel={handleCancel}
           onSave={handleSave}
+          showRequiredMark={showRequiredMark}
         />
       ) : (
         <>

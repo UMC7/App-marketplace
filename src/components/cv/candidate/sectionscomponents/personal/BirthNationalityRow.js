@@ -14,6 +14,7 @@ export default function BirthNationalityRow({
   onAddNationality,
   onRemoveNationality,
   ageLabel = '',
+  showRequiredMark = true,
 }) {
   // Evitamos keys duplicadas en el <select> de nacionalidades
   const uniqueNatOptions = useMemo(
@@ -26,7 +27,7 @@ export default function BirthNationalityRow({
       <div className="cp-row-birth-nat">
         <div>
           <label className="cp-label" htmlFor="pd-birth-month">
-            Birth month <span aria-hidden="true">*</span>
+            Birth month {showRequiredMark ? <span aria-hidden="true">*</span> : null}
           </label>
           <select
             id="pd-birth-month"
@@ -46,7 +47,7 @@ export default function BirthNationalityRow({
 
         <div>
           <label className="cp-label" htmlFor="pd-birth-year">
-            Birth year <span aria-hidden="true">*</span>
+            Birth year {showRequiredMark ? <span aria-hidden="true">*</span> : null}
           </label>
           <select
             id="pd-birth-year"
@@ -66,7 +67,7 @@ export default function BirthNationalityRow({
 
         <div>
           <label className="cp-label" htmlFor="pd-nat-select">
-            Nationalities <span aria-hidden="true">*</span>
+            Nationalities {showRequiredMark ? <span aria-hidden="true">*</span> : null}
           </label>
           <div className="cp-row-add">
             <select

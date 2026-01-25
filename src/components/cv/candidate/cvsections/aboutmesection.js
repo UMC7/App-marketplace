@@ -5,7 +5,11 @@ import SectionCard from "../sectionscomponents/aboutme/SectionCard";
 import AboutMeEditor from "../sectionscomponents/aboutme/AboutMeEditor";
 import ProfessionalStatementEditor from "../sectionscomponents/aboutme/ProfessionalStatementEditor";
 
-export default function AboutMeSection({ profile = {}, onSave, onSaved }) {
+export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = 'professional' }) {
+  const isLite = mode === 'lite';
+  const isProfessional = mode === 'professional';
+  const showRequired = !isProfessional;
+  const showOptional = !isLite;
   const initialAbout = useMemo(
     () => profile?.about_me || profile?.about || "",
     [profile]
@@ -37,7 +41,7 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved }) {
     (statement ?? "") !== (baseline.statement ?? "");
 
   // ⬇️ Requisito: “Short summary” debe tener contenido para poder guardar
-  const canSave = dirty && (about || "").trim().length > 0;
+  const canSave = dirty && (showRequired ? (about || "").trim().length > 0 : true);
 
   const handleSave = async () => {
     if (!canSave || saving) return;
@@ -47,7 +51,7 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved }) {
       professional_statement: (statement || "").trim(),
     };
 
-    if (!payload.about_me) {
+    if (showRequired && !payload.about_me) {
       // Doble verificación por si acaso (defensa en profundidad)
       toast?.error?.("Short summary is required.");
       return;
@@ -72,12 +76,22 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved }) {
     }
   };
 
+  const subtitle = showRequired
+    ? "Write a brief summary of your experience."
+    : "Add a professional statement to expand on your background.";
+
   return (
-    <SectionCard
-      subtitle="Write a brief summary and, if you wish, a longer professional statement describing your background."
-    >
-      <AboutMeEditor value={about} onChange={setAbout} />
-      <ProfessionalStatementEditor value={statement} onChange={setStatement} />
+    <SectionCard subtitle={subtitle}>
+      {showRequired ? (
+        <AboutMeEditor
+          value={about}
+          onChange={setAbout}
+          showRequiredMark={!isLite}
+        />
+      ) : null}
+      {showOptional ? (
+        <ProfessionalStatementEditor value={statement} onChange={setStatement} />
+      ) : null}
 
       <div className="section-actions" style={{ marginTop: 16 }}>
         <button

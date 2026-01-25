@@ -100,14 +100,89 @@ export default function PreferencesSkills({
   onChangeProgramTypes,
   dietaryRequirements,
   onChangeDietaryRequirements,
+  mode = 'professional',
 }) {
   const isMobile = useIsMobile();
+  const isLite = mode === 'lite';
+  const isProfessional = mode === 'professional';
 
   const twoCol = {
     display: 'grid',
     gap: 12,
     gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))',
   };
+
+  if (isLite) {
+    return (
+      <div className="cp-form">
+        <div style={twoCol}>
+          <div
+            style={{
+              display: 'grid',
+              gap: 12,
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            }}
+          >
+            <StatusPicker value={status} onChange={onChangeStatus} showRequiredMark={false} />
+            <AvailabilityPicker value={availability} onChange={onChangeAvailability} showRequiredMark={false} />
+          </div>
+        </div>
+
+        <div style={twoCol}>
+          <LanguageProficiencyPicker
+            value={languageLevels}
+            onChange={onChangeLanguageLevels}
+            showRequiredMark={false}
+          />
+          <DepartmentSpecialtiesInput
+            value={deptSpecialties}
+            onChange={onChangeDeptSpecialties}
+            showRequiredMark={false}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (isProfessional) {
+    return (
+      <div className="cp-form">
+        <div style={twoCol}>
+          <RegionsSeasonsPicker value={regionsSeasons} onChange={onChangeRegionsSeasons} />
+          <ContractTypesSelector value={contracts} onChange={onChangeContracts} />
+        </div>
+
+        <div style={twoCol}>
+          <RotationPreferencePicker value={rotation} onChange={onChangeRotation} />
+          <VesselTypePreferenceSelector
+            value={Array.isArray(vesselTypes) ? vesselTypes : []}
+            onChange={onChangeVesselTypes}
+          />
+        </div>
+
+        <div style={twoCol}>
+          <VesselSizeRangeSelector
+            value={vesselSizeRange}
+            onChange={onChangeVesselSizeRange}
+          />
+          <DayRateSalaryInput value={rateSalary} onChange={onChangeRateSalary} />
+        </div>
+
+        <div style={twoCol}>
+          <ProgramTypePreferenceSelector
+            value={programTypes}
+            onChange={onChangeProgramTypes}
+          />
+          <DietaryRequirementsSelector
+            value={dietaryRequirements}
+            onChange={onChangeDietaryRequirements}
+          />
+        </div>
+
+        <OnboardPreferences value={onboardPrefs} onChange={onChangeOnboardPrefs} />
+      </div>
+    );
+  }
 
   return (
     <div className="cp-form">

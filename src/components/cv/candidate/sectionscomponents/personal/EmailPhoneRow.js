@@ -4,6 +4,8 @@ import React from 'react';
 export default function EmailPhoneRow({
   gender = '',
   onChangeGender,
+  showGender = true,
+  showRequiredMark = true,
 
   email = '',
   onChangeEmail,
@@ -18,24 +20,26 @@ export default function EmailPhoneRow({
   return (
     <div className="cp-row-email">
       <div className="cp-col-left">
-        <div className="cp-left-row">
-          <div className="cp-cell-gender">
-            <label className="cp-label" htmlFor="pd-gender">Gender</label>
-            <select
-              id="pd-gender"
-              className="cp-input"
-              value={gender}
-              onChange={(e) => onChangeGender && onChangeGender(e.target.value)}
-            >
-              <option value="">Select…</option>
-              <option value="female">Female</option>
-              <option value="male">Male</option>
-            </select>
-          </div>
+        <div className={`cp-left-row${showGender ? '' : ' cp-left-row--lite'}`}>
+          {showGender ? (
+            <div className="cp-cell-gender">
+              <label className="cp-label" htmlFor="pd-gender">Sex</label>
+              <select
+                id="pd-gender"
+                className="cp-input"
+                value={gender}
+                onChange={(e) => onChangeGender && onChangeGender(e.target.value)}
+              >
+                <option value="">Select…</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+              </select>
+            </div>
+          ) : null}
 
           <div className="cp-cell-email">
             <label className="cp-label" htmlFor="pd-email">
-              Email <span aria-hidden="true">*</span>
+              Email {showRequiredMark ? <span aria-hidden="true">*</span> : null}
             </label>
             <input
               id="pd-email"
@@ -53,7 +57,7 @@ export default function EmailPhoneRow({
         <div className="cp-right-phone-row">
           <div className="cp-cell-cc">
             <label className="cp-label cp-nowrap" htmlFor="pd-phone-cc">
-              Mobile <span className="cp-cc-sub">(code) <span aria-hidden="true">*</span></span>
+              Mobile <span className="cp-cc-sub">(code) {showRequiredMark ? <span aria-hidden="true">*</span> : null}</span>
             </label>
             <div className="cp-field-cc">
               <span className="cp-prefix">+</span>
@@ -73,7 +77,7 @@ export default function EmailPhoneRow({
 
           <div className="cp-cell-num">
             <label className="cp-label" htmlFor="pd-phone-num">
-              Number <span aria-hidden="true">*</span>
+              Number {showRequiredMark ? <span aria-hidden="true">*</span> : null}
             </label>
             <input
               id="pd-phone-num"

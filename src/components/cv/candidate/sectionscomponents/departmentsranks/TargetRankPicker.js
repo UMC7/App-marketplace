@@ -17,13 +17,9 @@ export default function TargetRankPicker({
 
   return (
     <div
-      className={className}
+      className={`cp-target-picker ${className}`.trim()}
       /* Wrap habilitado para móviles; en desktop no afecta porque todo cabe en una fila */
       style={{
-        display: "flex",
-        gap: 8,
-        flexWrap: "wrap",
-        alignItems: "stretch",
         width: "100%",
         ...style,
       }}
@@ -41,7 +37,7 @@ export default function TargetRankPicker({
         onChange={onRankChange}
         label={null}
         placeholder="Select rank…"
-        style={{ flex: 3, minWidth: 0 }}  // igual que antes en desktop
+        style={{ minWidth: 0 }}
       />
 
       <button

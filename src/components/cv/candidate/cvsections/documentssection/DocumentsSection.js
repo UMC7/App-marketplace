@@ -65,7 +65,7 @@ export default function DocumentsSection({
             }}
           >
             <span style={{ fontSize: 14 }}>
-              {it.label} <span aria-hidden="true">*</span>
+              {it.label}
             </span>
             <select
               value={valOf(docFlags?.[it.key])}

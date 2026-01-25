@@ -15,6 +15,7 @@ export default function ReferencesSection({
   // ⬇️ Eliminamos el límite práctico: no exponemos `max` y forzamos “sin límite”
   profileId,          // <- opcional: si viene, cargamos/guardamos en DB
   onCountChange,      // <- opcional: notificación de cantidad actual
+  showRequiredMark = true,
 }) {
   const [local, setLocal] = useState(Array.isArray(value) ? value : []);
   const controlled = typeof onChange === "function";
@@ -104,6 +105,10 @@ export default function ReferencesSection({
       // Estos props son opcionales; el editor puede ignorarlos si no los soporta.
       onUpsert={enablePersistence ? handleUpsert : undefined}
       onDelete={enablePersistence ? handleDelete : undefined}
+      showRequiredMark={showRequiredMark}
     />
   );
 }
+
+
+

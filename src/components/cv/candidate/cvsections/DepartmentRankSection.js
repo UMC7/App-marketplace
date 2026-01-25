@@ -29,6 +29,9 @@ export default function DepartmentRankSection({
   onChangePrimaryRank,
   targets,
   onTargetsChange,
+  showTargets = true,
+  showPrimary = true,
+  showRequiredMark = true,
 }) {
   // Normalizamos props por si vienen con los alias
   const currentDept = department ?? primaryDepartment ?? "";
@@ -101,46 +104,54 @@ export default function DepartmentRankSection({
 
   return (
     <div className="cp-form">
-      {/* FILA: Primary department + Primary rank (mantiene inline flex para no alterar desktop) */}
-      <div
-        className="cp-dept-row" // hook para mobile; sin estilos en desktop
-        style={{ display: "flex", gap: 8 }}
-      >
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <DepartmentSelect value={currentDept || ""} onChange={emitDept} />
+      {showPrimary ? (
+        <div
+          className="cp-dept-row"
+          style={{ display: "flex", gap: 8 }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <DepartmentSelect
+              value={currentDept || ""}
+              onChange={emitDept}
+              required={showRequiredMark}
+            />
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <RankSelect
+              department={currentDept}
+              value={currentPrimaryRole || ""}
+              onChange={emitPrimaryRole}
+              required={showRequiredMark}
+            />
+          </div>
         </div>
+      ) : null}
 
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <RankSelect
-            department={currentDept}
-            value={currentPrimaryRole || ""}
-            onChange={emitPrimaryRole}
-          />
-        </div>
-      </div>
+      {showTargets ? (
+        <>
+          {/* Target ranks */}
+          <div style={{ marginTop: 10 }} />
 
-      {/* Target ranks */}
-      <label className="cp-label" style={{ marginTop: 10 }}>
-        Target ranks (optional) <span className="cp-muted">— up to {maxTargets}</span>
-      </label>
+          {/* Contenedor “gancho” para mobile; no modifica desktop */}
+          <div className="cp-target-row">
+            <TargetRankPicker
+              dept={targetDept}
+              onDeptChange={setTargetDept}
+              rank={targetRank}
+              onRankChange={setTargetRank}
+              onAdd={addTarget}
+              maxReached={currentTargets.length >= maxTargets}
+              style={{ marginTop: 4 }}
+            />
+          </div>
 
-      {/* Contenedor “gancho” para mobile; no modifica desktop */}
-      <div className="cp-target-row">
-        <TargetRankPicker
-          dept={targetDept}
-          onDeptChange={setTargetDept}
-          rank={targetRank}
-          onRankChange={setTargetRank}
-          onAdd={addTarget}
-          maxReached={currentTargets.length >= maxTargets}
-          style={{ marginTop: 4 }}
-        />
-      </div>
-
-      {/* Listado de seleccionados (solo se añade hook para espaciar en mobile) */}
-      <div className="cp-target-list">
-        <SelectedTargetsList items={currentTargets} onRemove={removeTarget} />
-      </div>
+          {/* Listado de seleccionados (solo se añade hook para espaciar en mobile) */}
+          <div className="cp-target-list">
+            <SelectedTargetsList items={currentTargets} onRemove={removeTarget} />
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }

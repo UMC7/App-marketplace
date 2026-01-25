@@ -5,10 +5,7 @@ import { toast } from 'react-toastify';
 
 // UI components & helpers from personal/
 import {
-  NameRow,
-  EmailPhoneRow,
   WhatsAppRow,
-  BirthNationalityRow,
   SocialLinksRow,
   VisibilityTogglesRow,
   buildYears,
@@ -22,8 +19,14 @@ import {
   NATIONALITIES,
 } from '../sectionscomponents/personal';
 
-export default function PersonalDetailsSection({ profile, onSaved }) {
+export default function PersonalDetailsSection({ profile, onSaved, mode = 'professional' }) {
   const [saving, setSaving] = useState(false);
+  const isLite = mode === 'lite';
+  const isProfessional = mode === 'professional';
+  const showRequired = !isProfessional;
+  const showOptional = !isLite;
+  const showRequiredMark = !isLite;
+  const reqLabel = (text) => (showRequiredMark ? `${text} *` : text);
 
   // Obligatorios
   const [firstName, setFirstName] = useState('');
@@ -134,6 +137,7 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
     [phoneNum]
   );
   const isSectionComplete = useMemo(() => {
+    if (!showRequired) return true;
     return Boolean(
       (firstName || '').trim() &&
       (lastName || '').trim() &&
@@ -148,6 +152,7 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
       nationalities.length > 0
     );
   }, [
+    showRequired,
     firstName,
     lastName,
     isEmailValid,
@@ -166,16 +171,18 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
     if (!profile?.id) return;
 
     // validaciones mínimas (mismo criterio que deshabilita el botón)
-    if (!(firstName || '').trim()) return toast.error('First name is required');
-    if (!(lastName || '').trim())  return toast.error('Last name is required');
-    if (!isEmailValid) return toast.error('Valid email is required');
-    if (!hasPhoneCC || !hasPhoneNum) return toast.error('Mobile phone (country code and number) is required');
-    if (!country)  return toast.error('Current country is required');
-    if (!(cityPort || '').trim()) return toast.error('Current city / port is required');
-    if (!birthMonth) return toast.error('Birth month is required');
-    if (!birthYear)  return toast.error('Birth year is required');
-    if (!Array.isArray(nationalities) || nationalities.length === 0) {
-      return toast.error('At least one nationality is required');
+    if (showRequired) {
+      if (!(firstName || '').trim()) return toast.error('First name is required');
+      if (!(lastName || '').trim())  return toast.error('Last name is required');
+      if (!isEmailValid) return toast.error('Valid email is required');
+      if (!hasPhoneCC || !hasPhoneNum) return toast.error('Mobile phone (country code and number) is required');
+      if (!country)  return toast.error('Current country is required');
+      if (!(cityPort || '').trim()) return toast.error('Current city / port is required');
+      if (!birthMonth) return toast.error('Birth month is required');
+      if (!birthYear)  return toast.error('Birth year is required');
+      if (!Array.isArray(nationalities) || nationalities.length === 0) {
+        return toast.error('At least one nationality is required');
+      }
     }
 
     const { cc: pcc, num: pnum } = normalizePhone(phoneCC, phoneNum);
@@ -243,142 +250,314 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
 
   return (
     <form onSubmit={save} className="cp-form">
-      {/* Row: First + Last name (padre provee el grid 1fr 1fr) */}
-      <div style={rowTwoCols}>
-        <NameRow
-          firstName={firstName}
-          lastName={lastName}
-          onChangeFirstName={setFirstName}
-          onChangeLastName={setLastName}
-        />
-      </div>
+      {showRequired ? (
+        <div className="cp-row-personal-1">
+          <div>
+            <label className="cp-label" htmlFor="pd-first-name">
+              First name {showRequiredMark ? <span aria-hidden="true">*</span> : null}
+            </label>
+            <input
+              id="pd-first-name"
+              className="cp-input"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              aria-required="true"
+            />
+          </div>
 
-      {/* Band superior: 2 columnas
-          - Izquierda: una fila con Gender + Email
-          - Derecha: una fila con Mobile (CC) + Number + “WhatsApp same as phone”
-            y, si waSame=false, debajo aparecen los campos extra de WhatsApp
-      */}
-      <EmailPhoneRow
-        gender={gender}
-        onChangeGender={setGender}
-        email={email}
-        onChangeEmail={setEmail}
-        phoneCC={phoneCC}
-        onChangePhoneCC={setPhoneCC}
-        phoneNum={phoneNum}
-        onChangePhoneNum={setPhoneNum}
-        rightInline={
-          <WhatsAppRow
-            variant="inline-toggle"
-            waSame={waSame}
-            onChangeWaSame={setWaSame}
+          <div>
+            <label className="cp-label" htmlFor="pd-last-name">
+              Last name {showRequiredMark ? <span aria-hidden="true">*</span> : null}
+            </label>
+            <input
+              id="pd-last-name"
+              className="cp-input"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              aria-required="true"
+            />
+          </div>
+
+          <div>
+            <label className="cp-label" htmlFor="pd-email">
+              Email {showRequiredMark ? <span aria-hidden="true">*</span> : null}
+            </label>
+            <input
+              id="pd-email"
+              className="cp-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@domain.com"
+              aria-required="true"
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {/* Desktop: name/email row, then phone + birth, then country/city/nationalities. */}
+      {showRequired ? (
+        <>
+          <div className="cp-row-personal-2-wrap">
+            <div className="cp-personal-phone">
+              <div className="cp-phone-block">
+                <div className="cp-right-phone-row cp-right-phone-row--inline">
+                <div className="cp-cell-cc">
+                  <label className="cp-label cp-nowrap" htmlFor="pd-phone-cc">
+                    Mobile <span className="cp-cc-sub">(code) {showRequiredMark ? <span aria-hidden="true">*</span> : null}</span>
+                  </label>
+                  <div className="cp-field-cc">
+                    <span className="cp-prefix">+</span>
+                    <input
+                      id="pd-phone-cc"
+                      className="cp-input"
+                      value={phoneCC}
+                      onChange={(e) => setPhoneCC(e.target.value.replace(/[^\d]/g, ''))}
+                      inputMode="numeric"
+                      placeholder="34"
+                      aria-required="true"
+                    />
+                  </div>
+                </div>
+
+                <div className="cp-cell-num">
+                  <label className="cp-label" htmlFor="pd-phone-num">
+                    Number {showRequiredMark ? <span aria-hidden="true">*</span> : null}
+                  </label>
+                  <input
+                    id="pd-phone-num"
+                    className="cp-input"
+                    value={phoneNum}
+                    onChange={(e) => setPhoneNum(e.target.value.replace(/[^\d]/g, ''))}
+                    placeholder="612345678"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    aria-required="true"
+                  />
+                </div>
+
+                <div className="cp-right-inline">
+                  <span className="cp-label-inline">WhatsApp</span>
+                  <WhatsAppRow
+                    waSame={waSame}
+                    onChangeWaSame={setWaSame}
+                    variant="inline-toggle"
+                  />
+                </div>
+                </div>
+              </div>
+            </div>
+
+            {!waSame && (
+              <div className="cp-personal-extra">
+                <div className="cp-phone-block">
+                  <WhatsAppRow
+                    waSame={waSame}
+                    onChangeWaSame={setWaSame}
+                    waCC={waCC}
+                    onChangeWaCC={setWaCC}
+                    waNum={waNum}
+                    onChangeWaNum={setWaNum}
+                    variant="extra-fields"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="cp-personal-birth">
+              <div className="cp-birth-block">
+                <div>
+                  <label className="cp-label" htmlFor="pd-birth-month">
+                    Birth month {showRequiredMark ? <span aria-hidden="true">*</span> : null}
+                  </label>
+                  <select
+                    id="pd-birth-month"
+                    className="cp-input"
+                    value={birthMonth}
+                    onChange={(e) => setBirthMonth(e.target.value)}
+                    aria-required="true"
+                  >
+                    <option value="">—</option>
+                    {MONTHS.map((m) => (
+                      <option key={m.v} value={m.v}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="cp-label" htmlFor="pd-birth-year">
+                    Birth year {showRequiredMark ? <span aria-hidden="true">*</span> : null}
+                  </label>
+                  <select
+                    id="pd-birth-year"
+                    className="cp-input"
+                    value={birthYear}
+                    onChange={(e) => setBirthYear(e.target.value)}
+                    aria-required="true"
+                  >
+                    <option value="">—</option>
+                    {years.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="cp-age-under-birth">
+                  <span className="cp-muted">Age (auto): {ageLabel || '—'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : null}
+      {showRequired ? (
+        <>
+          <div className="cp-row-personal-3">
+            <div>
+              <label className="cp-label">{reqLabel('Current country')}</label>
+              <select
+                className="cp-input"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+              >
+                <option value="">Select…</option>
+                {COUNTRIES.map((c, idx) => (
+                  <option key={`${c}-${idx}`} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="cp-label">{reqLabel('Current city / port')}</label>
+              <input
+                className="cp-input"
+                value={cityPort}
+                onChange={(e) => setCityPort(e.target.value)}
+                placeholder="Palma de Mallorca"
+              />
+            </div>
+
+            <div>
+              <label className="cp-label" htmlFor="pd-nat-select">
+                Nationalities {showRequiredMark ? <span aria-hidden="true">*</span> : null}
+              </label>
+              <div className="cp-row-add">
+                <select
+                  id="pd-nat-select"
+                  className="cp-input"
+                  value={natToAdd}
+                  onChange={(e) => setNatToAdd(e.target.value)}
+                  aria-required="true"
+                >
+                  <option value="">Select nationality…</option>
+                  {NATIONALITIES.map((n, idx) => (
+                    <option key={`${n}-${idx}`} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" className="cp-btn-add" onClick={addNationality}>
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {Array.isArray(nationalities) && nationalities.length > 0 && (
+            <div className="cp-chips">
+              {nationalities.map((n, idx) => (
+                <span key={`${n}-${idx}`} className="cp-chip cp-chip--active">
+                  {n}
+                  <button
+                    type="button"
+                    className="cp-chip-x"
+                    onClick={() => removeNationality(n)}
+                  >
+                    ✖
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </>
+      ) : null}
+
+      {isLite ? (
+        <>
+          <div className="cp-subtitle" style={{ marginTop: 6 }}>
+            Optionals
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <SocialLinksRow
+              facebook={facebook}
+              onChangeFacebook={setFacebook}
+              instagram={instagram}
+              onChangeInstagram={setInstagram}
+              linkedin={linkedin}
+              onChangeLinkedin={setLinkedin}
+              website={website}
+              onChangeWebsite={setWebsite}
+            />
+          </div>
+          <VisibilityTogglesRow
+            showAge={true}
+            showEmail={true}
+            showPhone={true}
           />
-        }
-        rightBelow={
-          <WhatsAppRow
-            variant="extra-fields"
-            waSame={waSame}
-            onChangeWaSame={setWaSame}
-            waCC={waCC}
-            onChangeWaCC={setWaCC}
-            waNum={waNum}
-            onChangeWaNum={setWaNum}
-          />
-        }
-      />
+        </>
+      ) : null}
 
-      {/* Row: Permanent residence + Current country + Current city/port + Communication preference */}
-      <div className="cp-row-country">
-        <div>
-          <label className="cp-label">Permanent residence (country)</label>
-          <select
-            className="cp-input"
-            value={residenceCountry}
-            onChange={(e) => setResidenceCountry(e.target.value)}
-          >
-            <option value="">Select…</option>
-            {COUNTRIES.map((c, idx) => (
-              <option key={`${c}-${idx}`} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
+      {showOptional ? (
+        <>
+          <div className="cp-row-personal-4">
+            <div>
+              <label className="cp-label" htmlFor="pd-gender-pro">Sex</label>
+              <select
+                id="pd-gender-pro"
+                className="cp-input"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+              >
+                <option value="">Select…</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+              </select>
+            </div>
 
-        <div>
-          <label className="cp-label">Current country *</label>
-          <select
-            className="cp-input"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-          >
-            <option value="">Select…</option>
-            {COUNTRIES.map((c, idx) => (
-              <option key={`${c}-${idx}`} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
+            <div>
+              <label className="cp-label">Permanent residence (country)</label>
+              <select
+                className="cp-input"
+                value={residenceCountry}
+                onChange={(e) => setResidenceCountry(e.target.value)}
+              >
+                <option value="">Select…</option>
+                {COUNTRIES.map((c, idx) => (
+                  <option key={`${c}-${idx}`} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
 
-        <div>
-          <label className="cp-label">Current city / port *</label>
-          <input
-            className="cp-input"
-            value={cityPort}
-            onChange={(e) => setCityPort(e.target.value)}
-            placeholder="Palma de Mallorca"
-          />
-        </div>
+            <div>
+              <label className="cp-label">Communication preference</label>
+              <select
+                className="cp-input"
+                value={commPref}
+                onChange={(e) => setCommPref(e.target.value)}
+              >
+                <option value="">—</option>
+                {COMM_PREFS.map((p, idx) => (
+                  <option key={`${p}-${idx}`} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-        <div>
-          <label className="cp-label">Communication preference</label>
-          <select
-            className="cp-input"
-            value={commPref}
-            onChange={(e) => setCommPref(e.target.value)}
-          >
-            <option value="">—</option>
-            {COMM_PREFS.map((p, idx) => (
-              <option key={`${p}-${idx}`} value={p}>{p}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Row: Birth month + Birth year + Nationalities (select + Add) + Age indicator + Chips */}
-      <BirthNationalityRow
-        months={MONTHS}
-        years={years}
-        nationalitiesOptions={NATIONALITIES}
-        birthMonth={birthMonth}
-        onChangeBirthMonth={setBirthMonth}
-        birthYear={birthYear}
-        onChangeBirthYear={setBirthYear}
-        natToAdd={natToAdd}
-        onChangeNatToAdd={setNatToAdd}
-        nationalities={nationalities}
-        onAddNationality={addNationality}
-        onRemoveNationality={removeNationality}
-        ageLabel={ageLabel}
-      />
-
-      {/* Sociales: dos filas (Facebook+Instagram) y (LinkedIn+Website) */}
-      <div style={{ marginTop: 12 }}>
-        <SocialLinksRow
-          facebook={facebook}
-          onChangeFacebook={setFacebook}
-          instagram={instagram}
-          onChangeInstagram={setInstagram}
-          linkedin={linkedin}
-          onChangeLinkedin={setLinkedin}
-          website={website}
-          onChangeWebsite={setWebsite}
-        />
-      </div>
-
-      {/* Toggles de visibilidad — siempre activos y bloqueados */}
-      <VisibilityTogglesRow
-        showAge={true}
-        showEmail={true}
-        showPhone={true}
-      />
+        </>
+      ) : null}
 
       {/* Actions */}
       <div className="cp-actions" style={{ marginTop: 12 }}>
@@ -387,3 +566,5 @@ export default function PersonalDetailsSection({ profile, onSaved }) {
     </form>
   );
 }
+
+

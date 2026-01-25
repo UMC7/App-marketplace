@@ -8,7 +8,7 @@ const LANGUAGES = [
 
 const FLUENCY_LEVELS = ['Native', 'Fluent', 'Conversational'];
 
-export default function LanguageProficiencyPicker({ value = [], onChange }) {
+export default function LanguageProficiencyPicker({ value = [], onChange, showRequiredMark = true }) {
   const [selLang, setSelLang] = useState('');
   const [selLevel, setSelLevel] = useState('');
 
@@ -36,7 +36,7 @@ export default function LanguageProficiencyPicker({ value = [], onChange }) {
 
   return (
     <div>
-      <label className="cp-label">Languages (with proficiency) *</label>
+      <label className="cp-label">Languages (with proficiency) {showRequiredMark ? '*' : ''}</label>
 
       {/* Mantener layout; Language y Fluency ocupan 50% cada uno */}
       <div className="cp-row-exp-c__regions" style={{ marginBottom: 6 }}>

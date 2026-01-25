@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import EducationItemCard from '../sectionscomponents/education/EducationItemCard';
 import EducationItemForm from '../sectionscomponents/education/EducationItemForm';
 
-export default function EducationSection({ userId: userIdProp }) {
+export default function EducationSection({ userId: userIdProp, showRequiredMark = true }) {
   const [userId, setUserId] = useState(userIdProp || null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -166,7 +166,11 @@ export default function EducationSection({ userId: userIdProp }) {
       {/* Crear (sin título interno) */}
       {creating && (
         <div style={formWrapperStyle}>
-          <EducationItemForm onSubmit={(p) => createItem(p)} onCancel={() => setCreating(false)} />
+          <EducationItemForm
+            onSubmit={(p) => createItem(p)}
+            onCancel={() => setCreating(false)}
+            showRequiredMark={showRequiredMark}
+          />
         </div>
       )}
 
@@ -187,6 +191,7 @@ export default function EducationSection({ userId: userIdProp }) {
             }}
             onSubmit={(p) => updateItem(editing.id, p)}
             onCancel={() => setEditing(null)}
+            showRequiredMark={showRequiredMark}
           />
         </div>
       )}

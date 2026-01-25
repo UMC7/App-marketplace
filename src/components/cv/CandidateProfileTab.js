@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import {
   ProfileProgress,
 } from './candidate';
+import { useAuth } from '../../context/AuthContext';
 import PreferencesSkills, { buildPrefsSkillsPayload } from './candidate/cvsections/PreferencesSkills';
 import PersonalDetailsSection from './candidate/cvsections/PersonalDetailsSection';
 import ExperienceSection from './candidate/cvsections/ExperienceSection';
@@ -82,10 +83,13 @@ function personalMeetsMin(p) {
 
 export default function CandidateProfileTab() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState('');
+  const [profileMode, setProfileMode] = useState('professional');
+  const [savingMode, setSavingMode] = useState(false);
   const [headline, setHeadline] = useState('');
   const [summary, setSummary] = useState('');
   const [primaryDepartment, setPrimaryDepartment] = useState('');
@@ -188,6 +192,34 @@ function buildFullPrefsSkillsPayload() {
   const [gallery, setGallery] = useState([]);
   const [savingDocFlags, setSavingDocFlags] = useState(false);
   const [savingGallery, setSavingGallery] = useState(false);
+
+  useEffect(() => {
+    const mode = currentUser?.app_metadata?.cv_mode;
+    if (mode === 'lite' || mode === 'professional') {
+      setProfileMode(mode);
+    }
+  }, [currentUser?.app_metadata?.cv_mode]);
+
+  const handleModeChange = async (nextMode) => {
+    if (!nextMode || nextMode === profileMode) return;
+    if (nextMode === 'professional' && !isShareReady) return;
+    const prev = profileMode;
+    setProfileMode(nextMode);
+    if (!currentUser?.id) return;
+    setSavingMode(true);
+    try {
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ cv_mode: nextMode, updated_at: new Date().toISOString() })
+        .eq('id', currentUser.id);
+      if (updateError) throw updateError;
+    } catch (e) {
+      setProfileMode(prev);
+      toast.error('Could not save profile mode.');
+    } finally {
+      setSavingMode(false);
+    }
+  };
 
   const handleSaveDocFlags = async () => {
   if (!profile?.id) return;
@@ -990,82 +1022,123 @@ const generateShortHandle = () => {
 
   const hasMedia = Array.isArray(gallery) && gallery.length > 0;
 
-  const personalProgress = {
-  first_name: !!personal.first_name?.trim(),
-  last_name: !!personal.last_name?.trim(),
-  email: !!personal.email_public?.trim(),
+  const isLite = profileMode === 'lite';
+  const isProfessional = profileMode === 'professional';
+  const showRequired = !isProfessional;
+  const showOptional = !isLite;
 
-  phone_cc: !!personal.phone_cc,
-  phone_number: !!personal.phone_number,
-  whatsapp_same: personal.whatsapp_same === true,
-  whatsapp_cc: personal.whatsapp_same ? true : !!personal.whatsapp_cc,
-  whatsapp_number: personal.whatsapp_same ? true : !!personal.whatsapp_number,
+  const personalProgress = isLite
+    ? {
+        first_name: !!personal.first_name?.trim(),
+        last_name: !!personal.last_name?.trim(),
+        email: !!personal.email_public?.trim(),
+        phone_cc: !!personal.phone_cc,
+        phone_number: !!personal.phone_number,
+        country: !!personal.country,
+        city_port: !!personal.city_port?.trim(),
+        birth_month: !!personal.birth_month,
+        birth_year: !!personal.birth_year,
+        nationality: Array.isArray(personal.nationalities) && personal.nationalities.length > 0,
+      }
+    : {
+        first_name: !!personal.first_name?.trim(),
+        last_name: !!personal.last_name?.trim(),
+        email: !!personal.email_public?.trim(),
 
-  residence_country: !!personal.residence_country,
-  country: !!personal.country,
-  city_port: !!personal.city_port?.trim(),
-  contact_pref: !!personal.contact_pref,
+        phone_cc: !!personal.phone_cc,
+        phone_number: !!personal.phone_number,
+        whatsapp_same: personal.whatsapp_same === true,
+        whatsapp_cc: personal.whatsapp_same ? true : !!personal.whatsapp_cc,
+        whatsapp_number: personal.whatsapp_same ? true : !!personal.whatsapp_number,
 
-  birth_month: !!personal.birth_month,
-  birth_year: !!personal.birth_year,
-  nationality: Array.isArray(personal.nationalities) && personal.nationalities.length > 0,
+        residence_country: !!personal.residence_country,
+        country: !!personal.country,
+        city_port: !!personal.city_port?.trim(),
+        contact_pref: !!personal.contact_pref,
 
-  gender: !!personal.gender,
+        birth_month: !!personal.birth_month,
+        birth_year: !!personal.birth_year,
+        nationality: Array.isArray(personal.nationalities) && personal.nationalities.length > 0,
 
-  linkedin: personal.linkedin === '' || !!personal.linkedin,
-  instagram: personal.instagram === '' || !!personal.instagram,
-  facebook: personal.facebook === '' || !!personal.facebook,
-  website: personal.website === '' || !!personal.website,
-};
+        gender: !!personal.gender,
 
-const deptRanksProgress = {
-  count:
-    (primaryDepartment ? 1 : 0) +
-    (primaryRank ? 1 : 0) +
-    (Array.isArray(targetRanks) && targetRanks.length > 0 ? 1 : 0),
-  total: 3,
-};
+        linkedin: personal.linkedin === '' || !!personal.linkedin,
+        instagram: personal.instagram === '' || !!personal.instagram,
+        facebook: personal.facebook === '' || !!personal.facebook,
+        website: personal.website === '' || !!personal.website,
+      };
+
+  const deptRanksProgress = {
+    count:
+      (primaryDepartment ? 1 : 0) +
+      (primaryRank ? 1 : 0) +
+      (!isLite && Array.isArray(targetRanks) && targetRanks.length > 0 ? 1 : 0),
+    total: isLite ? 2 : 3,
+  };
 
 const experienceProgress = { count: expCount > 0 ? 1 : 0, total: 1 };
 
-const aboutProgress = {
-  count:
-    (profile?.about_me?.trim() ? 1 : 0) +
-    (profile?.professional_statement?.trim() ? 1 : 0),
-  total: 2,
-};
+  const aboutProgress = isLite
+    ? { count: profile?.about_me?.trim() ? 1 : 0, total: 1 }
+    : {
+        count:
+          (profile?.about_me?.trim() ? 1 : 0) +
+          (profile?.professional_statement?.trim() ? 1 : 0),
+        total: 2,
+      };
 
-const lifestyleProgress = {
-  count:
-    (lifestyleHabits?.tattoosVisible ? 1 : 0) +
-    (lifestyleHabits?.smoking ? 1 : 0) +
-    (lifestyleHabits?.vaping ? 1 : 0) +
-    (lifestyleHabits?.alcohol ? 1 : 0) +
-    (Array.isArray(lifestyleHabits?.dietaryAllergies) && lifestyleHabits.dietaryAllergies.length > 0 ? 1 : 0) +
-    (lifestyleHabits?.fitness ? 1 : 0),
-  total: 6,
-};
+  const lifestyleProgress = isLite
+    ? {
+        count:
+          (lifestyleHabits?.tattoosVisible ? 1 : 0) +
+          (Array.isArray(lifestyleHabits?.dietaryAllergies) &&
+          lifestyleHabits.dietaryAllergies.length > 0
+            ? 1
+            : 0) +
+          (lifestyleHabits?.fitness ? 1 : 0),
+        total: 3,
+      }
+    : {
+        count:
+          (lifestyleHabits?.tattoosVisible ? 1 : 0) +
+          (lifestyleHabits?.smoking ? 1 : 0) +
+          (lifestyleHabits?.vaping ? 1 : 0) +
+          (lifestyleHabits?.alcohol ? 1 : 0) +
+          (Array.isArray(lifestyleHabits?.dietaryAllergies) &&
+          lifestyleHabits.dietaryAllergies.length > 0
+            ? 1
+            : 0) +
+          (lifestyleHabits?.fitness ? 1 : 0),
+        total: 6,
+      };
 
-const prefsSkillsDetail = {
-  status: !!(status && String(status).trim()),
-  availability: !!(availability && availability.trim()),
-  regionsSeasons: Array.isArray(regionsSeasons) && regionsSeasons.length > 0,
-  contracts: Array.isArray(contracts) && contracts.length > 0,
-  rotation: Array.isArray(rotation) && rotation.length > 0,
-  vesselTypes: Array.isArray(vesselTypes) && vesselTypes.length > 0,
-  vesselSizeRange: (vesselSizeRange && typeof vesselSizeRange === 'object'
-    ? (vesselSizeRange.min != null && vesselSizeRange.max != null)
-    : Array.isArray(vesselSizeRange) && vesselSizeRange.length > 0),
-  rateSalary: !!(rateSalary && (
-    String(rateSalary.dayRateMin || '').trim() ||
-    String(rateSalary.salaryMin || '').trim()
-  )),
-  languageLevels: Array.isArray(languageLevels) && languageLevels.length > 0,
-  deptSpecialties: Array.isArray(deptSpecialties) && deptSpecialties.length > 0,
-  programTypes: Array.isArray(programTypes) && programTypes.length > 0,
-  dietaryRequirements: Array.isArray(dietaryRequirements) && dietaryRequirements.length > 0,
-  onboardPrefs: (onboardPrefs && typeof onboardPrefs === 'object' && Object.values(onboardPrefs).some(Boolean)),
-};
+  const prefsSkillsDetail = isLite
+    ? {
+        status: !!(status && String(status).trim()),
+        availability: !!(availability && availability.trim()),
+        languageLevels: Array.isArray(languageLevels) && languageLevels.length > 0,
+        deptSpecialties: Array.isArray(deptSpecialties) && deptSpecialties.length > 0,
+      }
+    : {
+        status: !!(status && String(status).trim()),
+        availability: !!(availability && availability.trim()),
+        regionsSeasons: Array.isArray(regionsSeasons) && regionsSeasons.length > 0,
+        contracts: Array.isArray(contracts) && contracts.length > 0,
+        rotation: Array.isArray(rotation) && rotation.length > 0,
+        vesselTypes: Array.isArray(vesselTypes) && vesselTypes.length > 0,
+        vesselSizeRange: (vesselSizeRange && typeof vesselSizeRange === 'object'
+          ? (vesselSizeRange.min != null && vesselSizeRange.max != null)
+          : Array.isArray(vesselSizeRange) && vesselSizeRange.length > 0),
+        rateSalary: !!(rateSalary && (
+          String(rateSalary.dayRateMin || '').trim() ||
+          String(rateSalary.salaryMin || '').trim()
+        )),
+        languageLevels: Array.isArray(languageLevels) && languageLevels.length > 0,
+        deptSpecialties: Array.isArray(deptSpecialties) && deptSpecialties.length > 0,
+        programTypes: Array.isArray(programTypes) && programTypes.length > 0,
+        dietaryRequirements: Array.isArray(dietaryRequirements) && dietaryRequirements.length > 0,
+        onboardPrefs: (onboardPrefs && typeof onboardPrefs === 'object' && Object.values(onboardPrefs).some(Boolean)),
+      };
 const prefsSkillsProgress = {
   count: Object.values(prefsSkillsDetail).filter(Boolean).length,
   total: Object.keys(prefsSkillsDetail).length,
@@ -1078,7 +1151,10 @@ const referencesProgress = { count: refsCount > 0 ? 1 : 0, total: 1 };
 
 const educationProgress = { count: (educationCount || 0) > 0 ? 1 : 0, total: 1 };
 
-const mediaProgress = { count: Math.min(gallery.length, 9), total: 9 };
+const mediaProgress = {
+  count: Math.min(gallery.length, isLite ? 3 : 9),
+  total: isLite ? 3 : 9,
+};
 
 const galleryImagesCount = Array.isArray(gallery)
   ? gallery.filter((it) => (it?.type || inferTypeByName(it?.name || it?.path || it?.url || '')) === 'image').length
@@ -1169,6 +1245,29 @@ const meetsPrefsMin =
   return (
     <div className="candidate-profile-tab">
       <h2>Candidate Profile</h2>
+      <div className="cp-mode-tabs" role="tablist" aria-label="Candidate profile mode">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isLite ? 'true' : 'false'}
+          className={`cp-mode-tab ${isLite ? 'active' : ''}`}
+          onClick={() => handleModeChange('lite')}
+          disabled={savingMode}
+        >
+          Lite
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!isLite ? 'true' : 'false'}
+          className={`cp-mode-tab ${!isLite ? 'active' : ''}`}
+          onClick={() => handleModeChange('professional')}
+          disabled={savingMode || !isShareReady}
+          title={!isShareReady ? 'Complete Lite before unlocking Professional' : undefined}
+        >
+          Professional
+        </button>
+      </div>
 
     {!isShareReady && !loading && !error && (
       <div className="ppv-previewRibbon" role="status" aria-live="polite">
@@ -1238,6 +1337,7 @@ const meetsPrefsMin =
             <PersonalDetailsSection
               profile={profile}
               onSaved={(data) => setProfile(data)}
+              mode={profileMode}
             />
           </div>
 
@@ -1245,7 +1345,9 @@ const meetsPrefsMin =
           <div className="cp-card">
             <h3 className="cp-h3">Department & ranks</h3>
             <p className="cp-help">
-              Select your department, main rank, and up to 3 optional target ranks (they can be from other departments).
+              {showRequired
+                ? 'Select your department and main rank. Target ranks are optional.'
+                : 'Add optional target ranks (up to 3).'}
             </p>
             <form onSubmit={handleSaveDeptRanks} className="cp-form">
               <DepartmentRankSectionNew
@@ -1262,27 +1364,34 @@ const meetsPrefsMin =
                 onChangePrimaryRank={(v) => setPrimaryRank(v)}
                 targetRanks={targetRanks}
                 onChangeTargetRanks={(arr) => setTargetRanks(arr)}
+                showTargets={showOptional}
+                showPrimary={showRequired}
+                showRequiredMark={!isLite}
               />
               <div className="cp-actions" style={{ marginTop: 10 }}>
-              <button
-                type="submit"
-                disabled={saving || !hasDeptRanks}
-                title={!hasDeptRanks ? 'Please choose Primary department and Primary rank' : undefined}
-              >
-                Save
-              </button>
-            </div>
+                <button
+                  type="submit"
+                  disabled={saving || (showRequired && !hasDeptRanks)}
+                  title={showRequired && !hasDeptRanks ? 'Please choose Primary department and Primary rank' : undefined}
+                >
+                  Save
+                </button>
+              </div>
             </form>
           </div>
 
           {/* Experience — NUEVA implementación desde cvsections */}
-          <div className="cp-card">
-            <h3 className="cp-h3">Experience</h3>
-            <ExperienceSection
-              profileId={profile?.id}
-              onCountChange={(n) => setExpCount(Number(n) || 0)}
-            />
-          </div>
+          {showRequired ? (
+            <div className="cp-card">
+              <h3 className="cp-h3">Experience</h3>
+              <ExperienceSection
+                profileId={profile?.id}
+                onCountChange={(n) => setExpCount(Number(n) || 0)}
+                mode="lite"
+                showAllFields
+              />
+            </div>
+          ) : null}
 
           {/* NUEVO: About me + Professional Statement (después de Experience) */}
           <div className="cp-card">
@@ -1290,6 +1399,7 @@ const meetsPrefsMin =
             <AboutMeSection
               profile={profile}
               onSave={handleSaveAbout}
+              mode={profileMode}
             />
           </div>
 
@@ -1330,13 +1440,14 @@ const meetsPrefsMin =
                 onChangeProgramTypes={setProgramTypes}
                 dietaryRequirements={dietaryRequirements}
                 onChangeDietaryRequirements={setDietaryRequirements}
+                mode={profileMode}
               />
               <div className="cp-actions" style={{ marginTop: 12 }}>
                 <button
                   type="submit"
-                  disabled={saving || !meetsPrefsMin}
+                  disabled={saving || (showRequired && !meetsPrefsMin)}
                   title={
-                    !meetsPrefsMin
+                    showRequired && !meetsPrefsMin
                       ? 'Complete Status, Availability, at least one Language with proficiency and at least one Specific skill'
                       : undefined
                   }
@@ -1347,77 +1458,85 @@ const meetsPrefsMin =
             </form>
           </div>
 
-          {/* Lifestyle & Habits — después de Preferences & Skills */}
-          <div className="cp-card">
-            <h3 className="cp-h3">Lifestyle &amp; Habits</h3>
-            <form onSubmit={handleSaveDetails} className="cp-form">
-              <LifestyleHabitsSection
-                value={lifestyleHabits}
-                onChange={setLifestyleHabits}
+          {/* Lifestyle & Habits — solo Lite (sin duplicar con Professional) */}
+          {isLite ? (
+            <div className="cp-card">
+              <h3 className="cp-h3">Lifestyle &amp; Habits</h3>
+              <form onSubmit={handleSaveDetails} className="cp-form">
+                <LifestyleHabitsSection
+                  value={lifestyleHabits}
+                  onChange={setLifestyleHabits}
+                  mode={profileMode}
+                />
+                <div className="cp-actions" style={{ marginTop: 12 }}>
+                  <button
+                    type="submit"
+                    disabled={saving || (showRequired && !meetsLifestyleMin)}
+                    title={
+                      showRequired && !meetsLifestyleMin
+                        ? 'Complete: Visible tattoos, add at least one Dietary allergy (or “None”), and select Fitness / sport activity'
+                        : undefined
+                    }
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : null}
+
+          {showRequired ? (
+            <div className="cp-card">
+              <h3 className="cp-h3">Education (Studies)</h3>
+              <EducationSection showRequiredMark={!isLite} />
+            </div>
+          ) : null}
+
+          {showRequired ? (
+            <div className="cp-card">
+              <h3 className="cp-h3">Documents &amp; Media</h3>
+              <DocumentsSectionController
+                initialDocs={docs}
+                onSave={handleSaveDocs}
+                initialDocFlags={docFlags}
+                onDocFlagsChange={setDocFlags}
+                onSaveDocFlags={handleSaveDocFlags}
+                savingDocFlags={savingDocFlags}
+              />
+            </div>
+          ) : null}
+
+          {showRequired ? (
+            <div className="cp-card">
+              <h3 className="cp-h3">References</h3>
+              <ReferencesSection
+                profileId={profile?.id}
+                onCountChange={(n) => setRefsCount(Number(n) || 0)}
+                showRequiredMark={!isLite}
+              />
+            </div>
+          ) : null}
+
+          {showRequired ? (
+            <div className="cp-card">
+              <h3 className="cp-h3">Photos &amp; Videos</h3>
+              <MediaSection
+                value={gallery}
+                onChange={setGallery}
+                onUpload={handleUploadMedia}
               />
               <div className="cp-actions" style={{ marginTop: 12 }}>
                 <button
-                  type="submit"
-                  disabled={saving || !meetsLifestyleMin}
-                  title={
-                    !meetsLifestyleMin
-                      ? 'Complete: Visible tattoos, add at least one Dietary allergy (or “None”), and select Fitness / sport activity'
-                      : undefined
-                  }
+                  type="button"
+                  onClick={handleSaveGallery}
+                  disabled={savingGallery || !meetsPhotosImagesMin}
+                  title={!meetsPhotosImagesMin ? 'Add at least 3 images to enable Save' : undefined}
                 >
                   Save
                 </button>
               </div>
-            </form>
-          </div>
-
-          {/* Education (Studies) — después de Preferences & Skills */}
-          <div className="cp-card">
-          <h3 className="cp-h3">Education (Studies)</h3>
-            <EducationSection />
-          </div>
-
-          {/* Documents & Media */}
-          <div className="cp-card">
-            <h3 className="cp-h3">Documents &amp; Media</h3>
-            <DocumentsSectionController
-              initialDocs={docs}
-              onSave={handleSaveDocs}
-              initialDocFlags={docFlags}
-              onDocFlagsChange={setDocFlags}
-              onSaveDocFlags={handleSaveDocFlags}
-              savingDocFlags={savingDocFlags}
-            />
-          </div>
-
-          {/* References */}
-          <div className="cp-card">
-            <h3 className="cp-h3">References</h3>
-            <ReferencesSection
-              profileId={profile?.id}
-              onCountChange={(n) => setRefsCount(Number(n) || 0)}
-            />
-          </div>
-
-          {/* NEW: Photos & Videos (álbum del candidato) */}
-          <div className="cp-card">
-            <h3 className="cp-h3">Photos &amp; Videos</h3>
-            <MediaSection
-              value={gallery}
-              onChange={setGallery}
-              onUpload={handleUploadMedia}
-            />
-            <div className="cp-actions" style={{ marginTop: 12 }}>
-              <button
-                type="button"
-                onClick={handleSaveGallery}
-                disabled={savingGallery || !meetsPhotosImagesMin}
-                title={!meetsPhotosImagesMin ? 'Add at least 3 images to enable Save' : undefined}
-              >
-                Save
-              </button>
             </div>
-          </div>
+          ) : null}
         </>
       )}
     </div>

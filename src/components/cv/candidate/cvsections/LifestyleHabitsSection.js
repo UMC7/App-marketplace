@@ -64,7 +64,13 @@ function SelectField({ label, options, value, onChange }) {
   );
 }
 
-export default function LifestyleHabitsSection({ value, onChange }) {
+export default function LifestyleHabitsSection({ value, onChange, mode = 'professional' }) {
+  const isLite = mode === 'lite';
+  const isProfessional = mode === 'professional';
+  const showRequired = !isProfessional;
+  const showOptional = !isLite;
+  const showLiteLabels = mode === 'lite';
+  const reqLabel = (text) => (showLiteLabels ? text : `${text} *`);
   const v = value || {
     tattoosVisible: '',
     smoking: '',
@@ -117,80 +123,89 @@ export default function LifestyleHabitsSection({ value, onChange }) {
   return (
     <div className="cp-form">
       <div className="lh-grid">
-        <SelectField
-          label="Visible tattoos *"
-          options={TATTOOS}
-          value={v.tattoosVisible}
-          onChange={setField('tattoosVisible')}
-        />
+        {showRequired ? (
+          <SelectField
+            label={reqLabel('Visible tattoos')}
+            options={TATTOOS}
+            value={v.tattoosVisible}
+            onChange={setField('tattoosVisible')}
+          />
+        ) : null}
 
-        <SelectField
-          label="Smoking habits"
-          options={SMOKING}
-          value={v.smoking}
-          onChange={setField('smoking')}
-        />
+        {showOptional ? (
+          <>
+            <SelectField
+              label="Smoking habits"
+              options={SMOKING}
+              value={v.smoking}
+              onChange={setField('smoking')}
+            />
 
-        <SelectField
-          label="Vaping"
-          options={VAPING}
-          value={v.vaping}
-          onChange={setField('vaping')}
-        />
+            <SelectField
+              label="Vaping"
+              options={VAPING}
+              value={v.vaping}
+              onChange={setField('vaping')}
+            />
 
-        <SelectField
-          label="Alcohol consumption"
-          options={ALCOHOL}
-          value={v.alcohol}
-          onChange={setField('alcohol')}
-        />
+            <SelectField
+              label="Alcohol consumption"
+              options={ALCOHOL}
+              value={v.alcohol}
+              onChange={setField('alcohol')}
+            />
+          </>
+        ) : null}
 
-        {/* Dietary allergies (multi con Add + chips iguales a Preferences & Skills) */}
-        <div className="lh-field">
-          <label className="cp-label">Dietary allergies *</label>
-          <div className="lh-allergies-controls">
-            <select
-              className="cp-select cp-input"
-              value={selAllergy}
-              onChange={(e) => setSelAllergy(e.target.value)}
-            >
-              <option value="">Select...</option>
-              {ALLERGIES.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
+        {showRequired ? (
+          <div className="lh-field">
+            <label className="cp-label">{reqLabel('Dietary allergies')}</label>
+            <div className="lh-allergies-controls">
+              <select
+                className="cp-select cp-input"
+                value={selAllergy}
+                onChange={(e) => setSelAllergy(e.target.value)}
+              >
+                <option value="">Select...</option>
+                {ALLERGIES.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+              <button type="button" className="cp-btn-add" onClick={addAllergy}>
+                Add
+              </button>
+            </div>
+
+            <div className="lh-pills cp-chips">
+              {(v.dietaryAllergies || []).map((item) => (
+                <span key={item} className="cp-chip cp-chip--active">
+                  {item}
+                  <button
+                    type="button"
+                    className="cp-chip-x"
+                    onClick={() => removeAllergy(item)}
+                    aria-label={`Remove ${item}`}
+                  >
+                    ×
+                  </button>
+                </span>
               ))}
-            </select>
-            <button type="button" className="cp-btn-add" onClick={addAllergy}>
-              Add
-            </button>
+            </div>
           </div>
+        ) : null}
 
-          {/* Chips – mismo marcado/clases que el resto de secciones */}
-          <div className="lh-pills cp-chips">
-            {(v.dietaryAllergies || []).map((item) => (
-              <span key={item} className="cp-chip cp-chip--active">
-                {item}
-                <button
-                  type="button"
-                  className="cp-chip-x"
-                  onClick={() => removeAllergy(item)}
-                  aria-label={`Remove ${item}`}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <SelectField
-          label="Fitness / sport activity *"
-          options={FITNESS}
-          value={v.fitness}
-          onChange={setField('fitness')}
-        />
+        {showRequired ? (
+          <SelectField
+            label={reqLabel('Fitness / sport activity')}
+            options={FITNESS}
+            value={v.fitness}
+            onChange={setField('fitness')}
+          />
+        ) : null}
       </div>
     </div>
   );
 }
+

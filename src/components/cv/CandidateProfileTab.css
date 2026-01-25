@@ -60,6 +60,36 @@
   margin: 6px 0 18px;
   letter-spacing: .2px;
 }
+.cp-mode-tabs {
+  display: inline-flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(8, 26, 59, 0.08);
+  border: 1px solid rgba(8, 26, 59, 0.12);
+  margin: -8px 0 12px;
+}
+.cp-mode-tab {
+  border: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  background: transparent !important;
+  cursor: pointer;
+  transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.cp-mode-tab.active {
+  background: var(--primary-color) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(8, 26, 59, .18);
+}
+
+[data-theme='dark'] .candidate-profile-tab .cp-mode-tabs {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--line);
+}
 
 .cp-card {
   background: linear-gradient(180deg, var(--card), var(--card-2));
@@ -71,6 +101,7 @@
 }
 .cp-h3 { font-size: 16px; font-weight: 700; margin: 2px 0 10px; }
 .cp-help, .cp-muted { color: var(--muted); font-size: 13px; }
+.candidate-profile-tab .cp-subtitle{ text-align: center; }
 
 .cp-input,
 .cp-textarea,
@@ -189,6 +220,12 @@
   gap: 12px;
   grid-template-columns: 0.9fr 2fr;
 }
+.candidate-profile-tab .cp-left-row--lite{
+  grid-template-columns: 1fr;
+}
+.candidate-profile-tab .cp-left-row--lite .cp-cell-email{
+  grid-column: 1 / -1;
+}
 
 .candidate-profile-tab .cp-col-right{ display: grid; gap: 8px; }
 .candidate-profile-tab .cp-right-phone-row{
@@ -197,11 +234,23 @@
   grid-template-columns: 0.55fr 1.45fr minmax(160px, max-content);
   align-items: end;
 }
+.candidate-profile-tab .cp-phone-block{
+  width: 100%;
+  min-width: 0;
+}
+.candidate-profile-tab .cp-right-phone-row--inline{
+  grid-template-columns: 90px minmax(150px, 180px) minmax(150px, 180px);
+  width: 100%;
+}
+.candidate-profile-tab .cp-right-phone-row--inline .cp-right-inline{
+  width: 100%;
+  min-width: 0;
+}
 
 .candidate-profile-tab .cp-right-inline{
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 4px;
   white-space: normal;
 }
@@ -215,13 +264,83 @@
 .candidate-profile-tab .cp-row-wa-extra{
   display: grid;
   gap: 12px;
-  grid-template-columns: 1.00fr 1.45fr minmax(160px, max-content);
+  grid-template-columns: 90px minmax(150px, 180px);
+  width: 100%;
 }
 
 .candidate-profile-tab .cp-row-country {
   display: grid;
   gap: 12px;
   grid-template-columns: 1fr 1fr 1.2fr 1fr;
+}
+.candidate-profile-tab .cp-row-country--lite{
+  grid-template-columns: 1fr 1fr;
+}
+.candidate-profile-tab .cp-row-personal-1{
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.candidate-profile-tab .cp-row-personal-2{
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  justify-items: stretch;
+}
+.candidate-profile-tab .cp-row-personal-2-wrap{
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  grid-auto-rows: auto;
+}
+.candidate-profile-tab .cp-personal-phone{
+  grid-column: 1 / 2;
+  grid-row: 1;
+}
+.candidate-profile-tab .cp-personal-birth{
+  grid-column: 2 / 3;
+  grid-row: 1;
+}
+.candidate-profile-tab .cp-personal-extra{
+  grid-column: 1 / 2;
+  grid-row: 2;
+}
+.candidate-profile-tab .cp-row-personal-3{
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+.candidate-profile-tab .cp-row-personal-4{
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+.candidate-profile-tab .cp-target-row{
+  width: 100%;
+}
+.candidate-profile-tab .cp-target-picker{
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  width: 100%;
+}
+.candidate-profile-tab .cp-target-picker .cp-btn-add{
+  justify-self: start;
+  width: auto;
+}
+.candidate-profile-tab .cp-birth-block{
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.candidate-profile-tab .cp-age-under-birth{
+  grid-column: 2 / 3;
+  margin-top: -6px;
 }
 
 .candidate-profile-tab .cp-row-birth-nat {
@@ -280,6 +399,28 @@
   grid-template-columns: repeat(5, 1fr);
 }
 .candidate-profile-tab .cp-spacer{ visibility: hidden; }
+.candidate-profile-tab .cp-row-exp-b__req{
+  grid-column: 1 / span 2;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.candidate-profile-tab .cp-row-exp-b--yacht-req{
+  grid-template-columns: repeat(4, 1fr);
+}
+.candidate-profile-tab .cp-row-exp-b--yacht-opt{
+  grid-template-columns: repeat(4, 1fr);
+}
+.candidate-profile-tab .cp-row-exp-b__opt{
+  grid-column: 1 / span 2;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.candidate-profile-tab .cp-row-exp-b__opt--yacht-5{
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
 
 .candidate-profile-tab .cp-row-exp-c{
   display: grid;
@@ -307,6 +448,30 @@
   .candidate-profile-tab .cp-row-email{
     grid-template-columns: 1fr;
   }
+  .candidate-profile-tab .cp-row-personal-1{
+    grid-template-columns: 1fr;
+  }
+  .candidate-profile-tab .cp-row-personal-2{
+    grid-template-columns: 1fr;
+  }
+  .candidate-profile-tab .cp-row-personal-2-wrap{
+    grid-template-columns: 1fr;
+  }
+  .candidate-profile-tab .cp-personal-phone,
+  .candidate-profile-tab .cp-personal-birth,
+  .candidate-profile-tab .cp-personal-extra{
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .candidate-profile-tab .cp-row-personal-3{
+    grid-template-columns: 1fr;
+  }
+  .candidate-profile-tab .cp-row-personal-4{
+    grid-template-columns: 1fr;
+  }
+  .candidate-profile-tab .cp-birth-block{
+    grid-template-columns: 1fr 1fr;
+  }
   .candidate-profile-tab .cp-left-row{
     grid-template-columns: 1fr;
   }
@@ -323,6 +488,7 @@
   .candidate-profile-tab .cp-right-inline{
     grid-column: 1 / -1;
     padding-top: 4px;
+    align-items: flex-start;
   }
   .candidate-profile-tab .cp-row-wa-extra{
     grid-template-columns: var(--cols-cc-num-m);
@@ -347,6 +513,14 @@
   .candidate-profile-tab .cp-row-exp-b{
     grid-template-columns: 1fr;
   }
+  .candidate-profile-tab .cp-row-exp-b__req{
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+  }
+  .candidate-profile-tab .cp-row-exp-b__opt{
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+  }
   .candidate-profile-tab .cp-row-exp-b > *{
     grid-column: 1 / -1 !important;
   }
@@ -369,6 +543,7 @@
   }
   .candidate-profile-tab .cp-row-exp-d > :nth-child(3){ grid-column: 1 / -1; }
   .candidate-profile-tab .cp-row-exp-d > :nth-child(4){ grid-column: 1 / -1; }
+  .candidate-profile-tab .cp-row-exp-d .cp-exp-field--full{ grid-column: 1 / -1; }
 
   .candidate-profile-tab .cp-chips { gap: 6px; }
   .candidate-profile-tab .cp-chip {

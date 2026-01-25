@@ -6,13 +6,14 @@ export default function NameRow({
   lastName = '',
   onChangeFirstName,
   onChangeLastName,
+  showRequiredMark = true,
 }) {
   // No contenedor grid aquí: el grid lo aporta el padre con rowTwoCols
   return (
     <>
       <div>
         <label className="cp-label" htmlFor="pd-first-name">
-          First name <span aria-hidden="true">*</span>
+          First name {showRequiredMark ? <span aria-hidden="true">*</span> : null}
         </label>
         <input
           id="pd-first-name"
@@ -25,7 +26,7 @@ export default function NameRow({
 
       <div>
         <label className="cp-label" htmlFor="pd-last-name">
-          Last name <span aria-hidden="true">*</span>
+          Last name {showRequiredMark ? <span aria-hidden="true">*</span> : null}
         </label>
         <input
           id="pd-last-name"

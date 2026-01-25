@@ -14,7 +14,7 @@ const STATUS_OPTIONS = [
   'Not Available',
 ];
 
-export default function StatusPicker({ value, onChange, disabled = false, className = '' }) {
+export default function StatusPicker({ value, onChange, disabled = false, className = '', showRequiredMark = true }) {
   const handleChange = (e) => {
     const v = e.target.value;
     if (typeof onChange === 'function') onChange(v === '' ? null : v);
@@ -22,7 +22,7 @@ export default function StatusPicker({ value, onChange, disabled = false, classN
 
   return (
     <div className={className}>
-      <label className="cp-label">Status *</label>
+      <label className="cp-label">Status {showRequiredMark ? '*' : ''}</label>
       <select
         className="cp-input"
         value={value ?? ''}

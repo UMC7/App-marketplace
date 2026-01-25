@@ -16,6 +16,7 @@ export default function ReferenceForm({
   onCancel,
   onSave,
   onUploadAttachment,
+  showRequiredMark = true,
 }) {
   const [model, setModel] = useState(
     initialValue
@@ -101,11 +102,14 @@ export default function ReferenceForm({
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(model.email.trim());
   const canSave = requiredFilled && emailLooksOk;
 
+  const reqLabel = (text) => (showRequiredMark ? `${text} *` : text);
+  const optLabel = (text) => (showRequiredMark ? text : `${text} (Optional)`);
+
   return (
     <form className="cv-ref-form" onSubmit={handleSubmit}>
       <div className="grid">
         <label>
-          <span>Name *</span>
+          <span>{reqLabel('Name')}</span>
           <input
             type="text"
             value={model.name}
@@ -116,7 +120,7 @@ export default function ReferenceForm({
         </label>
 
         <label>
-          <span>Role / Position *</span>
+          <span>{reqLabel('Role / Position')}</span>
           <input
             type="text"
             value={model.role}
@@ -127,7 +131,7 @@ export default function ReferenceForm({
         </label>
 
         <label>
-          <span>Vessel / Company *</span>
+          <span>{reqLabel('Vessel / Company')}</span>
           <input
             type="text"
             value={model.company}
@@ -138,7 +142,7 @@ export default function ReferenceForm({
         </label>
 
         <label>
-          <span>Phone *</span>
+          <span>{reqLabel('Phone')}</span>
           <input
             type="tel"
             value={model.phone}
@@ -149,7 +153,7 @@ export default function ReferenceForm({
         </label>
 
         <label>
-          <span>Email *</span>
+          <span>{reqLabel('Email')}</span>
           <input
             type="email"
             value={model.email}
@@ -165,7 +169,7 @@ export default function ReferenceForm({
             value={model.attachment_url}
             onChange={(u) => setField("attachment_url", u)}
             onUpload={handleUpload}
-            label="Attachment"
+            label={optLabel('Attachment')}
           />
         </div>
       </div>

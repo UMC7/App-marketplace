@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from "react";
 import { COUNTRIES } from "../../shared/countriesData";
 
-export default function EducationItemForm({ initialValue, onSubmit, onCancel }) {
+export default function EducationItemForm({ initialValue, onSubmit, onCancel, showRequiredMark = true }) {
   const [institution, setInstitution] = useState(initialValue?.institution || "");
   const [program, setProgram] = useState(initialValue?.program || "");
   const [levelType, setLevelType] = useState(initialValue?.levelType || "");
@@ -17,6 +17,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
     initialValue?.endYear && !initialValue?.current ? initialValue.endYear : ""
   );
   const [errors, setErrors] = useState({});
+  const reqLabel = (text) => (showRequiredMark ? `${text} *` : text);
 
   const MONTHS = useMemo(
     () => [
@@ -126,7 +127,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
     <form className="cv-form education-form cp-form" onSubmit={handleSubmit} noValidate>
       <div className="cp-grid cp-grid-2 education-form-grid">
         <div className="field">
-          <label className="cp-label">Institution *</label>
+          <label className="cp-label">{reqLabel('Institution')}</label>
           <input
             className="cp-input"
             type="text"
@@ -138,7 +139,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
         </div>
 
         <div className="field">
-          <label className="cp-label">Program / Degree *</label>
+          <label className="cp-label">{reqLabel('Program / Degree')}</label>
           <input
             className="cp-input"
             type="text"
@@ -150,7 +151,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
         </div>
 
         <div className="field">
-          <label className="cp-label">Level / Type *</label>
+          <label className="cp-label">{reqLabel('Level / Type')}</label>
           <select
             className="cp-select"
             value={levelType}
@@ -167,7 +168,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
         </div>
 
         <div className="field">
-          <label className="cp-label">Country *</label>
+          <label className="cp-label">{reqLabel('Country')}</label>
           <select
             className="cp-select"
             value={country}
@@ -184,7 +185,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
         </div>
 
         <div className="field">
-          <label className="cp-label">Start *</label>
+          <label className="cp-label">{reqLabel('Start')}</label>
           <div className="cp-grid cp-grid-2">
             <select
               className="cp-select"
@@ -219,7 +220,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel }) 
         </div>
 
         <div className="field">
-          <label className="cp-label">End *</label>
+          <label className="cp-label">{reqLabel('End')}</label>
           <div className="cp-grid cp-grid-2">
             <select
               className="cp-select"

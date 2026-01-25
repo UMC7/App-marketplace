@@ -22,7 +22,7 @@ export default function SocialLinksRow({
       {/* Sociales: Facebook + Instagram */}
       <div style={twoCols}>
         <div>
-          <label className="cp-label">Facebook</label>
+          <label className="cp-label">Facebook (Optional)</label>
           <input
             className="cp-input"
             value={facebook}
@@ -31,7 +31,7 @@ export default function SocialLinksRow({
           />
         </div>
         <div>
-          <label className="cp-label">Instagram (handle)</label>
+          <label className="cp-label">Instagram (Optional)</label>
           <input
             className="cp-input"
             value={instagram}
@@ -44,7 +44,7 @@ export default function SocialLinksRow({
       {/* Sociales: LinkedIn + Website/Portfolio (con separación vertical como si fueran 2 filas del form) */}
       <div style={{ ...twoCols, marginTop: 12 }}>
         <div>
-          <label className="cp-label">LinkedIn</label>
+          <label className="cp-label">LinkedIn (Optional)</label>
           <input
             className="cp-input"
             value={linkedin}
@@ -53,7 +53,7 @@ export default function SocialLinksRow({
           />
         </div>
         <div>
-          <label className="cp-label">Website / Portfolio</label>
+          <label className="cp-label">Website / Portfolio (Optional)</label>
           <input
             className="cp-input"
             value={website}

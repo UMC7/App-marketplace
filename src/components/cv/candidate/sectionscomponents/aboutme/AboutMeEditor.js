@@ -1,7 +1,7 @@
 // src/components/cv/candidate/sectionscomponents/aboutme/AboutMeEditor.js
 import React, { useMemo } from "react";
 
-export default function AboutMeEditor({ value = "", onChange }) {
+export default function AboutMeEditor({ value = "", onChange, showRequiredMark = true }) {
   const MAX = 800;
   const length = useMemo(() => (value || "").length, [value]);
 
@@ -20,7 +20,7 @@ export default function AboutMeEditor({ value = "", onChange }) {
         className="field-label"
         style={{ display: "block", marginBottom: 6 }}
       >
-        Short summary *
+        Short summary {showRequiredMark ? '*' : ''}
       </label>
 
       <textarea

@@ -7,6 +7,7 @@ export default function DepartmentSpecialtiesInput({
   onChangeDepartment,
   value = [],
   onChange,
+  showRequiredMark = true,
 }) {
   const isDeptControlled = typeof onChangeDepartment === 'function';
   const [localDept, setLocalDept] = useState(department || '');
@@ -60,7 +61,7 @@ export default function DepartmentSpecialtiesInput({
 
   return (
     <div ref={wrapRef}>
-      <label className="cp-label">Specific skills * {dept ? `(${dept})` : ''}</label>
+      <label className="cp-label">Specific skills {showRequiredMark ? '*' : ''} {dept ? `(${dept})` : ''}</label>
 
       {/* Disposición: Department | Specialty */}
       <div
