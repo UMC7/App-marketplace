@@ -413,12 +413,22 @@ function YachtWorksPage() {
       )}
 
       {isMobile && (
-        <button
-          className="navbar-toggle"
-          onClick={() => togglePanel('filters')}
-        >
-          ☰ Filters
-        </button>
+        <div className="filters-prefs-row-mobile">
+          <button
+            className="navbar-toggle"
+            onClick={() => togglePanel('filters')}
+            aria-expanded={isFiltersOpen}
+          >
+            ☰ Filters
+          </button>
+          <button
+            className="navbar-toggle"
+            onClick={() => togglePanel('prefs')}
+            aria-expanded={isPrefsOpen}
+          >
+            ☰ Job Preferences
+          </button>
+        </div>
       )}
 
         <YachtOfferList

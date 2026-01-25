@@ -83,7 +83,6 @@ function YachtOfferList({
   const location = useLocation();
 
 const isPrefsOpen = openPanel === 'prefs';
-const togglePrefs = () => setOpenPanel(prev => (prev === 'prefs' ? null : 'prefs'));
 
 const filtersRef = useRef(null);
 const prefsRef   = useRef(null);
@@ -968,14 +967,7 @@ useEffect(() => {
 {(
   <>
     {/* Toggle SOLO para mobile. En desktop el título vive en YachtWorksPage */}
-    {isMobile && (
-      <button
-        className="navbar-toggle"
-        onClick={togglePrefs}
-      >
-        ☰ Job Preferences
-      </button>
-    )}
+
 
     {isPrefsOpen && (
       <div ref={prefsRef} className={`filter-body expanded`}>
@@ -1420,7 +1412,7 @@ useEffect(() => {
     {offer.end_date && (
       <div className="field-group">
         <div className="field-label">End Date</div>
-        <div className="field-value">{formatDate(offer.end_date)}</div>
+        <div className="field-value">{formatDate(offer.end_date, offer.end_date_month_only)}</div>
       </div>
     )}
 

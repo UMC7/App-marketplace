@@ -198,18 +198,18 @@ useEffect(() => {
   }));
 }, [initialValues]);
 
-useEffect(() => {
-  if (!initialValues?.end_date) return;
-  const parsed = new Date(initialValues.end_date);
-  if (Number.isNaN(parsed.getTime())) return;
-  const month = String(parsed.getMonth() + 1);
-  const day = String(parsed.getDate());
-  setFormData(prev => ({
-    ...prev,
-    end_month: month,
-    end_day: day,
-  }));
-}, [initialValues]);
+  useEffect(() => {
+    if (!initialValues?.end_date) return;
+    const parsed = new Date(initialValues.end_date);
+    if (Number.isNaN(parsed.getTime())) return;
+    const month = String(parsed.getMonth() + 1);
+    const day = String(parsed.getDate());
+    setFormData(prev => ({
+      ...prev,
+      end_month: month,
+      end_day: initialValues.end_date_month_only ? '' : day,
+    }));
+  }, [initialValues]);
 
 useEffect(() => {
   if (!Array.isArray(initialValues?.required_licenses)) return;
@@ -670,6 +670,7 @@ const {
   ...restForm
 } = formData;
 const startDateMonthOnly = !!start_month && !start_day;
+const endDateMonthOnly = !!end_month && !end_day;
 const requiredLicenses = required_license ? [required_license] : [];
 const derivedStartDate = (() => {
   if (!start_month) return null;
@@ -688,16 +689,17 @@ const derivedEndDate = (() => {
   return `${year}-${month}-${day}`;
 })();
 
-const sanitizedData = {
-  ...restForm,
-  start_date: derivedStartDate,
-  end_date: derivedEndDate,
-  start_date_month_only: startDateMonthOnly,
-  required_licenses: requiredLicenses,
-  required_documents: Array.isArray(required_documents) ? required_documents : [],
-  years_in_rank:
-    formData.years_in_rank === 'Green'
-      ? 0
+  const sanitizedData = {
+    ...restForm,
+    start_date: derivedStartDate,
+    end_date: derivedEndDate,
+    start_date_month_only: startDateMonthOnly,
+    end_date_month_only: endDateMonthOnly,
+    required_licenses: requiredLicenses,
+    required_documents: Array.isArray(required_documents) ? required_documents : [],
+    years_in_rank:
+      formData.years_in_rank === 'Green'
+        ? 0
       : formData.years_in_rank
       ? Number(formData.years_in_rank)
       : null,
@@ -724,13 +726,14 @@ const sanitizedData = {
     city: sanitizedData.city,
     country: sanitizedData.country,
     type: sanitizedData.type || null,
-    start_date: sanitizedData.is_asap || (sanitizedData.is_flexible && !sanitizedData.start_date)
-      ? new Date().toISOString().split('T')[0]
-      : sanitizedData.start_date || null,
-    start_date_month_only: !!sanitizedData.start_date_month_only,
-    end_date:
-      sanitizedData.type === 'Permanent'
-        ? null
+      start_date: sanitizedData.is_asap || (sanitizedData.is_flexible && !sanitizedData.start_date)
+        ? new Date().toISOString().split('T')[0]
+        : sanitizedData.start_date || null,
+      start_date_month_only: !!sanitizedData.start_date_month_only,
+      end_date_month_only: !!sanitizedData.end_date_month_only,
+      end_date:
+        sanitizedData.type === 'Permanent'
+          ? null
         : sanitizedData.end_date || null,
     is_doe: sanitizedData.is_doe,
     salary: sanitizedData.is_doe ? null : sanitizedData.salary,
