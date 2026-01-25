@@ -36,7 +36,7 @@ const getRoleImage = (title) => {
   ].some(role => lowerTitle.includes(role))) return 'enginedepartment';
 
   if ([
-    'chef', 'head chef', 'sous chef', 'solo chef', 'cook/crew chef', 'cook/steward(ess)'
+    'chef', 'head chef', 'sous chef', 'solo chef', 'cook/crew chef', 'cook/steward(ess)', 'deck/cook'
   ].some(role => lowerTitle.includes(role))) return 'galleydepartment';
   if ([
     'chief steward(ess)', '2nd steward(ess)', '2nd stewardess', '3rd steward(ess)', '3rd stewardess',
@@ -267,7 +267,7 @@ useEffect(() => {
 const RANKS = [
   "Captain", "Captain/Engineer", "Skipper", "Chase Boat Captain", "Relief Captain",
   "Chief Officer", "2nd Officer", "3rd Officer", "Bosun", "Deck/Engineer", "Mate",
-  "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster",
+  "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster", "Deck/Cook",
   "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Electrician", "Chef",
   "Head Chef", "Sous Chef", "Solo Chef", "Cook/Crew Chef", "Crew Chef/Stew", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
   "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Housekeeper", "Head of Housekeeping", "Cook/Stew/Deck", "Cook/Steward(ess)", "Stew/Deck",
