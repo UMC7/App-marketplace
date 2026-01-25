@@ -1243,7 +1243,7 @@ const meetsPrefsMin =
   ]);
 
   return (
-    <div className="candidate-profile-tab">
+    <div className={`candidate-profile-tab ${isLite ? 'cp-mode-lite' : 'cp-mode-professional'}`}>
       <h2>Candidate Profile</h2>
       <div className="cp-mode-tabs" role="tablist" aria-label="Candidate profile mode">
         <button

@@ -10,10 +10,19 @@
   margin: 0 0 10px;
   border-radius: 8px;
   padding: 8px 10px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  color: #9a3412;
+  background: rgba(104, 173, 168, 0.14);
+  border: 1px solid rgba(104, 173, 168, 0.35);
+  color: var(--primary-color, #081a3b);
   font-size: 13px;
+  font-weight: 600;
+}
+
+:root[data-theme='dark'] .ppv-previewRibbon,
+html[data-theme='dark'] .ppv-previewRibbon,
+body.dark-mode .ppv-previewRibbon {
+  background: #2a2a2a;
+  border-color: #3a3a3a;
+  color: var(--text-color, #f5f5f5);
 }
 
 .ppv-header {
@@ -61,9 +70,9 @@
 .ppv-stickyBar {
   position: sticky; bottom: 8px; z-index: 2;
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  background: #ffffffcc; backdrop-filter: blur(6px);
-  border: 1px solid rgba(0,0,0,.08); border-radius: 10px; padding: 10px 12px;
-  box-shadow: 0 8px 22px rgba(2,6,23,.10);
+  background: #ffffff; backdrop-filter: blur(6px);
+  border: 1px solid rgba(0,0,0,.12); border-radius: 10px; padding: 10px 12px;
+  box-shadow: var(--box-shadow, 0 4px 12px rgba(0, 0, 0, 0.08));
   margin: 8px 0;
 }
 .ppv-stickyLeft { min-width: 0; }
@@ -73,7 +82,7 @@
 .ppv-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .ppv-btn {
   padding: 10px 14px; border-radius: 8px;
-  border: 1px solid rgba(0,0,0,.18); background: #f3f4f6;
+  border: 1px solid rgba(8, 26, 59, 0.18); background: #ffffff;
   cursor: pointer; transition: box-shadow .15s ease, transform .05s ease, border-color .15s ease;
   font: inherit;
 }
@@ -87,7 +96,23 @@
   margin: 8px 0 10px;
 }
 .ppv-back-btn {
-  border-color: rgba(0,0,0,.22);
+  border-color: rgba(8, 26, 59, 0.22);
+}
+
+:root[data-theme='dark'] .ppv-stickyBar,
+html[data-theme='dark'] .ppv-stickyBar,
+body.dark-mode .ppv-stickyBar {
+  background: #2a2a2a;
+  border-color: #3a3a3a;
+  box-shadow: 0 0 10px rgba(0,0,0,.5);
+}
+
+:root[data-theme='dark'] .ppv-btn,
+html[data-theme='dark'] .ppv-btn,
+body.dark-mode .ppv-btn {
+  background: #262626;
+  border-color: #3a3a3a;
+  color: var(--text-color, #f5f5f5);
 }
 
 .ppv-body {

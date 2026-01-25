@@ -9,13 +9,13 @@ export default function SectionCard({ title, subtitle, children }) {
         borderRadius: 12,
         /* solo reducimos un poco el padding horizontal para ganar ancho útil */
         padding: "12px",
-        background: "var(--card, #0f172a)",
+        background: "var(--card, #ffffff)",
       }}
     >
       <div className="section-header" style={{ marginBottom: 12 }}>
         {title ? <h3 style={{ margin: 0 }}>{title}</h3> : null}
         {subtitle ? (
-          <p style={{ margin: "6px 0 0", color: "var(--muted, #94a3b8)", fontSize: 14 }}>
+          <p style={{ margin: "6px 0 0", color: "var(--muted, #6b7280)", fontSize: 14 }}>
             {subtitle}
           </p>
         ) : null}

@@ -14,20 +14,15 @@ export default function EducationSection({ userId: userIdProp, showRequiredMark 
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(null);
 
-  const isDark = useMemo(() => {
-    if (typeof document === 'undefined') return false;
-    return document.documentElement.getAttribute('data-theme') === 'dark';
-  }, []);
-
   const formWrapperStyle = useMemo(
     () => ({
-      border: `1px solid ${isDark ? '#212734' : 'var(--line)'}`,
+      border: '1px solid var(--line)',
       borderRadius: 12,
       padding: 12,
-      background: isDark ? '#0c1017' : 'linear-gradient(180deg, var(--card), var(--card-2))',
+      background: 'var(--card)',
       marginBottom: 10,
     }),
-    [isDark]
+    []
   );
 
   useEffect(() => {

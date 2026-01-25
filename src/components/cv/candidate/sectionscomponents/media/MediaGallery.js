@@ -183,15 +183,15 @@ export default function MediaGallery({
         }
 
         .tile {
-          position:relative; border:1px solid #273042; border-radius:12px; overflow:hidden;
-          background:#0f172a; cursor:pointer; display:flex; flex-direction:column;
+          position:relative; border:1px solid var(--line, #e2e8f0); border-radius:12px; overflow:hidden;
+          background:var(--card, #ffffff); cursor:pointer; display:flex; flex-direction:column;
         }
-        .tile img, .tile video { width:100%; height:220px; object-fit:cover; background:#0b1220; }
+        .tile img, .tile video { width:100%; height:220px; object-fit:cover; background:var(--card-2, #f8fafc); }
 
         .caption {
-          padding:8px 10px; font-size:.9rem; color:#cbd5e1; white-space:nowrap;
-          overflow:hidden; text-overflow:ellipsis; border-top:1px solid #223047;
-          background:#0b1220;
+          padding:8px 10px; font-size:.9rem; color:var(--muted-2, #6b7280); white-space:nowrap;
+          overflow:hidden; text-overflow:ellipsis; border-top:1px solid var(--line, #e2e8f0);
+          background:var(--card-2, #f8fafc);
         }
 
         /* ===== Toolbar desktop (arriba, hover/focus) ===== */
@@ -199,7 +199,7 @@ export default function MediaGallery({
           position:absolute; top:8px; left:8px; right:8px;
           display:flex; align-items:center; gap:8px;
           padding:4px;
-          background:rgba(2, 6, 23, .35);
+          background:rgba(0,0,0,.35);
           border:1px solid rgba(255,255,255,.18);
           border-radius:10px;
           backdrop-filter:saturate(120%) blur(4px);
@@ -211,9 +211,9 @@ export default function MediaGallery({
         .tile:hover .toolbar, .tile:focus-within .toolbar { opacity:1; transform:none; }
 
         .tlb-btn {
-          background:rgba(0,0,0,.55);
-          color:#fff;
-          border:1px solid rgba(255,255,255,.25);
+          background:var(--btn-bg, rgba(0,0,0,.55));
+          color:var(--btn-tx, #fff);
+          border:1px solid var(--btn-bd, rgba(255,255,255,.25));
           border-radius:8px;
           padding:4px 8px;
           font-size:13px;
@@ -222,8 +222,8 @@ export default function MediaGallery({
         .tlb-btn:disabled { opacity:.5; cursor:not-allowed; }
 
         .tlb-chip {
-          background:rgba(20, 184, 166, .9);
-          color:#0b1220;
+          background:var(--accent, #68ada8);
+          color:var(--btn-tx, #111);
           border:1px solid rgba(255,255,255,.25);
           border-radius:999px;
           padding:4px 10px;
@@ -233,9 +233,9 @@ export default function MediaGallery({
 
         .tlb-close {
           margin-left:auto; /* desktop: close dentro de la toolbar */
-          background:rgba(0,0,0,.55);
-          color:#fff;
-          border:1px solid rgba(255,255,255,.25);
+          background:var(--btn-bg, rgba(0,0,0,.55));
+          color:var(--btn-tx, #fff);
+          border:1px solid var(--btn-bd, rgba(255,255,255,.25));
           border-radius:8px;
           padding:4px 8px;
           font-size:14px;
@@ -248,9 +248,9 @@ export default function MediaGallery({
           position:absolute; top:8px; right:8px;
           width:32px; height:32px;
           align-items:center; justify-content:center;
-          background:rgba(0,0,0,.55);
-          color:#fff;
-          border:1px solid rgba(255,255,255,.25);
+          background:var(--btn-bg, rgba(0,0,0,.55));
+          color:var(--btn-tx, #fff);
+          border:1px solid var(--btn-bd, rgba(255,255,255,.25));
           border-radius:10px;
           font-size:16px; line-height:0;
           cursor:pointer;
@@ -259,7 +259,7 @@ export default function MediaGallery({
 
         .cover-badge {
           position:absolute; bottom:8px; left:8px;
-          background:#1f2f2d; border:1px solid #335e5a; color:#e5e7eb;
+          background:rgba(104, 173, 168, 0.18); border:1px solid rgba(104, 173, 168, 0.45); color:var(--text, #111);
           padding:2px 8px; border-radius:8px; font-size:.75rem;
           z-index:1;
         }
@@ -303,7 +303,7 @@ export default function MediaGallery({
         }
         .lightbox-inner {
           position:relative; width: min(92vw, 1100px); height: min(92vh, 720px);
-          background:#0b1220; border:1px solid #223047; border-radius:12px; overflow:hidden;
+          background:var(--card, #ffffff); border:1px solid var(--line, #e2e8f0); border-radius:12px; overflow:hidden;
           display:flex; align-items:center; justify-content:center;
         }
         .lb-content {
@@ -312,13 +312,13 @@ export default function MediaGallery({
         }
         .lb-content img, .lb-content video {
           max-width:100%; max-height: calc(100% - 40px);
-          object-fit:contain; background:#0b1220;
+          object-fit:contain; background:var(--card-2, #f8fafc);
         }
-        .lb-caption { color:#cbd5e1; font-size:.95rem; text-align:center; }
+        .lb-caption { color:var(--muted-2, #6b7280); font-size:.95rem; text-align:center; }
 
         .lb-close, .lb-nav {
-          position:absolute; top:10px; background:rgba(0,0,0,.55); color:#fff;
-          border:1px solid rgba(255,255,255,.25); border-radius:8px; cursor:pointer;
+          position:absolute; top:10px; background:var(--btn-bg, rgba(0,0,0,.55)); color:var(--btn-tx, #fff);
+          border:1px solid var(--btn-bd, rgba(255,255,255,.25)); border-radius:8px; cursor:pointer;
           padding:6px 10px; font-size:16px;
         }
         .lb-close { right:10px; }

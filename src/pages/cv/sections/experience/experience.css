@@ -10,10 +10,19 @@
   margin: 0 0 10px;
   border-radius: 8px;
   padding: 8px 10px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  color: #9a3412;
+  background: rgba(104, 173, 168, 0.14);
+  border: 1px solid rgba(104, 173, 168, 0.35);
+  color: var(--primary-color, #081a3b);
   font-size: 13px;
+  font-weight: 600;
+}
+
+:root[data-theme='dark'] .ppv-previewRibbon,
+html[data-theme='dark'] .ppv-previewRibbon,
+body.dark-mode .ppv-previewRibbon {
+  background: #2a2a2a;
+  border-color: #3a3a3a;
+  color: var(--text-color, #f5f5f5);
 }
 
 .ppv-header {
