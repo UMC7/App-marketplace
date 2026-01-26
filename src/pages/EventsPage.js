@@ -56,6 +56,7 @@ function EventsPage() {
   const [containerRatios, setContainerRatios] = useState({});
   const wrapRefs = useRef({}); // id -> DOM node de la imagen
   const cardRefs = useRef({}); // id -> DOM node de la tarjeta
+  const collapseTargetRef = useRef(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -158,15 +159,33 @@ function EventsPage() {
     const targetId = params.get('event');
     if (targetId) {
       setExpandedEventId(targetId);
-      // scroll suave a la tarjeta
-      setTimeout(() => {
-        const el = cardRefs.current[targetId];
-        if (el && typeof el.scrollIntoView === 'function') {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 0);
     }
   }, [loading]);
+
+  const getScrollOffset = () => {
+    const nav = document.querySelector('.navbar-container');
+    const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+    return navHeight + 8;
+  };
+
+  useEffect(() => {
+    if (!expandedEventId) return;
+    const el = cardRefs.current[expandedEventId];
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, [expandedEventId]);
+
+  useEffect(() => {
+    if (expandedEventId) return;
+    const id = collapseTargetRef.current;
+    if (!id) return;
+    collapseTargetRef.current = null;
+    const el = cardRefs.current[id] || document.getElementById(`event-${id}`);
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, [expandedEventId]);
 
   const updateUrlParam = (eventIdOrNull) => {
     const url = new URL(window.location.href);
@@ -229,14 +248,8 @@ function EventsPage() {
     setExpandedEventId((prevId) => {
       const next = prevId === eventId ? null : eventId;
       updateUrlParam(next);
-      // si expandimos, hacer scroll a la tarjeta
-      if (next) {
-        const el = cardRefs.current[next];
-        if (el && typeof el.scrollIntoView === 'function') {
-          setTimeout(() => {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }, 0);
-        }
+      if (!next) {
+        collapseTargetRef.current = eventId;
       }
       return next;
     });
@@ -401,6 +414,7 @@ function EventsPage() {
           return (
             <div
               key={event.id}
+              id={`event-${event.id}`}
               className={`event-card ${isExpanded ? 'expanded' : ''}`}
               onClick={() => toggleExpand(event.id)}
               ref={(el) => { cardRefs.current[event.id] = el; }}

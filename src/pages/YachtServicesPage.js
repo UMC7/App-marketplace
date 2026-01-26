@@ -1,6 +1,6 @@
 // src/pages/YachtServicesPage.js
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './YachtServicesPage.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import supabase from '../supabase';
@@ -16,6 +16,8 @@ function YachtServicesPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedServiceId, setExpandedServiceId] = useState(null);
+  const cardRefs = useRef({});
+  const collapseTargetRef = useRef(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -90,8 +92,39 @@ function YachtServicesPage() {
     filterServices();
   }, [filterServices]);
 
+  const getScrollOffset = () => {
+    const nav = document.querySelector('.navbar-container');
+    const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+    return navHeight + 8;
+  };
+
+  useEffect(() => {
+    if (!expandedServiceId) return;
+    const el = cardRefs.current[expandedServiceId];
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, [expandedServiceId]);
+
+  useEffect(() => {
+    if (expandedServiceId) return;
+    const id = collapseTargetRef.current;
+    if (!id) return;
+    collapseTargetRef.current = null;
+    const el = cardRefs.current[id] || document.getElementById(`service-${id}`);
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, [expandedServiceId]);
+
   const toggleExpand = (serviceId) => {
-    setExpandedServiceId((prevId) => (prevId === serviceId ? null : serviceId));
+    setExpandedServiceId((prevId) => {
+      if (prevId === serviceId) {
+        collapseTargetRef.current = serviceId;
+        return null;
+      }
+      return serviceId;
+    });
   };
 
   if (loading) {
@@ -212,7 +245,9 @@ function YachtServicesPage() {
             return (
               <div
                 key={service.id}
+                id={`service-${service.id}`}
                 className={`yacht-card ${expandedServiceId === service.id ? 'expanded' : ''}`}
+                ref={(el) => { if (el) cardRefs.current[service.id] = el; }}
                 onClick={() => toggleExpand(service.id)}
               >
                 {/* Si está colapsada: solo una imagen (la principal) */}
