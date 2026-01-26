@@ -4,6 +4,8 @@ import { useParams, useSearchParams, Navigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../supabase';
 import '../components/chat.css';
+import '../components/link-preview.css';
+import { LinkPreview, extractUrls } from '../components/LinkPreview';
 
 const renderMessageText = (text) => {
   if (!text) return null;
@@ -127,6 +129,9 @@ export default function ExternalChatPage() {
                   <div className={`chat-message ${own ? 'own' : 'other'}`}>
                     <div className="chat-message-sender">{own ? 'You' : 'Candidate'}</div>
                     {m.content && renderMessageText(m.content)}
+                    {m.content && extractUrls(m.content).map((url, idx) => (
+                      <LinkPreview key={`link-${m.id}-${idx}`} url={url} />
+                    ))}
                     <div className="chat-message-time">
                       {new Date(m.created_at).toLocaleString()}
                     </div>

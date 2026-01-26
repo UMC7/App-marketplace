@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import { useUnreadMessages } from '../context/UnreadMessagesContext';
 import './chat.css';
+import './link-preview.css';
 import Avatar from './Avatar';
+import { LinkPreview, extractUrls } from './LinkPreview';
 
 const MAX_CHAT_FILE_MB = 50;
 
@@ -417,6 +419,9 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
                   {isOwnMessage ? 'You' : (isExternal ? 'Anonymous' : otherNickname)}
                 </div>
                 {text && renderMessageText(text)}
+                {text && extractUrls(text).map((url, idx) => (
+                  <LinkPreview key={`link-${msg.id}-${idx}`} url={url} />
+                ))}
                 {!isExternal && msg.file_url && (
                   <a
                     href={msg.file_url}
