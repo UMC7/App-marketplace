@@ -429,6 +429,56 @@ const handleCopy = (text, field) => {
   setTimeout(() => setCopiedField(null), 1500);
 };
 
+  const getShareUrl = (offerId) =>
+    `${window.location.origin}/api/job-og?offer=${encodeURIComponent(offerId)}`;
+
+  const getShareData = (offer) => {
+    const title = offer?.title || 'SeaJobs';
+    const locationText = [offer?.city, offer?.country].filter(Boolean).join(' - ');
+    return {
+      title,
+      text: `${title}${locationText ? ' · ' + locationText : ''}`,
+      url: getShareUrl(offer.id),
+    };
+  };
+
+  const handleCopyLink = async (offerId) => {
+    const shareUrl = getShareUrl(offerId);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('Link copied!');
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = shareUrl;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      alert('Link copied!');
+    }
+  };
+
+  const handleWhatsApp = (offer) => {
+    const data = getShareData(offer);
+    const msg = `SeaJobs: ${data.text}\n${data.url}`;
+    const wa = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    window.open(wa, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShare = async (offer, e) => {
+    e.stopPropagation();
+    const data = getShareData(offer);
+    if (navigator.share) {
+      try {
+        await navigator.share(data);
+      } catch (err) {
+        if (err && err.name !== 'AbortError') {
+          console.error('Share failed', err);
+        }
+      }
+    }
+  };
+
  
   const [markedOffers, setMarkedOffers] = useState(() => {
     if (currentUser?.id) {
@@ -493,7 +543,7 @@ const handleCopy = (text, field) => {
     };
   }, []);
 
-  const isMobile = window.innerWidth <= 768;
+const isMobile = window.innerWidth <= 768;
   
 const [showAvatarMobile, setShowAvatarMobile] = useState(false);
 useEffect(() => {
@@ -502,6 +552,17 @@ useEffect(() => {
   const id = setTimeout(() => setShowAvatarMobile(v => !v), duration);
   return () => clearTimeout(id);
 }, [isMobile, showAvatarMobile]);
+
+  const supportsWebShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const iconBarStyle = { display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 };
+  const roundBtn = {
+    width: 44, height: 44, borderRadius: '9999px', border: '1px solid rgba(0,0,0,0.1)',
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    background: '#fff', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,.06)'
+  };
+  const waBtn = { ...roundBtn, background: '#25D366', border: 'none' };
+  const iconImg = { width: 22, height: 22, display: 'block' };
+  const shareIcon = { fontSize: 22, color: '#111' };
 
   const handleStartChat = (offerId, employerId) => {
     setActiveChat({ offerId, receiverId: employerId });
@@ -1578,6 +1639,40 @@ useEffect(() => {
 )}
 
     <div className="expanded-block block7">
+  <div className="job-share-bar" style={iconBarStyle} onClick={(e) => e.stopPropagation()}>
+    {supportsWebShare ? (
+      <button
+        type="button"
+        onClick={(e) => handleShare(offer, e)}
+        style={roundBtn}
+        aria-label="Share"
+        title="Share"
+      >
+        <span className="material-icons" style={shareIcon}>ios_share</span>
+      </button>
+    ) : (
+      <>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handleWhatsApp(offer); }}
+          style={waBtn}
+          aria-label="Share on WhatsApp"
+          title="Share on WhatsApp"
+        >
+          <img src="/icons/whatsapp.svg" alt="" style={iconImg} />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handleCopyLink(offer.id); }}
+          style={roundBtn}
+          aria-label="Copy share link"
+          title="Copy link"
+        >
+          <img src="/icons/link.svg" alt="" style={iconImg} />
+        </button>
+      </>
+    )}
+  </div>
   {!isOwner && (
     <button
       className="start-chat-btn"

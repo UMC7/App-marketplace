@@ -719,6 +719,10 @@ body:not(.dark-mode) .filters-panel h3 {
 
 /* Mobile Devices */
 @media (max-width: 768px) {
+  .job-share-bar {
+    margin-bottom: 8px;
+  }
+
   .collapsed-offer {
     flex-direction: row;
     align-items: center;
