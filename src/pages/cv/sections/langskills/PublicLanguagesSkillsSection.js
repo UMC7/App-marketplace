@@ -28,6 +28,26 @@ function parseMaybeJson(s) {
   }
 }
 
+function getLanguageFlag(lang) {
+  const t = String(lang || '').trim().toLowerCase();
+  if (!t) return '';
+  if (t.includes('english')) return '🇬🇧';
+  if (t.includes('spanish')) return '🇪🇸';
+  if (t.includes('french')) return '🇫🇷';
+  if (t.includes('italian')) return '🇮🇹';
+  if (t.includes('german')) return '🇩🇪';
+  if (t.includes('portuguese')) return '🇵🇹';
+  if (t.includes('dutch')) return '🇳🇱';
+  if (t.includes('russian')) return '🇷🇺';
+  if (t.includes('arabic')) return '🇸🇦';
+  if (t.includes('chinese') || t.includes('mandarin')) return '🇨🇳';
+  if (t.includes('japanese')) return '🇯🇵';
+  if (t.includes('greek')) return '🇬🇷';
+  if (t.includes('turkish')) return '🇹🇷';
+  if (t.includes('ukrainian')) return '🇺🇦';
+  return '';
+}
+
 /** Normaliza entrada de idiomas a objetos { lang, level, label } */
 function normalizeLanguages(input, profile) {
   const raw = input ?? profile?.languages ?? [];
@@ -95,6 +115,7 @@ function levelToPct(level) {
 function LanguageBar({ lang, level }) {
   const pct = levelToPct(level);
   const pretty = level ? cap(level) : '—';
+  const flag = getLanguageFlag(lang);
 
   const trackStyle = {
     position: 'relative',
@@ -117,7 +138,10 @@ function LanguageBar({ lang, level }) {
 
   return (
     <div style={{ width: '100%', maxWidth: 360, textAlign: 'center' }}>
-      <div style={{ fontWeight: 700, marginBottom: 8 }}>{lang}</div>
+      <div style={{ fontWeight: 700, marginBottom: 8 }}>
+        {lang}
+        {flag && <span className="pls-lang-flag" aria-hidden="true">{flag}</span>}
+      </div>
       <div style={trackStyle}>
         <div style={maskStyle} />
       </div>

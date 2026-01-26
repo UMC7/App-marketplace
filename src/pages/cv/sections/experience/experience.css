@@ -191,9 +191,29 @@ body.dark-mode .ppv-previewRibbon {
 .ppv-xpTitle { margin: 0; font-size: 18px; letter-spacing: .12em; text-transform: uppercase; color: #0b1220 !important; font-weight: 800; opacity: 1 !important; mix-blend-mode: normal !important; text-align: center; }
 .ppv-xpList { display: grid; gap: 12px; }
 .ppv-xpCard { background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 16px; padding: 12px; box-shadow: 0 6px 18px rgba(2,6,23,.06); }
-.ppv-xpCardHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.ppv-xpHeadTitle { font-weight: 700; color: #0b1220; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ppv-xpToggle { border: 1px solid rgba(0,0,0,.18); background: #f3f4f6; border-radius: 8px; padding: 6px 10px; cursor: pointer; font: inherit; }
+.ppv-xpCardHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.ppv-xpHeadTitle {
+  font-weight: 700;
+  color: #0b1220;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.ppv-xpToggle {
+  border: 1px solid rgba(0,0,0,.18);
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font: inherit;
+  white-space: nowrap;
+  line-height: 1;
+  align-self: flex-start;
+}
 .ppv-xpToggle:hover { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.2); }
 .ppv-kvRow {
   display: grid;
@@ -287,6 +307,10 @@ body.dark-mode .ppv-previewRibbon {
   margin-bottom: 8px;
   text-transform: uppercase;
   text-align: center;
+  color: #0b1220 !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  text-shadow: none !important;
 }
 
 .xp-chartsRow{
@@ -388,13 +412,14 @@ body.dark-mode .ppv-previewRibbon {
 .ppv-xp .ppv-sectionTitle {
   margin: 0 0 8px;
   font-size: 18px;
-  font-weight: 800;
-  letter-spacing: .12em;
+  font-weight: 700;
+  letter-spacing: .1em;
   text-transform: uppercase;
   text-align: center;
-  color: #0b1220;
-  opacity: 1;
-  mix-blend-mode: normal;
+  color: #0b1220 !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  text-shadow: none !important;
 }
 
 .ppv-a4Page .xp-chartsRow {
