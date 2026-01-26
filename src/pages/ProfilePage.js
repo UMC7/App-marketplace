@@ -487,6 +487,16 @@ useEffect(() => {
     className={`profile-tabs menu-panel ${isMenuOpen ? 'active' : ''}`}
     role="menu"
   >
+    {candidateEnabled && (
+      <button
+        className={`tab-pill ${isTab('cv')}`}
+        onClick={() => { setActiveTab('cv'); setIsMenuOpen(false); }}
+        role="menuitem"
+      >
+        Candidate Profile
+      </button>
+    )}
+
     <button
       className={`tab-pill ${isTab('productos')}`}
       onClick={() => { setActiveTab('productos'); setIsMenuOpen(false); }}
@@ -550,16 +560,6 @@ useEffect(() => {
     >
       Rating
     </button>
-
-    {candidateEnabled && (
-      <button
-        className={`tab-pill ${isTab('cv')}`}
-        onClick={() => { setActiveTab('cv'); setIsMenuOpen(false); }}
-        role="menuitem"
-      >
-        Candidate Profile
-      </button>
-    )}
 
     <button
       className={`tab-pill ${isTab('usuario')}`}
