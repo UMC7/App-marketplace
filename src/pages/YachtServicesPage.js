@@ -92,6 +92,15 @@ function YachtServicesPage() {
     filterServices();
   }, [filterServices]);
 
+  useEffect(() => {
+    if (loading) return;
+    const params = new URLSearchParams(window.location.search);
+    const targetId = params.get('service');
+    if (targetId) {
+      setExpandedServiceId(targetId);
+    }
+  }, [loading]);
+
   const getScrollOffset = () => {
     const nav = document.querySelector('.navbar-container');
     const navHeight = nav ? nav.getBoundingClientRect().height : 0;
@@ -117,14 +126,75 @@ function YachtServicesPage() {
     window.scrollTo({ top, behavior: 'smooth' });
   }, [expandedServiceId]);
 
+  const updateUrlParam = (serviceIdOrNull) => {
+    const url = new URL(window.location.href);
+    if (serviceIdOrNull) {
+      url.searchParams.set('service', serviceIdOrNull);
+    } else {
+      url.searchParams.delete('service');
+    }
+    window.history.replaceState({}, '', url.toString());
+  };
+
   const toggleExpand = (serviceId) => {
     setExpandedServiceId((prevId) => {
       if (prevId === serviceId) {
         collapseTargetRef.current = serviceId;
+        updateUrlParam(null);
         return null;
       }
+      updateUrlParam(serviceId);
       return serviceId;
     });
+  };
+
+  const getShareUrl = (serviceId) =>
+    `${window.location.origin}/api/service-og?service=${encodeURIComponent(serviceId)}`;
+
+  const getShareData = (service) => {
+    const locationText = [service.city, service.country].filter(Boolean).join(' - ');
+    return {
+      title: service.company_name || 'SeaServices',
+      text: `${service.company_name || 'SeaServices'}${locationText ? ' · ' + locationText : ''}`,
+      url: getShareUrl(service.id),
+    };
+  };
+
+  const handleCopyLink = async (serviceId) => {
+    const shareUrl = getShareUrl(serviceId);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('Link copied!');
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = shareUrl;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      alert('Link copied!');
+    }
+  };
+
+  const handleWhatsApp = (service) => {
+    const data = getShareData(service);
+    const msg = `SeaServices: ${data.text}\n${data.url}`;
+    const wa = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    window.open(wa, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShare = async (service, e) => {
+    e.stopPropagation();
+    const data = getShareData(service);
+    if (navigator.share) {
+      try {
+        await navigator.share(data);
+      } catch (err) {
+        if (err && err.name !== 'AbortError') {
+          console.error('Share failed', err);
+        }
+      }
+    }
   };
 
   if (loading) {
@@ -145,6 +215,17 @@ function YachtServicesPage() {
     swipe: true,
     adaptiveHeight: true,
   };
+
+  const supportsWebShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const iconBarStyle = { display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 };
+  const roundBtn = {
+    width: 44, height: 44, borderRadius: '9999px', border: '1px solid rgba(0,0,0,0.1)',
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    background: '#fff', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,.06)'
+  };
+  const waBtn = { ...roundBtn, background: '#25D366', border: 'none' };
+  const iconImg = { width: 22, height: 22, display: 'block' };
+  const shareIcon = { fontSize: 22, color: '#111' };
 
   return (
     <div className="container">
@@ -289,6 +370,46 @@ function YachtServicesPage() {
                 <p><strong>City:</strong> {service.city}</p>
                 <p><strong>Country:</strong> {service.country}</p>
                 <p><strong>Category:</strong> {service.categories?.name || 'Uncategorized'}</p>
+
+                {expandedServiceId === service.id && (
+                  <div className="service-share-bar" style={iconBarStyle} onClick={(e) => e.stopPropagation()}>
+                    {supportsWebShare ? (
+                      <button
+                        type="button"
+                        onClick={(e) => handleShare(service, e)}
+                        style={roundBtn}
+                        className="service-share-btn"
+                        aria-label="Share"
+                        title="Share"
+                      >
+                        <span className="material-icons service-share-material" style={shareIcon}>ios_share</span>
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleWhatsApp(service); }}
+                          style={waBtn}
+                          className="service-share-btn service-share-btn-wa"
+                          aria-label="Share on WhatsApp"
+                          title="Share on WhatsApp"
+                        >
+                          <img src="/icons/whatsapp.svg" alt="" style={iconImg} className="service-share-icon" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleCopyLink(service.id); }}
+                          style={roundBtn}
+                          className="service-share-btn"
+                          aria-label="Copy share link"
+                          title="Copy link"
+                        >
+                          <img src="/icons/link.svg" alt="" style={iconImg} className="service-share-icon" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 {expandedServiceId === service.id && (
                   <div style={{ marginTop: '10px', fontSize: '0.9em' }}>

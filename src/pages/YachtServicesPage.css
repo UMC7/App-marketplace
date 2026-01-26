@@ -103,3 +103,7 @@
 .yacht-card.expanded {
   min-height: 450px;
 }
+
+body.dark-mode .yacht-card .service-share-icon {
+  background-color: transparent !important;
+}
