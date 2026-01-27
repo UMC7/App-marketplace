@@ -1410,6 +1410,7 @@ const derivedEndDate = (() => {
     <option value="Caribbean">Caribbean</option>
     <option value="Indian Ocean">Indian Ocean</option>
     <option value="Mediterranean">Mediterranean</option>
+    <option value="Red Sea">Red Sea</option>
     <option value="North Sea">North Sea</option>
     <option value="Pacific">Pacific</option>
   </optgroup>
