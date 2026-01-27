@@ -458,11 +458,28 @@ const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
 
 const highlightClass = (missing) => (showMissing && missing ? 'missing-required' : '');
-const autoResizeTextarea = (e) => {
-  const el = e.target;
+const adjustRemarksTextareaHeight = (el) => {
+  if (!el) return;
+  const doc = typeof document !== 'undefined' ? document : null;
+  const scrollContainer =
+    el.closest?.('.modal-content-wrapper') ||
+    doc?.scrollingElement ||
+    doc?.documentElement;
+  const previousScrollTop = scrollContainer ? scrollContainer.scrollTop : null;
   el.style.height = 'auto';
   el.style.height = `${el.scrollHeight}px`;
+  if (scrollContainer) {
+    const restoreScroll = () => {
+      scrollContainer.scrollTop = previousScrollTop ?? 0;
+    };
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(restoreScroll);
+    } else {
+      restoreScroll();
+    }
+  }
 };
+const autoResizeTextarea = (e) => adjustRemarksTextareaHeight(e.target);
 
 const handleRemarksInput = (e) => {
   autoResizeTextarea(e);
