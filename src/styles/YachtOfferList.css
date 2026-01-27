@@ -1,7 +1,19 @@
 /* src/styles/YachtOfferList.css */
 
 /* Botón para iniciar chat privado */
-.start-chat-btn {
+.chat-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.chat-actions button {
+  width: 100%;
+}
+
+.start-chat-btn,
+.direct-apply-btn {
   background-color: var(--primary-color);
   color: white;
   padding: 10px 18px;
@@ -12,15 +24,35 @@
   cursor: pointer;
   transition: background 0.2s ease, transform 0.15s ease;
   display: inline-block;
+  width: 100%;
+  text-align: center;
 }
 
-.start-chat-btn:hover {
+.start-chat-btn:hover,
+.direct-apply-btn:hover {
   background-color: var(--accent-color);
   transform: translateY(-2px);
 }
 
-.start-chat-btn:active {
+.start-chat-btn:active,
+.direct-apply-btn:active {
   transform: translateY(0);
+}
+
+.direct-apply-btn {
+  background-color: #5cb8b0;
+}
+
+@media (min-width: 992px) {
+  .chat-actions {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .chat-actions button {
+    width: auto;
+    flex: 1;
+  }
 }
 
 @media (min-width: 1024px) {

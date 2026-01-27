@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import Modal from './Modal';
 import ChatPage from './ChatPage';
@@ -81,6 +81,7 @@ function YachtOfferList({
   setOpenPanel,
 }) {
   const location = useLocation();
+  const navigate = useNavigate();
 
 const isPrefsOpen = openPanel === 'prefs';
 
@@ -133,18 +134,19 @@ const hasCompletePrefs = Boolean(
   !prefsDisabled
 );
 
-  const [authors, setAuthors] = useState({});
-  const [authorAvatars, setAuthorAvatars] = useState({});
-  const [expandedOfferId, setExpandedOfferId] = useState(null);
-  const [showChatIntro, setShowChatIntro] = useState(false);
-  const [showChatLoginInfo, setShowChatLoginInfo] = useState(false);
-  const [chatIntroSeen, setChatIntroSeen] = useState(false);
-  const [pendingChat, setPendingChat] = useState(null);
-  const [openJobId, setOpenJobId] = useState(null);
-  const [openHandled, setOpenHandled] = useState(false);
-  const cardRefs = useRef({});
-  const chatIntroTimerRef = useRef(null);
-  const chatIntroScheduledRef = useRef(false);
+const [authors, setAuthors] = useState({});
+const [authorAvatars, setAuthorAvatars] = useState({});
+const [expandedOfferId, setExpandedOfferId] = useState(null);
+const [showChatIntro, setShowChatIntro] = useState(false);
+const [showChatLoginInfo, setShowChatLoginInfo] = useState(false);
+const [chatIntroSeen, setChatIntroSeen] = useState(false);
+const [pendingChat, setPendingChat] = useState(null);
+const [openJobId, setOpenJobId] = useState(null);
+const [openHandled, setOpenHandled] = useState(false);
+const [showDirectApplyModal, setShowDirectApplyModal] = useState(false);
+const cardRefs = useRef({});
+const chatIntroTimerRef = useRef(null);
+const chatIntroScheduledRef = useRef(false);
   const SCROLL_OFFSET = 120;
   const collapseTargetRef = useRef(null);
   const CHAT_INTRO_KEY = 'seajobs_private_chat_intro_seen';
@@ -607,6 +609,19 @@ useEffect(() => {
       setPendingChat(null);
       handleStartChat(next.offerId, next.receiverId);
     }
+  };
+
+  const handleDirectApply = () => {
+    setShowDirectApplyModal(true);
+  };
+
+  const handleCloseDirectApply = () => {
+    setShowDirectApplyModal(false);
+  };
+
+  const handleGoToCandidateProfile = () => {
+    setShowDirectApplyModal(false);
+    navigate('/profile?tab=cv');
   };
 
   const toggleWeek = (week) => {
@@ -1696,22 +1711,34 @@ useEffect(() => {
     )}
   </div>
   {!isOwner && (
-    <button
-      className="start-chat-btn"
-      onClick={(e) => {
-        e.stopPropagation();
-        if (currentUser) {
-          handleRequestChat(offer.id, offer.user_id);
-        } else {
-          handleShowChatLoginInfo();
-        }
-      }}
-      aria-disabled={!currentUser}
-      title={!currentUser ? 'Sign in to start a private chat.' : undefined}
-      style={!currentUser ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-    >
-      Start private chat
-    </button>
+    <div className="chat-actions">
+      <button
+        className="direct-apply-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDirectApply();
+        }}
+        type="button"
+      >
+        Direct Application
+      </button>
+      <button
+        className="start-chat-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (currentUser) {
+            handleRequestChat(offer.id, offer.user_id);
+          } else {
+            handleShowChatLoginInfo();
+          }
+        }}
+        aria-disabled={!currentUser}
+        title={!currentUser ? 'Sign in to start a private chat.' : undefined}
+        style={!currentUser ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+      >
+        Start Private Chat
+      </button>
+    </div>
   )}
 </div>
   </div>
@@ -2063,6 +2090,31 @@ useEffect(() => {
       <button className="landing-button" onClick={handleCloseChatLoginInfo}>
         Close
       </button>
+    </div>
+  </Modal>
+)}
+
+      {showDirectApplyModal && (
+  <Modal onClose={handleCloseDirectApply}>
+    <div style={{ maxWidth: 520 }}>
+      <h3 style={{ marginTop: 0 }}>One more step before applying</h3>
+      <p>Please complete your Candidate Profile so employers can view your information when you apply.</p>
+      <p>📍 You can find it under Profile → Candidate Profile.</p>
+      <div
+        style={{
+          display: 'flex',
+          gap: '12px',
+          flexWrap: 'wrap',
+          marginTop: 16,
+        }}
+      >
+        <button className="landing-button" onClick={handleGoToCandidateProfile}>
+          Go to Candidate Profile
+        </button>
+        <button className="landing-button" onClick={handleCloseDirectApply} style={{ backgroundColor: '#ccc' }}>
+          Maybe later
+        </button>
+      </div>
     </div>
   </Modal>
 )}
