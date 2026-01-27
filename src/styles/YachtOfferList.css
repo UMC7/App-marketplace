@@ -43,6 +43,16 @@
   background-color: #5cb8b0;
 }
 
+.direct-apply-instruction {
+  text-align: justify;
+}
+
+.direct-apply-link {
+  margin-top: 12px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
 @media (min-width: 992px) {
   .chat-actions {
     flex-direction: row;

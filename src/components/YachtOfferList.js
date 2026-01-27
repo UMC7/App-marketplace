@@ -2098,8 +2098,18 @@ useEffect(() => {
   <Modal onClose={handleCloseDirectApply}>
     <div style={{ maxWidth: 520 }}>
       <h3 style={{ marginTop: 0 }}>One more step before applying</h3>
-      <p>Please complete your Candidate Profile so employers can view your information when you apply.</p>
-      <p>📍 You can find it under Profile → Candidate Profile.</p>
+      <p className="direct-apply-instruction">
+        Please complete your Candidate Profile so employers can view your information when you apply.
+      </p>
+      <img
+        src="/images/Digital CV sample.png"
+        alt="Digital CV sample"
+        style={{ width: '50%', borderRadius: 8, marginTop: 12, display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
+      />
+      <p className="direct-apply-link">
+        📍 You can find it under<br />
+        Profile → Candidate Profile.
+      </p>
       <div
         style={{
           display: 'flex',
