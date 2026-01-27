@@ -307,6 +307,39 @@
   border-top: 1px solid #bca987; /* Specific color, consider variable if reused */
 }
 
+.required-docs-block {
+  display: none;
+}
+
+.required-docs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.required-doc-chip {
+  padding: 6px 0;
+  border-radius: 0;
+  border: none;
+  background-color: transparent;
+  color: var(--text-color, #1c1c1c);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.body-dark .required-doc-chip,
+body.dark-mode .required-doc-chip {
+  color: #ffffff;
+}
+
+@media (min-width: 992px) {
+  .required-docs-block {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
 .block7 {
   width: 100%;
   display: flex;

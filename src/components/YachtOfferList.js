@@ -1244,7 +1244,14 @@ useEffect(() => {
                     const authorNickname = authors[offer.user_id] || 'Usuario';
                     const primaryScore = Number(String(offer.match_primary_score).replace('%','')) || 0;
                     const teammateScore = Number(String(offer.match_teammate_score).replace('%','')) || 0;
- console.log('Offer:', offer.id, 'primaryScore:', primaryScore, 'teammateScore:', teammateScore);
+                    const normalizedRequiredDocs = (() => {
+                      const raw = offer.required_documents;
+                      if (Array.isArray(raw)) return raw;
+                      if (typeof raw === 'string') {
+                        return raw.split(',').map((doc) => doc.trim()).filter(Boolean);
+                      }
+                      return [];
+                    })();
                     return (
                       <div
                         key={offer.id}
@@ -1617,6 +1624,21 @@ useEffect(() => {
   </div>
 </div>
     </div>
+
+    {normalizedRequiredDocs.length > 0 && (
+  <div className="expanded-block block6 required-docs-block">
+    <div className="field-label">Required Documents / Certifications</div>
+    <div className="field-value">
+      <div className="required-docs-grid">
+        {normalizedRequiredDocs.map((doc, index) => (
+          <span key={`${doc}-${index}`} className="required-doc-chip">
+            {doc}
+          </span>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
 
     {offer.description && (
   <div className="expanded-block block6">

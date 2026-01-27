@@ -339,6 +339,39 @@ body {
   width: 100%;
 }
 
+.required-docs-summary-wrapper {
+  display: none;
+}
+
+.required-docs-summary-section {
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.required-docs-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.required-docs-summary-chip {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: #fff;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+@media (min-width: 992px) {
+  .required-docs-summary-wrapper {
+    display: block;
+    margin-bottom: 16px;
+  }
+}
+
 .remarks-ai-button {
   position: absolute;
   top: 8px;
