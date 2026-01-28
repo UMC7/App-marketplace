@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "mi-marketplace-mobile-webview",
+    "slug": "mi-marketplace-mobile",
+    "version": "1.0.0",
+    "android": {
+      "permissions": [
+        "CAMERA",
+        "WAKE_LOCK",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED"
+      ],
+      "package": "com.anonymous.mimarketplacemobile"
+    },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.mimarketplacemobile",
+      "buildNumber": "1"
+    }
+  }
+}
