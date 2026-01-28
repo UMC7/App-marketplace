@@ -75,6 +75,30 @@ const regionOrder = [
   'Oceania'
 ];
 
+const normalizeLocationKey = (value) => String(value || '').trim().toLowerCase();
+
+const LOCATION_TO_PREFERENCE_REGIONS = {
+  'asia': ['Asia'],
+  'caribbean': ['Caribbean'],
+  'baltic': ['North and Baltic Seas'],
+  'north sea': ['North and Baltic Seas'],
+  'mediterranean': ['Western Europe', 'Eastern Europe'],
+  'indian ocean': ['Asia'],
+  'red sea': ['Persian Gulf'],
+  'pacific': ['Oceania'],
+};
+
+const LOCATION_TO_COUNTRIES = Object.fromEntries(
+  Object.entries(LOCATION_TO_PREFERENCE_REGIONS).map(([locationKey, regions]) => [
+    locationKey,
+    Array.from(
+      new Set(
+        regions.flatMap((region) => (countriesByRegion[region] || []).map(normalizeLocationKey))
+      )
+    ),
+  ])
+);
+
 function YachtWorksPage() {
   const [offers, setOffers] = useState([]);
   const [user, setUser] = useState(null);
@@ -283,6 +307,8 @@ function YachtWorksPage() {
     };
     const pct = (ok) => (ok ? 1 : 0);
 
+    const prefCountriesSet = new Set((preferences.countries || []).map(normalizeLocationKey));
+
     return filteredOffers.map((o) => {
       if (!prefsReady) {
         return { ...o, match_primary_score: 0, match_teammate_score: 0 };
@@ -290,11 +316,14 @@ function YachtWorksPage() {
 
       const pPos = pct(posMatch(o.title, preferences.positions));
 
-      const pCountry = pct(
-        (preferences.countries || []).some(
-          c => String(o.country || '').toLowerCase() === String(c || '').toLowerCase()
-        )
-      );
+      const normalizedOfferLocation = normalizeLocationKey(o.country);
+      const regionFallback = normalizedOfferLocation ? LOCATION_TO_COUNTRIES[normalizedOfferLocation] : undefined;
+      const offerMatchesCountry =
+        !!normalizedOfferLocation && (
+          prefCountriesSet.has(normalizedOfferLocation) ||
+          (regionFallback && regionFallback.some((country) => prefCountriesSet.has(country)))
+        );
+      const pCountry = pct(offerMatchesCountry);
 
       const pTerm = pct((preferences.terms || []).includes(String(o.type || ''))); // 20%
 
