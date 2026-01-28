@@ -453,11 +453,10 @@ const undoRemarks = () => {
 
 const isDayworker = formData.title === 'Dayworker';
 const needsCommandLicense = COMMAND_RANKS.includes(formData.title);
-const selectedRequiredDocs = Array.isArray(formData.required_documents) ? formData.required_documents : [];
-const shouldShowRequiredDocsSummary = needsCommandLicense && selectedRequiredDocs.length > 0;
-
 const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
+
+const renderRequiredDocsSummary = () => null;
 
 const highlightClass = (missing) => (showMissing && missing ? 'missing-required' : '');
 const adjustRemarksTextareaHeight = (el) => {
@@ -482,25 +481,6 @@ const adjustRemarksTextareaHeight = (el) => {
   }
 };
 const autoResizeTextarea = (e) => adjustRemarksTextareaHeight(e.target);
-
-const renderRequiredDocsSummary = () => {
-  if (!shouldShowRequiredDocsSummary) return null;
-  return (
-    <div className="required-docs-summary-wrapper">
-      <div className="section-divider" />
-      <div className="required-docs-summary-section">
-        <label>Required Documents / Certifications summary:</label>
-        <div className="required-docs-summary-grid">
-          {selectedRequiredDocs.map((doc, index) => (
-            <div key={`${doc}-${index}`} className="required-docs-summary-chip">
-              {doc}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const handleRemarksInput = (e) => {
   autoResizeTextarea(e);
