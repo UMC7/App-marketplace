@@ -1,5 +1,5 @@
 // src/components/cv/CandidateProfileTab.js
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CandidateProfileTab.css';
 import supabase from '../../supabase';
@@ -21,6 +21,7 @@ import {
 } from './candidate/cvsections';
 import AboutMeSection from './candidate/cvsections/aboutmesection';
 import LifestyleHabitsSection from './candidate/cvsections/LifestyleHabitsSection';
+import Modal from '../Modal';
 
 function hasLanguagesWithLevel(languageLevels) {
   if (!Array.isArray(languageLevels)) return false;
@@ -80,6 +81,9 @@ function personalMeetsMin(p) {
     natsOk
   );
 }
+
+const CANDIDATE_PROFILE_MODAL_KEY = 'seajobs_candidate_profile_modal_seen';
+const CANDIDATE_PROFILE_MODAL_DELAY_MS = 5000;
 
 export default function CandidateProfileTab() {
   const navigate = useNavigate();
@@ -192,6 +196,8 @@ function buildFullPrefsSkillsPayload() {
   const [gallery, setGallery] = useState([]);
   const [savingDocFlags, setSavingDocFlags] = useState(false);
   const [savingGallery, setSavingGallery] = useState(false);
+  const candidateProfileModalTimer = useRef(null);
+  const [showCandidateProfileModal, setShowCandidateProfileModal] = useState(false);
 
   useEffect(() => {
     const mode = currentUser?.app_metadata?.cv_mode;
@@ -199,6 +205,42 @@ function buildFullPrefsSkillsPayload() {
       setProfileMode(mode);
     }
   }, [currentUser?.app_metadata?.cv_mode]);
+
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem(CANDIDATE_PROFILE_MODAL_KEY);
+      if (seen) {
+        return;
+      }
+    } catch (_e) {
+      // ignore storage failures
+    }
+
+    candidateProfileModalTimer.current = setTimeout(() => {
+      setShowCandidateProfileModal(true);
+      candidateProfileModalTimer.current = null;
+    }, CANDIDATE_PROFILE_MODAL_DELAY_MS);
+
+    return () => {
+      if (candidateProfileModalTimer.current) {
+        clearTimeout(candidateProfileModalTimer.current);
+        candidateProfileModalTimer.current = null;
+      }
+    };
+  }, []);
+
+  const handleCloseCandidateProfileModal = () => {
+    try {
+      localStorage.setItem(CANDIDATE_PROFILE_MODAL_KEY, '1');
+    } catch (_e) {
+      // ignore storage failures
+    }
+    if (candidateProfileModalTimer.current) {
+      clearTimeout(candidateProfileModalTimer.current);
+      candidateProfileModalTimer.current = null;
+    }
+    setShowCandidateProfileModal(false);
+  };
 
   const handleModeChange = async (nextMode) => {
     if (!nextMode || nextMode === profileMode) return;
@@ -1243,9 +1285,35 @@ const meetsPrefsMin =
   ]);
 
   return (
-    <div className={`candidate-profile-tab ${isLite ? 'cp-mode-lite' : 'cp-mode-professional'}`}>
-      <h2>Candidate Profile</h2>
-      <div className="cp-mode-tabs" role="tablist" aria-label="Candidate profile mode">
+    <>
+      {showCandidateProfileModal && (
+        <Modal onClose={handleCloseCandidateProfileModal}>
+          <div style={{ maxWidth: 520 }}>
+            <h3 style={{ marginTop: 0 }}>Welcome to Candidate Profile ⚓</h3>
+            <p>Where you build your professional crew profile on YachtDaywork.</p>
+            <p style={{ fontWeight: 600, marginTop: 20 }}>Lite Profile ⚓</p>
+            <p>
+              This is the foundation of your profile. When it reaches 100%, a Digital CV is created automatically.
+            </p>
+            <p>
+              You can share it externally with a unique link 🌐, send it to recruiters, and track analytics such as views 👀,
+              locations 🌍 and traffic sources 🧭.
+            </p>
+            <p style={{ fontWeight: 600, marginTop: 18 }}>Professional Profile 🧭</p>
+            <p>Used for applications within YachtDaywork and works together with Lite.</p>
+            <p>It unlocks only after Lite is 100% complete and must also be fully completed.</p>
+            <p>
+              Once completed, it enables direct applications and shows job compatibility with your preferences 🎯 on job cards.
+            </p>
+            <button className="landing-button" type="button" onClick={handleCloseCandidateProfileModal}>
+              Got it
+            </button>
+          </div>
+        </Modal>
+      )}
+      <div className={`candidate-profile-tab ${isLite ? 'cp-mode-lite' : 'cp-mode-professional'}`}>
+        <h2>Candidate Profile</h2>
+        <div className="cp-mode-tabs" role="tablist" aria-label="Candidate profile mode">
         <button
           type="button"
           role="tab"
@@ -1539,6 +1607,7 @@ const meetsPrefsMin =
           ) : null}
         </>
       )}
-    </div>
+      </div>
+    </>
   );
 }

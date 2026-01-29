@@ -856,7 +856,7 @@ body.dark-mode .candidate-profile-tab.cp-mode-lite{
     width: 100%;
   }
 
-  .candidate-profile-tab .education-card .cv-card-meta > span:first-child{
+.candidate-profile-tab .education-card .cv-card-meta > span:first-child{
     display: none;
-  }
+}
 }
