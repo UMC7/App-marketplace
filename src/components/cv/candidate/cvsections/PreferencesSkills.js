@@ -138,6 +138,7 @@ export default function PreferencesSkills({
             value={deptSpecialties}
             onChange={onChangeDeptSpecialties}
             showRequiredMark={false}
+            isMobile={isMobile}
           />
         </div>
       </div>
@@ -225,10 +226,11 @@ export default function PreferencesSkills({
           value={languageLevels}
           onChange={onChangeLanguageLevels}
         />
-        <DepartmentSpecialtiesInput
-          value={deptSpecialties}
-          onChange={onChangeDeptSpecialties}
-        />
+          <DepartmentSpecialtiesInput
+            value={deptSpecialties}
+            onChange={onChangeDeptSpecialties}
+            isMobile={isMobile}
+          />
       </div>
 
       {/* Compensation expectations (izquierda) | Program type + Dietary (derecha, lado a lado) */}
