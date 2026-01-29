@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
+import { registerRootComponent } from 'expo';
 
 const WEB_URL_RAW = (process.env.EXPO_PUBLIC_WEB_URL || '').trim();
 const WEB_URL = WEB_URL_RAW
@@ -21,7 +22,7 @@ const WEB_URL = WEB_URL_RAW
 
 const DEBUG_WEBVIEW = true;
 
-export default function WebViewRoot() {
+function WebViewRoot() {
   const webviewRef = useRef(null);
   const [canGoBack, setCanGoBack] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -233,3 +234,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+registerRootComponent(WebViewRoot);
+
+export { WebViewRoot };

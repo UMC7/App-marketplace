@@ -2,7 +2,7 @@
   "name": "mi-marketplace-mobile",
   "version": "1.0.0",
   "private": true,
-  "main": "node_modules/expo/AppEntry.js",
+  "main": "app/index.tsx",
   "dependencies": {
     "expo": "~54.0.32",
     "react": "19.1.0",

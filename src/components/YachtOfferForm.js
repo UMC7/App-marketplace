@@ -49,20 +49,33 @@ const getDaysInMonth = (monthValue) => {
   return new Date(year, month, 0).getDate();
 };
 
-const COMMAND_RANKS = [
-  'Captain',
-  'Skipper',
-  'Relief Captain',
-  'Chase Boat Captain',
-  'Captain/Engineer'
+const ENGINEERING_RANKS = [
+  'Deck/Engineer',
+  'Chief Engineer',
+  '2nd Engineer',
+  '3rd Engineer',
+  'Solo Engineer',
+  'Electrician',
 ];
 
-const COMMAND_LICENSE_OPTIONS = [
-  'Master Unlimited (STCW II/2)',
-  'Master (Yachts) 3000 GT',
-  'Master (Yachts) 500 GT',
-  'Master / Yachtmaster 200 GT',
-  'Yachtmaster <24 m',
+const COMMAND_RANKS = ENGINEERING_RANKS;
+
+const ENGINEERING_LICENSE_OPTIONS = [
+  'Chief Engineer Unlimited - STCW III/2',
+  'Second Engineer Unlimited - STCW III/2',
+  'Engineering Officer of the Watch (EOOW) - STCW III/1',
+  'Small Vessel Chief Engineer - MCA SV',
+  'AEC 2 - Approved Engine Course 2',
+  'AEC 1 - Approved Engine Course 1',
+  'MEOL (Yachts) - Marine Engine Operator Licence',
+  'High Voltage (HV) Training',
+  'Refrigeration / Air Conditioning',
+];
+const DECK_ENGINEER_LICENSE_OPTIONS = [
+  'Small Vessel Chief Engineer - MCA SV',
+  'AEC 2 - Approved Engine Course 2',
+  'AEC 1 - Approved Engine Course 1',
+  'MEOL (Yachts) - Marine Engine Operator Licence',
 ];
 
 const REQUIRED_DOCUMENT_GROUPS = [
@@ -75,20 +88,6 @@ const REQUIRED_DOCUMENT_GROUPS = [
       'STCW Basic Training (A-VI/1)',
       "Driver's License",
     ],
-  },
-  {
-    label: 'Navigation & Communication',
-    options: [
-      'RADAR / ARPA',
-      'ECDIS',
-      'GMDSS GOC',
-      'GMDSS ROC',
-      'RYA SRC (VHF)',
-    ],
-  },
-  {
-    label: 'Security',
-    options: ['Ship Security Officer (SSO)'],
   },
   {
     label: 'Administrative / Compliance',
@@ -452,7 +451,7 @@ const undoRemarks = () => {
 };
 
 const isDayworker = formData.title === 'Dayworker';
-const needsCommandLicense = COMMAND_RANKS.includes(formData.title);
+const needsEngineeringLicense = ENGINEERING_RANKS.includes(formData.title);
 const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
 
@@ -609,7 +608,7 @@ const formReady = (() => {
       if (name === 'title' && value === 'Dayworker') {
         newState.type = 'DayWork';
       }
-      if (name === 'title' && !COMMAND_RANKS.includes(value)) {
+      if (name === 'title' && !ENGINEERING_RANKS.includes(value)) {
         newState.required_license = '';
         newState.required_documents = [];
       }
@@ -915,7 +914,7 @@ const derivedEndDate = (() => {
       {titles.map((t) => <option key={t} value={t}>{t}</option>)}
     </select>
 
-    {needsCommandLicense && (
+    {needsEngineeringLicense && (
       <>
         <label>Required License:</label>
         <select
@@ -924,14 +923,17 @@ const derivedEndDate = (() => {
           onChange={handleChange}
         >
           <option value="">Select...</option>
-          {COMMAND_LICENSE_OPTIONS.map((opt) => (
+          {(formData.title === 'Deck/Engineer'
+            ? DECK_ENGINEER_LICENSE_OPTIONS
+            : ENGINEERING_LICENSE_OPTIONS
+          ).map((opt) => (
             <option key={opt} value={opt}>{opt}</option>
           ))}
         </select>
       </>
     )}
 
-    {needsCommandLicense && (
+    {needsEngineeringLicense && (
       <>
         <label htmlFor="required-docs-trigger">Required Documents / Certifications:</label>
         <div
