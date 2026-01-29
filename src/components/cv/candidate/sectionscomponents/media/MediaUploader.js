@@ -192,7 +192,7 @@ export default function MediaUploader({
     <div className="media-uploader">
       <div className="header">
         <div className="count">
-          {items.length}/{max} • max 1 video
+          {items.length}/{max} • max 1 video - <span className="req">min 3 photos</span>
         </div>
       </div>
 
@@ -278,7 +278,8 @@ export default function MediaUploader({
       <style>{`
         .media-uploader { display:flex; flex-direction:column; gap:12px; }
         .header { display:flex; align-items:center; justify-content:space-between; }
-        .count { color:var(--muted-2); font-size:.9rem; }
+        .count { color:var(--muted-2); font-size:.9rem; display:flex; align-items:center; gap:8px; }
+        .req { color:var(--muted-2); font-size:.85rem; font-weight:500; }
 
         .dropzone {
           border:2px dashed var(--line); 
