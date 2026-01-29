@@ -1,23 +1,52 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BackHandler, Platform, SafeAreaView, StyleSheet, View, Text, TouchableOpacity, Linking } from 'react-native';
+import {
+  ActivityIndicator,
+  BackHandler,
+  Linking,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
+
+const WEB_URL_RAW = (process.env.EXPO_PUBLIC_WEB_URL || '').trim();
+const WEB_URL = WEB_URL_RAW
+  ? WEB_URL_RAW.startsWith('http://') || WEB_URL_RAW.startsWith('https://')
+    ? WEB_URL_RAW
+    : `https://${WEB_URL_RAW}`
+  : '';
+
+const DEBUG_WEBVIEW = true;
 
 export default function WebViewRoot() {
   const webviewRef = useRef(null);
   const [canGoBack, setCanGoBack] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  if (!WEB_URL) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>Missing EXPO_PUBLIC_WEB_URL</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;
 
     const onBackPress = () => {
-      // If WebView can go back, navigate history instead of exiting app
       if (canGoBack && webviewRef.current) {
         // @ts-ignore
         webviewRef.current.goBack();
         return true;
       }
-      return false; // allow default behavior (exit app)
+      return false;
     };
 
     const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
@@ -26,6 +55,7 @@ export default function WebViewRoot() {
 
   const handleRetry = () => {
     setHasError(false);
+    setIsLoading(true);
     if (webviewRef.current) {
       // @ts-ignore
       webviewRef.current.reload();
@@ -34,22 +64,29 @@ export default function WebViewRoot() {
 
   const handleError = () => {
     setHasError(true);
+    setIsLoading(false);
   };
 
   const handleShouldStartLoad = (event: WebViewNavigation): boolean => {
     const { url } = event;
 
-    // Allow about:blank
+    if (DEBUG_WEBVIEW) console.log('WV nav request', url);
+
+    if (
+      (url === 'https://yachtdaywork.com/' && WEB_URL.includes('yachtdaywork.com')) ||
+      (url === 'https://www.yachtdaywork.com/' && WEB_URL.includes('yachtdaywork.com'))
+    ) {
+      return true;
+    }
+
     if (url === 'about:blank') {
       return true;
     }
 
-    // Allow relative URLs
     if (url.startsWith('/')) {
       return true;
     }
 
-    // Handle special schemes (must be handled by native apps)
     if (
       url.startsWith('mailto:') ||
       url.startsWith('tel:') ||
@@ -66,34 +103,27 @@ export default function WebViewRoot() {
       return false;
     }
 
-    // Parse and validate absolute URLs
-    try {
-      const parsedUrl = new URL(url);
-      const { protocol, hostname } = parsedUrl;
+    const match = url.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\/([^\/?#]+)(.*)$/);
+    if (!match) return false;
 
-      // Allow only HTTPS yachtdaywork.com and subdomains
-      if (
-        protocol === 'https:' &&
-        (hostname === 'yachtdaywork.com' || hostname.endsWith('.yachtdaywork.com'))
-      ) {
-        return true;
-      }
+    const protocol = (match[1] || '').toLowerCase();
+    const hostname = (match[2] || '').toLowerCase();
 
-      // Handle external HTTP/HTTPS URLs
-      if (protocol === 'http:' || protocol === 'https:') {
-        Linking.openURL(url).catch((err) => {
-          console.warn('Failed to open URL:', url, err);
-        });
-        return false;
-      }
+    if (
+      protocol === 'https' &&
+      (hostname === 'yachtdaywork.com' ||
+        hostname === 'www.yachtdaywork.com' ||
+        hostname.endsWith('.yachtdaywork.com'))
+    ) {
+      return true;
+    }
 
-      // Block any other protocol (file:, content:, data:, etc.)
-      return false;
-    } catch (error) {
-      // If URL parsing fails and it's not a recognized scheme, block it
-      console.warn('Invalid or unrecognized URL:', url);
+    if (protocol === 'http' || protocol === 'https') {
+      Linking.openURL(url).catch(() => {});
       return false;
     }
+
+    return false;
   };
 
   return (
@@ -109,17 +139,42 @@ export default function WebViewRoot() {
       ) : (
         <WebView
           ref={webviewRef}
-          source={{ uri: 'https://www.yachtdaywork.com' }}
-          originWhitelist={['https://www.yachtdaywork.com', 'https://*.yachtdaywork.com']}
+          source={{ uri: WEB_URL }}
+          originWhitelist={[
+            'https://www.yachtdaywork.com',
+            'https://yachtdaywork.com',
+            'https://*.yachtdaywork.com',
+          ]}
           javaScriptEnabled
           domStorageEnabled
-          startInLoadingState
+          onLoadStart={() => setIsLoading(true)}
+          onLoadProgress={(e) => {
+            if (DEBUG_WEBVIEW) console.log('WV progress', e?.nativeEvent?.progress, e?.nativeEvent?.url);
+          }}
+          onLoadEnd={(e) => {
+            if (DEBUG_WEBVIEW) console.log('WV loadEnd', e?.nativeEvent?.url);
+            setIsLoading(false);
+          }}
           onNavigationStateChange={(navState) => setCanGoBack(!!navState.canGoBack)}
-          onError={handleError}
-          onHttpError={handleError}
+          onError={(e) => {
+            if (DEBUG_WEBVIEW) console.log('WV onError', e?.nativeEvent);
+            handleError();
+          }}
+          onHttpError={(e) => {
+            if (DEBUG_WEBVIEW) console.log('WV onHttpError', e?.nativeEvent);
+            handleError();
+          }}
+          onConsoleMessage={(e) => {
+            if (DEBUG_WEBVIEW) console.log('WV console', e?.nativeEvent?.message);
+          }}
           onShouldStartLoadWithRequest={handleShouldStartLoad}
           style={styles.webview}
         />
+      )}
+      {isLoading && (
+        <View style={styles.loaderOverlay}>
+          <ActivityIndicator size="large" color="#081a3b" />
+        </View>
       )}
       <View style={styles.bottomSpacer} />
     </SafeAreaView>
@@ -136,6 +191,12 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 0,
+  },
+  loaderOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   errorContainer: {
     flex: 1,
