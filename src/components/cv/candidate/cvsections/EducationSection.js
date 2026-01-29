@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import EducationItemCard from '../sectionscomponents/education/EducationItemCard';
 import EducationItemForm from '../sectionscomponents/education/EducationItemForm';
 
-export default function EducationSection({ userId: userIdProp, showRequiredMark = true }) {
+export default function EducationSection({ userId: userIdProp, showRequiredMark = true, mode = 'professional' }) {
   const [userId, setUserId] = useState(userIdProp || null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -152,9 +152,16 @@ export default function EducationSection({ userId: userIdProp, showRequiredMark 
       {/* Barra de acción superior */}
       <div className="cp-actions" style={{ marginBottom: 8 }}>
         {!creating && !editing && (
-          <button type="button" className="cp-btn-add" onClick={() => setCreating(true)}>
-            + Add education
-          </button>
+          <>
+            <button type="button" className="cp-btn-add" onClick={() => setCreating(true)}>
+              + Add education
+            </button>
+            {mode === 'lite' && (
+              <span className="cp-muted" style={{ marginLeft: 10 }}>
+                Min 1 education
+              </span>
+            )}
+          </>
         )}
       </div>
 

@@ -764,9 +764,16 @@ export default function ExperienceSection({
     <div>
       <div className="cp-actions" style={{ marginBottom: 8 }}>
         {!editing && (
-          <button className="cp-btn-add" onClick={startAdd}>
-            + Add experience
-          </button>
+          <>
+            <button className="cp-btn-add" onClick={startAdd}>
+              + Add experience
+            </button>
+            {mode === 'lite' && (
+              <span className="cp-muted" style={{ marginLeft: 10 }}>
+                Min 1 experience
+              </span>
+            )}
+          </>
         )}
       </div>
 

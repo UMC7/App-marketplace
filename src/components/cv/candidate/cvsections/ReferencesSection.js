@@ -12,6 +12,7 @@ export default function ReferencesSection({
   value,
   onChange,
   title = "References",
+  mode = "professional",
   // ⬇️ Eliminamos el límite práctico: no exponemos `max` y forzamos “sin límite”
   profileId,          // <- opcional: si viene, cargamos/guardamos en DB
   onCountChange,      // <- opcional: notificación de cantidad actual
@@ -106,6 +107,7 @@ export default function ReferencesSection({
       onUpsert={enablePersistence ? handleUpsert : undefined}
       onDelete={enablePersistence ? handleDelete : undefined}
       showRequiredMark={showRequiredMark}
+      mode={mode}
     />
   );
 }

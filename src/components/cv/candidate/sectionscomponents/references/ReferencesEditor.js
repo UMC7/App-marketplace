@@ -10,6 +10,7 @@ export default function ReferencesEditor({
   onUpsert,
   onDelete,
   showRequiredMark = true,
+  mode = 'professional',
 }) {
   const [items, setItems] = useState(Array.isArray(value) ? value : []);
   const [editingIndex, setEditingIndex] = useState(-1);
@@ -91,6 +92,17 @@ export default function ReferencesEditor({
         />
       ) : (
         <>
+          <div className="cp-actions" style={{ marginBottom: 8 }}>
+            <button className="btn primary" disabled={!canAdd} onClick={handleAdd}>
+              Add reference
+            </button>
+            {mode === 'lite' && (
+              <span className="cp-muted" style={{ marginLeft: 10 }}>
+                Min 1 reference
+              </span>
+            )}
+          </div>
+
           <div className="list">
             {items.length === 0 && (
               <div className="empty">No references yet.</div>
@@ -103,12 +115,6 @@ export default function ReferencesEditor({
                 onDelete={() => handleDelete(i)}
               />
             ))}
-          </div>
-
-          <div className="bar">
-            <button className="btn primary" disabled={!canAdd} onClick={handleAdd}>
-              Add reference
-            </button>
           </div>
         </>
       )}
@@ -125,11 +131,6 @@ export default function ReferencesEditor({
           color:var(--muted);
           border-radius:12px;
           background: linear-gradient(180deg, var(--card), var(--card-2));
-        }
-
-        .cv-ref-editor .bar{
-          margin-top:12px; display:flex; gap:10px; align-items:center; justify-content:flex-start;
-          flex-wrap:wrap;
         }
 
         /* Botones: heredan tokens del contenedor (light/dark) */
@@ -158,11 +159,6 @@ export default function ReferencesEditor({
           }
         }
 
-        /* Móvil: botón a ancho completo, 1 columna */
-        @media (max-width:720px){
-          .cv-ref-editor .bar .btn{ width:100%; }
-          .cv-ref-editor .bar{ justify-content:space-between; }
-        }
       `}</style>
     </div>
   );

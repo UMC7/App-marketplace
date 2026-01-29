@@ -1556,7 +1556,7 @@ const meetsPrefsMin =
           {showRequired ? (
             <div className="cp-card">
               <h3 className="cp-h3">Education (Studies)</h3>
-              <EducationSection showRequiredMark={!isLite} />
+              <EducationSection showRequiredMark={!isLite} mode={profileMode} />
             </div>
           ) : null}
 
@@ -1581,6 +1581,7 @@ const meetsPrefsMin =
                 profileId={profile?.id}
                 onCountChange={(n) => setRefsCount(Number(n) || 0)}
                 showRequiredMark={!isLite}
+                mode={profileMode}
               />
             </div>
           ) : null}
