@@ -144,6 +144,8 @@ const [pendingChat, setPendingChat] = useState(null);
 const [openJobId, setOpenJobId] = useState(null);
 const [openHandled, setOpenHandled] = useState(false);
 const [showDirectApplyModal, setShowDirectApplyModal] = useState(false);
+const [directApplyModalType, setDirectApplyModalType] = useState(null);
+const [directApplicationReady, setDirectApplicationReady] = useState(false);
 const cardRefs = useRef({});
 const chatIntroTimerRef = useRef(null);
 const chatIntroScheduledRef = useRef(false);
@@ -257,6 +259,36 @@ useEffect(() => {
 
   setOpenHandled(true);
 }, [openJobId, openHandled, offers]);
+
+useEffect(() => {
+  let cancelled = false;
+  if (!currentUser?.id) {
+    setDirectApplicationReady(false);
+    return () => {
+      cancelled = true;
+    };
+  }
+
+  const fetchShareReady = async () => {
+    try {
+      const { data } = await supabase
+        .from('public_profiles')
+        .select('share_ready')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+      setDirectApplicationReady(Boolean(data?.share_ready));
+    } catch (e) {
+      if (!cancelled) setDirectApplicationReady(false);
+    }
+  };
+
+  fetchShareReady();
+  return () => {
+    cancelled = true;
+  };
+}, [currentUser?.id]);
 
   const [activeChat, setActiveChat] = useState(null);
   const [expandedWeeks, setExpandedWeeks] = useState({});
@@ -612,15 +644,19 @@ useEffect(() => {
   };
 
   const handleDirectApply = () => {
+    const allowed = currentUser && directApplicationReady;
+    setDirectApplyModalType(allowed ? 'success' : 'profile_required');
     setShowDirectApplyModal(true);
   };
 
   const handleCloseDirectApply = () => {
     setShowDirectApplyModal(false);
+    setDirectApplyModalType(null);
   };
 
   const handleGoToCandidateProfile = () => {
     setShowDirectApplyModal(false);
+    setDirectApplyModalType(null);
     navigate('/profile?tab=cv');
   };
 
@@ -2097,34 +2133,54 @@ useEffect(() => {
       {showDirectApplyModal && (
   <Modal onClose={handleCloseDirectApply}>
     <div style={{ maxWidth: 520 }}>
-      <h3 style={{ marginTop: 0 }}>One more step before applying</h3>
-      <p className="direct-apply-instruction">
-        Please complete your Candidate Profile so employers can view your information when you apply.
-      </p>
-      <img
-        src="/images/Digital CV sample.png"
-        alt="Digital CV sample"
-        style={{ width: '50%', borderRadius: 8, marginTop: 12, display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
-      />
-      <p className="direct-apply-link">
-        📍 You can find it under<br />
-        Profile → Candidate Profile.
-      </p>
-      <div
-        style={{
-          display: 'flex',
-          gap: '12px',
-          flexWrap: 'wrap',
-          marginTop: 16,
-        }}
-      >
-        <button className="landing-button" onClick={handleGoToCandidateProfile}>
-          Go to Candidate Profile
-        </button>
-        <button className="landing-button" onClick={handleCloseDirectApply} style={{ backgroundColor: '#ccc' }}>
-          Maybe later
-        </button>
-      </div>
+      {directApplyModalType === 'success' ? (
+        <>
+          <h3 style={{ marginTop: 0 }}>Application submitted 🚀</h3>
+          <p className="direct-apply-instruction">
+            Your application has been successfully sent.
+          </p>
+          <p className="direct-apply-instruction">
+            The employer will receive your Candidate Profile and may contact you via Private Chat or using the contact details on your profile.
+          </p>
+          <p className="direct-apply-instruction">
+            Thank you for applying. Please keep an eye on YachtDaywork for any updates or messages from the hiring team ⚓
+          </p>
+          <button className="landing-button" onClick={handleCloseDirectApply}>
+            Close
+          </button>
+        </>
+      ) : (
+        <>
+          <h3 style={{ marginTop: 0 }}>One more step before applying</h3>
+          <p className="direct-apply-instruction">
+            Direct Application is only enabled once both your Lite and Professional Candidate Profiles are 100% complete, so employers can instantly review your information.
+          </p>
+          <img
+            src="/images/Digital CV sample.png"
+            alt="Digital CV sample"
+            style={{ width: '50%', borderRadius: 8, marginTop: 12, display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
+          />
+          <p className="direct-apply-link">
+            📍 Puedes encontrarlo en<br />
+            Profile → Candidate Profile.
+          </p>
+          <div
+            style={{
+              display: 'flex',
+              gap: '12px',
+              flexWrap: 'wrap',
+              marginTop: 16,
+            }}
+          >
+            <button className="landing-button" onClick={handleGoToCandidateProfile}>
+              Go to Candidate Profile
+            </button>
+            <button className="landing-button" onClick={handleCloseDirectApply} style={{ backgroundColor: '#ccc' }}>
+              Maybe later
+            </button>
+          </div>
+        </>
+      )}
     </div>
   </Modal>
 )}
