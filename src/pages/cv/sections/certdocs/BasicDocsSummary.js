@@ -111,7 +111,10 @@ export default function BasicDocsSummary({ documents = [], docFlags = {} }) {
     // - Unlisted: NO se considera.
     // - Public/Private: sí se consideran para los indicadores.
     const docsAll = Array.isArray(documents) ? documents : [];
-    const docs = docsAll.filter(d => (d?.visibility || 'public') !== 'unlisted');
+    const docs = docsAll.filter((d) => {
+      const vis = String(d?.visibility || 'public').toLowerCase().trim();
+      return vis !== 'unlisted';
+    });
 
     const byType = (type) => docs.filter(d => canonicalType(d) === type);
 

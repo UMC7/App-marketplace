@@ -95,7 +95,10 @@ export default function PublicCertDocsSection({
   // - Public: se muestra y se puede abrir.
   const sorted = useMemo(() => {
     const list = Array.isArray(documents) ? [...documents] : [];
-    const filtered = list.filter((d) => (d?.visibility || 'public') !== 'unlisted');
+    const filtered = list.filter((d) => {
+      const vis = String(d?.visibility || 'public').toLowerCase().trim();
+      return vis !== 'unlisted';
+    });
     return filtered.sort((a, b) => {
       const pa = priorityOf(a), pb = priorityOf(b);
       if (pa !== pb) return pa - pb;
@@ -139,7 +142,7 @@ export default function PublicCertDocsSection({
   const openDoc = useCallback(async (doc) => {
     if (!doc) return;
     // Solo PUBLIC puede abrirse/verse
-    if ((doc.visibility || 'public') !== 'public') return;
+    if (String(doc.visibility || 'public').toLowerCase().trim() !== 'public') return;
 
     let url = '';
     const path = String(doc.file_url || '');
@@ -156,7 +159,7 @@ export default function PublicCertDocsSection({
           doc_id: doc?.id || null,
           title: doc?.title || null,
           ext: inferExt(path) || null,
-          visibility: doc?.visibility || 'public',
+                  visibility: doc?.visibility || 'public',
         },
       });
     } catch { /* no-op */ }
@@ -216,11 +219,9 @@ export default function PublicCertDocsSection({
         >
           {sorted.map((doc) => {
             const expText = fmtDate(doc.expires_on) || '—';
-            const canOpen = (doc.visibility || 'public') === 'public' && !!doc.file_url;
-            const openTitle =
-              (doc.visibility || 'public') === 'private'
-                ? 'File is private'
-                : (!doc.file_url ? 'No file available' : 'View scan');
+            const vis = String(doc.visibility || 'public').toLowerCase().trim();
+            const canOpen = vis === 'public' && !!doc.file_url;
+            const openTitle = vis === 'private' ? 'File is private' : (!doc.file_url ? 'No file available' : 'View scan');
 
             return (
               <li

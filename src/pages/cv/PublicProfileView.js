@@ -554,7 +554,10 @@ export default function PublicProfileView() {
             console.error('docs rpc error', docsErr);
             setDocuments([]);
           } else {
-            const docs = (rows || []).filter(d => (d.visibility || 'public') !== 'unlisted');
+            const docs = (rows || []).filter((d) => {
+              const vis = String(d?.visibility || 'public').toLowerCase().trim();
+              return vis !== 'unlisted';
+            });
             setDocuments(docs);
           }
         }
@@ -694,9 +697,9 @@ export default function PublicProfileView() {
 
   const cvDoc = useMemo(() => {
     const list = Array.isArray(documents) ? documents : [];
-    const pub = list.find((d) => (d.type || '').toLowerCase() === 'cv' && d.visibility === 'public');
+    const pub = list.find((d) => (d.type || '').toLowerCase() === 'cv' && String(d.visibility || 'public').toLowerCase().trim() === 'public');
     if (pub) return pub;
-    const unl = list.find((d) => (d.type || '').toLowerCase() === 'cv' && d.visibility === 'unlisted');
+    const unl = list.find((d) => (d.type || '').toLowerCase() === 'cv' && String(d.visibility || 'public').toLowerCase().trim() === 'unlisted');
     if (unl) return unl;
     return list.find((d) => (d.type || '').toLowerCase() === 'cv') || null;
   }, [documents]);
