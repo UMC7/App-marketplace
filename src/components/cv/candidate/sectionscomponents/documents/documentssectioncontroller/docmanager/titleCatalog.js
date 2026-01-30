@@ -128,6 +128,26 @@ const TITLE_CATALOG = [
         aliases: ["EOOW III/1", "STCW III/1", "OICEW"],
       },
       {
+        id: "eng_y1",
+        label: "Y1 — Yacht Engineer (Unlimited)",
+        aliases: ["Yacht Engineer Unlimited", "Yacht Engineer Y1"],
+      },
+      {
+        id: "eng_y2",
+        label: "Y2 — Yacht Engineer ≤3000 GT",
+        aliases: ["Yacht Engineer 3000 GT", "Yacht Engineer Y2"],
+      },
+      {
+        id: "eng_y3",
+        label: "Y3 — Yacht Engineer ≤500 GT",
+        aliases: ["Yacht Engineer 500 GT", "Yacht Engineer Y3"],
+      },
+      {
+        id: "eng_y4",
+        label: "Y4 — Yacht Engineer ≤200 GT",
+        aliases: ["Yacht Engineer 200 GT", "Yacht Engineer Y4"],
+      },
+      {
         id: "sv_ce_small_vessel",
         label: "Small Vessel Chief Engineer — MCA SV",
         aliases: ["SV Chief Engineer", "Small Vessel CoC"],
@@ -135,8 +155,6 @@ const TITLE_CATALOG = [
       { id: "sv_aec2", label: "AEC 2 — Approved Engine Course 2" },
       { id: "sv_aec1", label: "AEC 1 — Approved Engine Course 1" },
       { id: "sv_meol", label: "MEOL (Yachts) — Marine Engine Operator Licence" },
-      { id: "eng_high_voltage", label: "High Voltage (HV) Training" },
-      { id: "eng_refrigeration", label: "Refrigeration / Air Conditioning" },
     ],
   },
 
