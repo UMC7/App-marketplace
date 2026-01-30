@@ -64,19 +64,144 @@ const ENGINEERING_LICENSE_OPTIONS = [
   'Chief Engineer Unlimited - STCW III/2',
   'Second Engineer Unlimited - STCW III/2',
   'Engineering Officer of the Watch (EOOW) - STCW III/1',
-  'Small Vessel Chief Engineer - MCA SV',
-  'AEC 2 - Approved Engine Course 2',
-  'AEC 1 - Approved Engine Course 1',
-  'MEOL (Yachts) - Marine Engine Operator Licence',
-  'High Voltage (HV) Training',
-  'Refrigeration / Air Conditioning',
-];
-const DECK_ENGINEER_LICENSE_OPTIONS = [
+  'Y1 - Yacht Engineer (Unlimited)',
+  'Y2 - Yacht Engineer ≤3000 GT',
+  'Y3 - Yacht Engineer ≤500 GT',
+  'Y4 - Yacht Engineer ≤200 GT',
   'Small Vessel Chief Engineer - MCA SV',
   'AEC 2 - Approved Engine Course 2',
   'AEC 1 - Approved Engine Course 1',
   'MEOL (Yachts) - Marine Engine Operator Licence',
 ];
+
+const DECK_LICENSE_RANKS = [
+  'Captain',
+  'Captain/Engineer',
+  'Skipper',
+  'Chase Boat Captain',
+  'Relief Captain',
+  'Chief Officer',
+  '2nd Officer',
+  '3rd Officer',
+  'Bosun',
+  'Mate',
+  'Lead Deckhand',
+  'Deckhand',
+  'Deck/Steward(ess)',
+  'Deck/Carpenter',
+  'Deck/Divemaster',
+  'Deck/Cook',
+];
+
+const DECK_LICENSE_MAP = {
+  Captain: [
+    'Master Unlimited',
+    'Master Yachts 3000 GT',
+    'Master Yachts 500 GT',
+    'Master Yachts 200 GT',
+    'Yachtmaster',
+  ],
+  'Captain/Engineer': [
+    'Master Unlimited',
+    'Master Yachts 3000 GT',
+    'Master Yachts 500 GT',
+    'Master Yachts 200 GT',
+    'Yachtmaster',
+  ],
+  Skipper: [
+    'Master Unlimited',
+    'Master Yachts 3000 GT',
+    'Master Yachts 500 GT',
+    'Master Yachts 200 GT',
+    'Yachtmaster',
+  ],
+  'Relief Captain': [
+    'Master Unlimited',
+    'Master Yachts 3000 GT',
+    'Master Yachts 500 GT',
+    'Master Yachts 200 GT',
+    'Yachtmaster',
+  ],
+  'Chase Boat Captain': [
+    'Master Unlimited',
+    'Master Yachts 3000 GT',
+    'Master Yachts 500 GT',
+    'Master Yachts 200 GT',
+    'Yachtmaster',
+  ],
+  'Chief Officer': [
+    'Master Yachts 3000 GT',
+    'Chief Mate Unlimited',
+    'Chief Mate Yachts 3000 GT',
+    'OOW Unlimited',
+    'OOW Yachts 3000 GT',
+    'Yachtmaster',
+  ],
+  '2nd Officer': [
+    'Chief Mate Yachts 3000 GT',
+    'OOW Unlimited',
+    'OOW Yachts 3000 GT',
+    'Yachtmaster',
+  ],
+  '3rd Officer': [
+    'Chief Mate Yachts 3000 GT',
+    'OOW Unlimited',
+    'OOW Yachts 3000 GT',
+    'Yachtmaster',
+  ],
+  Mate: [
+    'Chief Mate Yachts 3000 GT',
+    'OOW Unlimited',
+    'OOW Yachts 3000 GT',
+    'Yachtmaster',
+  ],
+  Bosun: [
+    'OOW Yachts 3000 GT',
+    'Yachtmaster',
+  ],
+  'Lead Deckhand': [
+    'OOW Yachts 3000 GT',
+    'Yachtmaster',
+  ],
+  Deckhand: [
+    'OOW Yachts 3000 GT',
+    'Yachtmaster',
+  ],
+  'Deck/Steward(ess)': ['Yachtmaster'],
+  'Deck/Carpenter': ['Yachtmaster'],
+  'Deck/Divemaster': ['Yachtmaster'],
+  'Deck/Cook': ['Yachtmaster'],
+};
+
+const getDeckLicenseOptionsForRank = (rank) => DECK_LICENSE_MAP[rank] || [];
+
+const ENGINEERING_LICENSE_FIELD_RANKS = ['Captain/Engineer', 'Deck/Engineer'];
+const ENGINEERING_LICENSE_FIELD_OPTIONS = [
+  'Y4 – Yacht Engineer ≤200 GT',
+  'MEO (Yachts) – Marine Engine Operator',
+  'AEC 2 – Approved Engine Course 2',
+  'AEC 1 – Approved Engine Course 1',
+];
+
+const DECK_DOCUMENT_MAP = {
+  Captain: ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  'Captain/Engineer': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  Skipper: ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  'Relief Captain': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  'Chase Boat Captain': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  'Chief Officer': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  '2nd Officer': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  '3rd Officer': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  Mate: ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  Bosun: ['VHF SRC'],
+  'Lead Deckhand': ['VHF SRC'],
+  Deckhand: ['VHF SRC'],
+  'Deck/Steward(ess)': ['VHF SRC'],
+  'Deck/Carpenter': ['VHF SRC'],
+  'Deck/Divemaster': ['VHF SRC'],
+  'Deck/Cook': ['VHF SRC'],
+};
+const getDeckDocumentOptionsForRank = (rank) => DECK_DOCUMENT_MAP[rank] || [];
 
 const REQUIRED_DOCUMENT_GROUPS = [
   {
@@ -115,6 +240,7 @@ const initialState = {
   end_month: '',
   end_day: '',
   required_license: '',
+  engineering_license: '',
   required_documents: [],
   salary: '',
   is_doe: false,
@@ -215,6 +341,14 @@ useEffect(() => {
   setFormData(prev => ({
     ...prev,
     required_license: initialValues.required_licenses[0] || '',
+  }));
+}, [initialValues]);
+
+useEffect(() => {
+  if (typeof initialValues?.engineering_license === 'undefined') return;
+  setFormData(prev => ({
+    ...prev,
+    engineering_license: initialValues.engineering_license || '',
   }));
 }, [initialValues]);
 
@@ -452,6 +586,16 @@ const undoRemarks = () => {
 
 const isDayworker = formData.title === 'Dayworker';
 const needsEngineeringLicense = ENGINEERING_RANKS.includes(formData.title);
+const needsDeckLicense = DECK_LICENSE_RANKS.includes(formData.title);
+const showLicenseFields = needsEngineeringLicense || needsDeckLicense;
+const showEngineeringLicenseField = ENGINEERING_LICENSE_FIELD_RANKS.includes(formData.title);
+const licenseOptions = needsEngineeringLicense
+  ? ENGINEERING_LICENSE_OPTIONS
+  : needsDeckLicense
+    ? getDeckLicenseOptionsForRank(formData.title)
+    : [];
+const engineeringLicenseFieldOptions = ENGINEERING_LICENSE_FIELD_OPTIONS;
+const deckDocumentOptions = needsDeckLicense ? getDeckDocumentOptionsForRank(formData.title) : [];
 const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
 
@@ -608,9 +752,12 @@ const formReady = (() => {
       if (name === 'title' && value === 'Dayworker') {
         newState.type = 'DayWork';
       }
-      if (name === 'title' && !ENGINEERING_RANKS.includes(value)) {
+      if (name === 'title' && !ENGINEERING_RANKS.includes(value) && !DECK_LICENSE_RANKS.includes(value)) {
         newState.required_license = '';
         newState.required_documents = [];
+      }
+      if (name === 'title' && !ENGINEERING_LICENSE_FIELD_RANKS.includes(value)) {
+        newState.engineering_license = '';
       }
 
       // 🔹 Si marca ASAP → limpiar fecha
@@ -683,12 +830,14 @@ const {
   end_month,
   end_day,
   required_license,
+  engineering_license,
   required_documents,
   ...restForm
 } = formData;
 const startDateMonthOnly = !!start_month && !start_day;
 const endDateMonthOnly = !!end_month && !end_day;
 const requiredLicenses = required_license ? [required_license] : [];
+const engineeringLicensesArray = engineering_license ? [engineering_license] : [];
 const derivedStartDate = (() => {
   if (!start_month) return null;
   const year = getInferredYear(start_month);
@@ -713,6 +862,7 @@ const derivedEndDate = (() => {
     start_date_month_only: startDateMonthOnly,
     end_date_month_only: endDateMonthOnly,
     required_licenses: requiredLicenses,
+    required_engineering_licenses: engineeringLicensesArray,
     required_documents: Array.isArray(required_documents) ? required_documents : [],
     years_in_rank:
       formData.years_in_rank === 'Green'
@@ -769,6 +919,7 @@ const derivedEndDate = (() => {
     yacht_type: sanitizedData.yacht_type || null,
     uses: sanitizedData.uses || null,
     required_licenses: sanitizedData.required_licenses || [],
+    required_engineering_licenses: sanitizedData.required_engineering_licenses || [],
     required_documents: sanitizedData.required_documents || [],
     homeport: sanitizedData.homeport || null,
     liveaboard: sanitizedData.liveaboard || null,
@@ -914,7 +1065,7 @@ const derivedEndDate = (() => {
       {titles.map((t) => <option key={t} value={t}>{t}</option>)}
     </select>
 
-    {needsEngineeringLicense && (
+    {showLicenseFields && (
       <>
         <label>Required License:</label>
         <select
@@ -923,17 +1074,29 @@ const derivedEndDate = (() => {
           onChange={handleChange}
         >
           <option value="">Select...</option>
-          {(formData.title === 'Deck/Engineer'
-            ? DECK_ENGINEER_LICENSE_OPTIONS
-            : ENGINEERING_LICENSE_OPTIONS
-          ).map((opt) => (
+          {licenseOptions.map((opt) => (
             <option key={opt} value={opt}>{opt}</option>
           ))}
         </select>
+        {showEngineeringLicenseField && (
+          <>
+            <label>Engineering License:</label>
+            <select
+              name="engineering_license"
+              value={formData.engineering_license}
+              onChange={handleChange}
+            >
+              <option value="">Select...</option>
+              {engineeringLicenseFieldOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          </>
+        )}
       </>
     )}
 
-    {needsEngineeringLicense && (
+    {showLicenseFields && (
       <>
         <label htmlFor="required-docs-trigger">Required Documents / Certifications:</label>
         <div
@@ -953,22 +1116,41 @@ const derivedEndDate = (() => {
           </button>
 
           <div className="multiselect-options">
-            {REQUIRED_DOCUMENT_GROUPS.map((group) => (
-              <div key={group.label} style={{ marginBottom: 8 }}>
-                <div style={{ fontWeight: 700, margin: '4px 0' }}>{group.label}</div>
-                {group.options.map((opt) => (
-                  <label key={opt} className="form-checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="required_documents"
-                      value={opt}
-                      checked={(formData.required_documents || []).includes(opt)}
-                      onChange={handleChange}
-                    />
-                    {opt}
-                  </label>
-                ))}
-              </div>
+            {REQUIRED_DOCUMENT_GROUPS.map((group, index) => (
+              <React.Fragment key={group.label}>
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontWeight: 700, margin: '4px 0' }}>{group.label}</div>
+                  {group.options.map((opt) => (
+                    <label key={opt} className="form-checkbox-label">
+                      <input
+                        type="checkbox"
+                        name="required_documents"
+                        value={opt}
+                        checked={(formData.required_documents || []).includes(opt)}
+                        onChange={handleChange}
+                      />
+                      {opt}
+                    </label>
+                  ))}
+                </div>
+                {index === 0 && deckDocumentOptions.length > 0 && (
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ fontWeight: 700, margin: '4px 0' }}>Radio Certificates</div>
+                    {deckDocumentOptions.map((opt) => (
+                      <label key={opt} className="form-checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="required_documents"
+                          value={opt}
+                          checked={(formData.required_documents || []).includes(opt)}
+                          onChange={handleChange}
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </React.Fragment>
             ))}
           </div>
         </div>

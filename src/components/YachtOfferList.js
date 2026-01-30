@@ -1297,11 +1297,15 @@ useEffect(() => {
                     const teammateScore = Number(String(offer.match_teammate_score).replace('%','')) || 0;
                     const normalizedRequiredDocs = (() => {
                       const raw = offer.required_documents;
-                      if (Array.isArray(raw)) return raw;
-                      if (typeof raw === 'string') {
-                        return raw.split(',').map((doc) => doc.trim()).filter(Boolean);
-                      }
-                      return [];
+                      const docs = Array.isArray(raw)
+                        ? raw
+                        : typeof raw === 'string'
+                          ? raw.split(',').map((doc) => doc.trim()).filter(Boolean)
+                          : [];
+                      return [
+                        ...(offer.engineering_license ? [offer.engineering_license] : []),
+                        ...docs,
+                      ];
                     })();
                     return (
                       <div
