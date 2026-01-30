@@ -345,10 +345,15 @@ useEffect(() => {
 }, [initialValues]);
 
 useEffect(() => {
-  if (typeof initialValues?.engineering_license === 'undefined') return;
+  const arr = Array.isArray(initialValues?.required_engineering_licenses)
+    ? initialValues.required_engineering_licenses
+    : Array.isArray(initialValues?.engineering_license)
+      ? [initialValues.engineering_license]
+      : null;
+  if (!arr) return;
   setFormData(prev => ({
     ...prev,
-    engineering_license: initialValues.engineering_license || '',
+    engineering_license: arr[0] || '',
   }));
 }, [initialValues]);
 

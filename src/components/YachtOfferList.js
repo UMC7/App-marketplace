@@ -1302,8 +1302,11 @@ useEffect(() => {
                         : typeof raw === 'string'
                           ? raw.split(',').map((doc) => doc.trim()).filter(Boolean)
                           : [];
+                      const engineLic = Array.isArray(offer.required_engineering_licenses)
+                        ? offer.required_engineering_licenses[0]
+                        : null;
                       return [
-                        ...(offer.engineering_license ? [offer.engineering_license] : []),
+                        ...(engineLic ? [engineLic] : []),
                         ...docs,
                       ];
                     })();
