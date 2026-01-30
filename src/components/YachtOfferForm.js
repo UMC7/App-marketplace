@@ -150,9 +150,6 @@ const DECK_LICENSE_MAP = {
     'Yachtmaster',
   ],
   Skipper: [
-    'Master Unlimited',
-    'Master Yachts 3000 GT',
-    'Master Yachts 500 GT',
     'Master Yachts 200 GT',
     'Yachtmaster',
   ],
@@ -164,9 +161,6 @@ const DECK_LICENSE_MAP = {
     'Yachtmaster',
   ],
   'Chase Boat Captain': [
-    'Master Unlimited',
-    'Master Yachts 3000 GT',
-    'Master Yachts 500 GT',
     'Master Yachts 200 GT',
     'Yachtmaster',
   ],
@@ -231,9 +225,9 @@ const ENGINEERING_LICENSE_FIELD_OPTIONS = [
 const DECK_DOCUMENT_MAP = {
   Captain: ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
   'Captain/Engineer': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
-  Skipper: ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  Skipper: ['GMDSS ROC', 'VHF SRC'],
   'Relief Captain': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
-  'Chase Boat Captain': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  'Chase Boat Captain': ['GMDSS ROC', 'VHF SRC'],
   'Chief Officer': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
   '2nd Officer': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
   '3rd Officer': ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
