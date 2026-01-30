@@ -54,6 +54,7 @@ const ENGINEERING_RANKS = [
   '2nd Engineer',
   '3rd Engineer',
   'Solo Engineer',
+  'Engineer',
   'Electrician',
 ];
 
@@ -72,6 +73,46 @@ const ENGINEERING_LICENSE_OPTIONS = [
   'AEC 1 - Approved Engine Course 1',
   'MEOL (Yachts) - Marine Engine Operator Licence',
 ];
+
+const ELECTRICIAN_LICENSE_OPTIONS = [
+  'Engineering Officer of the Watch (EOOW) - STCW III/1',
+  'MEO (Yachts) - Marine Engine Operator Licence',
+  'AEC 2 - Approved Engine Course 2',
+  'AEC 1 - Approved Engine Course 1',
+];
+
+const SOLO_ENGINEER_EXCLUSIONS = new Set([
+  'Chief Engineer Unlimited - STCW III/2',
+  'Engineering Officer of the Watch (EOOW) - STCW III/1',
+  'Y1 - Yacht Engineer (Unlimited)',
+  'Second Engineer Unlimited - STCW III/2',
+]);
+
+const ENGINEERING_LICENSE_EXCLUSIONS = {
+  'Chief Engineer': new Set([
+    'AEC 2 - Approved Engine Course 2',
+    'AEC 1 - Approved Engine Course 1',
+    'Engineering Officer of the Watch (EOOW) - STCW III/1',
+    'Second Engineer Unlimited - STCW III/2',
+  ]),
+  '3rd Engineer': new Set([
+    'Chief Engineer Unlimited - STCW III/2',
+    'Y1 - Yacht Engineer (Unlimited)',
+  ]),
+  'Solo Engineer': SOLO_ENGINEER_EXCLUSIONS,
+  Engineer: SOLO_ENGINEER_EXCLUSIONS,
+};
+
+const getEngineeringLicenseOptionsForRank = (rank) => {
+  if (rank === 'Electrician') {
+    return ELECTRICIAN_LICENSE_OPTIONS;
+  }
+  const exclusions = ENGINEERING_LICENSE_EXCLUSIONS[rank];
+  if (!exclusions) {
+    return ENGINEERING_LICENSE_OPTIONS;
+  }
+  return ENGINEERING_LICENSE_OPTIONS.filter((opt) => !exclusions.has(opt));
+};
 
 const DECK_LICENSE_RANKS = [
   'Captain',
@@ -199,11 +240,11 @@ const DECK_DOCUMENT_MAP = {
   Mate: ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
   Bosun: ['VHF SRC'],
   'Lead Deckhand': ['VHF SRC'],
-  Deckhand: ['VHF SRC'],
-  'Deck/Steward(ess)': ['VHF SRC'],
-  'Deck/Carpenter': ['VHF SRC'],
-  'Deck/Divemaster': ['VHF SRC'],
-  'Deck/Cook': ['VHF SRC'],
+  Deckhand: ['VHF SRC (preferred / plus)'],
+  'Deck/Steward(ess)': ['VHF SRC (optional)'],
+  'Deck/Carpenter': ['VHF SRC (optional)'],
+  'Deck/Divemaster': ['VHF SRC (optional)'],
+  'Deck/Cook': ['VHF SRC (optional)'],
 };
 const getDeckDocumentOptionsForRank = (rank) => DECK_DOCUMENT_MAP[rank] || [];
 
@@ -281,7 +322,7 @@ const initialState = {
   visas: [],
 };
 
-const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain', 'Chief Officer', '2nd Officer', '3rd Officer', 'Bosun', 'Deck/Engineer', 'Mate', 'Lead Deckhand', 'Deckhand', 'Deck/Steward(ess)', 'Deck/Carpenter', 'Deck/Divemaster', 'Deck/Cook', 'Dayworker', 'Chief Engineer', '2nd Engineer', '3rd Engineer', 'Solo Engineer', 'Electrician', 'Chef', 'Head Chef', 'Sous Chef', 'Solo Chef', 'Cook/Crew Chef', 'Crew Chef/Stew', 'Chef/Steward(ess)', 'Butler', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Steward(ess)', '4th Steward(ess)', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Housekeeper', 'Head of Housekeeping', 'Cook/Stew/Deck', 'Cook/Steward(ess)', 'Stew/Deck', 'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Steward(ess)/Nanny', 'Nanny', 'Videographer', 'Yoga/Pilates Instructor', 'Personal Trainer', 'Dive Instrutor', 'Water Sport Instrutor', 'Nurse', 'Other']; // ajusta según lista oficial
+const titles = ['Captain', 'Captain/Engineer', 'Skipper', 'Chase Boat Captain', 'Relief Captain', 'Chief Officer', '2nd Officer', '3rd Officer', 'Bosun', 'Deck/Engineer', 'Mate', 'Lead Deckhand', 'Deckhand', 'Deck/Steward(ess)', 'Deck/Carpenter', 'Deck/Divemaster', 'Deck/Cook', 'Dayworker', 'Chief Engineer', '2nd Engineer', '3rd Engineer', 'Solo Engineer', 'Engineer', 'Electrician', 'Chef', 'Head Chef', 'Sous Chef', 'Solo Chef', 'Cook/Crew Chef', 'Crew Chef/Stew', 'Chef/Steward(ess)', 'Butler', 'Steward(ess)', 'Chief Steward(ess)', '2nd Steward(ess)', '3rd Steward(ess)', '4th Steward(ess)', 'Solo Steward(ess)', 'Junior Steward(ess)', 'Housekeeper', 'Head of Housekeeping', 'Cook/Stew/Deck', 'Cook/Steward(ess)', 'Stew/Deck', 'Laundry/Steward(ess)', 'Stew/Masseur', 'Masseur', 'Hairdresser/Barber', 'Steward(ess)/Nanny', 'Nanny', 'Videographer', 'Yoga/Pilates Instructor', 'Personal Trainer', 'Dive Instrutor', 'Water Sport Instrutor', 'Nurse', 'Other']; // ajusta según lista oficial
 
 const countries = [
   // 🌐 Countries
@@ -599,7 +640,7 @@ const needsDeckLicense = DECK_LICENSE_RANKS.includes(formData.title);
 const showLicenseFields = needsEngineeringLicense || needsDeckLicense;
 const showEngineeringLicenseField = ENGINEERING_LICENSE_FIELD_RANKS.includes(formData.title);
 const licenseOptions = needsEngineeringLicense
-  ? ENGINEERING_LICENSE_OPTIONS
+  ? getEngineeringLicenseOptionsForRank(formData.title)
   : needsDeckLicense
     ? getDeckLicenseOptionsForRank(formData.title)
     : [];
