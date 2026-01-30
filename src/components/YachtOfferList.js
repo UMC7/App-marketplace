@@ -2161,8 +2161,7 @@ useEffect(() => {
             style={{ width: '50%', borderRadius: 8, marginTop: 12, display: 'block', marginLeft: 'auto', marginRight: 'auto' }}
           />
           <p className="direct-apply-link">
-            📍 Puedes encontrarlo en<br />
-            Profile → Candidate Profile.
+            📍 You can find it under Profile → Candidate Profile.
           </p>
           <div
             style={{
