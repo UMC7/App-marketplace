@@ -50,7 +50,6 @@ const getDaysInMonth = (monthValue) => {
 };
 
 const ENGINEERING_RANKS = [
-  'Deck/Engineer',
   'Chief Engineer',
   '2nd Engineer',
   '3rd Engineer',
@@ -84,6 +83,7 @@ const DECK_LICENSE_RANKS = [
   '2nd Officer',
   '3rd Officer',
   'Bosun',
+  'Deck/Engineer',
   'Mate',
   'Lead Deckhand',
   'Deckhand',
@@ -156,6 +156,10 @@ const DECK_LICENSE_MAP = {
     'Yachtmaster',
   ],
   Bosun: [
+    'OOW Yachts 3000 GT',
+    'Yachtmaster',
+  ],
+  'Deck/Engineer': [
     'OOW Yachts 3000 GT',
     'Yachtmaster',
   ],
