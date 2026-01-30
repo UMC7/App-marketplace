@@ -245,6 +245,7 @@ const DECK_DOCUMENT_MAP = {
   'Deck/Carpenter': ['VHF SRC (optional)'],
   'Deck/Divemaster': ['VHF SRC (optional)'],
   'Deck/Cook': ['VHF SRC (optional)'],
+  'Deck/Engineer': ['VHF SRC'],
 };
 const getDeckDocumentOptionsForRank = (rank) => DECK_DOCUMENT_MAP[rank] || [];
 
