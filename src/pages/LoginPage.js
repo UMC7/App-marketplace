@@ -86,7 +86,7 @@ function LoginPage() {
             onClick={() => setShowRecovery(!showRecovery)}
             className="forgot-password-btn"
           >
-            {showRecovery ? 'Hide recovery' : '¿Forgot your password?'}
+            {showRecovery ? 'Hide recovery' : 'Forgot your password?'}
           </button>
         </div>
 
