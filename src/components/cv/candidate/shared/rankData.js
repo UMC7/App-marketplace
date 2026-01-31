@@ -49,6 +49,7 @@ export const RANKS_BY_DEPT = {
     "Junior Steward(ess)",
     "Laundry/Steward(ess)",
     "Stew/Deck",
+    "Stew/Masseur",
     "Dayworker",
   ],
   Other: [
@@ -56,7 +57,6 @@ export const RANKS_BY_DEPT = {
     "Dive Instructor",
     "Water Sport Instructor",
     "Masseur",
-    "Stew/Masseur",
     "Hairdresser/Barber",
     "Nanny",
     "Yoga/Pilates Instructor",

@@ -20,6 +20,7 @@ import {
   CHASE_BOAT_SIZES,
   VISA_OPTIONS,
   COUNTRIES,
+  DEPARTMENT_RANK_GROUPS,
 } from './yachtOfferForm.constants';
 import CustomMultiSelect from './CustomMultiSelect';
 import RequiredDocumentsSelect from './RequiredDocumentsSelect';
@@ -823,7 +824,13 @@ const derivedEndDate = (() => {
       required
     >
       <option value="">Select...</option>
-      {titles.map((t) => <option key={t} value={t}>{t}</option>)}
+      {DEPARTMENT_RANK_GROUPS.map((group) => (
+        <optgroup key={group.label} label={group.label}>
+          {group.ranks.map((rank) => (
+            <option key={rank} value={rank}>{rank}</option>
+          ))}
+        </optgroup>
+      ))}
     </select>
 
     {showLicenseFields && (
@@ -950,7 +957,13 @@ const derivedEndDate = (() => {
       className={highlightClass(formData.team === 'Yes' && !formData.teammate_rank)}
     >
       <option value="">Select...</option>
-      {titles.map((t) => <option key={t} value={t}>{t}</option>)}
+      {DEPARTMENT_RANK_GROUPS.map((group) => (
+        <optgroup key={group.label} label={group.label}>
+          {group.ranks.map((rank) => (
+            <option key={rank} value={rank}>{rank}</option>
+          ))}
+        </optgroup>
+      ))}
     </select>
 
     <label>Teammate Experience:</label>
