@@ -330,6 +330,93 @@ export const DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS = [
   },
 ];
 
+export const DECK_ENGINEER_REQUIRED_DOCUMENT_GROUPS = [
+  {
+    label: 'Commonly Required',
+    options: [
+      'Valid Passport (>6 months validity)',
+      'Reference Letter',
+      "Seaman's Book",
+      'ENG1 Seafarer Medical Certificate',
+      'STCW Basic Training (A-VI/1)',
+      "Driver's License",
+    ],
+  },
+  {
+    label: 'Administrative / Compliance',
+    options: ['Background Check - DBS / Police Clearance', 'Flag State Endorsement'],
+  },
+  {
+    label: 'Travel / Health',
+    options: ['Vaccination - Yellow Fever', 'Vaccination - COVID'],
+  },
+  {
+    label: 'Radio Certificates',
+    options: ['VHF SRC'],
+  },
+  {
+    label: 'MCA Modules (Deck)',
+    options: [
+      'Efficient Deck Hand (EDH)',
+      'General Ship Knowledge (GSK)',
+      'HELM — Operational Level',
+      'MCA Yacht Rating Certificate',
+    ],
+  },
+  {
+    label: 'Tender & PWC',
+    options: [
+      'Powerboat Level 2 / Tender Operator',
+      'PWC (Personal Watercraft)',
+      'PWC Instructor',
+    ],
+  },
+];
+
+export const DAYWORKER_REQUIRED_DOCUMENT_GROUPS = [
+  {
+    label: 'Commonly Required',
+    options: [
+      'Valid Passport (>6 months validity)',
+      'Reference Letter',
+      "Seaman's Book",
+      'ENG1 Seafarer Medical Certificate',
+      'STCW Basic Training (A-VI/1)',
+      "Driver's License",
+    ],
+  },
+];
+
+export const ENGINEERING_REQUIRED_DOCUMENT_GROUPS = [
+  {
+    label: 'Commonly Required',
+    options: [
+      'Valid Passport (>6 months validity)',
+      'Reference Letter',
+      "Seaman's Book",
+      'ENG1 Seafarer Medical Certificate',
+      'STCW Basic Training (A-VI/1)',
+      "Driver's License",
+    ],
+  },
+  {
+    label: 'Administrative / Compliance',
+    options: ['Background Check - DBS / Police Clearance', 'Flag State Endorsement'],
+  },
+  {
+    label: 'Travel / Health',
+    options: ['Vaccination - Yellow Fever', 'Vaccination - COVID'],
+  },
+  {
+    label: 'Tender & PWC',
+    options: [
+      'Powerboat Level 2 / Tender Operator',
+      'PWC (Personal Watercraft)',
+      'PWC Instructor',
+    ],
+  },
+];
+
 export const RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS = {
   Captain: CAPTAIN_REQUIRED_DOCUMENT_GROUPS,
   'Captain/Engineer': CAPTAIN_REQUIRED_DOCUMENT_GROUPS,
@@ -347,6 +434,14 @@ export const RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS = {
   'Deck/Carpenter': DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS,
   'Deck/Divemaster': DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS,
   'Deck/Cook': DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS,
+  Dayworker: DAYWORKER_REQUIRED_DOCUMENT_GROUPS,
+  'Chief Engineer': ENGINEERING_REQUIRED_DOCUMENT_GROUPS,
+  '2nd Engineer': ENGINEERING_REQUIRED_DOCUMENT_GROUPS,
+  '3rd Engineer': ENGINEERING_REQUIRED_DOCUMENT_GROUPS,
+  Engineer: ENGINEERING_REQUIRED_DOCUMENT_GROUPS,
+  'Solo Engineer': ENGINEERING_REQUIRED_DOCUMENT_GROUPS,
+  Electrician: ENGINEERING_REQUIRED_DOCUMENT_GROUPS,
+  'Deck/Engineer': DECK_ENGINEER_REQUIRED_DOCUMENT_GROUPS,
 };
 
 export const GALLEY_REQUIRED_DOCUMENT_GROUPS = [
