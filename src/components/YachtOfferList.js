@@ -32,7 +32,7 @@ const getRoleImage = (title) => {
   ].some(role => lowerTitle.includes(role))) return 'deckdepartment';
 
   if ([
-    'chief engineer', '2nd engineer', '3rd engineer', 'solo engineer', 'electrician'
+    'chief engineer', '2nd engineer', '3rd engineer', 'solo engineer', 'engineer', 'electrician'
   ].some(role => lowerTitle.includes(role))) return 'enginedepartment';
 
   if ([
