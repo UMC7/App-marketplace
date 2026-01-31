@@ -142,6 +142,77 @@ export const REQUIRED_DOCUMENT_GROUPS = [
   },
 ];
 
+export const CAPTAIN_TIER_DECK_RANKS = ['Captain','Captain/Engineer','Skipper','Relief Captain'];
+
+export const CAPTAIN_REQUIRED_DOCUMENT_GROUPS = [
+  {
+    label: 'Commonly Required',
+    options: [
+      'Valid Passport (>6 months validity)',
+      'Reference Letter',
+      "Seaman's Book",
+      'ENG1 Seafarer Medical Certificate',
+      'STCW Basic Training (A-VI/1)',
+      "Driver's License",
+    ],
+  },
+  {
+    label: 'Administrative / Compliance',
+    options: ['Background Check - DBS / Police Clearance', 'Flag State Endorsement'],
+  },
+  {
+    label: 'Travel / Health',
+    options: ['Vaccination - Yellow Fever', 'Vaccination - COVID'],
+  },
+  {
+    label: 'Radio Certificates',
+    options: ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
+  },
+  {
+    label: 'STCW Certificates',
+    options: [
+      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
+      'Proficiency in Survival Craft & Rescue Boats (PSCRB) - A-VI/2-1',
+      'Fast Rescue Boats - A-VI/2-2',
+      'Advanced Fire Fighting - A-VI/3',
+      'Medical First Aid - A-VI/4-1',
+      'Medical Care - A-VI/4-2',
+      'Security Awareness - A-VI/6-1',
+      'Designated Security Duties (DSD) - A-VI/6-2',
+    ],
+  },
+  {
+    label: 'STCW Passenger / Management',
+    options: [
+      'Crowd Management - A-V/2',
+      'Crisis Management & Human Behaviour - A-V/2-2',
+      'Passenger Ship Safety Training',
+    ],
+  },
+  {
+    label: 'MCA Modules (Deck)',
+    options: ['Navigation, Radar & ARPA (OOW)', 'ECDIS — Electronic Chart Display'],
+  },
+  {
+    label: 'Yacht Helicopter Ops',
+    options: [
+      'Helicopter Landing Officer (HLO)',
+      'Helideck Emergency Response Team Leader (HERTL)',
+    ],
+  },
+  {
+    label: 'Tender & PWC',
+    options: ['PWC Instructor'],
+  },
+];
+
+export const RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS = {
+  Captain: CAPTAIN_REQUIRED_DOCUMENT_GROUPS,
+  'Captain/Engineer': CAPTAIN_REQUIRED_DOCUMENT_GROUPS,
+  Skipper: CAPTAIN_REQUIRED_DOCUMENT_GROUPS,
+  'Relief Captain': CAPTAIN_REQUIRED_DOCUMENT_GROUPS,
+};
+
 export const GALLEY_REQUIRED_DOCUMENT_GROUPS = [
   {
     label: 'Commonly Required',

@@ -13,6 +13,8 @@ import {
   ENGINEERING_LICENSE_FIELD_RANKS,
   ENGINEERING_LICENSE_FIELD_OPTIONS,
   REQUIRED_DOCUMENT_GROUPS,
+  CAPTAIN_TIER_DECK_RANKS,
+  RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS,
   GALLEY_REQUIRED_DOCUMENT_GROUPS,
   INTERIOR_DEPARTMENT_RANKS,
   INTERIOR_REQUIRED_DOCUMENT_GROUPS,
@@ -374,19 +376,23 @@ const licenseOptions = needsEngineeringLicense
     ? getDeckLicenseOptionsForRank(formData.title)
     : [];
 const engineeringLicenseFieldOptions = ENGINEERING_LICENSE_FIELD_OPTIONS;
-const deckDocumentOptions = needsDeckLicense ? getDeckDocumentOptionsForRank(formData.title) : [];
+const isCaptainTierDeckRank = CAPTAIN_TIER_DECK_RANKS.includes(formData.title);
+const deckDocumentOptions = needsDeckLicense && !isCaptainTierDeckRank ? getDeckDocumentOptionsForRank(formData.title) : [];
 const isGalleyDepartmentRank = GALLEY_DEPARTMENT_RANKS.includes(formData.title);
 const isInteriorDepartmentRank = INTERIOR_DEPARTMENT_RANKS.includes(formData.title);
 const isOthersDepartmentRank = OTHERS_DEPARTMENT_RANKS.includes(formData.title);
 const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
-const requiredDocumentGroups = isGalleyDepartmentRank
-  ? GALLEY_REQUIRED_DOCUMENT_GROUPS
-  : isInteriorDepartmentRank
-    ? INTERIOR_REQUIRED_DOCUMENT_GROUPS
-    : isOthersDepartmentRank
-      ? OTHERS_REQUIRED_DOCUMENT_GROUPS
-      : REQUIRED_DOCUMENT_GROUPS;
+const specialRequiredDocumentGroups = RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS[formData.title];
+const requiredDocumentGroups = specialRequiredDocumentGroups
+  ? specialRequiredDocumentGroups
+  : isGalleyDepartmentRank
+    ? GALLEY_REQUIRED_DOCUMENT_GROUPS
+    : isInteriorDepartmentRank
+      ? INTERIOR_REQUIRED_DOCUMENT_GROUPS
+      : isOthersDepartmentRank
+        ? OTHERS_REQUIRED_DOCUMENT_GROUPS
+        : REQUIRED_DOCUMENT_GROUPS;
 
 const renderRequiredDocsSummary = () => null;
 
