@@ -23,7 +23,7 @@ export const titles = [
   'Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster',
   'Deck/Cook','Dayworker',
   'Chief Engineer','2nd Engineer','3rd Engineer','Solo Engineer','Engineer','Electrician',
-  'Chef','Head Chef','Sous Chef','Solo Chef','Cook/Crew Chef','Crew Chef/Stew','Chef/Steward(ess)',
+  'Chef','Head Chef','Sous Chef','Solo Chef','Cook','Cook/Crew Chef','Crew Chef/Stew','Chef/Steward(ess)',
   'Butler','Steward(ess)','Chief Steward(ess)','2nd Steward(ess)','3rd Steward(ess)',
   '4th Steward(ess)','Solo Steward(ess)','Junior Steward(ess)',
   'Housekeeper','Head of Housekeeping',
@@ -48,7 +48,7 @@ export const DECK_LICENSE_RANKS = [
 ];
 
 export const GALLEY_DEPARTMENT_RANKS = [
-  'Chef','Head Chef','Sous Chef','Solo Chef','Cook/Crew Chef','Crew Chef/Stew','Chef/Steward(ess)'
+  'Chef','Head Chef','Sous Chef','Solo Chef','Cook','Cook/Crew Chef','Crew Chef/Stew','Chef/Steward(ess)'
 ];
 
 export const ENGINEERING_LICENSE_OPTIONS = [
@@ -342,6 +342,7 @@ export const DEPARTMENT_RANK_GROUPS = [
       'Sous Chef',
       'Chef',
       'Solo Chef',
+      'Cook',
       'Cook/Crew Chef',
       'Crew Chef/Stew',
       'Chef/Steward(ess)',
