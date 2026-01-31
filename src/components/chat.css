@@ -351,7 +351,13 @@ body.dark-mode .chat-back-btn {
 .dark-mode .chat-header { background: #111827; border-bottom: 1px solid #222; }
 .dark-mode .chat-messages { background-color: #121212; }
 .dark-mode .chat-message.own { background-color: #3a3a3a; color: #ddd; }
-.dark-mode .chat-message.other { background-color: var(--accent-color); color: white; }
+.dark-mode .chat-message.other {
+  background-color: #262626;
+  color: #EDEDED;
+  border: 1px solid #4FB6B8;
+}
+.dark-mode .chat-message.other .chat-message-sender,
+.dark-mode .chat-message.other .chat-message-time { color: #B0B0B0; }
 .dark-mode .chat-message.system { background-color: #2b2b2b; color: #e5e7eb; }
 .dark-mode .chat-message-sender { color: #bbb; }
 .dark-mode .chat-file-link { color: #FFD700 !important; }
