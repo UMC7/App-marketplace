@@ -10,88 +10,30 @@ import {
   ENGINEERING_RANKS,
   DECK_LICENSE_RANKS,
   GALLEY_DEPARTMENT_RANKS,
-  ENGINEERING_LICENSE_OPTIONS,
-  ELECTRICIAN_LICENSE_OPTIONS,
   ENGINEERING_LICENSE_FIELD_RANKS,
   ENGINEERING_LICENSE_FIELD_OPTIONS,
-  DECK_LICENSE_MAP,
-  DECK_DOCUMENT_MAP,
   REQUIRED_DOCUMENT_GROUPS,
   GALLEY_REQUIRED_DOCUMENT_GROUPS,
   INTERIOR_DEPARTMENT_RANKS,
   INTERIOR_REQUIRED_DOCUMENT_GROUPS,
+  DEFAULT_YACHT_SIZES,
+  CHASE_BOAT_SIZES,
+  VISA_OPTIONS,
+  COUNTRIES,
 } from './yachtOfferForm.constants';
+import CustomMultiSelect from './CustomMultiSelect';
+import RequiredDocumentsSelect from './RequiredDocumentsSelect';
+import RemarksField from './RemarksField';
+import {
+  getInferredYear,
+  getDaysInMonth,
+  readJsonResponse,
+  adjustRemarksTextareaHeight,
+  getEngineeringLicenseOptionsForRank,
+  getDeckLicenseOptionsForRank,
+  getDeckDocumentOptionsForRank,
+} from './yachtOfferForm.utils';
 
-const defaultYachtSizes = [
-  "0 - 30m", "31 - 40m", "41 - 50m", "51 - 70m", "71 - 100m", ">100m"
-];
-
-const chaseBoatSizes = [
-  "<10m", "10 - 15m", "15 - 20m", ">20m"
-];
-
-const visaOptions = [
-  'Green card or US Citizen',
-  'B1/B2',
-  'C1/D',
-  'Schengen',
-  'European Passport'
-];
-
-const getInferredYear = (monthValue) => {
-  const month = Number(monthValue);
-  if (!month) return null;
-  const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  return month >= currentMonth ? now.getFullYear() : now.getFullYear() + 1;
-};
-
-const getDaysInMonth = (monthValue) => {
-  const month = Number(monthValue);
-  if (!month) return 31;
-  const year = getInferredYear(monthValue) || new Date().getFullYear();
-  return new Date(year, month, 0).getDate();
-};
-
-const COMMAND_RANKS = ENGINEERING_RANKS;
-
-const SOLO_ENGINEER_EXCLUSIONS = new Set([
-  'Chief Engineer Unlimited - STCW III/2',
-  'Engineering Officer of the Watch (EOOW) - STCW III/1',
-  'Y1 - Yacht Engineer (Unlimited)',
-  'Second Engineer Unlimited - STCW III/2',
-]);
-
-const ENGINEERING_LICENSE_EXCLUSIONS = {
-  'Chief Engineer': new Set([
-    'AEC 2 - Approved Engine Course 2',
-    'AEC 1 - Approved Engine Course 1',
-    'Engineering Officer of the Watch (EOOW) - STCW III/1',
-    'Second Engineer Unlimited - STCW III/2',
-  ]),
-  '3rd Engineer': new Set([
-    'Chief Engineer Unlimited - STCW III/2',
-    'Y1 - Yacht Engineer (Unlimited)',
-  ]),
-  'Solo Engineer': SOLO_ENGINEER_EXCLUSIONS,
-  Engineer: SOLO_ENGINEER_EXCLUSIONS,
-};
-
-const getEngineeringLicenseOptionsForRank = (rank) => {
-  if (rank === 'Electrician') {
-    return ELECTRICIAN_LICENSE_OPTIONS;
-  }
-  const exclusions = ENGINEERING_LICENSE_EXCLUSIONS[rank];
-  if (!exclusions) {
-    return ENGINEERING_LICENSE_OPTIONS;
-  }
-  return ENGINEERING_LICENSE_OPTIONS.filter((opt) => !exclusions.has(opt));
-};
-
-
-const getDeckLicenseOptionsForRank = (rank) => DECK_LICENSE_MAP[rank] || [];
-
-const getDeckDocumentOptionsForRank = (rank) => DECK_DOCUMENT_MAP[rank] || [];
 
 const initialState = {
   work_environment: '',
@@ -143,22 +85,6 @@ const initialState = {
   visas: [],
 };
 
-
-const countries = [
-  // 🌐 Countries
-  "Albania", "Anguilla", "Antigua and Barbuda", "Argentina", "Aruba", "Australia", "Bahamas", "Bahrain", "Barbados",
-  "Belgium", "Belize", "Bermuda (UK)", "Bonaire", "Brazil", "Brunei", "Bulgaria", "BVI (UK)", "Cambodia", "Canada", "Cape Verde", "Cayman Islands (UK)",
-  "Chile", "China", "Colombia", "Costa Rica", "Croatia", "Cuba", "Curacao", "Cyprus", "Denmark", "Dominica",
-  "Dominican Republic", "Ecuador", "Egypt", "Estonia", "Fiji", "Finland", "France", "Germany", "Gibraltar (UK)", "Greece", "Grenada", "Guatemala", "Guernsey (UK)", "Honduras", "India", "Indonesia", "Ireland", "Israel", "Isle of Man (UK)",
-  "Italy", "Jamaica", "Japan", "Jersey (UK)", "Kiribati", "Kuwait", "Latvia", "Libya", "Lithuania", "Madagascar",
-  "Malaysia", "Maldives", "Malta", "Marshall Islands", "Mauritius", "Mexico", "Micronesia",
-  "Monaco", "Montenegro", "Morocco", "Myanmar", "Netherlands", "New Zealand", "Nicaragua",
-  "Norway", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Saint Barthélemy", "Saint Kitts and Nevis",
-  "Saint Lucia", "Saint Maarten", "Saint Vincent and the Grenadines", "Samoa", "Saudi Arabia", "Seychelles",
-  "Singapore", "Solomon Islands", "South Africa", "South Korea", "Spain", "Sweden", "Taiwan",
-  "Thailand", "Trinidad and Tobago", "Tunisia", "Turkey", "United Arab Emirates", "United Kingdom",
-  "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"
-];
 
 
 function YachtOfferForm({ user, onOfferPosted, initialValues, mode }) {
@@ -265,24 +191,6 @@ useEffect(() => {
     document.removeEventListener('keydown', handleEsc);
   };
 }, []);
-
-const readJsonResponse = async (res) => {
-  const contentType = res.headers.get('content-type') || '';
-  const text = await res.text();
-
-  if (!contentType.includes('application/json')) {
-    if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<!doctype')) {
-      throw new Error('API not available in local dev. Use Vercel dev or deploy.');
-    }
-    throw new Error('Unexpected API response.');
-  }
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error('Invalid JSON response.');
-  }
-};
 
 // YachtOfferForm.js
 const autoFillFromText = async () => {
@@ -477,27 +385,6 @@ const requiredDocumentGroups = isGalleyDepartmentRank
 const renderRequiredDocsSummary = () => null;
 
 const highlightClass = (missing) => (showMissing && missing ? 'missing-required' : '');
-const adjustRemarksTextareaHeight = (el) => {
-  if (!el) return;
-  const doc = typeof document !== 'undefined' ? document : null;
-  const scrollContainer =
-    el.closest?.('.modal-content-wrapper') ||
-    doc?.scrollingElement ||
-    doc?.documentElement;
-  const previousScrollTop = scrollContainer ? scrollContainer.scrollTop : null;
-  el.style.height = 'auto';
-  el.style.height = `${el.scrollHeight}px`;
-  if (scrollContainer) {
-    const restoreScroll = () => {
-      scrollContainer.scrollTop = previousScrollTop ?? 0;
-    };
-    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
-      window.requestAnimationFrame(restoreScroll);
-    } else {
-      restoreScroll();
-    }
-  }
-};
 const autoResizeTextarea = (e) => adjustRemarksTextareaHeight(e.target);
 
 const handleRemarksInput = (e) => {
@@ -543,7 +430,7 @@ const formReady = (() => {
 })();
 
   const yachtSizeOptions =
-  formData.title === 'Chase Boat Captain' ? chaseBoatSizes : defaultYachtSizes;
+  formData.title === 'Chase Boat Captain' ? CHASE_BOAT_SIZES : DEFAULT_YACHT_SIZES;
 
   const handleChange = (e) => {
   const { name, value, type, checked } = e.target;
@@ -970,62 +857,15 @@ const derivedEndDate = (() => {
       </>
     )}
 
-    <label htmlFor="required-docs-trigger">Required Documents / Certifications:</label>
-    <div
-      className={`custom-multiselect ${showRequiredDocs ? 'open' : ''}`}
-      ref={requiredDocsRef}
-    >
-      <button
-        type="button"
-        id="required-docs-trigger"
-        className="multiselect-trigger"
-        onClick={() => setShowRequiredDocs((v) => !v)}
-      >
-        {(formData.required_documents || []).length > 0
-          ? (formData.required_documents || []).join(', ')
-          : 'Select...'}
-        <span className={`caret ${showRequiredDocs ? 'up' : ''}`} aria-hidden>?</span>
-      </button>
-
-      <div className="multiselect-options">
-        {requiredDocumentGroups.map((group, index) => (
-          <React.Fragment key={group.label}>
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ fontWeight: 700, margin: '4px 0' }}>{group.label}</div>
-              {group.options.map((opt) => (
-                <label key={opt} className="form-checkbox-label">
-                  <input
-                    type="checkbox"
-                    name="required_documents"
-                    value={opt}
-                    checked={(formData.required_documents || []).includes(opt)}
-                    onChange={handleChange}
-                  />
-                  {opt}
-                </label>
-              ))}
-            </div>
-            {index === 0 && deckDocumentOptions.length > 0 && (
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ fontWeight: 700, margin: '4px 0' }}>Radio Certificates</div>
-                {deckDocumentOptions.map((opt) => (
-                  <label key={opt} className="form-checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="required_documents"
-                      value={opt}
-                      checked={(formData.required_documents || []).includes(opt)}
-                      onChange={handleChange}
-                    />
-                    {opt}
-                  </label>
-                ))}
-              </div>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-    </div>
+    <RequiredDocumentsSelect
+      open={showRequiredDocs}
+      onToggle={() => setShowRequiredDocs((v) => !v)}
+      selectedDocuments={formData.required_documents || []}
+      onChange={handleChange}
+      requiredDocumentGroups={requiredDocumentGroups}
+      deckDocumentOptions={deckDocumentOptions}
+      containerRef={requiredDocsRef}
+    />
 
     {/* 3. Años en el cargo */}
     <label>Time in Rank:</label>
@@ -1194,37 +1034,18 @@ const derivedEndDate = (() => {
   </select>
 </div>
 
-  {/* Campo Visas */}
-<label htmlFor="visas-trigger">Visa(s):</label>
-<div
-  className={`custom-multiselect ${showVisas ? 'open' : ''}`}
-  ref={visasRef}
->
-  <button
-    type="button"
-    id="visas-trigger"
-    className="multiselect-trigger"
-    onClick={() => setShowVisas((v) => !v)}
-  >
-    {formData.visas.length > 0 ? formData.visas.join(', ') : 'Select...'}
-    <span className={`caret ${showVisas ? 'up' : ''}`} aria-hidden>▾</span>
-  </button>
-
-  <div className="multiselect-options">
-    {visaOptions.map((visa) => (
-      <label key={visa} className="form-checkbox-label">
-        <input
-          type="checkbox"
-          name="visas"
-          value={visa}
-          checked={formData.visas.includes(visa)}
-          onChange={handleChange}
-        />
-        {visa}
-      </label>
-    ))}
-  </div>
-</div>
+    {/* Campo Visas */}
+    <CustomMultiSelect
+      label="Visa(s):"
+      triggerId="visas-trigger"
+      open={showVisas}
+      onToggle={() => setShowVisas((v) => !v)}
+      selected={formData.visas}
+      groups={[{ label: '', options: VISA_OPTIONS }]}
+      name="visas"
+      onChange={handleChange}
+      containerRef={visasRef}
+    />
 
     {/* 9. Tipo */}
     <label>Terms: <span style={{ color: 'red' }}>*</span></label>
@@ -1471,9 +1292,9 @@ const derivedEndDate = (() => {
   </optgroup>
 
   <optgroup label="Countries">
-    {countries.map((c) => (
-      <option key={c} value={c}>{c}</option>
-    ))}
+          {COUNTRIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
   </optgroup>
 </select>
 
@@ -1487,41 +1308,19 @@ const derivedEndDate = (() => {
 
     {renderRequiredDocsSummary()}
 
-    {/* 19. Descripción */}
-    <label>Remarks:</label>
-    <div className="remarks-field">
-      <textarea
-        className="remarks-textarea"
-        name="description"
-        rows={5}
-        ref={remarksRef}
-        value={formData.description}
-        onChange={handleChange}
-        onInput={handleRemarksInput}
-        onFocus={autoResizeTextarea}
-        style={{ overflow: 'hidden', resize: 'none' }}
-      />
-      <button
-        type="button"
-        onClick={previousRemarks ? undoRemarks : improveRemarks}
-        className="remarks-ai-button"
-        disabled={rewriteLoading || (!previousRemarks && remarksAiUsed)}
-        aria-label={previousRemarks ? 'Undo AI change' : 'Improve with AI'}
-        title={previousRemarks ? 'Undo' : 'Improve with AI'}
-        data-typing={remarksTyping ? 'true' : 'false'}
-      >
-        {rewriteLoading ? (
-          <span className="remarks-ai-text">...</span>
-        ) : previousRemarks ? (
-          <span className="remarks-ai-text">Undo</span>
-        ) : (
-          <>
-            <span className="remarks-ai-spark">✦</span>
-            <span className="remarks-ai-text">AI</span>
-          </>
-        )}
-      </button>
-    </div>
+    <RemarksField
+      value={formData.description}
+      onChange={handleChange}
+      onInput={handleRemarksInput}
+      onFocus={autoResizeTextarea}
+      textareaRef={remarksRef}
+      previousRemarks={previousRemarks}
+      remarksAiUsed={remarksAiUsed}
+      remarksTyping={remarksTyping}
+      rewriteLoading={rewriteLoading}
+      onUndo={undoRemarks}
+      onImprove={improveRemarks}
+    />
 
           </>
     )}
@@ -1763,7 +1562,7 @@ const derivedEndDate = (() => {
           required
         >
           <option value="">Select...</option>
-          {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </>
     )}
@@ -1786,41 +1585,19 @@ const derivedEndDate = (() => {
       onChange={handleChange}
     />
 
-    {/* Remarks */}
-<label>Remarks:</label>
-<div className="remarks-field">
-  <textarea
-    className="remarks-textarea"
-    name="description"
-    rows={5}
-    ref={remarksRef}
-    value={formData.description}
-    onChange={handleChange}
-    onInput={handleRemarksInput}
-    onFocus={autoResizeTextarea}
-    style={{ overflow: 'hidden', resize: 'none' }}
-  />
-  <button
-    type="button"
-    onClick={previousRemarks ? undoRemarks : improveRemarks}
-    className="remarks-ai-button"
-    disabled={rewriteLoading || (!previousRemarks && remarksAiUsed)}
-    aria-label={previousRemarks ? 'Undo AI change' : 'Improve with AI'}
-    title={previousRemarks ? 'Undo' : 'Improve with AI'}
-    data-typing={remarksTyping ? 'true' : 'false'}
-  >
-    {rewriteLoading ? (
-      <span className="remarks-ai-text">...</span>
-    ) : previousRemarks ? (
-      <span className="remarks-ai-text">Undo</span>
-    ) : (
-      <>
-        <span className="remarks-ai-spark">✦</span>
-        <span className="remarks-ai-text">AI</span>
-      </>
-    )}
-  </button>
-</div>
+    <RemarksField
+      value={formData.description}
+      onChange={handleChange}
+      onInput={handleRemarksInput}
+      onFocus={autoResizeTextarea}
+      textareaRef={remarksRef}
+      previousRemarks={previousRemarks}
+      remarksAiUsed={remarksAiUsed}
+      remarksTyping={remarksTyping}
+      rewriteLoading={rewriteLoading}
+      onUndo={undoRemarks}
+      onImprove={improveRemarks}
+    />
   </>
 )}
 

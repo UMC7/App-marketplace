@@ -246,3 +246,42 @@ export const INTERIOR_REQUIRED_DOCUMENT_GROUPS = [
     ],
   },
 ];
+
+export const DEFAULT_YACHT_SIZES = [
+  '0 - 30m',
+  '31 - 40m',
+  '41 - 50m',
+  '51 - 70m',
+  '71 - 100m',
+  '>100m',
+];
+
+export const CHASE_BOAT_SIZES = [
+  '<10m',
+  '10 - 15m',
+  '15 - 20m',
+  '>20m',
+];
+
+export const VISA_OPTIONS = [
+  'Green card or US Citizen',
+  'B1/B2',
+  'C1/D',
+  'Schengen',
+  'European Passport',
+];
+
+export const COUNTRIES = [
+  'Albania','Anguilla','Antigua and Barbuda','Argentina','Aruba','Australia','Bahamas','Bahrain','Barbados',
+  'Belgium','Belize','Bermuda (UK)','Bonaire','Brazil','Brunei','Bulgaria','BVI (UK)','Cambodia','Canada','Cape Verde','Cayman Islands (UK)',
+  'Chile','China','Colombia','Costa Rica','Croatia','Cuba','Curacao','Cyprus','Denmark','Dominica',
+  'Dominican Republic','Ecuador','Egypt','Estonia','Fiji','Finland','France','Germany','Gibraltar (UK)','Greece','Grenada','Guatemala','Guernsey (UK)','Honduras','India','Indonesia','Ireland','Israel','Isle of Man (UK)',
+  'Italy','Jamaica','Japan','Jersey (UK)','Kiribati','Kuwait','Latvia','Libya','Lithuania','Madagascar',
+  'Malaysia','Maldives','Malta','Marshall Islands','Mauritius','Mexico','Micronesia',
+  'Monaco','Montenegro','Morocco','Myanmar','Netherlands','New Zealand','Nicaragua',
+  'Norway','Panama','Peru','Philippines','Poland','Portugal','Qatar','Romania','Saint Barthélemy','Saint Kitts and Nevis',
+  'Saint Lucia','Saint Maarten','Saint Vincent and the Grenadines','Samoa','Saudi Arabia','Seychelles',
+  'Singapore','Solomon Islands','South Africa','South Korea','Spain','Sweden','Taiwan',
+  'Thailand','Trinidad and Tobago','Tunisia','Turkey','United Arab Emirates','United Kingdom',
+  'United States','Uruguay','Vanuatu','Venezuela','Vietnam',
+];
