@@ -36,7 +36,7 @@ const getRoleImage = (title) => {
   ].some(role => lowerTitle.includes(role))) return 'enginedepartment';
 
   if ([
-    'chef', 'head chef', 'sous chef', 'solo chef', 'cook/crew chef', 'cook/steward(ess)', 'deck/cook'
+    'chef', 'head chef', 'sous chef', 'solo chef', 'cook', 'cook/crew chef', 'cook/steward(ess)', 'deck/cook'
   ].some(role => lowerTitle.includes(role))) return 'galleydepartment';
   if ([
     'chief steward(ess)', '2nd steward(ess)', '2nd stewardess', '3rd steward(ess)', '3rd stewardess',
