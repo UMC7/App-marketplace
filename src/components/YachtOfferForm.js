@@ -16,6 +16,8 @@ import {
   GALLEY_REQUIRED_DOCUMENT_GROUPS,
   INTERIOR_DEPARTMENT_RANKS,
   INTERIOR_REQUIRED_DOCUMENT_GROUPS,
+  OTHERS_DEPARTMENT_RANKS,
+  OTHERS_REQUIRED_DOCUMENT_GROUPS,
   DEFAULT_YACHT_SIZES,
   CHASE_BOAT_SIZES,
   VISA_OPTIONS,
@@ -375,13 +377,16 @@ const engineeringLicenseFieldOptions = ENGINEERING_LICENSE_FIELD_OPTIONS;
 const deckDocumentOptions = needsDeckLicense ? getDeckDocumentOptionsForRank(formData.title) : [];
 const isGalleyDepartmentRank = GALLEY_DEPARTMENT_RANKS.includes(formData.title);
 const isInteriorDepartmentRank = INTERIOR_DEPARTMENT_RANKS.includes(formData.title);
+const isOthersDepartmentRank = OTHERS_DEPARTMENT_RANKS.includes(formData.title);
 const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
 const requiredDocumentGroups = isGalleyDepartmentRank
   ? GALLEY_REQUIRED_DOCUMENT_GROUPS
   : isInteriorDepartmentRank
     ? INTERIOR_REQUIRED_DOCUMENT_GROUPS
-    : REQUIRED_DOCUMENT_GROUPS;
+    : isOthersDepartmentRank
+      ? OTHERS_REQUIRED_DOCUMENT_GROUPS
+      : REQUIRED_DOCUMENT_GROUPS;
 
 const renderRequiredDocsSummary = () => null;
 

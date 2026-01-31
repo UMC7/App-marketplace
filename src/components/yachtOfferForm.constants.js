@@ -180,33 +180,22 @@ export const GALLEY_REQUIRED_DOCUMENT_GROUPS = [
 ];
 
 export const INTERIOR_DEPARTMENT_RANKS = [
-  'Butler',
-  'Steward(ess)',
   'Chief Steward(ess)',
   '2nd Steward(ess)',
   '3rd Steward(ess)',
   '4th Steward(ess)',
-  'Solo Steward(ess)',
   'Junior Steward(ess)',
-  'Housekeeper',
-  'Head of Housekeeping',
-  'Laundry/Steward(ess)',
+  'Steward(ess)',
+  'Solo Steward(ess)',
   'Stew/Deck',
+  'Laundry/Steward(ess)',
+  'Stew/Masseur',
+  'Steward(ess)/Nanny',
+  'Butler',
+  'Head of Housekeeping',
+  'Housekeeper',
   'Cook/Stew/Deck',
   'Cook/Steward(ess)',
-  'Chef/Steward(ess)',
-  'Crew Chef/Stew',
-  'Stew/Masseur',
-  'Masseur',
-  'Hairdresser/Barber',
-  'Steward(ess)/Nanny',
-  'Nanny',
-  'Videographer',
-  'Yoga/Pilates Instructor',
-  'Personal Trainer',
-  'Dive Instrutor',
-  'Water Sport Instrutor',
-  'Nurse',
 ];
 
 export const INTERIOR_REQUIRED_DOCUMENT_GROUPS = [
@@ -243,6 +232,70 @@ export const INTERIOR_REQUIRED_DOCUMENT_GROUPS = [
       'Crowd Management — A-V/2',
       'Crisis Management & Human Behaviour — A-V/2-2',
       'Passenger Ship Safety Training',
+    ],
+  },
+];
+
+export const OTHERS_REQUIRED_DOCUMENT_GROUPS = [
+  {
+    label: 'Commonly Required',
+    options: [
+      'Valid Passport (>6 months validity)',
+      'Reference Letter',
+      "Seaman's Book",
+      'ENG1 Seafarer Medical Certificate',
+      'STCW Basic Training (A-VI/1)',
+      "Driver's License",
+    ],
+  },
+  {
+    label: 'Administrative / Compliance',
+    options: ['Background Check - DBS / Police Clearance'],
+  },
+  {
+    label: 'Travel / Health',
+    options: ['Vaccination - Yellow Fever', 'Vaccination - COVID'],
+  },
+  {
+    label: 'STCW Certificates (Key)',
+    options: [
+      'Medical First Aid — A-VI/4-1',
+      'Medical Care — A-VI/4-2',
+      'Designated Security Duties (DSD) — A-VI/6-2',
+    ],
+  },
+  {
+    label: 'STCW Passenger / Management',
+    options: [
+      'Crowd Management — A-V/2',
+      'Crisis Management & Human Behaviour — A-V/2-2',
+      'Passenger Ship Safety Training',
+    ],
+  },
+  {
+    label: 'MCA Modules (Deck)',
+    options: [
+      'Efficient Deck Hand (EDH)',
+      'General Ship Knowledge (GSK)',
+      'MCA Yacht Rating Certificate',
+    ],
+  },
+  {
+    label: 'Yacht Helicopter Ops',
+    options: [
+      'Helicopter Landing Officer (HLO)',
+      'Helideck Emergency Response Team Member (HERTM)',
+      'Helideck Emergency Response Team Leader (HERTL)',
+      'Helideck Firefighting & Rescue',
+      'Helideck Assistant / Marshalling (HDA)',
+    ],
+  },
+  {
+    label: 'Tender & PWC',
+    options: [
+      'Powerboat Level 2 / Tender Operator',
+      'PWC (Personal Watercraft)',
+      'PWC Instructor',
     ],
   },
 ];
@@ -331,6 +384,8 @@ export const DEPARTMENT_RANK_GROUPS = [
     ],
   },
 ];
+
+export const OTHERS_DEPARTMENT_RANKS = DEPARTMENT_RANK_GROUPS.find((group) => group.label === 'Others Department').ranks;
 
 export const DEFAULT_YACHT_SIZES = [
   '0 - 30m',
