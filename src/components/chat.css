@@ -100,13 +100,17 @@ body.dark-mode .chat-back-btn {
   border-left: 4px solid #f59e0b;
   border-radius: 8px;
   padding: 12px 16px;
-  font-size: 0.85rem;
-  line-height: 1.4;
+  font-size: 0.78rem;
+  line-height: 1.35;
   color: #0f172a;
 }
-.safety-notice-title {
+.safety-notice h4 {
+  font-size: 0.9rem;
   font-weight: 600;
-  margin-bottom: 6px;
+  margin: 0 0 6px;
+}
+.safety-notice-title {
+  margin: 0;
 }
 .safety-notice p {
   margin: 0 0 6px;

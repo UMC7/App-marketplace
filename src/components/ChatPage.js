@@ -351,7 +351,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     <div className="chat-messages">
       {!isExternal && (
         <div className="safety-notice" role="note">
-          <div className="safety-notice-title">⚠️ Safety Notice</div>
+          <h4 className="safety-notice-title">⚠️ Safety Notice</h4>
           {DISCLAIMER_PARAGRAPHS.map((paragraph, idx) => (
             <p key={`${paragraph}-${idx}`}>{paragraph}</p>
           ))}
