@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from 'react-native';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
 import { registerRootComponent } from 'expo';
@@ -18,52 +19,36 @@ import {
 } from 'react-native-safe-area-context';
 
 const WEB_URL_RAW = (process.env.EXPO_PUBLIC_WEB_URL || '').trim();
-const WEB_URL = WEB_URL_RAW
+const WEB_URL_BASE = WEB_URL_RAW
   ? WEB_URL_RAW.startsWith('http://') || WEB_URL_RAW.startsWith('https://')
     ? WEB_URL_RAW
     : `https://${WEB_URL_RAW}`
   : '';
 
-const DEBUG_WEBVIEW = true;
+const DEBUG_WEBVIEW = false;
 
 function WebViewRootInner() {
-  const webviewRef = useRef(null);
-  const loaderTimerRef = useRef<any>(null);
+  const webviewRef = useRef<WebView>(null);
   const insets = useSafeAreaInsets();
+  const systemScheme = useColorScheme(); // 'light' | 'dark' | null
 
   const [canGoBack, setCanGoBack] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [firstPaintDone, setFirstPaintDone] = useState(false);
 
-  const stopLoader = () => {
-    if (loaderTimerRef.current) {
-      clearTimeout(loaderTimerRef.current);
-      loaderTimerRef.current = null;
-    }
-    setIsLoading(false);
-  };
-
-  const startLoader = () => {
-    if (loaderTimerRef.current) clearTimeout(loaderTimerRef.current);
-    setIsLoading(true);
-    loaderTimerRef.current = setTimeout(() => {
-      setIsLoading(false);
-      loaderTimerRef.current = null;
-    }, 4000);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (loaderTimerRef.current) clearTimeout(loaderTimerRef.current);
-    };
-  }, []);
+  // Forzamos el modo de la WEB según el sistema
+  const WEB_URL = WEB_URL_BASE
+    ? `${WEB_URL_BASE}${WEB_URL_BASE.includes('?') ? '&' : '?'}appTheme=${
+        systemScheme === 'dark' ? 'dark' : 'light'
+      }`
+    : '';
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;
 
     const onBackPress = () => {
       if (canGoBack && webviewRef.current) {
-        // @ts-ignore
         webviewRef.current.goBack();
         return true;
       }
@@ -76,18 +61,12 @@ function WebViewRootInner() {
 
   const handleRetry = () => {
     setHasError(false);
-    startLoader();
-    if (webviewRef.current) {
-      // @ts-ignore
-      webviewRef.current.reload();
-    }
+    setIsLoading(true);
+    setFirstPaintDone(false);
+    webviewRef.current?.reload();
   };
 
   const handleError = () => {
-    if (loaderTimerRef.current) {
-      clearTimeout(loaderTimerRef.current);
-      loaderTimerRef.current = null;
-    }
     setHasError(true);
     setIsLoading(false);
   };
@@ -97,15 +76,7 @@ function WebViewRootInner() {
 
     if (DEBUG_WEBVIEW) console.log('WV nav request', url);
 
-    if (
-      (url === 'https://yachtdaywork.com/' && WEB_URL.includes('yachtdaywork.com')) ||
-      (url === 'https://www.yachtdaywork.com/' && WEB_URL.includes('yachtdaywork.com'))
-    ) {
-      return true;
-    }
-
-    if (url === 'about:blank') return true;
-    if (url.startsWith('/')) return true;
+    if (url === 'about:blank' || url.startsWith('/')) return true;
 
     if (
       url.startsWith('mailto:') ||
@@ -124,8 +95,8 @@ function WebViewRootInner() {
     const match = url.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):\/\/([^\/?#]+)(.*)$/);
     if (!match) return false;
 
-    const protocol = (match[1] || '').toLowerCase();
-    const hostname = (match[2] || '').toLowerCase();
+    const protocol = match[1].toLowerCase();
+    const hostname = match[2].toLowerCase();
 
     if (
       protocol === 'https' &&
@@ -182,22 +153,38 @@ function WebViewRootInner() {
             ]}
             javaScriptEnabled
             domStorageEnabled
-            onLoadStart={startLoader}
+            onLoadStart={() => {
+              setIsLoading(true);
+              setFirstPaintDone(false);
+            }}
             onLoadProgress={(e) => {
-              if (DEBUG_WEBVIEW)
-                console.log('WV progress', e?.nativeEvent?.progress, e?.nativeEvent?.url);
+              // Primer render real → quitamos spinner inmediatamente
+              if (!firstPaintDone && e.nativeEvent.progress > 0.1) {
+                setFirstPaintDone(true);
+                setIsLoading(false);
+              }
             }}
-            onLoadEnd={(e) => {
-              if (DEBUG_WEBVIEW) console.log('WV loadEnd', e?.nativeEvent?.url);
-              stopLoader();
-            }}
-            onNavigationStateChange={(navState) => setCanGoBack(!!navState.canGoBack)}
+            onNavigationStateChange={(navState) =>
+              setCanGoBack(!!navState.canGoBack)
+            }
             onError={handleError}
             onHttpError={handleError}
-            onConsoleMessage={(e) => {
-              if (DEBUG_WEBVIEW) console.log('WV console', e?.nativeEvent?.message);
-            }}
             onShouldStartLoadWithRequest={handleShouldStartLoad}
+            injectedJavaScriptBeforeContentLoaded={`
+              (function() {
+                // Bloquea cualquier intento del sistema de reinterpretar colores
+                const meta = document.createElement('meta');
+                meta.name = 'color-scheme';
+                meta.content = 'light dark';
+                document.head.appendChild(meta);
+
+                // Comunica a la web el tema decidido por la app
+                window.__APP_THEME__ = '${systemScheme === 'dark' ? 'dark' : 'light'}';
+                document.documentElement.setAttribute('data-app-theme', window.__APP_THEME__);
+              })();
+              true;
+            `}
+            forceDarkOn={false}
             style={styles.webview}
           />
         </View>
@@ -230,7 +217,7 @@ const styles = StyleSheet.create({
   },
   loaderOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    backgroundColor: 'rgba(255,255,255,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
   },

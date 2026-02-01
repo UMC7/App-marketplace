@@ -1,20 +1,34 @@
 {
   "expo": {
-    "name": "mi-marketplace-mobile-webview",
-    "slug": "mi-marketplace-mobile",
+    "name": "YachtDaywork",
+    "slug": "yachtdaywork",
     "version": "1.0.0",
+
+    "icon": "./app/assets/images/Iniciales.png",
+
     "android": {
+      "package": "com.yachtdaywork.app",
       "permissions": [
         "CAMERA",
         "WAKE_LOCK",
         "VIBRATE",
         "RECEIVE_BOOT_COMPLETED"
       ],
-      "package": "com.anonymous.mimarketplacemobile"
+      "adaptiveIcon": {
+        "foregroundImage": "./app/assets/images/Iniciales.png",
+        "backgroundColor": "#081a3b"
+      }
     },
+
     "ios": {
-      "bundleIdentifier": "com.anonymous.mimarketplacemobile",
+      "bundleIdentifier": "com.yachtdaywork.app",
       "buildNumber": "1"
+    },
+
+    "extra": {
+      "eas": {
+        "projectId": "18381343-94e5-4eb6-8e88-a90919dfd1b6"
+      }
     }
   }
 }
