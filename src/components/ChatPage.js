@@ -10,6 +10,13 @@ import { LinkPreview, extractUrls } from './LinkPreview';
 
 const MAX_CHAT_FILE_MB = 50;
 
+const DISCLAIMER_PARAGRAPHS = [
+  'Yacht Daywork connects candidates and employers but is not involved in the hiring process.',
+  'Please be cautious when communicating online. Never send money or share sensitive personal or financial information to apply for a job. Legitimate employers will not request fees.',
+  'All interactions are the responsibility of the parties involved. If something feels suspicious, stop the conversation and report it.',
+  'We’re here to help make connections safer and easier. ⚓',
+];
+
 const renderMessageText = (text) => {
   if (!text) return null;
   const normalized = text.replace(/\r\n/g, '\n');
@@ -342,6 +349,14 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
   const renderMessages = () => (
     <div className="chat-messages">
+      {!isExternal && (
+        <div className="safety-notice" role="note">
+          <div className="safety-notice-title">⚠️ Safety Notice</div>
+          {DISCLAIMER_PARAGRAPHS.map((paragraph, idx) => (
+            <p key={`${paragraph}-${idx}`}>{paragraph}</p>
+          ))}
+        </div>
+      )}
       {(() => {
         let lastDateKey = null;
         const rows = [];
@@ -577,5 +592,3 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 }
 
 export default ChatPage;
-
-
