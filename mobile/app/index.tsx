@@ -1,5 +1,5 @@
 // mobile/app/index.tsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   BackHandler,
@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from 'react-native';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
@@ -30,6 +31,8 @@ function WebViewRootInner() {
   const [canGoBack, setCanGoBack] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const systemColorScheme = useColorScheme();
+  const normalizedColorScheme = systemColorScheme === 'dark' ? 'dark' : 'light';
 
   const stopLoader = () => setIsLoading(false);
   const startLoader = () => setIsLoading(true);
@@ -105,6 +108,35 @@ function WebViewRootInner() {
     return false;
   };
 
+  const injectedJavaScriptBeforeContentLoaded = useMemo(() => `
+              (function() {
+                var meta = document.createElement('meta');
+                meta.name = 'color-scheme';
+                meta.content = '${normalizedColorScheme}';
+                document.head.appendChild(meta);
+                document.documentElement.setAttribute('data-theme', '${normalizedColorScheme}');
+                document.documentElement.dataset.theme = '${normalizedColorScheme}';
+                document.body.dataset.theme = '${normalizedColorScheme}';
+                document.documentElement.style.setProperty('--preferred-color-scheme', '${normalizedColorScheme}');
+                window.__ydw_system_color_scheme = '${normalizedColorScheme}';
+
+                function pingReady() {
+                  try {
+                    if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+                      window.ReactNativeWebView.postMessage('ydw_ready');
+                    }
+                  } catch (e) {}
+                }
+
+                document.addEventListener('DOMContentLoaded', pingReady, { once: true });
+                window.addEventListener('load', pingReady, { once: true });
+                setTimeout(pingReady, 1200);
+                setTimeout(pingReady, 3000);
+                pingReady();
+              })();
+              true;
+            `, [normalizedColorScheme]);
+
   if (!WEB_URL) {
     return (
       <View style={styles.container}>
@@ -149,28 +181,7 @@ function WebViewRootInner() {
             onMessage={(e) => {
               if (e?.nativeEvent?.data === 'ydw_ready') stopLoader();
             }}
-            injectedJavaScriptBeforeContentLoaded={`
-              (function() {
-                var meta = document.createElement('meta');
-                meta.name = 'color-scheme';
-                meta.content = 'light dark';
-                document.head.appendChild(meta);
-
-                function pingReady() {
-                  try {
-                    if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-                      window.ReactNativeWebView.postMessage('ydw_ready');
-                    }
-                  } catch (e) {}
-                }
-
-                document.addEventListener('DOMContentLoaded', pingReady, { once: true });
-                window.addEventListener('load', pingReady, { once: true });
-                setTimeout(pingReady, 1200);
-                setTimeout(pingReady, 3000);
-              })();
-              true;
-            `}
+            injectedJavaScriptBeforeContentLoaded={injectedJavaScriptBeforeContentLoaded}
             style={styles.webview}
           />
         </View>
