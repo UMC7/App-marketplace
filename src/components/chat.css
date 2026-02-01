@@ -397,7 +397,7 @@ body.dark-mode .chat-back-btn {
 .dark-mode .chat-input textarea { background-color: #2a2a2a; color: #fff; border: 1px solid #444; }
 .dark-mode .chat-input button { background-color: var(--accent-color); }
 .dark-mode .safety-notice {
-  background: #0f172a;
+  background: #121212;
   color: #e5e7eb;
   border-left-color: #f59e0b;
 }
