@@ -3,28 +3,20 @@
     "name": "YachtDaywork",
     "slug": "mi-marketplace-mobile",
     "version": "1.0.0",
-
     "icon": "./app/assets/images/Iniciales.png",
-
     "android": {
-      "package": "com.yachtdaywork.app",
-      "permissions": [
-        "CAMERA",
-        "WAKE_LOCK",
-        "VIBRATE",
-        "RECEIVE_BOOT_COMPLETED"
-      ],
+      "permissions": ["CAMERA", "WAKE_LOCK", "VIBRATE", "RECEIVE_BOOT_COMPLETED"],
+      "package": "com.anonymous.mimarketplacemobile",
       "adaptiveIcon": {
         "foregroundImage": "./app/assets/images/Iniciales.png",
         "backgroundColor": "#081a3b"
       }
     },
-
     "ios": {
-      "bundleIdentifier": "com.yachtdaywork.app",
+      "bundleIdentifier": "com.anonymous.mimarketplacemobile",
       "buildNumber": "1"
     },
-
+    "plugins": ["./plugins/withForceDarkAllowedFalse"],
     "extra": {
       "eas": {
         "projectId": "18381343-94e5-4eb6-8e88-a90919dfd1b6"

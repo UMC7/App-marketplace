@@ -9,17 +9,13 @@ import {
   Text,
   TouchableOpacity,
   View,
-  useColorScheme,
 } from 'react-native';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
 import { registerRootComponent } from 'expo';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WEB_URL_RAW = (process.env.EXPO_PUBLIC_WEB_URL || '').trim();
-const WEB_URL_BASE = WEB_URL_RAW
+const WEB_URL = WEB_URL_RAW
   ? WEB_URL_RAW.startsWith('http://') || WEB_URL_RAW.startsWith('https://')
     ? WEB_URL_RAW
     : `https://${WEB_URL_RAW}`
@@ -30,19 +26,13 @@ const DEBUG_WEBVIEW = false;
 function WebViewRootInner() {
   const webviewRef = useRef<WebView>(null);
   const insets = useSafeAreaInsets();
-  const systemScheme = useColorScheme(); // 'light' | 'dark' | null
 
   const [canGoBack, setCanGoBack] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [firstPaintDone, setFirstPaintDone] = useState(false);
 
-  // Forzamos el modo de la WEB según el sistema
-  const WEB_URL = WEB_URL_BASE
-    ? `${WEB_URL_BASE}${WEB_URL_BASE.includes('?') ? '&' : '?'}appTheme=${
-        systemScheme === 'dark' ? 'dark' : 'light'
-      }`
-    : '';
+  const stopLoader = () => setIsLoading(false);
+  const startLoader = () => setIsLoading(true);
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;
@@ -61,14 +51,13 @@ function WebViewRootInner() {
 
   const handleRetry = () => {
     setHasError(false);
-    setIsLoading(true);
-    setFirstPaintDone(false);
+    startLoader();
     webviewRef.current?.reload();
   };
 
   const handleError = () => {
     setHasError(true);
-    setIsLoading(false);
+    stopLoader();
   };
 
   const handleShouldStartLoad = (event: WebViewNavigation): boolean => {
@@ -76,7 +65,8 @@ function WebViewRootInner() {
 
     if (DEBUG_WEBVIEW) console.log('WV nav request', url);
 
-    if (url === 'about:blank' || url.startsWith('/')) return true;
+    if (url === 'about:blank') return true;
+    if (url.startsWith('/')) return true;
 
     if (
       url.startsWith('mailto:') ||
@@ -136,13 +126,7 @@ function WebViewRootInner() {
           </TouchableOpacity>
         </View>
       ) : (
-        <View
-          style={{
-            flex: 1,
-            paddingTop: insets.top,
-            paddingBottom: insets.bottom,
-          }}
-        >
+        <View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom }}>
           <WebView
             ref={webviewRef}
             source={{ uri: WEB_URL }}
@@ -153,38 +137,22 @@ function WebViewRootInner() {
             ]}
             javaScriptEnabled
             domStorageEnabled
-            onLoadStart={() => {
-              setIsLoading(true);
-              setFirstPaintDone(false);
-            }}
-            onLoadProgress={(e) => {
-              // Primer render real → quitamos spinner inmediatamente
-              if (!firstPaintDone && e.nativeEvent.progress > 0.1) {
-                setFirstPaintDone(true);
-                setIsLoading(false);
-              }
-            }}
-            onNavigationStateChange={(navState) =>
-              setCanGoBack(!!navState.canGoBack)
-            }
+            onLoadStart={startLoader}
+            onLoadEnd={stopLoader}
+            onNavigationStateChange={(navState) => setCanGoBack(!!navState.canGoBack)}
             onError={handleError}
             onHttpError={handleError}
             onShouldStartLoadWithRequest={handleShouldStartLoad}
             injectedJavaScriptBeforeContentLoaded={`
               (function() {
-                // Bloquea cualquier intento del sistema de reinterpretar colores
-                const meta = document.createElement('meta');
+                // ayuda a que el WebView no "adivine" colores raros
+                var meta = document.createElement('meta');
                 meta.name = 'color-scheme';
                 meta.content = 'light dark';
                 document.head.appendChild(meta);
-
-                // Comunica a la web el tema decidido por la app
-                window.__APP_THEME__ = '${systemScheme === 'dark' ? 'dark' : 'light'}';
-                document.documentElement.setAttribute('data-app-theme', window.__APP_THEME__);
               })();
               true;
             `}
-            forceDarkOn={false}
             style={styles.webview}
           />
         </View>
@@ -208,13 +176,8 @@ function WebViewRoot() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  webview: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  webview: { flex: 1 },
   loaderOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(255,255,255,0.85)',
@@ -228,33 +191,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: '#fff',
   },
-  errorTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#081a3b',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  errorMessage: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 24,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  retryButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    backgroundColor: '#081a3b',
-    borderRadius: 8,
-    minWidth: 120,
-    alignItems: 'center',
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  errorTitle: { fontSize: 24, fontWeight: '700', color: '#081a3b', marginBottom: 12, textAlign: 'center' },
+  errorMessage: { fontSize: 16, color: '#666', marginBottom: 24, textAlign: 'center', lineHeight: 22 },
+  retryButton: { paddingVertical: 12, paddingHorizontal: 32, backgroundColor: '#081a3b', borderRadius: 8, minWidth: 120, alignItems: 'center' },
+  retryButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
 
 registerRootComponent(WebViewRoot);
