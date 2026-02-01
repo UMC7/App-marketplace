@@ -1,3 +1,4 @@
+// mobile/app/index.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -24,6 +25,8 @@ const DEBUG_WEBVIEW = true;
 
 function WebViewRoot() {
   const webviewRef = useRef(null);
+  const loaderTimerRef = useRef<any>(null);
+
   const [canGoBack, setCanGoBack] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +40,29 @@ function WebViewRoot() {
       </SafeAreaView>
     );
   }
+
+  const stopLoader = () => {
+    if (loaderTimerRef.current) {
+      clearTimeout(loaderTimerRef.current);
+      loaderTimerRef.current = null;
+    }
+    setIsLoading(false);
+  };
+
+  const startLoader = () => {
+    if (loaderTimerRef.current) clearTimeout(loaderTimerRef.current);
+    setIsLoading(true);
+    loaderTimerRef.current = setTimeout(() => {
+      setIsLoading(false);
+      loaderTimerRef.current = null;
+    }, 4000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (loaderTimerRef.current) clearTimeout(loaderTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;
@@ -56,7 +82,7 @@ function WebViewRoot() {
 
   const handleRetry = () => {
     setHasError(false);
-    setIsLoading(true);
+    startLoader();
     if (webviewRef.current) {
       // @ts-ignore
       webviewRef.current.reload();
@@ -64,6 +90,10 @@ function WebViewRoot() {
   };
 
   const handleError = () => {
+    if (loaderTimerRef.current) {
+      clearTimeout(loaderTimerRef.current);
+      loaderTimerRef.current = null;
+    }
     setHasError(true);
     setIsLoading(false);
   };
@@ -148,13 +178,13 @@ function WebViewRoot() {
           ]}
           javaScriptEnabled
           domStorageEnabled
-          onLoadStart={() => setIsLoading(true)}
+          onLoadStart={startLoader}
           onLoadProgress={(e) => {
             if (DEBUG_WEBVIEW) console.log('WV progress', e?.nativeEvent?.progress, e?.nativeEvent?.url);
           }}
           onLoadEnd={(e) => {
             if (DEBUG_WEBVIEW) console.log('WV loadEnd', e?.nativeEvent?.url);
-            setIsLoading(false);
+            stopLoader();
           }}
           onNavigationStateChange={(navState) => setCanGoBack(!!navState.canGoBack)}
           onError={(e) => {
@@ -238,3 +268,4 @@ const styles = StyleSheet.create({
 registerRootComponent(WebViewRoot);
 
 export { WebViewRoot };
+export default WebViewRoot;
