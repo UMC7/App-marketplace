@@ -9,6 +9,8 @@ import '../styles/YachtOfferList.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import MatchBorder from '../components/MatchBorder';
 
+const REMARKS_DISCLAIMER = 'Disclaimer:\nYacht Daywork Ltd. connects employers and crew directly and is not involved in hiring decisions or private agreements. Please communicate responsibly and remain cautious when applying.';
+
 const formatSalaryValue = (currency, amount, withTips) => {
   const base = `${currency || ''} ${Number(amount).toLocaleString('en-US')}`;
   return withTips ? `${base} + Tips` : base;
@@ -1310,6 +1312,13 @@ useEffect(() => {
                         ...docs,
                       ];
                     })();
+                    const remarkParagraphs = (() => {
+                      const description = offer.description || '';
+                      return description
+                        .split(/\n{2,}/)
+                        .map((paragraph) => paragraph.trim())
+                        .filter(Boolean);
+                    })();
                     return (
                       <div
                         key={offer.id}
@@ -1698,25 +1707,26 @@ useEffect(() => {
   </div>
 )}
 
-    {offer.description && (
-  <div className="expanded-block block6">
-    <div className="field-label">Remarks</div>
-    <div className="field-value remarks-content">
-      {offer.description.split(/\n{2,}/).map((paragraph, index) => (
-        <p
-          key={index}
-          style={{
-            whiteSpace: 'pre-line',
-            marginBottom: '12px',
-            textAlign: 'justify',
-          }}
-        >
-          {paragraph}
+    <div className="expanded-block block6">
+      <div className="field-label">Remarks</div>
+      <div className="field-value remarks-content">
+        {remarkParagraphs.map((paragraph, index) => (
+          <p
+            key={index}
+            style={{
+              whiteSpace: 'pre-line',
+              marginBottom: '12px',
+              textAlign: 'justify',
+            }}
+          >
+            {paragraph}
+          </p>
+        ))}
+        <p className="remarks-disclaimer">
+          {REMARKS_DISCLAIMER}
         </p>
-      ))}
+      </div>
     </div>
-  </div>
-)}
 
     <div className="expanded-block block7">
   <div className="job-share-bar" style={iconBarStyle} onClick={(e) => e.stopPropagation()}>

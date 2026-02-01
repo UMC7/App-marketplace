@@ -244,3 +244,27 @@
 .collapsed-images .match-border {
   margin: 2px; /* pequeña separación para que no “pegue” al borde */
 }
+
+.remarks-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.remarks-disclaimer {
+  margin-top: 32px;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+.offer-card.expanded .remarks-disclaimer {
+  margin-top: 32px;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+body.dark-mode .offer-card.expanded .remarks-disclaimer {
+  color: #8FA3B8 !important;
+}
