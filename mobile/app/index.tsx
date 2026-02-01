@@ -138,18 +138,36 @@ function WebViewRootInner() {
             javaScriptEnabled
             domStorageEnabled
             onLoadStart={startLoader}
+            onLoadProgress={(e) => {
+              if (e.nativeEvent.progress >= 0.2) stopLoader();
+            }}
             onLoadEnd={stopLoader}
             onNavigationStateChange={(navState) => setCanGoBack(!!navState.canGoBack)}
             onError={handleError}
             onHttpError={handleError}
             onShouldStartLoadWithRequest={handleShouldStartLoad}
+            onMessage={(e) => {
+              if (e?.nativeEvent?.data === 'ydw_ready') stopLoader();
+            }}
             injectedJavaScriptBeforeContentLoaded={`
               (function() {
-                // ayuda a que el WebView no "adivine" colores raros
                 var meta = document.createElement('meta');
                 meta.name = 'color-scheme';
                 meta.content = 'light dark';
                 document.head.appendChild(meta);
+
+                function pingReady() {
+                  try {
+                    if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+                      window.ReactNativeWebView.postMessage('ydw_ready');
+                    }
+                  } catch (e) {}
+                }
+
+                document.addEventListener('DOMContentLoaded', pingReady, { once: true });
+                window.addEventListener('load', pingReady, { once: true });
+                setTimeout(pingReady, 1200);
+                setTimeout(pingReady, 3000);
               })();
               true;
             `}

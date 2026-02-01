@@ -3,12 +3,12 @@
     "name": "YachtDaywork",
     "slug": "mi-marketplace-mobile",
     "version": "1.0.0",
-    "icon": "./app/assets/images/Iniciales.png",
+    "icon": "./assets/images/Iniciales.png",
     "android": {
       "permissions": ["CAMERA", "WAKE_LOCK", "VIBRATE", "RECEIVE_BOOT_COMPLETED"],
       "package": "com.anonymous.mimarketplacemobile",
       "adaptiveIcon": {
-        "foregroundImage": "./app/assets/images/Iniciales.png",
+        "foregroundImage": "./assets/images/Iniciales.png",
         "backgroundColor": "#081a3b"
       }
     },
