@@ -5,7 +5,6 @@ import {
   BackHandler,
   Linking,
   Platform,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,6 +12,10 @@ import {
 } from 'react-native';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
 import { registerRootComponent } from 'expo';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 const WEB_URL_RAW = (process.env.EXPO_PUBLIC_WEB_URL || '').trim();
 const WEB_URL = WEB_URL_RAW
@@ -23,23 +26,14 @@ const WEB_URL = WEB_URL_RAW
 
 const DEBUG_WEBVIEW = true;
 
-function WebViewRoot() {
+function WebViewRootInner() {
   const webviewRef = useRef(null);
   const loaderTimerRef = useRef<any>(null);
+  const insets = useSafeAreaInsets();
 
   const [canGoBack, setCanGoBack] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  if (!WEB_URL) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>Missing EXPO_PUBLIC_WEB_URL</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   const stopLoader = () => {
     if (loaderTimerRef.current) {
@@ -110,13 +104,8 @@ function WebViewRoot() {
       return true;
     }
 
-    if (url === 'about:blank') {
-      return true;
-    }
-
-    if (url.startsWith('/')) {
-      return true;
-    }
+    if (url === 'about:blank') return true;
+    if (url.startsWith('/')) return true;
 
     if (
       url.startsWith('mailto:') ||
@@ -128,9 +117,7 @@ function WebViewRoot() {
       url.startsWith('maps://') ||
       url.startsWith('stripe://')
     ) {
-      Linking.openURL(url).catch((err) => {
-        console.warn('Failed to open URL:', url, err);
-      });
+      Linking.openURL(url).catch(() => {});
       return false;
     }
 
@@ -157,8 +144,18 @@ function WebViewRoot() {
     return false;
   };
 
+  if (!WEB_URL) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>Missing EXPO_PUBLIC_WEB_URL</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {hasError ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorTitle}>Connection Error</Text>
@@ -168,47 +165,58 @@ function WebViewRoot() {
           </TouchableOpacity>
         </View>
       ) : (
-        <WebView
-          ref={webviewRef}
-          source={{ uri: WEB_URL }}
-          originWhitelist={[
-            'https://www.yachtdaywork.com',
-            'https://yachtdaywork.com',
-            'https://*.yachtdaywork.com',
-          ]}
-          javaScriptEnabled
-          domStorageEnabled
-          onLoadStart={startLoader}
-          onLoadProgress={(e) => {
-            if (DEBUG_WEBVIEW) console.log('WV progress', e?.nativeEvent?.progress, e?.nativeEvent?.url);
+        <View
+          style={{
+            flex: 1,
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
           }}
-          onLoadEnd={(e) => {
-            if (DEBUG_WEBVIEW) console.log('WV loadEnd', e?.nativeEvent?.url);
-            stopLoader();
-          }}
-          onNavigationStateChange={(navState) => setCanGoBack(!!navState.canGoBack)}
-          onError={(e) => {
-            if (DEBUG_WEBVIEW) console.log('WV onError', e?.nativeEvent);
-            handleError();
-          }}
-          onHttpError={(e) => {
-            if (DEBUG_WEBVIEW) console.log('WV onHttpError', e?.nativeEvent);
-            handleError();
-          }}
-          onConsoleMessage={(e) => {
-            if (DEBUG_WEBVIEW) console.log('WV console', e?.nativeEvent?.message);
-          }}
-          onShouldStartLoadWithRequest={handleShouldStartLoad}
-          style={styles.webview}
-        />
+        >
+          <WebView
+            ref={webviewRef}
+            source={{ uri: WEB_URL }}
+            originWhitelist={[
+              'https://www.yachtdaywork.com',
+              'https://yachtdaywork.com',
+              'https://*.yachtdaywork.com',
+            ]}
+            javaScriptEnabled
+            domStorageEnabled
+            onLoadStart={startLoader}
+            onLoadProgress={(e) => {
+              if (DEBUG_WEBVIEW)
+                console.log('WV progress', e?.nativeEvent?.progress, e?.nativeEvent?.url);
+            }}
+            onLoadEnd={(e) => {
+              if (DEBUG_WEBVIEW) console.log('WV loadEnd', e?.nativeEvent?.url);
+              stopLoader();
+            }}
+            onNavigationStateChange={(navState) => setCanGoBack(!!navState.canGoBack)}
+            onError={handleError}
+            onHttpError={handleError}
+            onConsoleMessage={(e) => {
+              if (DEBUG_WEBVIEW) console.log('WV console', e?.nativeEvent?.message);
+            }}
+            onShouldStartLoadWithRequest={handleShouldStartLoad}
+            style={styles.webview}
+          />
+        </View>
       )}
+
       {isLoading && (
         <View style={styles.loaderOverlay}>
           <ActivityIndicator size="large" color="#081a3b" />
         </View>
       )}
-      <View style={styles.bottomSpacer} />
-    </SafeAreaView>
+    </View>
+  );
+}
+
+function WebViewRoot() {
+  return (
+    <SafeAreaProvider>
+      <WebViewRootInner />
+    </SafeAreaProvider>
   );
 }
 
@@ -219,9 +227,6 @@ const styles = StyleSheet.create({
   },
   webview: {
     flex: 1,
-  },
-  bottomSpacer: {
-    height: 0,
   },
   loaderOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -267,5 +272,5 @@ const styles = StyleSheet.create({
 
 registerRootComponent(WebViewRoot);
 
-export { WebViewRoot };
 export default WebViewRoot;
+export { WebViewRoot };
