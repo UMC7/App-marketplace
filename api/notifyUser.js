@@ -68,10 +68,10 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "No se pudo guardar la notificación." });
     }
 
-    // 2) Tokens del usuario
+    // 2) Tokens del usuario (web = FCM, android/ios desde app = Expo)
     const { data: rows, error: tokErr } = await sb
       .from("device_tokens")
-      .select("token")
+      .select("token, platform")
       .eq("user_id", userId)
       .eq("is_valid", true);
 
@@ -80,24 +80,32 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "No se pudieron obtener los tokens." });
     }
 
-    const tokens = (rows || []).map((r) => r.token).filter(Boolean);
+    const allRows = rows || [];
+    const fcmTokens = [];
+    const expoTokens = [];
+    for (const r of allRows) {
+      const t = r.token;
+      if (!t) continue;
+      if (typeof t === "string" && t.startsWith("ExponentPushToken[")) {
+        expoTokens.push(t);
+      } else {
+        fcmTokens.push(t);
+      }
+    }
 
-    // 3) Envío push (si hay tokens)
     let sent = 0;
     let failed = 0;
+    const invalidTokens = [];
 
-    if (tokens.length) {
+    // 3a) Envío FCM (web / PWA)
+    if (fcmTokens.length) {
       const response = await admin.messaging().sendEachForMulticast({
         notification: { title, body },
-        data: toStringMap({ notification_id: notif.id, ...data }),
-        tokens,
+        data: toStringMap({ notification_id: notif.id, ...(data || {}) }),
+        tokens: fcmTokens,
       });
-
-      sent = response.successCount;
-      failed = response.failureCount;
-
-      // Limpieza de tokens inválidos
-      const invalid = [];
+      sent += response.successCount;
+      failed += response.failureCount;
       response.responses.forEach((r, i) => {
         if (!r.success) {
           const code = r.error?.errorInfo?.code || r.error?.code || "";
@@ -105,16 +113,53 @@ export default async function handler(req, res) {
             code.includes("registration-token-not-registered") ||
             code.includes("invalid-registration-token")
           ) {
-            invalid.push(tokens[i]);
+            invalidTokens.push(fcmTokens[i]);
           }
         }
       });
-      if (invalid.length) {
-        await sb
-          .from("device_tokens")
-          .update({ is_valid: false, updated_at: new Date().toISOString() })
-          .in("token", invalid);
+    }
+
+    // 3b) Envío Expo Push (app móvil WebView con expo-notifications)
+    if (expoTokens.length) {
+      const expoPayload = expoTokens.map((to) => ({
+        to,
+        title,
+        body,
+        data: { notification_id: notif.id, ...(data || {}) },
+      }));
+      try {
+        const expoRes = await fetch("https://exp.host/--/api/v2/push/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(expoPayload),
+        });
+        const expoResult = await expoRes.json();
+        const results = Array.isArray(expoResult) ? expoResult : [expoResult];
+        results.forEach((item, i) => {
+          if (item.status === "ok") {
+            sent += 1;
+          } else {
+            failed += 1;
+            const err = item.details?.error || item.message || "";
+            if (
+              err === "DeviceNotRegistered" ||
+              (item.message && item.message.toLowerCase().includes("not registered"))
+            ) {
+              if (expoTokens[i]) invalidTokens.push(expoTokens[i]);
+            }
+          }
+        });
+      } catch (expoErr) {
+        console.error("Expo push send error:", expoErr?.message || expoErr);
+        failed += expoTokens.length;
       }
+    }
+
+    if (invalidTokens.length) {
+      await sb
+        .from("device_tokens")
+        .update({ is_valid: false, updated_at: new Date().toISOString() })
+        .in("token", invalidTokens);
     }
 
     return res.status(200).json({

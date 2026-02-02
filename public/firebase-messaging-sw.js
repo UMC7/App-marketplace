@@ -20,7 +20,7 @@ messaging.onBackgroundMessage(({ notification }) => {
   if (!notification) return;
   self.registration.showNotification(notification.title, {
     body: notification.body,
-    icon: "/icons/icon-192x192.png", // opcional si tienes un icono
+    icon: "/logo192.png",
     data: notification,
   });
 });
