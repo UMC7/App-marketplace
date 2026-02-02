@@ -556,7 +556,26 @@ const formReady = (() => {
   }
 };
 
-  const handleSubmit = async (e) => {
+const coerceOptionalNumber = (value) => {
+  if (value === undefined || value === null || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const prepareOfferForUpdate = (payload) => ({
+  ...payload,
+  salary: payload.is_doe ? null : coerceOptionalNumber(payload.salary),
+  salary_currency: payload.is_doe ? null : payload.salary_currency || null,
+  teammate_salary:
+    payload.team === 'Yes' ? coerceOptionalNumber(payload.teammate_salary) : null,
+  teammate_salary_currency:
+    payload.team === 'Yes' ? payload.teammate_salary_currency || null : null,
+  teammate_experience:
+    payload.team === 'Yes' ? coerceOptionalNumber(payload.teammate_experience) : null,
+  holidays: coerceOptionalNumber(payload.holidays),
+});
+
+const handleSubmit = async (e) => {
     e.preventDefault();
     const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
@@ -653,9 +672,11 @@ const derivedEndDate = (() => {
 
     setLoading(true);
 
+    const updatePayload = prepareOfferForUpdate(sanitizedData);
+
     if (mode === 'edit') {
-  // en modo edición, delega a la función onOfferPosted que viene del modal
-  await onOfferPosted(sanitizedData);
+      // en modo edición, delega a la función onOfferPosted que viene del modal
+      await onOfferPosted(updatePayload);
 } else {
   // en modo creación, inserta como siempre
   const { error } = await supabase.from('yacht_work_offers').insert([{
