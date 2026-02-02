@@ -14,6 +14,7 @@ import {
 import { WebView, type WebViewNavigation } from 'react-native-webview';
 import { registerRootComponent } from 'expo';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Notifications from 'expo-notifications';
 
 const WEB_URL_RAW = (process.env.EXPO_PUBLIC_WEB_URL || '').trim();
 const WEB_URL = WEB_URL_RAW
@@ -51,6 +52,34 @@ function WebViewRootInner() {
     const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => sub.remove();
   }, [canGoBack]);
+
+  useEffect(() => {
+    const registerForPushNotifications = async () => {
+      try {
+        const { status: currentStatus } = await Notifications.getPermissionsAsync();
+        console.log('Push notification permission status (before request):', currentStatus);
+        let finalStatus = currentStatus;
+
+        if (finalStatus !== 'granted') {
+          const { status: requestedStatus } = await Notifications.requestPermissionsAsync();
+          console.log('Push notification permission status (after request):', requestedStatus);
+          finalStatus = requestedStatus;
+        }
+
+        if (finalStatus !== 'granted') {
+          console.log('Push notifications permission not granted.');
+          return;
+        }
+
+        const tokenResponse = await Notifications.getExpoPushTokenAsync();
+        console.log('Expo push token (debug):', tokenResponse.data);
+      } catch (error) {
+        console.log('Failed to register for push notifications:', error);
+      }
+    };
+
+    registerForPushNotifications();
+  }, []);
 
   const handleRetry = () => {
     setHasError(false);

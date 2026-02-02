@@ -5,6 +5,7 @@
   "main": "app/index.tsx",
   "dependencies": {
     "expo": "~54.0.32",
+    "expo-notifications": "~0.32.16",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.0",
