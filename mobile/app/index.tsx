@@ -11,7 +11,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { WebView, type WebViewNavigation } from 'react-native-webview';
+import { WebView, type WebViewNavigation, type WebViewMessageEvent } from 'react-native-webview';
 import { registerRootComponent } from 'expo';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
@@ -24,6 +24,10 @@ const WEB_URL = WEB_URL_RAW
   : '';
 
 const DEBUG_WEBVIEW = false;
+const PUSH_REGISTER_URL =
+  WEB_URL && WEB_URL.length
+    ? `${WEB_URL.replace(/\/$/, '')}/api/push/register`
+    : 'https://www.yachtdaywork.com/api/push/register';
 
 function WebViewRootInner() {
   const webviewRef = useRef<WebView>(null);
@@ -34,6 +38,9 @@ function WebViewRootInner() {
   const [isLoading, setIsLoading] = useState(true);
   const systemColorScheme = useColorScheme();
   const normalizedColorScheme = systemColorScheme === 'dark' ? 'dark' : 'light';
+  const authUserIdRef = useRef<string | null>(null);
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
   const stopLoader = () => setIsLoading(false);
   const startLoader = () => setIsLoading(true);
@@ -73,6 +80,7 @@ function WebViewRootInner() {
 
         const tokenResponse = await Notifications.getExpoPushTokenAsync();
         console.log('Expo push token (debug):', tokenResponse.data);
+        setExpoPushToken(tokenResponse.data);
       } catch (error) {
         console.log('Failed to register for push notifications:', error);
       }
@@ -80,6 +88,20 @@ function WebViewRootInner() {
 
     registerForPushNotifications();
   }, []);
+
+  useEffect(() => {
+    if (!authUserId || !expoPushToken) return;
+
+    void fetch(PUSH_REGISTER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: authUserId,
+        platform: 'android',
+        token: expoPushToken,
+      }),
+    });
+  }, [authUserId, expoPushToken]);
 
   const handleRetry = () => {
     setHasError(false);
@@ -207,8 +229,25 @@ function WebViewRootInner() {
             onError={handleError}
             onHttpError={handleError}
             onShouldStartLoadWithRequest={handleShouldStartLoad}
-            onMessage={(e) => {
-              if (e?.nativeEvent?.data === 'ydw_ready') stopLoader();
+            onMessage={(event: WebViewMessageEvent) => {
+              const message = event?.nativeEvent?.data;
+              if (!message) return;
+
+              if (message === 'ydw_ready') {
+                stopLoader();
+                return;
+              }
+
+              try {
+                const payload = JSON.parse(message);
+                if (payload?.type === 'AUTH' && payload.user_id) {
+                  authUserIdRef.current = payload.user_id;
+                  setAuthUserId(payload.user_id);
+                  console.log('AUTH received:', payload.user_id);
+                }
+              } catch (error) {
+                // ignore non-JSON messages
+              }
             }}
             injectedJavaScriptBeforeContentLoaded={injectedJavaScriptBeforeContentLoaded}
             style={styles.webview}

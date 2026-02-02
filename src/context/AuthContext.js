@@ -217,6 +217,15 @@ export function AuthProvider({ children }) {
     registerFCM(currentUser);
   }, [currentUser?.id]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const userId = currentUser?.id;
+    if (!userId) return;
+    window.ReactNativeWebView?.postMessage(
+      JSON.stringify({ type: 'AUTH', user_id: userId }),
+    );
+  }, [currentUser?.id]);
+
   // 🔄 Escucha en tiempo real cambios en la fila del usuario (incluye avatar_url)
   // y actualiza currentUser.app_metadata sin recargar.
   useEffect(() => {
