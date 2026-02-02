@@ -126,24 +126,41 @@ export default async function handler(req, res) {
         title,
         body,
         data: { notification_id: notif.id, ...(data || {}) },
+        sound: "default",
       }));
+
       try {
         const expoRes = await fetch("https://exp.host/--/api/v2/push/send", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: JSON.stringify(expoPayload),
         });
-        const expoResult = await expoRes.json();
-        const results = Array.isArray(expoResult) ? expoResult : [expoResult];
-        results.forEach((item, i) => {
-          if (item.status === "ok") {
+
+        const expoJson = await expoRes.json();
+        return res.status(200).json({
+          success: true,
+          notificationId: notif.id,
+          sent,
+          failed,
+          expo: expoJson,
+        });
+
+        const tickets = expoJson?.data || [];
+
+        tickets.forEach((t, i) => {
+          if (t?.status === "ok") {
             sent += 1;
           } else {
             failed += 1;
-            const err = item.details?.error || item.message || "";
+            const msg = (t?.message || "").toLowerCase();
+            const det = (t?.details?.error || "").toLowerCase();
             if (
-              err === "DeviceNotRegistered" ||
-              (item.message && item.message.toLowerCase().includes("not registered"))
+              det.includes("device") ||
+              msg.includes("not registered") ||
+              det.includes("not registered")
             ) {
               if (expoTokens[i]) invalidTokens.push(expoTokens[i]);
             }
