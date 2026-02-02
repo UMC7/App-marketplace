@@ -15,6 +15,7 @@ import { WebView, type WebViewNavigation, type WebViewMessageEvent } from 'react
 import { registerRootComponent } from 'expo';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 
 const WEB_URL_RAW = (process.env.EXPO_PUBLIC_WEB_URL || '').trim();
 const WEB_URL = WEB_URL_RAW
@@ -78,7 +79,9 @@ function WebViewRootInner() {
           return;
         }
 
-        const tokenResponse = await Notifications.getExpoPushTokenAsync();
+        const tokenResponse = await Notifications.getExpoPushTokenAsync({
+          projectId: Constants.expoConfig?.extra?.eas?.projectId,
+        });
         console.log('Expo push token (debug):', tokenResponse.data);
         setExpoPushToken(tokenResponse.data);
       } catch (error) {

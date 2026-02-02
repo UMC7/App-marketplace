@@ -5,7 +5,13 @@
     "version": "1.0.0",
     "icon": "./assets/images/Iniciales.png",
     "android": {
-      "permissions": ["CAMERA", "WAKE_LOCK", "VIBRATE", "RECEIVE_BOOT_COMPLETED"],
+      "permissions": [
+        "CAMERA",
+        "WAKE_LOCK",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "POST_NOTIFICATIONS"
+      ],
       "package": "com.anonymous.mimarketplacemobile",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
