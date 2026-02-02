@@ -15,6 +15,13 @@ import { WebView, type WebViewNavigation, type WebViewMessageEvent } from 'react
 import { registerRootComponent } from 'expo';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 import Constants from 'expo-constants';
 
 const WEB_URL_RAW = (process.env.EXPO_PUBLIC_WEB_URL || '').trim();
