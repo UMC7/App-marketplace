@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import Modal from './Modal';
@@ -238,7 +238,7 @@ useEffect(() => {
     setChatUserFromQuery(null);
     setChatQueryHandled(false);
   }
-}, [location.search]);
+}, [location.search, chatOfferFromQuery, chatUserFromQuery]);
 
 useEffect(() => {
   if (!openJobId || openHandled || !offers?.length) return;
@@ -285,9 +285,9 @@ useEffect(() => {
 
 useEffect(() => {
   if (!chatOfferFromQuery || !chatUserFromQuery || chatQueryHandled || !offers?.length) return;
-  handleStartChat(chatOfferFromQuery, chatUserFromQuery);
+  setActiveChat({ offerId: chatOfferFromQuery, receiverId: chatUserFromQuery });
   setChatQueryHandled(true);
-}, [chatOfferFromQuery, chatUserFromQuery, chatQueryHandled, offers, handleStartChat]);
+}, [chatOfferFromQuery, chatUserFromQuery, chatQueryHandled, offers, setActiveChat]);
 
 useEffect(() => {
   let cancelled = false;
@@ -627,9 +627,9 @@ useEffect(() => {
   const iconImg = { width: 22, height: 22, display: 'block' };
   const shareIcon = { fontSize: 22, color: '#111' };
 
-  const handleStartChat = useCallback((offerId, employerId) => {
+  const handleStartChat = (offerId, employerId) => {
     setActiveChat({ offerId, receiverId: employerId });
-  }, []);
+  };
 
   const handleRequestChat = (offerId, employerId) => {
     if (!chatIntroSeen) {
