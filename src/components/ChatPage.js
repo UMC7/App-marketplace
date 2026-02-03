@@ -7,6 +7,7 @@ import './chat.css';
 import './link-preview.css';
 import Avatar from './Avatar';
 import { LinkPreview, extractUrls } from './LinkPreview';
+import { markNotificationsForChatAsRead } from '../utils/notificationRoutes';
 
 const MAX_CHAT_FILE_MB = 50;
 
@@ -179,6 +180,12 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     };
     loadOffer();
   }, [isExternal, offerId]);
+
+  // Marcar como leídas las notificaciones de este chat al abrir la conversación
+  useEffect(() => {
+    if (isExternal || !currentUser?.id || !offerId || !receiverId) return;
+    markNotificationsForChatAsRead(supabase, currentUser.id, offerId, receiverId);
+  }, [isExternal, currentUser?.id, offerId, receiverId]);
 
   // Load messages (internal vs external)
   useEffect(() => {

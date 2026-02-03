@@ -35,21 +35,47 @@ export function appendQueryParams(url, params) {
 }
 
 /**
- * Construye la URL que abre la conversación de chat (no solo la tarjeta del empleo).
- * Requiere en data: offer_id (u oferta) y sender_id / other_user_id (el otro usuario del chat).
- * No exige target === 'chat': si vienen offer_id + sender_id (u otra clave de pareja), se construye la URL.
+ * Indica si el data de una notificación corresponde al mismo chat (misma oferta + mismo usuario).
+ */
+export function notificationDataMatchesChat(notificationData, offerId, otherUserId) {
+  if (!notificationData || !offerId || !otherUserId) return false;
+  const offerVal = CHAT_OFFER_KEYS.map((k) => notificationData[k]).find((v) => v != null);
+  const userVal = CHAT_PARTNER_KEYS.map((k) => notificationData[k]).find((v) => v != null);
+  return (
+    String(offerVal) === String(offerId) && String(userVal) === String(otherUserId)
+  );
+}
+
+/**
+ * Construye la URL que abre solo la conversación de chat (sin abrir la tarjeta del empleo).
+ * No incluye "open=" para no redirigir a la tarjeta al salir.
  */
 export function buildChatNotificationUrl(data) {
   if (!data) return null;
   const chatParams = getChatParams(data);
   if (!chatParams) return null;
   const basePath = data.path || '/yacht-works';
-  const jobId = data.job_id || data.jobId || data.query?.open || chatParams.offerId;
-
   const params = new URLSearchParams();
-  if (jobId) params.set('open', toStringValue(jobId));
   params.set('chatOffer', chatParams.offerId);
   params.set('chatUser', chatParams.receiverId);
-
   return appendQueryParams(basePath, params);
+}
+
+/**
+ * Marca como leídas todas las notificaciones del usuario que correspondan a este chat.
+ * Útil al abrir la conversación (p. ej. desde la lista) para que el contador se actualice.
+ */
+export async function markNotificationsForChatAsRead(supabaseClient, userId, offerId, otherUserId) {
+  if (!supabaseClient || !userId || !offerId || !otherUserId) return;
+  const { data: rows } = await supabaseClient
+    .from('notifications')
+    .select('id, data')
+    .eq('user_id', userId)
+    .eq('is_read', false);
+  if (!rows?.length) return;
+  const ids = rows
+    .filter((row) => notificationDataMatchesChat(row.data, offerId, otherUserId))
+    .map((r) => r.id);
+  if (ids.length === 0) return;
+  await supabaseClient.from('notifications').update({ is_read: true }).in('id', ids);
 }

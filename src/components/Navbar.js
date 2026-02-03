@@ -441,10 +441,12 @@ const handleOpenChat = (offerId, receiverId) => {
     offerId={activeChat.offerId}
     receiverId={activeChat.receiverId}
     onBack={() => {
+      navigate('/yacht-works');
       setActiveChat(null);
-      setShowChatList(true);
+      setShowChatList(false);
     }}
     onClose={() => {
+      navigate('/yacht-works');
       setActiveChat(null);
       setShowChatList(false);
     }}

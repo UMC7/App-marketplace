@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import supabase from "../supabase";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { buildChatNotificationUrl } from "../utils/notificationRoutes";
+import { buildChatNotificationUrl, getChatParams, notificationDataMatchesChat } from "../utils/notificationRoutes";
 
 export default function NotificationsPanel({ onClose, onReadOne }) {
   const { currentUser } = useAuth();
@@ -25,8 +25,10 @@ export default function NotificationsPanel({ onClose, onReadOne }) {
 
 const handleItemClick = async (n) => {
   const d = parseData(n.data);
+  const chatUrl = buildChatNotificationUrl(d);
+  const chatParams = getChatParams(d);
 
-  // Marcar como leída siempre al hacer clic
+  // Marcar como leída la notificación clicada
   if (n.is_read === false) {
     setItems((p) => p.map((i) => (i.id === n.id ? { ...i, is_read: true } : i)));
     setUnread((c) => Math.max(0, c - 1));
@@ -41,17 +43,34 @@ const handleItemClick = async (n) => {
     setItems((p) => p.map((i) => (i.id === n.id ? { ...i, is_read: false } : i)));
     setUnread((c) => c + 1);
     if (typeof onReadOne === "function") onReadOne();
-    // no-op: onReadOne rollback not supported
+  }
+
+  // Si es notificación de chat: marcar como leídas todas las del mismo chat y actualizar contador al instante
+  if (chatUrl && chatParams) {
+    const sameChatIds = items
+      .filter(
+        (i) =>
+          i.id !== n.id &&
+          !i.is_read &&
+          notificationDataMatchesChat(parseData(i.data), chatParams.offerId, chatParams.receiverId)
+      )
+      .map((i) => i.id);
+    if (sameChatIds.length > 0) {
+      await supabase.from("notifications").update({ is_read: true }).in("id", sameChatIds);
+      setItems((p) =>
+        p.map((i) => (sameChatIds.includes(i.id) ? { ...i, is_read: true } : i))
+      );
+      setUnread((c) => Math.max(0, c - sameChatIds.length));
+      if (typeof onReadOne === "function") onReadOne();
+    }
   }
 
   if (typeof onClose === "function") onClose();
 
-  // Determinar destino: seajobs (oferta) o chat privado
   const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs" || d?.path === "/yacht-works";
   const targetIsChat = d?.target === "chat" || (d?.offer_id && !targetIsSeaJobs);
   const jobId = d?.job_id || d?.query?.open;
   const offerId = d?.offer_id;
-  const chatUrl = buildChatNotificationUrl(d);
 
   let url = null;
   if (chatUrl) {
