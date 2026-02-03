@@ -17,11 +17,19 @@ serve(async (req) => {
   }
 
   const apiUrl = Deno.env.get("WEB_API_URL") || "";
-  const apiKey = Deno.env.get("WEB_API_INTERNAL_KEY") || "";
+  const internalKey = Deno.env.get("WEB_API_INTERNAL_KEY") || "";
 
-  if (!apiUrl || !apiKey) {
+  if (!apiUrl || !internalKey) {
     return new Response(JSON.stringify({ error: "missing_secrets" }), {
       status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const incomingKey = req.headers.get("x-internal-key") || "";
+  if (!incomingKey || incomingKey !== internalKey) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401,
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -47,7 +55,7 @@ serve(async (req) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-internal-key": apiKey,
+      "x-internal-key": internalKey,
     },
     body: JSON.stringify({
       userId: payload.receiver_id,
