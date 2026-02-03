@@ -1,4 +1,6 @@
 // supabase/functions/chat_push/index.ts
+// Para que al hacer clic en la notificación se abra la conversación (y no solo la tarjeta del empleo),
+// el invocador debe enviar en data: target: "chat", offer_id, sender_id (id del que envió el mensaje).
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
 type Payload = {

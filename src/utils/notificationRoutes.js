@@ -34,8 +34,13 @@ export function appendQueryParams(url, params) {
   return `${url}${separator}${query}`;
 }
 
+/**
+ * Construye la URL que abre la conversación de chat (no solo la tarjeta del empleo).
+ * Requiere en data: offer_id (u oferta) y sender_id / other_user_id (el otro usuario del chat).
+ * No exige target === 'chat': si vienen offer_id + sender_id (u otra clave de pareja), se construye la URL.
+ */
 export function buildChatNotificationUrl(data) {
-  if (!data || data.target !== 'chat') return null;
+  if (!data) return null;
   const chatParams = getChatParams(data);
   if (!chatParams) return null;
   const basePath = data.path || '/yacht-works';
