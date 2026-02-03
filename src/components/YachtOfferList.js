@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import Modal from './Modal';
@@ -143,8 +143,11 @@ const [showChatIntro, setShowChatIntro] = useState(false);
 const [showChatLoginInfo, setShowChatLoginInfo] = useState(false);
 const [chatIntroSeen, setChatIntroSeen] = useState(false);
 const [pendingChat, setPendingChat] = useState(null);
-const [openJobId, setOpenJobId] = useState(null);
-const [openHandled, setOpenHandled] = useState(false);
+  const [openJobId, setOpenJobId] = useState(null);
+  const [openHandled, setOpenHandled] = useState(false);
+  const [chatOfferFromQuery, setChatOfferFromQuery] = useState(null);
+  const [chatUserFromQuery, setChatUserFromQuery] = useState(null);
+  const [chatQueryHandled, setChatQueryHandled] = useState(false);
 const [showDirectApplyModal, setShowDirectApplyModal] = useState(false);
 const [directApplyModalType, setDirectApplyModalType] = useState(null);
 const [directApplicationReady, setDirectApplicationReady] = useState(false);
@@ -217,6 +220,24 @@ useEffect(() => {
   } else {
     setOpenJobId(null);
   }
+}, [location.search, chatOfferFromQuery, chatUserFromQuery]);
+
+useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const chatOfferParam = params.get('chatOffer');
+  const chatUserParam = params.get('chatUser');
+  if (chatOfferParam && chatUserParam) {
+    setChatOfferFromQuery(chatOfferParam);
+    setChatUserFromQuery(chatUserParam);
+    setChatQueryHandled(false);
+    return;
+  }
+
+  if (chatOfferFromQuery || chatUserFromQuery) {
+    setChatOfferFromQuery(null);
+    setChatUserFromQuery(null);
+    setChatQueryHandled(false);
+  }
 }, [location.search]);
 
 useEffect(() => {
@@ -261,6 +282,12 @@ useEffect(() => {
 
   setOpenHandled(true);
 }, [openJobId, openHandled, offers]);
+
+useEffect(() => {
+  if (!chatOfferFromQuery || !chatUserFromQuery || chatQueryHandled || !offers?.length) return;
+  handleStartChat(chatOfferFromQuery, chatUserFromQuery);
+  setChatQueryHandled(true);
+}, [chatOfferFromQuery, chatUserFromQuery, chatQueryHandled, offers, handleStartChat]);
 
 useEffect(() => {
   let cancelled = false;
@@ -600,9 +627,9 @@ useEffect(() => {
   const iconImg = { width: 22, height: 22, display: 'block' };
   const shareIcon = { fontSize: 22, color: '#111' };
 
-  const handleStartChat = (offerId, employerId) => {
+  const handleStartChat = useCallback((offerId, employerId) => {
     setActiveChat({ offerId, receiverId: employerId });
-  };
+  }, []);
 
   const handleRequestChat = (offerId, employerId) => {
     if (!chatIntroSeen) {

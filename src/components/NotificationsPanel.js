@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import supabase from "../supabase";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { buildChatNotificationUrl } from "../utils/notificationRoutes";
 
 export default function NotificationsPanel({ onClose, onReadOne }) {
   const { currentUser } = useAuth();
@@ -50,9 +51,12 @@ const handleItemClick = async (n) => {
   const targetIsChat = d?.target === "chat" || (d?.offer_id && !targetIsSeaJobs);
   const jobId = d?.job_id || d?.query?.open;
   const offerId = d?.offer_id;
+  const chatUrl = buildChatNotificationUrl(d);
 
   let url = null;
-  if (targetIsSeaJobs && jobId) {
+  if (chatUrl) {
+    url = chatUrl;
+  } else if (targetIsSeaJobs && jobId) {
     const basePath = d?.path || "/yacht-works";
     url = `${basePath}?open=${encodeURIComponent(jobId)}`;
   } else if (targetIsChat && offerId) {
