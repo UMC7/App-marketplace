@@ -39,9 +39,15 @@ const handleItemClick = async (e, n) => {
     setItems((prev) => prev.map((i) => (i.id === n.id ? { ...i, is_read: true } : i)));
     setUnread((c) => Math.max(0, c - 1));
   }
-  try {
-    await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
-  } catch {}
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("id", n.id);
+
+  if (error) {
+    setItems((prev) => prev.map((i) => (i.id === n.id ? { ...i, is_read: false } : i)));
+    setUnread((c) => c + 1);
+  }
 
   setOpen(false);
 

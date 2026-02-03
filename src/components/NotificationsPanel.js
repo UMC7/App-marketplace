@@ -31,9 +31,17 @@ const handleItemClick = async (n) => {
     setUnread((c) => Math.max(0, c - 1));
     if (typeof onReadOne === "function") onReadOne();
   }
-  try {
-    await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
-  } catch {}
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("id", n.id);
+
+  if (error) {
+    setItems((p) => p.map((i) => (i.id === n.id ? { ...i, is_read: false } : i)));
+    setUnread((c) => c + 1);
+    if (typeof onReadOne === "function") onReadOne();
+    // no-op: onReadOne rollback not supported
+  }
 
   if (typeof onClose === "function") onClose();
 
