@@ -1,6 +1,4 @@
 // /api/notifyUser.js
-// Inserta en public.notifications y envía push a los tokens del usuario.
-
 import admin from "firebase-admin";
 import { createClient } from "@supabase/supabase-js";
 
@@ -14,15 +12,10 @@ try {
   throw new Error("❌ No se pudo decodificar FIREBASE_SERVICE_ACCOUNT_BASE64: " + e.message);
 }
 
-try {
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-  }
-} catch (error) {
-  console.error("🛑 FIREBASE INIT ERROR:", error?.message || "initialization failed");
-  throw new Error("Error al inicializar Firebase Admin SDK: " + error.message);
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
 }
 
 // --- Supabase (Service Role) ---
@@ -43,14 +36,17 @@ function toStringMap(obj = {}) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Método no permitido" });
+  }
 
   try {
     const { userId, title, body, data } = req.body || {};
-    if (!userId || !title || !body)
+    if (!userId || !title || !body) {
       return res.status(400).json({ error: "Faltan parámetros: userId, title, body" });
+    }
 
-    // 1) Guardar en historial (UI)
+    // 1) Guardar en historial
     const { data: notif, error: insErr } = await sb
       .from("notifications")
       .insert({
@@ -64,11 +60,10 @@ export default async function handler(req, res) {
       .single();
 
     if (insErr) {
-      console.error("DB insert notifications error:", insErr?.message || "insert failed");
       return res.status(500).json({ error: "No se pudo guardar la notificación." });
     }
 
-    // 2) Tokens del usuario (web = FCM, android/ios desde app = Expo)
+    // 2) Obtener tokens
     const { data: rows, error: tokErr } = await sb
       .from("device_tokens")
       .select("token, platform")
@@ -76,13 +71,13 @@ export default async function handler(req, res) {
       .eq("is_valid", true);
 
     if (tokErr) {
-      console.error("DB select device_tokens error:", tokErr?.message || "select failed");
       return res.status(500).json({ error: "No se pudieron obtener los tokens." });
     }
 
     const allRows = rows || [];
     const fcmTokens = [];
     const expoTokens = [];
+
     for (const r of allRows) {
       const t = r.token;
       if (!t) continue;
@@ -104,8 +99,10 @@ export default async function handler(req, res) {
         data: toStringMap({ notification_id: notif.id, ...(data || {}) }),
         tokens: fcmTokens,
       });
+
       sent += response.successCount;
       failed += response.failureCount;
+
       response.responses.forEach((r, i) => {
         if (!r.success) {
           const code = r.error?.errorInfo?.code || r.error?.code || "";
@@ -119,7 +116,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3b) Envío Expo Push (app móvil WebView con expo-notifications)
+    // 3b) Envío Expo Push (app móvil)
     if (expoTokens.length) {
       const expoPayload = expoTokens.map((to) => ({
         to,
@@ -140,14 +137,6 @@ export default async function handler(req, res) {
         });
 
         const expoJson = await expoRes.json();
-        return res.status(200).json({
-          success: true,
-          notificationId: notif.id,
-          sent,
-          failed,
-          expo: expoJson,
-        });
-
         const tickets = expoJson?.data || [];
 
         tickets.forEach((t, i) => {
@@ -166,12 +155,12 @@ export default async function handler(req, res) {
             }
           }
         });
-      } catch (expoErr) {
-        console.error("Expo push send error:", expoErr?.message || expoErr);
+      } catch {
         failed += expoTokens.length;
       }
     }
 
+    // 4) Invalidar tokens rotos
     if (invalidTokens.length) {
       await sb
         .from("device_tokens")
@@ -186,7 +175,6 @@ export default async function handler(req, res) {
       failed,
     });
   } catch (err) {
-    console.error("notifyUser ERROR:", err?.message || "unexpected failure");
-    return res.status(500).json({ error: "Error interno al notificar", details: err.message });
+    return res.status(500).json({ error: "Error interno al notificar" });
   }
 }
