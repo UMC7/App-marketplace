@@ -1,0 +1,2 @@
+# supabase/functions/chat_push/config.toml
+verify_jwt = false

@@ -33,30 +33,41 @@ const handleItemClick = async (e, n) => {
     e.stopPropagation();
   }
   const d = parseData(n.data);
-  const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs" || d?.path === "/yacht-works";
-  const jobId = d?.job_id || d?.query?.open;
-  if (!targetIsSeaJobs || !jobId) return;
 
+  // Marcar como leída siempre al hacer clic
   if (n.is_read === false) {
     setItems((prev) => prev.map((i) => (i.id === n.id ? { ...i, is_read: true } : i)));
     setUnread((c) => Math.max(0, c - 1));
   }
-
   try {
     await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
   } catch {}
 
-  const basePath = d?.path || "/yacht-works";
-  const url = `${basePath}?open=${encodeURIComponent(jobId)}`;
-
   setOpen(false);
 
-  try { navigate(url); } catch {}
+  // Determinar destino: seajobs (oferta) o chat privado
+  const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs" || d?.path === "/yacht-works";
+  const targetIsChat = d?.target === "chat" || (d?.offer_id && !targetIsSeaJobs);
+  const jobId = d?.job_id || d?.query?.open;
+  const offerId = d?.offer_id;
 
-  setTimeout(() => {
-    const now = window.location.pathname + window.location.search;
-    if (now !== url) window.location.assign(url);
-  }, 0);
+  let url = null;
+  if (targetIsSeaJobs && jobId) {
+    const basePath = d?.path || "/yacht-works";
+    url = `${basePath}?open=${encodeURIComponent(jobId)}`;
+  } else if (targetIsChat && offerId) {
+    url = `/yacht-works?open=${encodeURIComponent(offerId)}`;
+  }
+
+  if (url) {
+    try {
+      navigate(url);
+    } catch {}
+    setTimeout(() => {
+      const now = window.location.pathname + window.location.search;
+      if (now !== url) window.location.assign(url);
+    }, 0);
+  }
 };
 
   useEffect(() => {
