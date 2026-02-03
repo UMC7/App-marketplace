@@ -151,6 +151,11 @@ const [pendingChat, setPendingChat] = useState(null);
 const [showDirectApplyModal, setShowDirectApplyModal] = useState(false);
 const [directApplyModalType, setDirectApplyModalType] = useState(null);
 const [directApplicationReady, setDirectApplicationReady] = useState(false);
+const [activeChat, setActiveChat] = useState(null);
+const [expandedWeeks, setExpandedWeeks] = useState({});
+const [expandedDays, setExpandedDays] = useState({});
+const [copiedField, setCopiedField] = useState(null);
+const [prefsLoaded, setPrefsLoaded] = useState(false);
 const cardRefs = useRef({});
 const chatIntroTimerRef = useRef(null);
 const chatIntroScheduledRef = useRef(false);
@@ -319,12 +324,7 @@ useEffect(() => {
   };
 }, [currentUser?.id]);
 
-  const [activeChat, setActiveChat] = useState(null);
-  const [expandedWeeks, setExpandedWeeks] = useState({});
-  const [expandedDays, setExpandedDays] = useState({});
-  const [copiedField, setCopiedField] = useState(null);
   const setFiltersVisible = setShowFilters;
-  const [prefsLoaded, setPrefsLoaded] = useState(false);
 
 const RANKS = [
   "Captain", "Captain/Engineer", "Skipper", "Chase Boat Captain", "Relief Captain",
