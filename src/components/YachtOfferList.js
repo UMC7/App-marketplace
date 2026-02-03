@@ -289,10 +289,15 @@ useEffect(() => {
 }, [openJobId, openHandled, offers]);
 
 useEffect(() => {
-  if (!chatOfferFromQuery || !chatUserFromQuery || chatQueryHandled || !offers?.length) return;
+  if (!chatOfferFromQuery || !chatUserFromQuery || chatQueryHandled || !offers?.length || !currentUser?.id) return;
+  const offer = offers.find((o) => String(o.id) === String(chatOfferFromQuery));
+  if (!offer) return;
+  const isParticipant =
+    currentUser.id === offer.user_id || currentUser.id === chatUserFromQuery;
+  if (!isParticipant) return;
   setActiveChat({ offerId: chatOfferFromQuery, receiverId: chatUserFromQuery });
   setChatQueryHandled(true);
-}, [chatOfferFromQuery, chatUserFromQuery, chatQueryHandled, offers, setActiveChat]);
+}, [chatOfferFromQuery, chatUserFromQuery, chatQueryHandled, offers, currentUser?.id, setActiveChat]);
 
 useEffect(() => {
   let cancelled = false;

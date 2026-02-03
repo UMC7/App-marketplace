@@ -1,0 +1,7 @@
+-- Placeholder: las políticas RLS deben exportarse desde el proyecto Supabase
+-- y versionarse aquí. Ver supabase/migrations/README.md.
+-- Ejemplo de política (ajustar a tu esquema real):
+-- ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+-- CREATE POLICY "Users can read own notifications"
+--   ON public.notifications FOR SELECT
+--   USING (auth.uid() = user_id);

@@ -59,6 +59,7 @@ function WebViewRootInner() {
   const normalizedColorScheme = systemColorScheme === 'dark' ? 'dark' : 'light';
   const authUserIdRef = useRef<string | null>(null);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [authAccessToken, setAuthAccessToken] = useState<string | null>(null);
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
   const stopLoader = () => setIsLoading(false);
@@ -112,6 +113,8 @@ function WebViewRootInner() {
 
   useEffect(() => {
     if (!authUserId || !expoPushToken) return;
+    // El backend exige access_token para validar que user_id es el autenticado
+    if (!authAccessToken) return;
 
     void fetch(PUSH_REGISTER_URL, {
       method: 'POST',
@@ -120,9 +123,10 @@ function WebViewRootInner() {
         user_id: authUserId,
         platform: 'android',
         token: expoPushToken,
+        access_token: authAccessToken,
       }),
     });
-  }, [authUserId, expoPushToken]);
+  }, [authUserId, authAccessToken, expoPushToken]);
 
   const handleRetry = () => {
     setHasError(false);
@@ -264,6 +268,7 @@ function WebViewRootInner() {
                 if (payload?.type === 'AUTH' && payload.user_id) {
                   authUserIdRef.current = payload.user_id;
                   setAuthUserId(payload.user_id);
+                  setAuthAccessToken(payload.access_token ?? null);
                   console.log('AUTH received:', payload.user_id);
                 }
               } catch (error) {

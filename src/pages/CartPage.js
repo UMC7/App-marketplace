@@ -133,9 +133,13 @@ function CartPage() {
         htmlToBuyer += `</ul>`;
       }
 
+      const { data: { session } } = await supabase.auth.getSession();
+      const authHeaders = { 'Content-Type': 'application/json' };
+      if (session?.access_token) authHeaders.Authorization = `Bearer ${session.access_token}`;
+
       await fetch('/api/sendEmail', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({
           to: buyerEmail,
           subject: 'Purchase Confirmation - Yacht Daywork',
@@ -162,7 +166,7 @@ function CartPage() {
 
         await fetch('/api/sendEmail', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders,
           body: JSON.stringify({
             to: safeSeller.email,
             subject: 'New Order Received - Yacht Daywork',

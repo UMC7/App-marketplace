@@ -137,7 +137,8 @@ export default async function handler(req, res) {
         });
 
         const expoJson = await expoRes.json();
-        const tickets = expoJson?.data || [];
+        const raw = expoJson?.data;
+        const tickets = Array.isArray(raw) ? raw : raw ? [raw] : [];
 
         tickets.forEach((t, i) => {
           if (t?.status === "ok") {
