@@ -415,43 +415,42 @@ const handleOpenChat = (offerId, receiverId) => {
       {showChatList && (
         <Modal onClose={() => { setActiveChat(null); setShowChatList(false); }}>
           {!activeChat ? (
-  <ChatList
-    currentUser={currentUser}
-    onOpenChat={handleOpenChat}
-    onOpenOffer={() => {
-      setActiveChat(null);
-      setShowChatList(false);
-    }}
-  />
-) : activeChat.external ? (
-  <ChatPage
-    mode="external"
-    externalThreadId={activeChat.threadId}
-    onBack={() => {
-      setActiveChat(null);
-      setShowChatList(true);
-    }}
-    onClose={() => {
-      setActiveChat(null);
-      setShowChatList(false);
-    }}
-  />
-) : (
-  <ChatPage
-    offerId={activeChat.offerId}
-    receiverId={activeChat.receiverId}
-    onBack={() => {
-      navigate('/yacht-works');
-      setActiveChat(null);
-      setShowChatList(false);
-    }}
-    onClose={() => {
-      navigate('/yacht-works');
-      setActiveChat(null);
-      setShowChatList(false);
-    }}
-  />
-)}
+            <ChatList
+              currentUser={currentUser}
+              onOpenChat={handleOpenChat}
+              onOpenOffer={() => {
+                setActiveChat(null);
+                setShowChatList(false);
+              }}
+            />
+          ) : activeChat.external ? (
+            <ChatPage
+              mode="external"
+              externalThreadId={activeChat.threadId}
+              onBack={() => {
+                setActiveChat(null);
+                setShowChatList(true);
+              }}
+              onClose={() => {
+                setActiveChat(null);
+                setShowChatList(false);
+              }}
+            />
+          ) : (
+            <ChatPage
+              offerId={activeChat.offerId}
+              receiverId={activeChat.receiverId}
+              onBack={() => {
+                setActiveChat(null);
+                setShowChatList(true);
+              }}
+              onClose={() => {
+                navigate('/yacht-works');
+                setActiveChat(null);
+                setShowChatList(false);
+              }}
+            />
+          )}
         </Modal>
       )}
       {showLegalModal && (

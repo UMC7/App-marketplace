@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const emailInternalKey = process.env.SEND_EMAIL_INTERNAL_KEY;
 
 // Throttle: máximo de envíos por IP en una ventana (in-memory; para multi-instance usar Redis).
 const THROTTLE_WINDOW_MS = 15 * 60 * 1000; // 15 min
@@ -64,6 +65,13 @@ async function assertAuth(req) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  if (emailInternalKey) {
+    const incomingKey = req.headers['x-internal-key'];
+    if (!incomingKey || incomingKey !== emailInternalKey) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
   }
 
   const auth = await assertAuth(req);
