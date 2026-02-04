@@ -15,6 +15,7 @@ import { WebView, type WebViewNavigation, type WebViewMessageEvent } from 'react
 import { registerRootComponent } from 'expo';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 
 if (Platform.OS === 'android') {
   Notifications.setNotificationChannelAsync('default', {
@@ -31,9 +32,10 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
-import Constants from 'expo-constants';
 
 const WEB_URL_RAW = (process.env.EXPO_PUBLIC_WEB_URL || '').trim();
 const WEB_URL = WEB_URL_RAW
@@ -57,6 +59,7 @@ function WebViewRootInner() {
   const [isLoading, setIsLoading] = useState(true);
   const systemColorScheme = useColorScheme();
   const normalizedColorScheme = systemColorScheme === 'dark' ? 'dark' : 'light';
+
   const authUserIdRef = useRef<string | null>(null);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [authAccessToken, setAuthAccessToken] = useState<string | null>(null);
@@ -84,28 +87,22 @@ function WebViewRootInner() {
     const registerForPushNotifications = async () => {
       try {
         const { status: currentStatus } = await Notifications.getPermissionsAsync();
-        console.log('Push notification permission status (before request):', currentStatus);
         let finalStatus = currentStatus;
 
         if (finalStatus !== 'granted') {
           const { status: requestedStatus } = await Notifications.requestPermissionsAsync();
-          console.log('Push notification permission status (after request):', requestedStatus);
           finalStatus = requestedStatus;
         }
 
         if (finalStatus !== 'granted') {
-          console.log('Push notifications permission not granted.');
           return;
         }
 
         const tokenResponse = await Notifications.getExpoPushTokenAsync({
           projectId: Constants.expoConfig?.extra?.eas?.projectId,
         });
-        console.log('Expo push token (debug):', tokenResponse.data);
         setExpoPushToken(tokenResponse.data);
-      } catch (error) {
-        console.log('Failed to register for push notifications:', error);
-      }
+      } catch {}
     };
 
     registerForPushNotifications();
@@ -113,17 +110,18 @@ function WebViewRootInner() {
 
   useEffect(() => {
     if (!authUserId || !expoPushToken) return;
-    // El backend exige access_token para validar que user_id es el autenticado
     if (!authAccessToken) return;
 
     void fetch(PUSH_REGISTER_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authAccessToken}`,
+      },
       body: JSON.stringify({
         user_id: authUserId,
         platform: 'android',
         token: expoPushToken,
-        access_token: authAccessToken,
       }),
     });
   }, [authUserId, authAccessToken, expoPushToken]);
@@ -184,34 +182,37 @@ function WebViewRootInner() {
     return false;
   };
 
-  const injectedJavaScriptBeforeContentLoaded = useMemo(() => `
-              (function() {
-                var meta = document.createElement('meta');
-                meta.name = 'color-scheme';
-                meta.content = '${normalizedColorScheme}';
-                document.head.appendChild(meta);
-                document.documentElement.setAttribute('data-theme', '${normalizedColorScheme}');
-                document.documentElement.dataset.theme = '${normalizedColorScheme}';
-                document.body.dataset.theme = '${normalizedColorScheme}';
-                document.documentElement.style.setProperty('--preferred-color-scheme', '${normalizedColorScheme}');
-                window.__ydw_system_color_scheme = '${normalizedColorScheme}';
+  const injectedJavaScriptBeforeContentLoaded = useMemo(
+    () => `
+      (function() {
+        var meta = document.createElement('meta');
+        meta.name = 'color-scheme';
+        meta.content = '${normalizedColorScheme}';
+        document.head.appendChild(meta);
+        document.documentElement.setAttribute('data-theme', '${normalizedColorScheme}');
+        document.documentElement.dataset.theme = '${normalizedColorScheme}';
+        document.body.dataset.theme = '${normalizedColorScheme}';
+        document.documentElement.style.setProperty('--preferred-color-scheme', '${normalizedColorScheme}');
+        window.__ydw_system_color_scheme = '${normalizedColorScheme}';
 
-                function pingReady() {
-                  try {
-                    if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-                      window.ReactNativeWebView.postMessage('ydw_ready');
-                    }
-                  } catch (e) {}
-                }
+        function pingReady() {
+          try {
+            if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+              window.ReactNativeWebView.postMessage('ydw_ready');
+            }
+          } catch (e) {}
+        }
 
-                document.addEventListener('DOMContentLoaded', pingReady, { once: true });
-                window.addEventListener('load', pingReady, { once: true });
-                setTimeout(pingReady, 1200);
-                setTimeout(pingReady, 3000);
-                pingReady();
-              })();
-              true;
-            `, [normalizedColorScheme]);
+        document.addEventListener('DOMContentLoaded', pingReady, { once: true });
+        window.addEventListener('load', pingReady, { once: true });
+        setTimeout(pingReady, 1200);
+        setTimeout(pingReady, 3000);
+        pingReady();
+      })();
+      true;
+    `,
+    [normalizedColorScheme]
+  );
 
   if (!WEB_URL) {
     return (
@@ -269,11 +270,8 @@ function WebViewRootInner() {
                   authUserIdRef.current = payload.user_id;
                   setAuthUserId(payload.user_id);
                   setAuthAccessToken(payload.access_token ?? null);
-                  console.log('AUTH received:', payload.user_id);
                 }
-              } catch (error) {
-                // ignore non-JSON messages
-              }
+              } catch {}
             }}
             injectedJavaScriptBeforeContentLoaded={injectedJavaScriptBeforeContentLoaded}
             style={styles.webview}

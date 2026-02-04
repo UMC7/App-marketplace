@@ -137,10 +137,18 @@ export default async function handler(req, res) {
         });
 
         const expoJson = await expoRes.json();
+        console.log("Expo push HTTP status:", expoRes.status);
+        console.log("Expo push body:", JSON.stringify(expoJson));
+
         const raw = expoJson?.data;
         const tickets = Array.isArray(raw) ? raw : raw ? [raw] : [];
 
         tickets.forEach((t, i) => {
+          console.log("Expo push ticket", {
+            token: expoTokens[i],
+            status: t?.status,
+            details: t?.details,
+          });
           if (t?.status === "ok") {
             sent += 1;
           } else {
@@ -156,7 +164,8 @@ export default async function handler(req, res) {
             }
           }
         });
-      } catch {
+      } catch (error) {
+        console.log("Expo push send error:", error);
         failed += expoTokens.length;
       }
     }
