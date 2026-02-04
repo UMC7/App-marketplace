@@ -1,5 +1,5 @@
 // src/context/AuthContext.js
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import supabase from '../supabase';
 import { registerFCM } from '../notifications/registerFCM';
 
@@ -52,6 +52,16 @@ async function uploadPendingAvatarIfAny(user) {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const postAuthToWebView = useCallback((session) => {
+    if (typeof window === 'undefined' || !session?.user) return;
+    window.ReactNativeWebView?.postMessage(
+      JSON.stringify({
+        type: 'AUTH',
+        user_id: session.user.id,
+        access_token: session.access_token || null,
+      }),
+    );
+  }, []);
 
   useEffect(() => {
     const getSession = async () => {
@@ -180,6 +190,7 @@ export function AuthProvider({ children }) {
         } else {
           setCurrentUser(buildExtendedUser(userProfile));
         }
+        postAuthToWebView(session);
       } catch (err) {
         console.error('Error inesperado al obtener sesión:', err.message);
         setCurrentUser(null);
@@ -195,6 +206,7 @@ export function AuthProvider({ children }) {
         setCurrentUser(null);
       } else {
         getSession();
+        postAuthToWebView(session);
       }
     });
 
@@ -224,13 +236,7 @@ export function AuthProvider({ children }) {
     if (!userId) return;
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      window.ReactNativeWebView?.postMessage(
-        JSON.stringify({
-          type: 'AUTH',
-          user_id: userId,
-          access_token: session?.access_token || null,
-        }),
-      );
+      postAuthToWebView(session);
     })();
   }, [currentUser?.id]);
 
