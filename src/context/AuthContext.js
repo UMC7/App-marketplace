@@ -1,5 +1,5 @@
 // src/context/AuthContext.js
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import supabase from '../supabase';
 import { registerFCM } from '../notifications/registerFCM';
 
@@ -52,8 +52,11 @@ async function uploadPendingAvatarIfAny(user) {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const sessionRef = useRef(null);
   const postAuthToWebView = useCallback((session) => {
     if (typeof window === 'undefined' || !session?.user) return;
+    console.log('[AuthContext] session.user.id =', session?.user?.id);
+    console.log('[AuthContext] session.access_token =', session?.access_token);
     window.ReactNativeWebView?.postMessage(
       JSON.stringify({
         type: 'AUTH',
@@ -79,8 +82,12 @@ export function AuthProvider({ children }) {
 
         if (!session?.user) {
           setCurrentUser(null);
+          sessionRef.current = null;
           return;
         }
+
+        sessionRef.current = session;
+        postAuthToWebView(session);
 
         const user = session.user;
         const metadata = user.user_metadata || {};
@@ -190,7 +197,6 @@ export function AuthProvider({ children }) {
         } else {
           setCurrentUser(buildExtendedUser(userProfile));
         }
-        postAuthToWebView(session);
       } catch (err) {
         console.error('Error inesperado al obtener sesión:', err.message);
         setCurrentUser(null);
@@ -201,13 +207,17 @@ export function AuthProvider({ children }) {
 
     getSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session?.user) {
+        sessionRef.current = null;
         setCurrentUser(null);
-      } else {
-        getSession();
-        postAuthToWebView(session);
+        setLoading(false);
+        return;
       }
+
+      sessionRef.current = session;
+      postAuthToWebView(session);
+      // NO llamar getSession() aquí
     });
 
     return () => {
@@ -234,19 +244,13 @@ export function AuthProvider({ children }) {
     if (typeof window === 'undefined') return;
     const userId = currentUser?.id;
     if (!userId) return;
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      postAuthToWebView(session);
-    })();
-  }, [currentUser?.id]);
+    if (sessionRef.current) postAuthToWebView(sessionRef.current);
+  }, [currentUser?.id, postAuthToWebView]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const handler = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session) postAuthToWebView(session);
+    const handler = () => {
+      if (sessionRef.current) postAuthToWebView(sessionRef.current);
     };
 
     window.addEventListener('ydw:ready', handler);
