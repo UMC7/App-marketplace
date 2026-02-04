@@ -25,3 +25,14 @@ yarn-debug.log*
 yarn-error.log*
 .vercel
 .env
+
+# mobile / expo / android
+mobile/node_modules/
+android/
+mobile/android/
+.gradle/
+**/.gradle/
+**/build/
+*.dex
+*.bin
+*.lock
