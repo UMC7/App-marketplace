@@ -240,6 +240,19 @@ export function AuthProvider({ children }) {
     })();
   }, [currentUser?.id]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) postAuthToWebView(session);
+    };
+
+    window.addEventListener('ydw:ready', handler);
+    return () => window.removeEventListener('ydw:ready', handler);
+  }, [postAuthToWebView]);
+
   // 🔄 Escucha en tiempo real cambios en la fila del usuario (incluye avatar_url)
   // y actualiza currentUser.app_metadata sin recargar.
   useEffect(() => {

@@ -260,6 +260,10 @@ function WebViewRootInner() {
               if (!message) return;
 
               if (message === 'ydw_ready') {
+                webviewRef.current?.injectJavaScript(`
+                  window.dispatchEvent(new CustomEvent('ydw:ready'));
+                  true;
+                `);
                 stopLoader();
                 return;
               }
