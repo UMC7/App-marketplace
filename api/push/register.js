@@ -38,7 +38,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Faltan parámetros: user_id, token, platform" });
     }
 
+    console.log('[push/register] headers.auth =', req.headers.authorization);
+    console.log('[push/register] body.user_id =', req.body?.user_id);
+
     const authenticatedId = await getAuthenticatedUserId(req);
+    console.log('[push/register] authenticatedId =', authenticatedId);
     if (authenticatedId === null) {
       return res.status(401).json({ error: "No autorizado. Envía Authorization: Bearer <token> o access_token en el body." });
     }
