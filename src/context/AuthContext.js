@@ -67,6 +67,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    let authListener;
     const getSession = async () => {
       try {
         const {
@@ -205,20 +206,42 @@ export function AuthProvider({ children }) {
       }
     };
 
-    getSession();
+    const bootstrap = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!session?.user) {
-        sessionRef.current = null;
+        if (session?.user) {
+          setCurrentUser(session.user);
+          sessionRef.current = session;
+        }
+      } catch (err) {
+        console.error('Error inesperado al obtener sesión inicial:', err.message);
         setCurrentUser(null);
+      } finally {
         setLoading(false);
-        return;
       }
+
+      await getSession();
+
+      authListener = supabase.auth.onAuthStateChange(async (_event, session) => {
+        if (!session?.user) {
+          sessionRef.current = null;
+          setCurrentUser(null);
+          setLoading(false);
+          return;
+        }
 
       sessionRef.current = session;
       postAuthToWebView(session);
+      setCurrentUser({ ...session.user });
+      setLoading(false);
       // NO llamar getSession() aquí
     });
+    };
+
+    bootstrap();
 
     return () => {
       authListener?.subscription?.unsubscribe();
