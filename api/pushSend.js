@@ -49,6 +49,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Faltan userId o title" });
     }
 
+    const target = data?.target || record?.target || body.target;
+    if (target !== "seajobs") {
+      return res.status(200).json({ success: true, skipped: true, reason: "solo job match" });
+    }
+
     const { data: rows, error: tokErr } = await sb
       .from("device_tokens")
       .select("token, platform")
