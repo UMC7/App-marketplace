@@ -187,6 +187,10 @@ function YachtServicesPage() {
   const handleShare = async (service, e) => {
     e.stopPropagation();
     const data = getShareData(service);
+    if (isInNativeApp()) {
+      postShareToNative(data);
+      return;
+    }
     if (navigator.share) {
       try {
         await navigator.share(data);
