@@ -8,6 +8,7 @@ import Avatar from '../components/Avatar';
 import '../styles/YachtOfferList.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import MatchBorder from '../components/MatchBorder';
+import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 
 const REMARKS_DISCLAIMER = 'Disclaimer:\nYacht Daywork Ltd. connects employers and crew directly and is not involved in hiring decisions or private agreements. Please communicate responsibly and remain cautious when applying.';
 
@@ -547,6 +548,10 @@ const handleCopy = (text, field) => {
   const handleShare = async (offer, e) => {
     e.stopPropagation();
     const data = getShareData(offer);
+    if (isInNativeApp()) {
+      postShareToNative(data);
+      return;
+    }
     if (navigator.share) {
       try {
         await navigator.share(data);
@@ -633,6 +638,7 @@ useEffect(() => {
 }, [isMobile, showAvatarMobile]);
 
   const supportsWebShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const showNativeShare = supportsWebShare || isInNativeApp();
   const iconBarStyle = { display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 };
   const roundBtn = {
     width: 44, height: 44, borderRadius: '9999px', border: '1px solid rgba(0,0,0,0.1)',
@@ -1773,7 +1779,7 @@ useEffect(() => {
 
     <div className="expanded-block block7">
   <div className="job-share-bar" style={iconBarStyle} onClick={(e) => e.stopPropagation()}>
-    {supportsWebShare ? (
+    {showNativeShare ? (
       <button
         type="button"
         onClick={(e) => handleShare(offer, e)}

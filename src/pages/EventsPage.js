@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './EventsPage.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import supabase from '../supabase';
+import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 
 const formatDate = (dateStr) => {
   const options = { day: '2-digit', month: 'short', year: 'numeric' };
@@ -232,6 +233,10 @@ function EventsPage() {
   const handleShare = async (event, e) => {
     e.stopPropagation();
     const data = getShareData(event);
+    if (isInNativeApp()) {
+      postShareToNative(data);
+      return;
+    }
     if (navigator.share) {
       try {
         await navigator.share(data);
@@ -273,6 +278,7 @@ function EventsPage() {
   const RATIO_MARGIN = 0.05; // 5%
 
   const supportsWebShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const showNativeShare = supportsWebShare || isInNativeApp();
 
   // estilos inline mínimos para no tocar tu CSS global
   const iconBarStyle = { display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 };
@@ -498,7 +504,7 @@ function EventsPage() {
               {/* Barra de compartir solo cuando está expandida */}
               {isExpanded && (
                 <div style={iconBarStyle} onClick={(e) => e.stopPropagation()}>
-                  {supportsWebShare ? (
+                  {showNativeShare ? (
                     <button
                       type="button"
                       onClick={(e) => handleShare(event, e)}

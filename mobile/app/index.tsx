@@ -6,6 +6,7 @@ import {
   Image,
   Linking,
   Platform,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -85,7 +86,10 @@ function WebViewRootInner() {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const systemColorScheme = useColorScheme();
-  const normalizedColorScheme = systemColorScheme === 'dark' ? 'dark' : 'light';
+  // Always inject 'light' for meta/data-theme to prevent native dark mode distorting colors.
+  // window.__ydw_system_color_scheme lets the web use system preference as default when no saved theme.
+  const injectedTheme = 'light';
+  const systemScheme = systemColorScheme === 'dark' ? 'dark' : 'light';
 
   const authUserIdRef = useRef<string | null>(null);
   const expoPushTokenRef = useRef<string | null>(null);
@@ -236,13 +240,13 @@ function WebViewRootInner() {
       (function() {
         var meta = document.createElement('meta');
         meta.name = 'color-scheme';
-        meta.content = '${normalizedColorScheme}';
+        meta.content = '${injectedTheme}';
         document.head.appendChild(meta);
-        document.documentElement.setAttribute('data-theme', '${normalizedColorScheme}');
-        document.documentElement.dataset.theme = '${normalizedColorScheme}';
-        document.body.dataset.theme = '${normalizedColorScheme}';
-        document.documentElement.style.setProperty('--preferred-color-scheme', '${normalizedColorScheme}');
-        window.__ydw_system_color_scheme = '${normalizedColorScheme}';
+        document.documentElement.setAttribute('data-theme', '${injectedTheme}');
+        document.documentElement.dataset.theme = '${injectedTheme}';
+        document.body.dataset.theme = '${injectedTheme}';
+        document.documentElement.style.setProperty('--preferred-color-scheme', '${injectedTheme}');
+        window.__ydw_system_color_scheme = '${systemScheme}';
 
         function pingReady() {
           try {
@@ -260,7 +264,7 @@ function WebViewRootInner() {
       })();
       true;
     `,
-    [normalizedColorScheme]
+    [systemScheme]
   );
 
   if (!WEB_URL) {
@@ -313,6 +317,18 @@ function WebViewRootInner() {
                 const payload = typeof message === 'string' ? JSON.parse(message) : null;
                 if (payload?.type === 'NOTIF_BADGE' && typeof payload.count === 'number') {
                   Notifications.setBadgeCountAsync(Math.min(99, Math.max(0, payload.count)));
+                  return;
+                }
+                if (payload?.type === 'SHARE') {
+                  const title = String(payload.title ?? '').trim() || undefined;
+                  const text = String(payload.text ?? '').trim() || undefined;
+                  const url = String(payload.url ?? '').trim() || undefined;
+                  const shareMessage = [text, url].filter(Boolean).join('\n');
+                  Share.share({
+                    title: title || 'Share',
+                    message: shareMessage || url || title || '',
+                    url: url || undefined,
+                  }).catch(() => {});
                   return;
                 }
               } catch {}

@@ -23,7 +23,9 @@
       "bundleIdentifier": "com.anonymous.mimarketplacemobile",
       "buildNumber": "1"
     },
-    "plugins": ["./plugins/withForceDarkAllowedFalse"],
+    "plugins": [
+      "./plugins/withForceDarkAllowedFalse"
+    ],
     "extra": {
       "eas": {
         "projectId": "18381343-94e5-4eb6-8e88-a90919dfd1b6"

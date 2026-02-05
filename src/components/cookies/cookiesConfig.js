@@ -25,9 +25,18 @@ export const saveConsent = (consent) => {
 };
 
 // 🔹 Obtener tema guardado
+// Si hay preferencia guardada, la usa. Si no, usa el esquema del sistema (en app) o prefers-color-scheme.
 export const getThemePreference = () => {
   try {
-    return localStorage.getItem(THEME_KEY) || 'light';
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === 'dark' || saved === 'light') return saved;
+    if (typeof window !== 'undefined' && (window.__ydw_system_color_scheme === 'dark' || window.__ydw_system_color_scheme === 'light')) {
+      return window.__ydw_system_color_scheme;
+    }
+    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
   } catch (error) {
     console.error('Error reading theme preference:', error);
     return 'light';

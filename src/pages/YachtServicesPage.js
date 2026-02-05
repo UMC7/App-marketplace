@@ -7,6 +7,7 @@ import supabase from '../supabase';
 
 // Carrusel (mismo paquete que ya usas en ProductDetailPage)
 import Slider from 'react-slick';
+import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
@@ -217,6 +218,7 @@ function YachtServicesPage() {
   };
 
   const supportsWebShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const showNativeShare = supportsWebShare || isInNativeApp();
   const iconBarStyle = { display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 };
   const roundBtn = {
     width: 44, height: 44, borderRadius: '9999px', border: '1px solid rgba(0,0,0,0.1)',
@@ -373,7 +375,7 @@ function YachtServicesPage() {
 
                 {expandedServiceId === service.id && (
                   <div className="service-share-bar" style={iconBarStyle} onClick={(e) => e.stopPropagation()}>
-                    {supportsWebShare ? (
+                    {showNativeShare ? (
                       <button
                         type="button"
                         onClick={(e) => handleShare(service, e)}
