@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import supabase from "../supabase";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { buildChatNotificationUrl, getChatParams, notificationDataMatchesChat } from "../utils/notificationRoutes";
+import { buildChatNotificationUrl, getChatParams, notificationDataMatchesChat, openChatFromNotification } from "../utils/notificationRoutes";
 
 export default function NotificationsPanel({ onClose, onReadOne }) {
   const { currentUser } = useAuth();
@@ -67,15 +67,19 @@ const handleItemClick = async (n) => {
 
   if (typeof onClose === "function") onClose();
 
+  // Chat: abrir modal Chats con la conversación específica (misma UX que Chats → seleccionar)
+  if (chatUrl && chatParams) {
+    openChatFromNotification(chatParams.offerId, chatParams.receiverId);
+    return;
+  }
+
   const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs" || d?.path === "/yacht-works";
   const targetIsChat = d?.target === "chat" || (d?.offer_id && !targetIsSeaJobs);
   const jobId = d?.job_id || d?.query?.open;
   const offerId = d?.offer_id;
 
   let url = null;
-  if (chatUrl) {
-    url = chatUrl;
-  } else if (targetIsSeaJobs && jobId) {
+  if (targetIsSeaJobs && jobId) {
     const basePath = d?.path || "/yacht-works";
     url = `${basePath}?open=${encodeURIComponent(jobId)}`;
   } else if (targetIsChat && offerId) {

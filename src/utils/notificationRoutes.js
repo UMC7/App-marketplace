@@ -62,6 +62,18 @@ export function buildChatNotificationUrl(data) {
 }
 
 /**
+ * Abre el modal Chats con la conversación específica (misma UX que Chats → seleccionar chat).
+ */
+export function openChatFromNotification(offerId, receiverId) {
+  if (!offerId || !receiverId) return;
+  window.dispatchEvent(
+    new CustomEvent('ydw:openChatFromNotification', {
+      detail: { offerId: String(offerId), receiverId: String(receiverId) },
+    })
+  );
+}
+
+/**
  * Marca como leídas todas las notificaciones del usuario que correspondan a este chat.
  * Útil al abrir la conversación (p. ej. desde la lista) para que el contador se actualice.
  */

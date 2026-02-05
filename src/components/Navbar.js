@@ -83,6 +83,21 @@ function Navbar() {
     };
   }, []);
 
+  // Al hacer clic en notificación de chat desde Alerts: abrir Chats con esa conversación
+  useEffect(() => {
+    const handler = (e) => {
+      const { offerId, receiverId } = e?.detail || {};
+      if (offerId && receiverId) {
+        setShowNotifications(false);
+        setShowChatList(true);
+        setActiveChat({ offerId, receiverId });
+      }
+    };
+    window.addEventListener('ydw:openChatFromNotification', handler);
+    return () => window.removeEventListener('ydw:openChatFromNotification', handler);
+  }, []);
+
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -105,7 +120,13 @@ function Navbar() {
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('is_read', false);
-  if (isMounted) setNotifUnread(count ?? 0);
+  if (isMounted) {
+    const c = count ?? 0;
+    setNotifUnread(c);
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'NOTIF_BADGE', count: c }));
+    }
+  }
 };
 
   const load = async () => {
@@ -129,11 +150,22 @@ function Navbar() {
       { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
       (payload) => {
         if (payload?.old?.is_read === false && payload?.new?.is_read === true) {
-          setNotifUnread((c) => Math.max(0, c - 1));
+          setNotifUnread((c) => {
+            const next = Math.max(0, c - 1);
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'NOTIF_BADGE', count: next }));
+            }
+            return next;
+          });
         } else if (payload?.old?.is_read === true && payload?.new?.is_read === false) {
-          setNotifUnread((c) => c + 1);
+          setNotifUnread((c) => {
+            const next = c + 1;
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'NOTIF_BADGE', count: next }));
+            }
+            return next;
+          });
         }
-
         setTimeout(recount, 400);
       }
     )

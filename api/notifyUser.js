@@ -118,12 +118,19 @@ export default async function handler(req, res) {
 
     // 3b) Envío Expo Push (app móvil)
     if (expoTokens.length) {
+      const { count: unreadCount } = await sb
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("is_read", false);
+      const badge = Math.min(99, Math.max(0, unreadCount ?? 1));
       const expoPayload = expoTokens.map((to) => ({
         to,
         title,
         body,
         data: { notification_id: notif.id, ...(data || {}) },
         sound: "default",
+        badge,
       }));
 
       try {

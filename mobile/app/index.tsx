@@ -261,6 +261,7 @@ function WebViewRootInner() {
           <WebView
             ref={webviewRef}
             source={{ uri: WEB_URL }}
+            cacheEnabled
             originWhitelist={[
               'https://www.yachtdaywork.com',
               'https://yachtdaywork.com',
@@ -280,6 +281,14 @@ function WebViewRootInner() {
             onMessage={(event: WebViewMessageEvent) => {
               const message = event?.nativeEvent?.data;
               if (!message) return;
+
+              try {
+                const payload = typeof message === 'string' ? JSON.parse(message) : null;
+                if (payload?.type === 'NOTIF_BADGE' && typeof payload.count === 'number') {
+                  Notifications.setBadgeCountAsync(Math.min(99, Math.max(0, payload.count)));
+                  return;
+                }
+              } catch {}
 
               if (message === 'ydw_ready') {
                 const token = expoPushTokenRef.current || expoPushToken;

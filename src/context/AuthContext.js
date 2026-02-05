@@ -75,6 +75,7 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const sessionRef = useRef(null);
+  const currentUserIdRef = useRef(null);
   const postAuthToWebView = useCallback((session) => {
     if (typeof window === 'undefined' || !window.ReactNativeWebView || !session?.user) return;
     const accessToken = (session.access_token || '').trim();
@@ -251,7 +252,7 @@ export function AuthProvider({ children }) {
 
       await getSession();
 
-      authListener = supabase.auth.onAuthStateChange((_event, session) => {
+      authListener = supabase.auth.onAuthStateChange((event, session) => {
         if (!session?.user) {
           sessionRef.current = null;
           setCurrentUser(null);
@@ -261,7 +262,15 @@ export function AuthProvider({ children }) {
 
         sessionRef.current = session;
         postAuthToWebView(session);
-        setLoading(true);
+
+        // Mismo usuario (refresh de token) o TOKEN_REFRESHED: no desmontar la app
+        const isSameUserRefresh =
+          event === 'TOKEN_REFRESHED' ||
+          (currentUserIdRef.current && currentUserIdRef.current === session.user.id);
+        if (!isSameUserRefresh) {
+          setLoading(true);
+        }
+
         hydrateSessionUser(session.user)
           .then((extendedUser) => {
             if (extendedUser) {
@@ -271,7 +280,6 @@ export function AuthProvider({ children }) {
           .finally(() => {
             setLoading(false);
           });
-        // NO llamar getSession() aquí
       });
     };
 
@@ -281,6 +289,10 @@ export function AuthProvider({ children }) {
       authListener?.subscription?.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    currentUserIdRef.current = currentUser?.id ?? null;
+  }, [currentUser?.id]);
 
   // Subir "pending avatar" al tener usuario con id (una vez por sesión)
   useEffect(() => {
