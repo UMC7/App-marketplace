@@ -76,7 +76,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const sessionRef = useRef(null);
   const postAuthToWebView = useCallback(async (session, skipRefresh = false) => {
-    if (typeof window === 'undefined' || !session?.user) return;
+    if (typeof window === 'undefined' || !window.ReactNativeWebView || !session?.user) return;
     let s = session;
     if (!skipRefresh) {
       try {
@@ -86,7 +86,7 @@ export function AuthProvider({ children }) {
     }
     const accessToken = (s.access_token || '').trim();
     if (!accessToken) return;
-    window.ReactNativeWebView?.postMessage(
+    window.ReactNativeWebView.postMessage(
       JSON.stringify({
         type: 'AUTH',
         user_id: s.user.id,
