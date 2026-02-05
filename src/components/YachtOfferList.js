@@ -397,8 +397,18 @@ const toggleCountryPreference = (country) => {
 };
 
 const PREF_LS_KEY = currentUser?.id ? `job_prefs_user_${currentUser.id}` : null;
+const hasLoadedPrefsRef = useRef(false);
+
+const prefsHaveData = (p) =>
+  (p?.positions?.length || 0) > 0 ||
+  (p?.terms?.length || 0) > 0 ||
+  (p?.countries?.length || 0) > 0 ||
+  (typeof p?.selectedRegion === 'string' && p.selectedRegion.length > 0) ||
+  (p?.minSalary !== '' && p?.minSalary != null) ||
+  (typeof p?.flag === 'string' && p.flag.length > 0);
 
 useEffect(() => {
+  hasLoadedPrefsRef.current = false;
   const load = async () => {
     if (!currentUser?.id) {
       setPrefsLoaded(true);
@@ -414,37 +424,37 @@ useEffect(() => {
       if (!error && data && data.job_preferences) {
         setPreferences(prev => ({ ...prev, ...data.job_preferences }));
         try { if (PREF_LS_KEY) localStorage.setItem(PREF_LS_KEY, JSON.stringify(data.job_preferences)); } catch {}
+        hasLoadedPrefsRef.current = true;
       } else {
-
         let usedLocal = false;
         if (PREF_LS_KEY) {
           const raw = localStorage.getItem(PREF_LS_KEY);
           if (raw) {
-            const parsed = JSON.parse(raw);
-            setPreferences(prev => ({ ...prev, ...parsed }));
-            usedLocal = true;
+            try {
+              const parsed = JSON.parse(raw);
+              setPreferences(prev => ({ ...prev, ...parsed }));
+              usedLocal = true;
+              hasLoadedPrefsRef.current = true;
+            } catch (_) {}
           }
         }
-
-        await supabase
-  .from('settings')
-  .upsert(
-    {
-      user_id: currentUser.id,
-      job_preferences: usedLocal && PREF_LS_KEY
-        ? JSON.parse(localStorage.getItem(PREF_LS_KEY) || '{}')
-        : {},
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id' }
-  );
+        if (usedLocal && PREF_LS_KEY) {
+          const toSave = JSON.parse(localStorage.getItem(PREF_LS_KEY) || '{}');
+          await supabase.from('settings').upsert(
+            { user_id: currentUser.id, job_preferences: toSave, updated_at: new Date().toISOString() },
+            { onConflict: 'user_id' }
+          );
+        }
       }
     } catch (e) {
       if (PREF_LS_KEY) {
         const raw = localStorage.getItem(PREF_LS_KEY);
         if (raw) {
-          const parsed = JSON.parse(raw);
-          setPreferences(prev => ({ ...prev, ...parsed }));
+          try {
+            const parsed = JSON.parse(raw);
+            setPreferences(prev => ({ ...prev, ...parsed }));
+            hasLoadedPrefsRef.current = true;
+          } catch (_) {}
         }
       }
     } finally {
@@ -458,6 +468,7 @@ useEffect(() => {
 useEffect(() => {
   if (!currentUser?.id) return;
   if (!prefsLoaded) return;
+  if (!hasLoadedPrefsRef.current && !prefsHaveData(preferences)) return;
 
   const t = setTimeout(async () => {
     if (PREF_LS_KEY) {

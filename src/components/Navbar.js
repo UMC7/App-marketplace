@@ -184,15 +184,11 @@ function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.getSession();
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      setCartItems([]);
-      localStorage.removeItem('cart');
-      navigate('/login');
-    } catch (err) {
-      alert('Error al cerrar sesión.');
-    }
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (_) {}
+    setCartItems([]);
+    localStorage.removeItem('cart');
+    navigate('/login');
   };
 
 const handleOpenChat = (offerId, receiverId) => {
