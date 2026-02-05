@@ -1,8 +1,9 @@
 // mobile/app/index.tsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
+  Animated,
   BackHandler,
+  Image,
   Linking,
   Platform,
   StyleSheet,
@@ -45,10 +46,36 @@ const WEB_URL = WEB_URL_RAW
   : '';
 
 const DEBUG_WEBVIEW = false;
+const LOADER_BG = '#2a2a2a';
 const PUSH_REGISTER_URL =
   WEB_URL && WEB_URL.length
     ? `${WEB_URL.replace(/\/$/, '')}/api/push/register`
     : 'https://www.yachtdaywork.com/api/push/register';
+
+function LoadingLogo() {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.06, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0.96, duration: 800, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulseAnim]);
+  return (
+    <View style={styles.loaderContent}>
+      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+        <Image
+          source={require('../assets/images/Iniciales.png')}
+          style={styles.loaderLogo}
+          resizeMode="contain"
+        />
+      </Animated.View>
+    </View>
+  );
+}
 
 function WebViewRootInner() {
   const webviewRef = useRef<WebView>(null);
@@ -320,8 +347,8 @@ function WebViewRootInner() {
       )}
 
       {isLoading && (
-        <View style={styles.loaderOverlay}>
-          <ActivityIndicator size="large" color="#081a3b" />
+        <View style={[styles.loaderOverlay, { backgroundColor: LOADER_BG }]}>
+          <LoadingLogo />
         </View>
       )}
     </View>
@@ -341,10 +368,11 @@ const styles = StyleSheet.create({
   webview: { flex: 1 },
   loaderOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loaderContent: { justifyContent: 'center', alignItems: 'center' },
+  loaderLogo: { width: 160, height: 160 },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
