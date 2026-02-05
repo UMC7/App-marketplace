@@ -61,6 +61,7 @@ function WebViewRootInner() {
   const normalizedColorScheme = systemColorScheme === 'dark' ? 'dark' : 'light';
 
   const authUserIdRef = useRef<string | null>(null);
+  const expoPushTokenRef = useRef<string | null>(null);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [authAccessToken, setAuthAccessToken] = useState<string | null>(null);
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
@@ -101,6 +102,7 @@ function WebViewRootInner() {
         const tokenResponse = await Notifications.getExpoPushTokenAsync({
           projectId: Constants.expoConfig?.extra?.eas?.projectId,
         });
+        expoPushTokenRef.current = tokenResponse.data;
         setExpoPushToken(tokenResponse.data);
       } catch {}
     };
@@ -109,21 +111,41 @@ function WebViewRootInner() {
   }, []);
 
   useEffect(() => {
-    if (!authUserId || !expoPushToken) return;
-    if (!authAccessToken) return;
+    if (!expoPushToken) return;
+    const script = `(function(){var t="${expoPushToken.replace(/\\/g,'\\\\').replace(/"/g,'\\"')}";window.__expoPushToken=t;window.dispatchEvent(new CustomEvent('expo:pushToken',{detail:t}));})();true;`;
+    webviewRef.current?.injectJavaScript(script);
+  }, [expoPushToken]);
 
-    void fetch(PUSH_REGISTER_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authAccessToken}`,
-      },
-      body: JSON.stringify({
-        user_id: authUserId,
-        platform: 'android',
-        token: expoPushToken,
-      }),
-    });
+  useEffect(() => {
+    if (!authUserId || !expoPushToken) return;
+    const token = (authAccessToken || '').trim();
+    if (!token || token.length < 50) return;
+
+    const doRegister = (attempt = 1) => {
+      fetch(PUSH_REGISTER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          'X-Access-Token': token,
+        },
+        body: JSON.stringify({
+          user_id: authUserId,
+          platform: 'android',
+          token: expoPushToken,
+          access_token: token,
+        }),
+      })
+        .then((res) => {
+          if (res.status === 401 && attempt < 3) {
+            setTimeout(() => doRegister(attempt + 1), 1500 * attempt);
+            return;
+          }
+        })
+        .catch(() => {});
+    };
+
+    void doRegister();
   }, [authUserId, authAccessToken, expoPushToken]);
 
   const handleRetry = () => {
@@ -260,8 +282,13 @@ function WebViewRootInner() {
               if (!message) return;
 
               if (message === 'ydw_ready') {
+                const token = expoPushTokenRef.current || expoPushToken;
+                const tokenPart = token
+                  ? `(function(){var t="${token.replace(/\\/g,'\\\\').replace(/"/g,'\\"')}";window.__expoPushToken=t;window.dispatchEvent(new CustomEvent('expo:pushToken',{detail:t}));})();`
+                  : '';
                 webviewRef.current?.injectJavaScript(`
                   window.dispatchEvent(new CustomEvent('ydw:ready'));
+                  ${tokenPart}
                   true;
                 `);
                 stopLoader();

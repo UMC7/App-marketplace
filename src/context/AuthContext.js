@@ -9,6 +9,28 @@ export const useAuth = () => {
   return useContext(AuthContext);
 };
 
+const buildExtendedUser = (user, profileData) => {
+  if (!user) return null;
+
+  const metadata = user.user_metadata || {};
+  const mergedAppMetadata = {
+    ...user.app_metadata,
+    ...(profileData || {}),
+  };
+  const resolvedRole =
+    profileData?.role ||
+    metadata.role ||
+    user.app_metadata?.role ||
+    user.role ||
+    'user';
+
+  return {
+    ...user,
+    role: resolvedRole,
+    app_metadata: mergedAppMetadata,
+  };
+};
+
 // Sube el "pending_avatar" guardado en localStorage y actualiza users.avatar_url
 async function uploadPendingAvatarIfAny(user) {
   try {
@@ -53,21 +75,50 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const sessionRef = useRef(null);
-  const postAuthToWebView = useCallback((session) => {
+  const postAuthToWebView = useCallback(async (session, skipRefresh = false) => {
     if (typeof window === 'undefined' || !session?.user) return;
-    console.log('[AuthContext] session.user.id =', session?.user?.id);
-    console.log('[AuthContext] session.access_token =', session?.access_token);
+    let s = session;
+    if (!skipRefresh) {
+      try {
+        const { data: { session: refreshed } } = await supabase.auth.refreshSession();
+        if (refreshed?.access_token) s = refreshed;
+      } catch (_) {}
+    }
+    const accessToken = (s.access_token || '').trim();
+    if (!accessToken) return;
     window.ReactNativeWebView?.postMessage(
       JSON.stringify({
         type: 'AUTH',
-        user_id: session.user.id,
-        access_token: session.access_token || null,
+        user_id: s.user.id,
+        access_token: accessToken,
       }),
     );
   }, []);
 
   useEffect(() => {
     let authListener;
+    const hydrateSessionUser = async (user) => {
+      if (!user?.id) return null;
+
+      try {
+        const { data: userProfile, error: profileError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.warn('No se pudo obtener el perfil extendido:', profileError.message);
+          return buildExtendedUser(user, null);
+        }
+
+        return buildExtendedUser(user, userProfile);
+      } catch (err) {
+        console.error('Error al obtener el perfil extendido:', err.message);
+        return buildExtendedUser(user, null);
+      }
+    };
+
     const getSession = async () => {
       try {
         const {
@@ -92,24 +143,6 @@ export function AuthProvider({ children }) {
 
         const user = session.user;
         const metadata = user.user_metadata || {};
-
-        const buildExtendedUser = (profileData) => {
-          const mergedAppMetadata = {
-            ...user.app_metadata,
-            ...(profileData || {}),
-          };
-          const resolvedRole =
-            profileData?.role ||
-            metadata.role ||
-            user.app_metadata?.role ||
-            user.role ||
-            'user';
-          return {
-            ...user,
-            role: resolvedRole,
-            app_metadata: mergedAppMetadata,
-          };
-        };
 
         const { data: existingUser, error: selectError } = await supabase
           .from('users')
@@ -194,9 +227,9 @@ export function AuthProvider({ children }) {
 
         if (profileError) {
           console.warn('No se pudo obtener el perfil extendido:', profileError.message);
-          setCurrentUser(buildExtendedUser(null));
+          setCurrentUser(buildExtendedUser(user, null));
         } else {
-          setCurrentUser(buildExtendedUser(userProfile));
+          setCurrentUser(buildExtendedUser(user, userProfile));
         }
       } catch (err) {
         console.error('Error inesperado al obtener sesión:', err.message);
@@ -225,7 +258,7 @@ export function AuthProvider({ children }) {
 
       await getSession();
 
-      authListener = supabase.auth.onAuthStateChange(async (_event, session) => {
+      authListener = supabase.auth.onAuthStateChange((_event, session) => {
         if (!session?.user) {
           sessionRef.current = null;
           setCurrentUser(null);
@@ -233,12 +266,20 @@ export function AuthProvider({ children }) {
           return;
         }
 
-      sessionRef.current = session;
-      postAuthToWebView(session);
-      setCurrentUser({ ...session.user });
-      setLoading(false);
-      // NO llamar getSession() aquí
-    });
+        sessionRef.current = session;
+        postAuthToWebView(session);
+        setLoading(true);
+        hydrateSessionUser(session.user)
+          .then((extendedUser) => {
+            if (extendedUser) {
+              setCurrentUser(extendedUser);
+            }
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+        // NO llamar getSession() aquí
+      });
     };
 
     bootstrap();
@@ -272,13 +313,62 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    let retryTimeout;
+    let resendTimeouts = [];
     const handler = () => {
-      if (sessionRef.current) postAuthToWebView(sessionRef.current);
+      if (sessionRef.current) {
+        postAuthToWebView(sessionRef.current);
+        // Re-enviar AUTH 2s y 5s después por si la primera se perdió
+        resendTimeouts.push(setTimeout(() => {
+          if (sessionRef.current) postAuthToWebView(sessionRef.current, true);
+        }, 2000));
+        resendTimeouts.push(setTimeout(() => {
+          if (sessionRef.current) postAuthToWebView(sessionRef.current, true);
+        }, 5000));
+      } else {
+        retryTimeout = setTimeout(() => {
+          if (sessionRef.current) postAuthToWebView(sessionRef.current);
+        }, 1500);
+      }
     };
 
     window.addEventListener('ydw:ready', handler);
-    return () => window.removeEventListener('ydw:ready', handler);
+    return () => {
+      window.removeEventListener('ydw:ready', handler);
+      if (retryTimeout) clearTimeout(retryTimeout);
+      resendTimeouts.forEach((t) => clearTimeout(t));
+    };
   }, [postAuthToWebView]);
+
+  // Fallback: cuando la app nativa inyecta el Expo push token, la web registra directamente
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const registerFromWeb = async (expoToken) => {
+      const session = sessionRef.current;
+      if (!session?.user?.id || !expoToken) return;
+      const accessToken = (session.access_token || '').trim();
+      if (!accessToken || accessToken.length < 50) return;
+      try {
+        await fetch('/api/push/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify({
+            user_id: session.user.id,
+            platform: 'android',
+            token: expoToken,
+            access_token: accessToken,
+          }),
+        });
+      } catch (_) {}
+    };
+    const handler = (e) => {
+      const token = (e?.detail || window.__expoPushToken || '').trim();
+      if (token) registerFromWeb(token);
+    };
+    window.addEventListener('expo:pushToken', handler);
+    if (window.__expoPushToken) handler({ detail: window.__expoPushToken });
+    return () => window.removeEventListener('expo:pushToken', handler);
+  }, []);
 
   // 🔄 Escucha en tiempo real cambios en la fila del usuario (incluye avatar_url)
   // y actualiza currentUser.app_metadata sin recargar.

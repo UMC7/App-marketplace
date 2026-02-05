@@ -2,21 +2,34 @@
 // Solo acepta registro si el user_id coincide con el usuario autenticado (JWT/Supabase).
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseUrl =
+  process.env.SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey =
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.REACT_APP_SUPABASE_ANON_KEY;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceRoleKey) {
   throw new Error("Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.");
 }
 
+if (!supabaseAnonKey) {
+  console.error("[push/register] SUPABASE_ANON_KEY no está definida. El JWT no se puede validar.");
+}
+
 const sbAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 /** Obtiene el user_id del token (Supabase JWT). Si no hay token o es inválido, devuelve null. */
 async function getAuthenticatedUserId(req) {
+  // Priorizar body: algunos proxies/OkHttp eliminan Authorization en redirects
   const token =
-    req.headers.authorization?.replace(/^Bearer\s+/i, "") || req.body?.access_token;
-  if (!token) return null;
+    (req.body?.access_token || "").trim() ||
+    (req.headers["x-access-token"] || "").trim() ||
+    (req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
+  if (!token || token.length < 50) return null;
 
   if (!supabaseAnonKey) return null;
   const sbAuth = createClient(supabaseUrl, supabaseAnonKey);
@@ -24,7 +37,11 @@ async function getAuthenticatedUserId(req) {
     data: { user },
     error,
   } = await sbAuth.auth.getUser(token);
-  if (error || !user) return null;
+  if (error) {
+    console.warn("[push/register] getUser error:", error.message);
+    return null;
+  }
+  if (!user) return null;
   return user.id;
 }
 
@@ -38,13 +55,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Faltan parámetros: user_id, token, platform" });
     }
 
-    console.log('[push/register] headers.auth =', req.headers.authorization);
-    console.log('[push/register] body.user_id =', req.body?.user_id);
-
     const authenticatedId = await getAuthenticatedUserId(req);
-    console.log('[push/register] authenticatedId =', authenticatedId);
     if (authenticatedId === null) {
-      return res.status(401).json({ error: "No autorizado. Envía Authorization: Bearer <token> o access_token en el body." });
+      const tokenReceived = !!(req.headers.authorization || req.body?.access_token);
+      const hint = !supabaseAnonKey
+        ? " (SUPABASE_ANON_KEY no configurada en el servidor)"
+        : !tokenReceived
+          ? " (No se recibió Authorization ni access_token)"
+          : " (Token inválido o expirado)";
+      return res.status(401).json({
+        error: "No autorizado. Envía Authorization: Bearer <token> o access_token en el body." + hint,
+      });
     }
     if (authenticatedId !== user_id) {
       return res.status(403).json({ error: "user_id no coincide con el usuario autenticado." });
