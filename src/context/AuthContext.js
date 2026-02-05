@@ -301,10 +301,11 @@ export function AuthProvider({ children }) {
     uploadPendingAvatarIfAny(u);
   }, [currentUser?.id]);
 
-  // === FCM: registrar/actualizar token cuando hay usuario autenticado ===
+  // === FCM: registrar/actualizar token cuando hay usuario autenticado (solo web; en app usamos Expo) ===
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!currentUser?.id) return;
+    if (window.ReactNativeWebView) return;
     registerFCM(currentUser);
   }, [currentUser?.id]);
 
