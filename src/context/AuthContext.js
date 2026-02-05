@@ -75,21 +75,14 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const sessionRef = useRef(null);
-  const postAuthToWebView = useCallback(async (session, skipRefresh = false) => {
+  const postAuthToWebView = useCallback((session) => {
     if (typeof window === 'undefined' || !window.ReactNativeWebView || !session?.user) return;
-    let s = session;
-    if (!skipRefresh) {
-      try {
-        const { data: { session: refreshed } } = await supabase.auth.refreshSession();
-        if (refreshed?.access_token) s = refreshed;
-      } catch (_) {}
-    }
-    const accessToken = (s.access_token || '').trim();
+    const accessToken = (session.access_token || '').trim();
     if (!accessToken) return;
     window.ReactNativeWebView.postMessage(
       JSON.stringify({
         type: 'AUTH',
-        user_id: s.user.id,
+        user_id: session.user.id,
         access_token: accessToken,
       }),
     );
@@ -320,10 +313,10 @@ export function AuthProvider({ children }) {
         postAuthToWebView(sessionRef.current);
         // Re-enviar AUTH 2s y 5s después por si la primera se perdió
         resendTimeouts.push(setTimeout(() => {
-          if (sessionRef.current) postAuthToWebView(sessionRef.current, true);
+          if (sessionRef.current) postAuthToWebView(sessionRef.current);
         }, 2000));
         resendTimeouts.push(setTimeout(() => {
-          if (sessionRef.current) postAuthToWebView(sessionRef.current, true);
+          if (sessionRef.current) postAuthToWebView(sessionRef.current);
         }, 5000));
       } else {
         retryTimeout = setTimeout(() => {
