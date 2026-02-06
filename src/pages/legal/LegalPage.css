@@ -1,3 +1,5 @@
+/* src/pages/LegalPage.css */
+
 /* Base (modo claro) */
 .legal-container {
   max-width: 700px;
@@ -8,7 +10,7 @@
   padding: 32px;
   font-family: 'Inter', sans-serif;
   color: #081a3b;
-  opacity: 1 !important;            /* evita atenuaciones heredadas */
+  opacity: 1 !important;
 }
 
 .legal-header {
@@ -59,8 +61,8 @@
 
 /* --------- Modo oscuro --------- */
 [data-theme="dark"] .legal-container {
-  background: #22252b;               /* card oscuro */
-  color: #f1f5f9;                    /* texto principal claro */
+  background: #22252b;
+  color: #f1f5f9;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
 }
 
@@ -69,7 +71,7 @@
 }
 
 [data-theme="dark"] .legal-content h2 {
-  color: #68ada8;                    /* mantiene el turquesa de marca */
+  color: #68ada8;
 }
 
 [data-theme="dark"] .legal-link {
