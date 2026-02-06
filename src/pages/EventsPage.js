@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './EventsPage.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
+import LoadingSpinner from '../components/LoadingSpinner';
 import supabase from '../supabase';
 import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 
@@ -267,7 +268,7 @@ function EventsPage() {
   };
 
   if (loading) {
-    return <p style={{ padding: '20px' }}>Loading events...</p>;
+    return <LoadingSpinner message="Loading events..." />;
   }
 
   if (events.length === 0) {

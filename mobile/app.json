@@ -24,7 +24,8 @@
       "buildNumber": "1"
     },
     "plugins": [
-      "./plugins/withForceDarkAllowedFalse"
+      "./plugins/withForceDarkAllowedFalse",
+      "./plugins/withSystemNavigationBar"
     ],
     "extra": {
       "eas": {

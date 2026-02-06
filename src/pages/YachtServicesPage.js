@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './YachtServicesPage.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
+import LoadingSpinner from '../components/LoadingSpinner';
 import supabase from '../supabase';
 
 // Carrusel (mismo paquete que ya usas en ProductDetailPage)
@@ -203,7 +204,7 @@ function YachtServicesPage() {
   };
 
   if (loading) {
-    return <p style={{ padding: '20px' }}>Loading services...</p>;
+    return <LoadingSpinner message="Loading services..." />;
   }
 
   // Carrusel: autoplay, sin flechas ni dots

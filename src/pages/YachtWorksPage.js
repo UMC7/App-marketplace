@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import supabase from '../supabase';
 import YachtOfferList from '../components/YachtOfferList';
 import Modal from '../components/Modal';
+import LoadingSpinner from '../components/LoadingSpinner';
 import '../yachtworkspage.css';
 
 const getOfferDepartment = (offer) => {
@@ -392,6 +393,10 @@ function YachtWorksPage() {
       prefsIntroTimer.current = null;
     }
   };
+
+  if (offersLoading) {
+    return <LoadingSpinner message="Loading offers..." />;
+  }
 
   return (
     <div className="container">

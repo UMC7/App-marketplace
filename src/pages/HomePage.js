@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import ProductList from '../components/ProductList';
 import ScrollToTopButton from '../components/ScrollToTopButton';
+import LoadingSpinner from '../components/LoadingSpinner';
 import './HomePage.css';
 import supabase from '../supabase';
 
@@ -120,6 +121,10 @@ function HomePage() {
     setSortOrder('');
     setFilteredProducts(products);
   };
+
+  if (loading) {
+    return <LoadingSpinner message="Loading products..." />;
+  }
 
   return (
     <div className="container">
@@ -243,11 +248,7 @@ function HomePage() {
         </div>
       )}
 
-      {loading ? (
-        <p>Loading products...</p>
-      ) : (
-        <ProductList products={filteredProducts} />
-      )}
+      <ProductList products={filteredProducts} />
 
       <ScrollToTopButton />
     </div>

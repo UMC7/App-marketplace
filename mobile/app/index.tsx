@@ -7,6 +7,7 @@ import {
   Linking,
   Platform,
   Share,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -277,8 +278,19 @@ function WebViewRootInner() {
     );
   }
 
+  // Configure status bar to follow system theme
+  useEffect(() => {
+    const barStyle = systemColorScheme === 'dark' ? 'light-content' : 'dark-content';
+    StatusBar.setBarStyle(barStyle, true);
+  }, [systemColorScheme]);
+
   return (
     <View style={styles.container}>
+      <StatusBar
+        barStyle={systemColorScheme === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={Platform.OS === 'android' ? (systemColorScheme === 'dark' ? '#000000' : '#FFFFFF') : undefined}
+        translucent={Platform.OS === 'android'}
+      />
       {hasError ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorTitle}>Connection Error</Text>
@@ -288,11 +300,12 @@ function WebViewRootInner() {
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom }}>
+        <View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom, backgroundColor: '#f4f6f8' }}>
           <WebView
             ref={webviewRef}
             source={{ uri: WEB_URL }}
             cacheEnabled
+            style={{ backgroundColor: '#f4f6f8' }}
             originWhitelist={[
               'https://www.yachtdaywork.com',
               'https://yachtdaywork.com',
@@ -323,12 +336,21 @@ function WebViewRootInner() {
                   const title = String(payload.title ?? '').trim() || undefined;
                   const text = String(payload.text ?? '').trim() || undefined;
                   const url = String(payload.url ?? '').trim() || undefined;
+                  
+                  // Use native system share sheet - combine text and url in message
                   const shareMessage = [text, url].filter(Boolean).join('\n');
-                  Share.share({
-                    title: title || 'Share',
-                    message: shareMessage || url || title || '',
-                    url: url || undefined,
-                  }).catch(() => {});
+                  
+                  // For Android/iOS native share sheet
+                  Share.share(
+                    {
+                      title: title,
+                      message: shareMessage || url || title || '',
+                      ...(Platform.OS === 'ios' && url ? { url } : {}),
+                    },
+                    {
+                      dialogTitle: title || 'Share',
+                    }
+                  ).catch(() => {});
                   return;
                 }
               } catch {}
@@ -380,8 +402,8 @@ function WebViewRoot() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  webview: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#f4f6f8' },
+  webview: { flex: 1, backgroundColor: '#f4f6f8' },
   loaderOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',

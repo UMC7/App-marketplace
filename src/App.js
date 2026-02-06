@@ -39,6 +39,7 @@ import './App.css';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AnimatedLayout from './layouts/AnimatedLayout';
+import LoadingSpinner from './components/LoadingSpinner';
 
 // ✅ NUEVO: detalle de evento (para deep links o uso futuro)
 import EventDetail from './pages/EventDetail';
@@ -195,7 +196,7 @@ function App() {
   }, []);
 
   if (loading || !consentLoaded) {
-    return <div>Loading application...</div>;
+    return <LoadingSpinner message="Loading application..." />;
   }
 
   return (

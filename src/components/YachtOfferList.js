@@ -8,6 +8,7 @@ import Avatar from '../components/Avatar';
 import '../styles/YachtOfferList.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import MatchBorder from '../components/MatchBorder';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 
 const REMARKS_DISCLAIMER = 'Disclaimer:\nYacht Daywork Ltd. connects employers and crew directly and is not involved in hiring decisions or private agreements. Please communicate responsibly and remain cautious when applying.';
@@ -2157,9 +2158,7 @@ useEffect(() => {
       ))}
 
       {offersLoading && (
-        <p style={{ marginTop: '20px', fontStyle: 'italic' }}>
-          Loading offers...
-        </p>
+        <LoadingSpinner message="Loading offers..." />
       )}
       {!offersLoading && Object.keys(groupedOffers).length === 0 && (
         <p style={{ marginTop: '20px', fontStyle: 'italic' }}>

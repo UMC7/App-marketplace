@@ -23,6 +23,71 @@ body {
   color: #1c1c1c;
 }
 
+body.dark-mode {
+  background-color: #121212;
+  color: #f5f5f5;
+}
+
+@keyframes page-transition-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Gradiente que se mueve (igual que la línea del navbar) */
+@keyframes spinner-gradient-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.page-transition-spinner {
+  border: none;
+  background: linear-gradient(
+    90deg,
+    #1f6feb,
+    #00c2a8,
+    #f59e0b,
+    #ef4444,
+    #7c3aed,
+    #1f6feb
+  );
+  background-size: 300% 100%;
+  animation: page-transition-spin 0.8s linear infinite, spinner-gradient-flow 3s linear infinite;
+  mask-image: conic-gradient(from -45deg, black 0deg, black 90deg, transparent 90deg),
+    radial-gradient(circle, transparent 58%, black 58%);
+  mask-composite: intersect;
+  -webkit-mask-image: conic-gradient(from -45deg, black 0deg, black 90deg, transparent 90deg),
+    radial-gradient(circle, transparent 58%, black 58%);
+  -webkit-mask-composite: source-in;
+}
+
+body.dark-mode .page-transition-spinner {
+  border: none;
+  background: linear-gradient(
+    90deg,
+    #1f6feb,
+    #00c2a8,
+    #f59e0b,
+    #ef4444,
+    #7c3aed,
+    #1f6feb
+  );
+  background-size: 300% 100%;
+  animation: page-transition-spin 0.8s linear infinite, spinner-gradient-flow 3s linear infinite;
+  mask-image: conic-gradient(from -45deg, black 0deg, black 90deg, transparent 90deg),
+    radial-gradient(circle, transparent 58%, black 58%);
+  mask-composite: intersect;
+  -webkit-mask-image: conic-gradient(from -45deg, black 0deg, black 90deg, transparent 90deg),
+    radial-gradient(circle, transparent 58%, black 58%);
+  -webkit-mask-composite: source-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-spinner,
+  body.dark-mode .page-transition-spinner {
+    animation: page-transition-spin 0.8s linear infinite;
+  }
+}
+
 h1,
 h2,
 h3 {
