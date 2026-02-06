@@ -78,13 +78,17 @@
     margin-right: var(--spacing-xxxxl);
   }
 
-  .top-row > .expanded-block:not(:last-child)::after {
+  .top-row > .expanded-block:not(:last-child) .field-pair {
+    position: relative;
+  }
+
+  .top-row > .expanded-block:not(:last-child) .field-pair::after {
     content: "";
     position: absolute;
-    top: 32px;
-    right: 0;
+    top: 0;
+    right: calc(-1 * var(--spacing-xxxxl));
     width: 1px;
-    height: 100px;
+    height: 100%;
     background-color: #bca987;
   }
 }

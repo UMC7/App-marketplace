@@ -160,7 +160,6 @@ const [prefsLoaded, setPrefsLoaded] = useState(false);
 const cardRefs = useRef({});
 const chatIntroTimerRef = useRef(null);
 const chatIntroScheduledRef = useRef(false);
-  const SCROLL_OFFSET = 120;
   const collapseTargetRef = useRef(null);
   const CHAT_INTRO_KEY = 'seajobs_private_chat_intro_seen';
   const CHAT_INTRO_DELAY_MS = 5000;
@@ -330,8 +329,6 @@ useEffect(() => {
   };
 }, [currentUser?.id]);
 
-  const setFiltersVisible = setShowFilters;
-
 const RANKS = [
   "Captain", "Captain/Engineer", "Skipper", "Chase Boat Captain", "Relief Captain",
   "Chief Officer", "2nd Officer", "3rd Officer", "Bosun", "Deck/Engineer", "Mate",
@@ -464,7 +461,7 @@ useEffect(() => {
   };
 
   load();
-}, [currentUser?.id]);
+}, [currentUser?.id, PREF_LS_KEY, setPreferences]);
 
 useEffect(() => {
   if (!currentUser?.id) return;
@@ -758,16 +755,6 @@ useEffect(() => {
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     return new Date(d.setDate(diff));
   };
-
-  const getWeekGroup = (dateStr) => {
-    const monday = getMonday(new Date(dateStr));
-    return monday.toLocaleDateString('en-US', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
-
 
   const groupedOffers = useMemo(() => {
     return offers
@@ -1343,7 +1330,6 @@ useEffect(() => {
                   offers.map((offer) => {
                     const isOwner = currentUser?.id === offer.user_id;
                     const isExpanded = expandedOfferId === offer.id;
-                    const authorNickname = authors[offer.user_id] || 'Usuario';
                     const primaryScore = Number(String(offer.match_primary_score).replace('%','')) || 0;
                     const teammateScore = Number(String(offer.match_teammate_score).replace('%','')) || 0;
                     const normalizedRequiredDocs = (() => {
