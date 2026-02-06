@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:836453123406:android:f985cead711a1417a50a1f",
+        "mobilesdk_app_id": "1:836453123406:android:cb5e904f5557f161a50a1f",
         "android_client_info": {
-          "package_name": "com.anonymous.mimarketplacemobile"
+          "package_name": "com.yachtdaywork.app"
         }
       },
       "oauth_client": [],

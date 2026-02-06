@@ -12,7 +12,7 @@
         "RECEIVE_BOOT_COMPLETED",
         "POST_NOTIFICATIONS"
       ],
-      "package": "com.anonymous.mimarketplacemobile",
+      "package": "com.yachtdaywork.app",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/YDWapp.png",
@@ -20,7 +20,7 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "com.anonymous.mimarketplacemobile",
+      "bundleIdentifier": "com.yachtdaywork.app",
       "buildNumber": "1"
     },
     "plugins": [
