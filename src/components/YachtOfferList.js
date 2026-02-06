@@ -1566,6 +1566,20 @@ useEffect(() => {
       </div>
     )}
     
+    {offer.is_smoke_free_yacht && (
+      <div className="field-group">
+        <div className="field-label">Smoke-free yacht</div>
+        <div className="field-value">Yes</div>
+      </div>
+    )}
+
+    {offer.is_dry_boat && (
+      <div className="field-group">
+        <div className="field-label">Dry boat</div>
+        <div className="field-value">Yes</div>
+      </div>
+    )}
+
     {(offer.is_asap || offer.start_date) && (
       <div className="field-group">
         <div className="field-label">Start Date</div>

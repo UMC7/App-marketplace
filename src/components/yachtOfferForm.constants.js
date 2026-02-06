@@ -34,7 +34,7 @@ export const titles = [
 ];
 
 export const types = [
-  'Rotational','Permanent','Temporary','Seasonal','Relief','Delivery','Crossing','DayWork'
+  'Rotational','Permanent','Temporary','Seasonal','Relief','Delivery','Crossing','Freelance','DayWork'
 ];
 
 export const ENGINEERING_RANKS = [
@@ -121,6 +121,24 @@ export const DECK_DOCUMENT_MAP = {
   'Deck/Engineer': ['VHF SRC'],
 };
 
+export const WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP = {
+  label: 'Watersports / Diving',
+  options: [
+    'Certified Diver',
+    'Divemaster / Dive Guide',
+    'Instructor (PADI or equivalent)',
+    'Water Toys Experience',
+  ],
+};
+
+export const FISHING_REQUIRED_DOCUMENT_GROUP = {
+  label: 'Fishing Experience',
+  options: [
+    'Recreational Fishing Experience',
+    'Advanced / Sport Fishing',
+  ],
+};
+
 export const REQUIRED_DOCUMENT_GROUPS = [
   {
     label: 'Commonly Required',
@@ -140,6 +158,8 @@ export const REQUIRED_DOCUMENT_GROUPS = [
     label: 'Travel & Health',
     options: ['Vaccination - Yellow Fever'],
   },
+  FISHING_REQUIRED_DOCUMENT_GROUP,
+  WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
 
 export const CAPTAIN_TIER_DECK_RANKS = ['Captain','Captain/Engineer','Skipper','Relief Captain'];
@@ -204,6 +224,8 @@ export const CAPTAIN_REQUIRED_DOCUMENT_GROUPS = [
     label: 'Tender & PWC',
     options: ['PWC Instructor'],
   },
+  FISHING_REQUIRED_DOCUMENT_GROUP,
+  WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
 
 export const DECK_COMMAND_REQUIRED_DOCUMENT_GROUPS = [
@@ -285,6 +307,8 @@ export const DECK_COMMAND_REQUIRED_DOCUMENT_GROUPS = [
       'PWC Instructor',
     ],
   },
+  FISHING_REQUIRED_DOCUMENT_GROUP,
+  WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
 
 export const DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS = [
@@ -328,6 +352,8 @@ export const DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS = [
       'PWC Instructor',
     ],
   },
+  FISHING_REQUIRED_DOCUMENT_GROUP,
+  WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
 
 export const DECK_ENGINEER_REQUIRED_DOCUMENT_GROUPS = [
@@ -371,6 +397,8 @@ export const DECK_ENGINEER_REQUIRED_DOCUMENT_GROUPS = [
       'PWC Instructor',
     ],
   },
+  FISHING_REQUIRED_DOCUMENT_GROUP,
+  WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
 
 export const DAYWORKER_REQUIRED_DOCUMENT_GROUPS = [
@@ -385,6 +413,8 @@ export const DAYWORKER_REQUIRED_DOCUMENT_GROUPS = [
       "Driver's License",
     ],
   },
+  FISHING_REQUIRED_DOCUMENT_GROUP,
+  WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
 
 export const ENGINEERING_REQUIRED_DOCUMENT_GROUPS = [
@@ -415,6 +445,8 @@ export const ENGINEERING_REQUIRED_DOCUMENT_GROUPS = [
       'PWC Instructor',
     ],
   },
+  FISHING_REQUIRED_DOCUMENT_GROUP,
+  WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
 
 export const RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS = {
@@ -479,6 +511,8 @@ export const GALLEY_REQUIRED_DOCUMENT_GROUPS = [
     label: 'Interior (Service & Hospitality)',
     options: ['Silver Service','Mixology / Bartender','Barista'],
   },
+  FISHING_REQUIRED_DOCUMENT_GROUP,
+  WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
 
 export const INTERIOR_DEPARTMENT_RANKS = [
@@ -536,6 +570,8 @@ export const INTERIOR_REQUIRED_DOCUMENT_GROUPS = [
       'Passenger Ship Safety Training',
     ],
   },
+  FISHING_REQUIRED_DOCUMENT_GROUP,
+  WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
 
 export const OTHERS_REQUIRED_DOCUMENT_GROUPS = [
@@ -600,6 +636,8 @@ export const OTHERS_REQUIRED_DOCUMENT_GROUPS = [
       'PWC Instructor',
     ],
   },
+  FISHING_REQUIRED_DOCUMENT_GROUP,
+  WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
 
 export const DEPARTMENT_RANK_GROUPS = [

@@ -59,6 +59,8 @@ const initialState = {
   is_doe: false,
   is_tips: false,
   is_flexible: false,
+  is_smoke_free_yacht: false,
+  is_dry_boat: false,
   years_in_rank: '',
   gender: '',
   description: '',
@@ -721,6 +723,8 @@ const derivedEndDate = (() => {
     is_asap: sanitizedData.is_asap,
     is_tips: sanitizedData.is_tips,
     is_flexible: sanitizedData.is_flexible,
+    is_smoke_free_yacht: sanitizedData.is_smoke_free_yacht,
+    is_dry_boat: sanitizedData.is_dry_boat,
     holidays: sanitizedData.holidays ? Number(sanitizedData.holidays) : null,
     language_1: sanitizedData.language_1 || null,
     language_1_fluency: sanitizedData.language_1_fluency || null,
@@ -1208,10 +1212,31 @@ const derivedEndDate = (() => {
     <label>Flag:</label>
     <select name="flag" value={formData.flag} onChange={handleChange}>
       <option value="">Select...</option>
-      {['Foreign Flag', 'United States', 'Australia', 'Bahamas', 'Belgium', 'Bermuda', 'BVI', 'Cayman Islands', 'Cook Islands', 'Cyprus', 'Delaware', 'France', 'Germany', 'Gibraltar', 'Greece', 'Guernsey', 'Holland', 'Hong Kong', 'Isle of Man', 'Italy', 'Jamaica', 'Jersey', 'Langkawi', 'Malta', 'Marshall Islands', 'Panama', 'Poland', 'Portugal', 'San Marino', 'Singapore', 'Spain', 'UK'].map((f) => (
+      {['Foreign Flag', 'United States', 'Australia', 'Bahamas', 'Belgium', 'Bermuda', 'BVI', 'Canada', 'Cayman Islands', 'Cook Islands', 'Cyprus', 'Delaware', 'France', 'Germany', 'Gibraltar', 'Greece', 'Guernsey', 'Holland', 'Hong Kong', 'Isle of Man', 'Italy', 'Jamaica', 'Jersey', 'Langkawi', 'Malta', 'Marshall Islands', 'Panama', 'Poland', 'Portugal', 'San Marino', 'Singapore', 'Spain', 'UK'].map((f) => (
         <option key={f} value={f}>{f}</option>
       ))}
     </select>
+
+    <div className="form-group asap-flex-row">
+      <label className="form-checkbox-label">
+        <input
+          type="checkbox"
+          name="is_smoke_free_yacht"
+          checked={formData.is_smoke_free_yacht}
+          onChange={handleChange}
+        />
+        <span>Smoke-free yacht</span>
+      </label>
+      <label className="form-checkbox-label">
+        <input
+          type="checkbox"
+          name="is_dry_boat"
+          checked={formData.is_dry_boat}
+          onChange={handleChange}
+        />
+        <span>Dry boat</span>
+      </label>
+    </div>
 
     {/* 13. Fecha de Inicio */}
 <label>Start Date (Month/Day): <span style={{ color: 'red' }}>*</span></label>
