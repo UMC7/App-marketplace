@@ -40,6 +40,17 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Método no permitido" });
   }
 
+  const internalKey = process.env.WEB_API_INTERNAL_KEY;
+  if (internalKey) {
+    const incoming = req.headers["x-internal-key"];
+    if (!incoming || incoming !== internalKey) {
+      return res.status(401).json({
+        error: "No autorizado",
+        hint: "Incluye header x-internal-key (mismo valor que WEB_API_INTERNAL_KEY en tu deploy y en Supabase Edge secrets).",
+      });
+    }
+  }
+
   try {
     const { userId, title, body, data } = req.body || {};
     if (!userId || !title || !body) {
@@ -192,6 +203,10 @@ export default async function handler(req, res) {
       failed,
     });
   } catch (err) {
-    return res.status(500).json({ error: "Error interno al notificar" });
+    console.error("notifyUser error:", err?.message || err);
+    return res.status(500).json({
+      error: "Error interno al notificar",
+      message: err?.message || String(err),
+    });
   }
 }
