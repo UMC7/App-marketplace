@@ -5,19 +5,28 @@
     "version": "1.0.0",
     "icon": "./assets/images/YDWapp.png",
     "android": {
-      "permissions": ["CAMERA", "WAKE_LOCK", "VIBRATE", "RECEIVE_BOOT_COMPLETED", "POST_NOTIFICATIONS"],
+      "permissions": [
+        "CAMERA",
+        "WAKE_LOCK",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "POST_NOTIFICATIONS"
+      ],
       "package": "com.yachtdaywork.app",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/YDWapp.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "useNextNotificationsApi": true
     },
     "ios": {
       "bundleIdentifier": "com.yachtdaywork.app",
       "buildNumber": "1"
     },
-    "plugins": ["./plugins/withForceDarkAllowedFalse"],
+    "plugins": [
+      "./plugins/withForceDarkAllowedFalse"
+    ],
     "extra": {
       "eas": {
         "projectId": "18381343-94e5-4eb6-8e88-a90919dfd1b6"

@@ -142,6 +142,8 @@ export default async function handler(req, res) {
         data: { notification_id: notif.id, ...(data || {}) },
         sound: "default",
         badge,
+        priority: "high",
+        channelId: "default",
       }));
 
       try {
