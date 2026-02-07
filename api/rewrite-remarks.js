@@ -112,9 +112,14 @@ const forceSectionBreaks = (text) => {
     /\s+(Start\s+Date:?)\s*/gi,
     /\s+(Itinerary:?)\s*/gi,
     /\s+(Salary:?)\s*/gi,
+    // "Vessel Details:" debe ir en línea aparte; la IA a veces pega "ASAP Vessel Details:." → forzar "ASAP.\n\nVessel Details:"
+    /\s+Vessel\s+Details:\.?\s*/gi,
   ];
   for (const re of sectionHeads) {
-    out = out.replace(re, "\n\n$1 ");
+    // Para "Vessel Details" no usamos $1; quitamos el punto si lo puso la IA tras los dos puntos
+    out = re.source.includes("Vessel")
+      ? out.replace(re, "\n\nVessel Details:\n")
+      : out.replace(re, "\n\n$1 ");
   }
   return out.replace(/\n{3,}/g, "\n\n").trim();
 };
@@ -269,17 +274,14 @@ const ensureEmojis = (text) => {
     .map((line) => {
       const trimmed = line.trim();
       if (!trimmed) return "";
-      if (/^(👤|📍|✅|📅|🧭|💰|🎁|📧)\s/.test(trimmed)) return trimmed;
-      if (/^(•|✔)\s+/.test(trimmed)) {
-        const rest = trimmed.slice(2).trim();
-        if (trimmed.startsWith("✔") || benefitKeywords.test(rest)) return `🎁 ${trimmed}`;
-        return `✅ ${trimmed}`;
-      }
+      if (/^(👤|📍|✅|📅|🧭|💰|🎁|📧|🚢)\s/.test(trimmed)) return trimmed;
+      if (/^(•|✔)\s+/.test(trimmed)) return trimmed;
       if (/^Start Date\b/i.test(trimmed)) return `📅 ${trimmed}`;
       if (/^Itinerary\b/i.test(trimmed)) return `🧭 ${trimmed}`;
       if (/^Salary\b/i.test(trimmed)) return `💰 ${trimmed}`;
       if (/^Benefits?:?\s*$/i.test(trimmed)) return `🎁 ${trimmed}`;
       if (/^Email\b/i.test(trimmed)) return `📧 ${trimmed}`;
+      if (/^Vessel\s+Details\b/i.test(trimmed)) return `🚢 ${trimmed}`;
       if (/^(seeking|looking for|position:|role:)/i.test(trimmed)) return `👤 ${trimmed}`;
       if (/^(located|location|based)\b/i.test(trimmed)) return `📍 ${trimmed}`;
       if (/^(requirements?|qualifications?|must|required)\b/i.test(trimmed)) return `✅ ${trimmed}`;
