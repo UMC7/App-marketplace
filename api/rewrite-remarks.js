@@ -102,6 +102,23 @@ const normalizeSectionLabels = (text) => {
   return out;
 };
 
+/** Force newline before section headers so "Benefits:", "Email...", etc. start on their own line. */
+const forceSectionBreaks = (text) => {
+  let out = String(text || "");
+  const sectionHeads = [
+    /\s+(Requirements?:)\s*/gi,
+    /\s+(Benefits?:)\s*/gi,
+    /\s+(Email\s+[A-Za-z])/gi,
+    /\s+(Start\s+Date:?)\s*/gi,
+    /\s+(Itinerary:?)\s*/gi,
+    /\s+(Salary:?)\s*/gi,
+  ];
+  for (const re of sectionHeads) {
+    out = out.replace(re, "\n\n$1 ");
+  }
+  return out.replace(/\n{3,}/g, "\n\n").trim();
+};
+
 /** Convert - or * list markers to • or ✔ based on content. */
 const normalizeListMarkers = (text) => {
   const benefitKeywords = /\b(salary|rotation|leave|flights?|flight\s+paid|accommodation|bonus|package|medical|insurance|travel|holiday|vacation)\b/i;
@@ -119,7 +136,7 @@ const normalizeListMarkers = (text) => {
     .join("\n");
 };
 
-/** Split lines that contain multiple bullets in one line (e.g. "• A, B, C" -> three lines). */
+/** Split lines that contain multiple bullets in one line so each bullet is on its own line. */
 const splitBulletLines = (text) => {
   const lines = String(text || "").split("\n");
   const out = [];
@@ -130,12 +147,15 @@ const splitBulletLines = (text) => {
       continue;
     }
     const bulletReq = /^(•)\s+(.+)$/;
-    const bulletBen = /^(✔)\s+(.+)$/;
+    const bulletBen = /^([✔✓])\s+(.+)$/;
     const mReq = trimmed.match(bulletReq);
     const mBen = trimmed.match(bulletBen);
+
     if (mReq) {
       const rest = mReq[2];
-      const parts = rest.split(/\s*[,;]\s*(?=[A-Za-z])/).map((s) => s.trim()).filter(Boolean);
+      const byComma = rest.split(/\s*[,;]\s*(?=[A-Za-z])/).map((s) => s.trim()).filter(Boolean);
+      const byBullet = rest.split(/\s+•\s+/).map((s) => s.trim()).filter(Boolean);
+      const parts = byBullet.length > 1 ? byBullet : byComma.length > 1 ? byComma : [rest];
       if (parts.length > 1) {
         parts.forEach((p) => out.push(`• ${p}`));
         continue;
@@ -143,9 +163,29 @@ const splitBulletLines = (text) => {
     }
     if (mBen) {
       const rest = mBen[2];
-      const parts = rest.split(/\s*[,;]\s*(?=[A-Za-z])/).map((s) => s.trim()).filter(Boolean);
+      const byComma = rest.split(/\s*[,;]\s*(?=[A-Za-z])/).map((s) => s.trim()).filter(Boolean);
+      const byBullet = rest.split(/\s+[✔✓]\s+/).map((s) => s.trim()).filter(Boolean);
+      const parts = byBullet.length > 1 ? byBullet : byComma.length > 1 ? byComma : [rest];
       if (parts.length > 1) {
-        parts.forEach((p) => out.push(`✔ ${p}`));
+        const bulletChar = mBen[1];
+        parts.forEach((p) => out.push(`${bulletChar} ${p}`));
+        continue;
+      }
+    }
+    const sectionLabel = /^(Requirements?:|Benefits?:|Email\s|Start\s+Date|Itinerary|Salary)/i;
+    if (/[•✔✓]/.test(trimmed) && !/^[•✔✓]\s/.test(trimmed)) {
+      const byBulletDot = trimmed.split(/\s+•\s+/).map((s) => s.trim()).filter(Boolean);
+      const byBulletCheck = trimmed.split(/\s+[✔✓]\s+/).map((s) => s.trim()).filter(Boolean);
+      if (byBulletDot.length > 1) {
+        byBulletDot.forEach((p) => {
+          out.push(sectionLabel.test(p) || p.startsWith("•") ? p : `• ${p}`);
+        });
+        continue;
+      }
+      if (byBulletCheck.length > 1) {
+        byBulletCheck.forEach((p) => {
+          out.push(sectionLabel.test(p) || /^[✔✓]\s/.test(p) ? p : `✔ ${p}`);
+        });
         continue;
       }
     }
@@ -229,7 +269,7 @@ const ensureEmojis = (text) => {
     .map((line) => {
       const trimmed = line.trim();
       if (!trimmed) return "";
-      if (/^(👤|📍|✅|📅|🧭|💰|🎁)\s/.test(trimmed)) return trimmed;
+      if (/^(👤|📍|✅|📅|🧭|💰|🎁|📧)\s/.test(trimmed)) return trimmed;
       if (/^(•|✔)\s+/.test(trimmed)) {
         const rest = trimmed.slice(2).trim();
         if (trimmed.startsWith("✔") || benefitKeywords.test(rest)) return `🎁 ${trimmed}`;
@@ -238,10 +278,13 @@ const ensureEmojis = (text) => {
       if (/^Start Date\b/i.test(trimmed)) return `📅 ${trimmed}`;
       if (/^Itinerary\b/i.test(trimmed)) return `🧭 ${trimmed}`;
       if (/^Salary\b/i.test(trimmed)) return `💰 ${trimmed}`;
+      if (/^Benefits?:?\s*$/i.test(trimmed)) return `🎁 ${trimmed}`;
+      if (/^Email\b/i.test(trimmed)) return `📧 ${trimmed}`;
       if (/^(seeking|looking for|position:|role:)/i.test(trimmed)) return `👤 ${trimmed}`;
       if (/^(located|location|based)\b/i.test(trimmed)) return `📍 ${trimmed}`;
       if (/^(requirements?|qualifications?|must|required)\b/i.test(trimmed)) return `✅ ${trimmed}`;
       if (/^(benefits?|package|rotation|leave|flights|accommodation|bonus)\b/i.test(trimmed)) return `🎁 ${trimmed}`;
+      if (/^\w+\s+\d+\s*(m\s?|ft\)|\()/.test(trimmed) && /\b(yacht|flag|motor)\b/i.test(trimmed)) return `👤 ${trimmed}`;
       if (/\b(seeking|looking for|position:|role:)\b/i.test(trimmed)) return `👤 ${trimmed}`;
       if (/\b(located|location|based)\b/i.test(trimmed)) return `📍 ${trimmed}`;
       if (/\b(requirements?|qualifications?|must|required)\b/i.test(trimmed)) return `✅ ${trimmed}`;
@@ -317,10 +360,12 @@ export default async function handler(req, res) {
               dedupeBlocksAndBullets(
                 splitBulletLines(
                   normalizeListMarkers(
-                    removeApplyHere(
-                      normalizeUnitParens(
-                        ensureLengthConversions(
-                          normalizeSectionLabels(suggestionRaw)
+                    forceSectionBreaks(
+                      removeApplyHere(
+                        normalizeUnitParens(
+                          ensureLengthConversions(
+                            normalizeSectionLabels(suggestionRaw)
+                          )
                         )
                       )
                     )

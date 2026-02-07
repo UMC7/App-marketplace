@@ -66,3 +66,32 @@ Si el webhook no existe o apunta a otra función/URL, los push de chat no se dis
 ## Job preferences / otros push
 
 Los push de **job preferences** (match de ofertas) suelen ir por otro camino (por ejemplo **pushSend** o un webhook distinto). Revisa en el Dashboard qué webhooks tienes y a qué tablas/eventos están asociados, y que las URLs sigan siendo las correctas después del deploy.
+
+---
+
+## Cambio de applicationId / package (Android)
+
+Si cambiaste el **package** de la app (ej. de `com.anonymous.mimarketplacemobile` a `com.yachtdaywork.app`):
+
+- Android trata la nueva APK como **otra app**: los FCM/Expo tokens antiguos dejan de ser válidos para la nueva identidad.
+- Los push pueden “llegar” al backend y a Expo (200, ticket ok) pero **Android descarta** la notificación en background porque el token no corresponde a la app instalada.
+- Al abrir la app, se registra un **token nuevo**; por eso a veces la notificación “aparece” al entrar.
+
+**Acción única obligatoria:** invalidar todos los tokens Android antiguos para que solo se usen los registrados por la nueva APK.
+
+### Cómo invalidar tokens Android (una vez)
+
+Llama al endpoint con la misma clave interna que usas para el backend:
+
+```bash
+curl -X POST https://www.yachtdaywork.com/api/push/invalidate \
+  -H "Content-Type: application/json" \
+  -H "x-internal-key: TU_WEB_API_INTERNAL_KEY"
+```
+
+Respuesta esperada: `{ "success": true, "message": "..." }`.
+
+A partir de ahí:
+
+- Los usuarios que **abran la app** (nueva versión) volverán a registrar su token y recibirán push en background.
+- Los que no la hayan abierto no tendrán token válido hasta que la abran (comportamiento correcto tras el cambio de package).

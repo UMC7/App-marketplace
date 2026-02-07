@@ -102,6 +102,7 @@ export default async function handler(req, res) {
     let sent = 0;
     let failed = 0;
     const invalidTokens = [];
+    const sendErrors = [];
 
     // 3a) Envío FCM (web / PWA)
     if (fcmTokens.length) {
@@ -117,12 +118,19 @@ export default async function handler(req, res) {
       response.responses.forEach((r, i) => {
         if (!r.success) {
           const code = r.error?.errorInfo?.code || r.error?.code || "";
+          const message = r.error?.errorInfo?.message || r.error?.message || "";
           if (
             code.includes("registration-token-not-registered") ||
             code.includes("invalid-registration-token")
           ) {
             invalidTokens.push(fcmTokens[i]);
           }
+          sendErrors.push({
+            token: fcmTokens[i],
+            provider: "fcm",
+            code: code || undefined,
+            message: message || undefined,
+          });
         }
       });
     }
@@ -182,11 +190,23 @@ export default async function handler(req, res) {
             ) {
               if (expoTokens[i]) invalidTokens.push(expoTokens[i]);
             }
+            sendErrors.push({
+              token: expoTokens[i],
+              provider: "expo",
+              code: t?.details?.error || undefined,
+              message: t?.message || undefined,
+            });
           }
         });
       } catch (error) {
         console.log("Expo push send error:", error);
         failed += expoTokens.length;
+        sendErrors.push({
+          token: null,
+          provider: "expo",
+          code: "request_failed",
+          message: error?.message || String(error),
+        });
       }
     }
 
@@ -198,12 +218,21 @@ export default async function handler(req, res) {
         .in("token", invalidTokens);
     }
 
-    return res.status(200).json({
+    const payload = {
       success: true,
       notificationId: notif.id,
       sent,
       failed,
-    });
+    };
+    if (failed > 0 && sendErrors.length > 0) {
+      payload.errors = sendErrors.slice(0, 3).map((e) => ({
+        token: e.token,
+        provider: e.provider,
+        code: e.code,
+        message: e.message,
+      }));
+    }
+    return res.status(200).json(payload);
   } catch (err) {
     console.error("notifyUser error:", err?.message || err);
     return res.status(500).json({
