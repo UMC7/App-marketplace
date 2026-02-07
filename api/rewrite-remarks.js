@@ -1,4 +1,4 @@
-﻿import OpenAI from "openai";
+import OpenAI from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -102,58 +102,150 @@ const normalizeSectionLabels = (text) => {
   return out;
 };
 
-const ensureParagraphs = (text) => {
-  if (/\n\s*\n/.test(text)) return text;
-  const lines = String(text || "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  const out = [];
-  for (const line of lines) {
-    if (/^(•|✔)\s+/.test(line)) {
-      out.push(line);
-      continue;
-    }
-    const sentences = line.split(/(?<=[.!?])\s+(?=[A-Z0-9])/);
-    for (const sentence of sentences) {
-      const trimmed = sentence.trim();
-      if (trimmed) out.push(trimmed);
-    }
-  }
-
-  const final = [];
-  for (let i = 0; i < out.length; i += 1) {
-    const cur = out[i];
-    const next = out[i + 1];
-    final.push(cur);
-    if (!next) break;
-    const curIsBullet = /^(•|✔)\s+/.test(cur);
-    const nextIsBullet = /^(•|✔)\s+/.test(next);
-    if (curIsBullet && nextIsBullet) continue;
-    final.push("");
-  }
-
-  return final.join("\n");
-};
-
-const ensureEmojis = (text) => {
+/** Convert - or * list markers to • or ✔ based on content. */
+const normalizeListMarkers = (text) => {
+  const benefitKeywords = /\b(salary|rotation|leave|flights?|flight\s+paid|accommodation|bonus|package|medical|insurance|travel|holiday|vacation)\b/i;
   return String(text || "")
     .split("\n")
     .map((line) => {
       const trimmed = line.trim();
       if (!trimmed) return "";
-      if (/^(•|✔)\s+/.test(trimmed)) return trimmed;
+      const bulletMatch = trimmed.match(/^([-*]|\d+\.)\s+/);
+      if (!bulletMatch) return trimmed;
+      const rest = trimmed.slice(bulletMatch[0].length).trim();
+      if (benefitKeywords.test(rest)) return `✔ ${rest}`;
+      return `• ${rest}`;
+    })
+    .join("\n");
+};
+
+/** Split lines that contain multiple bullets in one line (e.g. "• A, B, C" -> three lines). */
+const splitBulletLines = (text) => {
+  const lines = String(text || "").split("\n");
+  const out = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      out.push("");
+      continue;
+    }
+    const bulletReq = /^(•)\s+(.+)$/;
+    const bulletBen = /^(✔)\s+(.+)$/;
+    const mReq = trimmed.match(bulletReq);
+    const mBen = trimmed.match(bulletBen);
+    if (mReq) {
+      const rest = mReq[2];
+      const parts = rest.split(/\s*[,;]\s*(?=[A-Za-z])/).map((s) => s.trim()).filter(Boolean);
+      if (parts.length > 1) {
+        parts.forEach((p) => out.push(`• ${p}`));
+        continue;
+      }
+    }
+    if (mBen) {
+      const rest = mBen[2];
+      const parts = rest.split(/\s*[,;]\s*(?=[A-Za-z])/).map((s) => s.trim()).filter(Boolean);
+      if (parts.length > 1) {
+        parts.forEach((p) => out.push(`✔ ${p}`));
+        continue;
+      }
+    }
+    out.push(trimmed);
+  }
+  return out.join("\n");
+};
+
+/** Ensure sentences end with a period when they look like statements. */
+const ensureSentenceEndings = (text) => {
+  return String(text || "")
+    .split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || /^(•|✔|👤|📍|✅|📅|🧭|💰|🎁)\s/.test(trimmed)) return trimmed;
+      if (/[.!?]$/.test(trimmed)) return trimmed;
+      if (/^[A-Z0-9]/.test(trimmed) && trimmed.length > 15) return `${trimmed}.`;
+      return trimmed;
+    })
+    .join("\n");
+};
+
+/** Always enforce: one blank line between sections/paragraphs, single newline between list items. */
+const ensureParagraphs = (text) => {
+  const lines = String(text || "")
+    .split("\n")
+    .map((l) => l.trim());
+  const normalized = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line === "") {
+      normalized.push("");
+      i++;
+      continue;
+    }
+    if (/^(•|✔)\s+/.test(line)) {
+      normalized.push(line);
+      i++;
+      while (i < lines.length && lines[i] !== "" && /^(•|✔)\s+/.test(lines[i])) {
+        normalized.push(lines[i]);
+        i++;
+      }
+      if (i < lines.length && lines[i] !== "") normalized.push("");
+      continue;
+    }
+    const sentences = line.split(/(?<=[.!?])\s+(?=[A-Z0-9])/).map((s) => s.trim()).filter(Boolean);
+    if (sentences.length === 0) {
+      normalized.push(line);
+      i++;
+      if (i < lines.length && lines[i] !== "") normalized.push("");
+      continue;
+    }
+    for (let j = 0; j < sentences.length; j++) {
+      normalized.push(sentences[j]);
+      if (j < sentences.length - 1) normalized.push("");
+    }
+    i++;
+    if (i < lines.length && lines[i] !== "" && !/^(•|✔)\s+/.test(lines[i])) normalized.push("");
+  }
+
+  const final = [];
+  for (let k = 0; k < normalized.length; k++) {
+    const cur = normalized[k];
+    const next = normalized[k + 1];
+    final.push(cur);
+    if (next === undefined) break;
+    const curBullet = /^(•|✔)\s+/.test(cur);
+    const nextBullet = /^(•|✔)\s+/.test(next);
+    if (cur === "" || next === "") continue;
+    if (curBullet && nextBullet) continue;
+    final.push("");
+  }
+  return final.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+};
+
+const ensureEmojis = (text) => {
+  const benefitKeywords = /\b(salary|rotation|leave|flights?|accommodation|bonus|package|medical|insurance|travel|holiday|vacation)\b/i;
+  return String(text || "")
+    .split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return "";
       if (/^(👤|📍|✅|📅|🧭|💰|🎁)\s/.test(trimmed)) return trimmed;
+      if (/^(•|✔)\s+/.test(trimmed)) {
+        const rest = trimmed.slice(2).trim();
+        if (trimmed.startsWith("✔") || benefitKeywords.test(rest)) return `🎁 ${trimmed}`;
+        return `✅ ${trimmed}`;
+      }
       if (/^Start Date\b/i.test(trimmed)) return `📅 ${trimmed}`;
       if (/^Itinerary\b/i.test(trimmed)) return `🧭 ${trimmed}`;
       if (/^Salary\b/i.test(trimmed)) return `💰 ${trimmed}`;
+      if (/^(seeking|looking for|position:|role:)/i.test(trimmed)) return `👤 ${trimmed}`;
+      if (/^(located|location|based)\b/i.test(trimmed)) return `📍 ${trimmed}`;
+      if (/^(requirements?|qualifications?|must|required)\b/i.test(trimmed)) return `✅ ${trimmed}`;
+      if (/^(benefits?|package|rotation|leave|flights|accommodation|bonus)\b/i.test(trimmed)) return `🎁 ${trimmed}`;
       if (/\b(seeking|looking for|position:|role:)\b/i.test(trimmed)) return `👤 ${trimmed}`;
       if (/\b(located|location|based)\b/i.test(trimmed)) return `📍 ${trimmed}`;
       if (/\b(requirements?|qualifications?|must|required)\b/i.test(trimmed)) return `✅ ${trimmed}`;
-      if (/\b(benefits?|package|rotation|leave|flights|accommodation|bonus)\b/i.test(trimmed)) {
-        return `🎁 ${trimmed}`;
-      }
+      if (/\b(benefits?|package|rotation|leave|flights|accommodation|bonus)\b/i.test(trimmed)) return `🎁 ${trimmed}`;
       return trimmed;
     })
     .join("\n");
@@ -176,23 +268,29 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Text is too long" });
     }
 
-    const system = [
-      "You rewrite job remarks into a professional, clear, and concise version.",
-      "Keep the same language as the input.",
-      "Do not add facts or requirements that are not in the source.",
-      "Preserve important details like dates, locations, salaries, visas, and certificates.",
-      "Format for readability: use short paragraphs separated by a blank line.",
-      "Avoid repeating the same information or section twice.",
-      "Use tasteful, professional emojis to improve readability (role, location, requirements, benefits, start date, itinerary, contact).",
-      "Use plain text only (no markdown bold).",
-      "If requirements are present, list each on its own line and prefix with '•'.",
-      "If employer benefits or package details are listed, put each on its own line and prefix with '✔'.",
-      "Treat requirements as must-have conditions (e.g., 'must', 'required', 'need', visas, certificates, experience).",
-      "Treat benefits/package as offerings (e.g., salary, rotation, leave, flights, accommodation, bonuses).",
-      "Do not convert exact vessel length into ranges. Keep exact lengths as given.",
-      "If a length appears in feet, add meters in parentheses. If in meters, add feet in parentheses.",
-      "Return only the rewritten text without quotes or extra commentary."
-    ].join(" ");
+    const system = `You are a professional editor. Rewrite the job remarks so they are clear, structured, and easy to read. Output rules (follow strictly):
+
+1. LANGUAGE: Keep the same language as the input. Do not add information that is not in the source.
+
+2. STRUCTURE: Organise in this order when relevant: role/location → requirements → benefits → start date / itinerary / salary. Put exactly one blank line between each section or paragraph. Use short paragraphs (one or two sentences). Do not repeat the same information.
+
+3. SENTENCES: End every sentence with a period. Use proper punctuation.
+
+4. LISTS - REQUIREMENTS: If there are requirements (must-have: certificates, visas, experience, skills), list each requirement on its own line. Each line must start with the bullet character • (Unicode bullet). Use only • for requirements, never "-" or "*". Example:
+• STCW required
+• Valid visa for EU
+• 2 years experience
+
+5. LISTS - BENEFITS: If there are benefits or package details (salary, rotation, flights, accommodation, leave), list each on its own line. Each line must start with ✔ (checkmark). Use only ✔ for benefits. Example:
+✔ Competitive salary
+✔ Flights included
+✔ 38 days leave
+
+6. FORMAT: Plain text only. No markdown (no ** or ##). No quotes around the output. Put exactly one blank line between paragraphs or sections. Between list items of the same list use a single newline (no blank line between • items or between ✔ items).
+
+7. NUMBERS: Keep exact vessel lengths as given. If length is in feet add (X m) in parentheses; if in meters add (X ft).
+
+8. Return only the rewritten text, nothing else.`;
 
     const promptParts = [
       "Context (optional):",
@@ -215,11 +313,17 @@ export default async function handler(req, res) {
     const suggestion = suggestionRaw
       ? ensureEmojis(
           ensureParagraphs(
-            dedupeBlocksAndBullets(
-              removeApplyHere(
-                normalizeUnitParens(
-                  ensureLengthConversions(
-                    normalizeSectionLabels(suggestionRaw)
+            ensureSentenceEndings(
+              dedupeBlocksAndBullets(
+                splitBulletLines(
+                  normalizeListMarkers(
+                    removeApplyHere(
+                      normalizeUnitParens(
+                        ensureLengthConversions(
+                          normalizeSectionLabels(suggestionRaw)
+                        )
+                      )
+                    )
                   )
                 )
               )
