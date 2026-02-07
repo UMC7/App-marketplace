@@ -8,6 +8,7 @@ import './link-preview.css';
 import Avatar from './Avatar';
 import { LinkPreview, extractUrls } from './LinkPreview';
 import { markNotificationsForChatAsRead } from '../utils/notificationRoutes';
+import { parseServerDate } from '../utils/dateUtils';
 
 const MAX_CHAT_FILE_MB = 50;
 
@@ -380,8 +381,8 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
             : null;
 
           const timestamp = isExternal
-            ? new Date(msg.created_at)
-            : new Date(msg.sent_at);
+            ? parseServerDate(msg.created_at)
+            : parseServerDate(msg.sent_at);
           const dateKey = startOfDay(timestamp).toISOString();
           if (dateKey !== lastDateKey) {
             rows.push(

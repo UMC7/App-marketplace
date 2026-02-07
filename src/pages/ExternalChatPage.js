@@ -6,6 +6,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../supabase';
 import '../components/chat.css';
 import '../components/link-preview.css';
 import { LinkPreview, extractUrls } from '../components/LinkPreview';
+import { formatDateTimeLocal } from '../utils/dateUtils';
 
 const renderMessageText = (text) => {
   if (!text) return null;
@@ -133,7 +134,7 @@ export default function ExternalChatPage() {
                       <LinkPreview key={`link-${m.id}-${idx}`} url={url} />
                     ))}
                     <div className="chat-message-time">
-                      {new Date(m.created_at).toLocaleString()}
+                      {formatDateTimeLocal(m.created_at)}
                     </div>
                   </div>
                 </div>
