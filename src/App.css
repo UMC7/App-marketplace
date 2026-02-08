@@ -883,6 +883,12 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
   display: block;
 }
 
+/* En el formulario de ofertas, form-group es flex; esta variante mantiene label arriba y control abajo */
+.login-form .form-group-stack {
+  display: block;
+  padding-left: 0;
+}
+
 .login-form label {
   font-size: 1rem;
   font-weight: 500;

@@ -72,6 +72,9 @@ const initialState = {
   link_x: '',
   team: 'No',
   teammate_rank: '',
+  teammate_required_license: '',
+  teammate_engineering_license: '',
+  teammate_required_documents: [],
   teammate_salary: '',
   teammate_experience: '',
   flag: 'Foreign Flag',
@@ -172,6 +175,19 @@ useEffect(() => {
     required_documents: initialValues.required_documents || [],
   }));
 }, [initialValues]);
+
+useEffect(() => {
+  if (!initialValues) return;
+  const tr = initialValues.teammate_required_licenses;
+  const te = initialValues.teammate_required_engineering_licenses;
+  const td = initialValues.teammate_required_documents;
+  setFormData(prev => ({
+    ...prev,
+    ...(Array.isArray(tr) && tr[0] != null && { teammate_required_license: tr[0] }),
+    ...(Array.isArray(te) && te[0] != null && { teammate_engineering_license: te[0] }),
+    ...(Array.isArray(td) && { teammate_required_documents: td }),
+  }));
+}, [initialValues?.teammate_required_licenses, initialValues?.teammate_required_engineering_licenses, initialValues?.teammate_required_documents]);
   const [loading, setLoading] = useState(false);
   const [rewriteLoading, setRewriteLoading] = useState(false);
   const [previousRemarks, setPreviousRemarks] = useState('');
@@ -182,10 +198,12 @@ useEffect(() => {
   const [showPaste, setShowPaste] = useState(false);
   const [showVisas, setShowVisas] = useState(false);
   const [showRequiredDocs, setShowRequiredDocs] = useState(false);
+  const [showTeammateRequiredDocs, setShowTeammateRequiredDocs] = useState(false);
 
   // close the visas dropdown on outside click or ESC
 const visasRef = useRef(null);
 const requiredDocsRef = useRef(null);
+  const teammateRequiredDocsRef = useRef(null);
 const remarksRef = useRef(null);
 const remarksTypingTimer = useRef(null);
 useEffect(() => {
@@ -196,11 +214,15 @@ useEffect(() => {
     if (requiredDocsRef.current && !requiredDocsRef.current.contains(e.target)) {
       setShowRequiredDocs(false);
     }
+    if (teammateRequiredDocsRef.current && !teammateRequiredDocsRef.current.contains(e.target)) {
+      setShowTeammateRequiredDocs(false);
+    }
   };
   const handleEsc = (e) => {
     if (e.key === 'Escape') {
       setShowVisas(false);
       setShowRequiredDocs(false);
+      setShowTeammateRequiredDocs(false);
     }
   };
   document.addEventListener('click', handleClickOutside);
@@ -408,6 +430,36 @@ const requiredDocumentGroups = specialRequiredDocumentGroups
         ? OTHERS_REQUIRED_DOCUMENT_GROUPS
         : REQUIRED_DOCUMENT_GROUPS;
 
+const teammateRank = formData.teammate_rank || '';
+const isTeammateGalley = GALLEY_DEPARTMENT_RANKS.includes(teammateRank);
+const isTeammateInterior = INTERIOR_DEPARTMENT_RANKS.includes(teammateRank);
+const isTeammateOthers = OTHERS_DEPARTMENT_RANKS.includes(teammateRank);
+const teammateSpecialGroups = teammateRank ? (RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS[teammateRank] || null) : null;
+const teammateRequiredDocumentGroups = teammateSpecialGroups
+  ? teammateSpecialGroups
+  : isTeammateGalley
+    ? GALLEY_REQUIRED_DOCUMENT_GROUPS
+    : isTeammateInterior
+      ? INTERIOR_REQUIRED_DOCUMENT_GROUPS
+      : isTeammateOthers
+        ? OTHERS_REQUIRED_DOCUMENT_GROUPS
+        : teammateRank
+          ? REQUIRED_DOCUMENT_GROUPS
+          : [];
+const needsTeammateDeckLicense = teammateRank && DECK_LICENSE_RANKS.includes(teammateRank);
+const needsTeammateEngineeringLicense = teammateRank && ENGINEERING_RANKS.includes(teammateRank);
+const showTeammateLicenseFields = needsTeammateDeckLicense || needsTeammateEngineeringLicense;
+const showTeammateEngineeringLicenseField = teammateRank && ENGINEERING_LICENSE_FIELD_RANKS.includes(teammateRank);
+const teammateLicenseOptions = needsTeammateEngineeringLicense
+  ? getEngineeringLicenseOptionsForRank(teammateRank)
+  : needsTeammateDeckLicense
+    ? getDeckLicenseOptionsForRank(teammateRank)
+    : [];
+const isTeammateCaptainTierDeck = teammateRank && CAPTAIN_TIER_DECK_RANKS.includes(teammateRank);
+const teammateDeckDocumentOptions = needsTeammateDeckLicense && !isTeammateCaptainTierDeck
+  ? getDeckDocumentOptionsForRank(teammateRank)
+  : [];
+
 const renderRequiredDocsSummary = () => null;
 
 const highlightClass = (missing) => (showMissing && missing ? 'missing-required' : '');
@@ -512,6 +564,17 @@ const formReady = (() => {
     return;
   }
 
+  if (name === 'teammate_required_documents') {
+    setFormData(prev => {
+      const current = prev.teammate_required_documents || [];
+      const next = checked
+        ? [...current, value]
+        : current.filter((v) => v !== value);
+      return { ...prev, teammate_required_documents: next };
+    });
+    return;
+  }
+
   if (name === 'visas') {
     setFormData(prev => {
       const currentVisas = prev.visas || [];
@@ -545,6 +608,17 @@ const formReady = (() => {
       }
       if (name === 'title' && !ENGINEERING_LICENSE_FIELD_RANKS.includes(value)) {
         newState.engineering_license = '';
+      }
+      if (name === 'teammate_rank') {
+        newState.teammate_required_license = '';
+        newState.teammate_engineering_license = '';
+        newState.teammate_required_documents = [];
+      }
+      if (name === 'teammate_rank' && !DECK_LICENSE_RANKS.includes(value) && !ENGINEERING_RANKS.includes(value)) {
+        newState.teammate_required_license = '';
+      }
+      if (name === 'teammate_rank' && !ENGINEERING_LICENSE_FIELD_RANKS.includes(value)) {
+        newState.teammate_engineering_license = '';
       }
 
       // 🔹 Si marca ASAP → limpiar fecha
@@ -686,6 +760,9 @@ const derivedEndDate = (() => {
       : formData.teammate_experience
       ? Number(formData.teammate_experience)
       : null,
+    teammate_required_licenses: formData.team === 'Yes' ? (formData.teammate_required_license ? [formData.teammate_required_license] : []) : [],
+    teammate_required_engineering_licenses: formData.team === 'Yes' ? (formData.teammate_engineering_license ? [formData.teammate_engineering_license] : []) : [],
+    teammate_required_documents: formData.team === 'Yes' ? (Array.isArray(formData.teammate_required_documents) ? formData.teammate_required_documents : []) : [],
 };
 
     setLoading(true);
@@ -733,6 +810,9 @@ const derivedEndDate = (() => {
     required_licenses: sanitizedData.required_licenses || [],
     required_engineering_licenses: sanitizedData.required_engineering_licenses || [],
     required_documents: sanitizedData.required_documents || [],
+    teammate_required_licenses: sanitizedData.teammate_required_licenses || [],
+    teammate_required_engineering_licenses: sanitizedData.teammate_required_engineering_licenses || [],
+    teammate_required_documents: sanitizedData.teammate_required_documents || [],
     homeport: sanitizedData.homeport || null,
     liveaboard: sanitizedData.liveaboard || null,
     season_type: sanitizedData.season_type || null,
@@ -999,7 +1079,7 @@ const derivedEndDate = (() => {
   </label>
 </div>
 
-{/* 6-8. Campos si Team === 'Yes' */}
+{/* 6-8. Campos si Team === 'Yes' – mismo orden que primer rank: Rank → License → Eng License → Docs → Time in Rank → Salary */}
 {formData.team === 'Yes' && (
   <>
     <label>Teammate Rank: <span style={{ color: 'red' }}>*</span></label>
@@ -1019,6 +1099,52 @@ const derivedEndDate = (() => {
       ))}
     </select>
 
+    {showTeammateLicenseFields && teammateLicenseOptions.length > 0 && (
+      <>
+        <label>Teammate Required License:</label>
+        <select
+          name="teammate_required_license"
+          value={formData.teammate_required_license}
+          onChange={handleChange}
+        >
+          <option value="">Select...</option>
+          {teammateLicenseOptions.map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+        {showTeammateEngineeringLicenseField && (
+          <>
+            <label>Teammate Engineering License:</label>
+            <select
+              name="teammate_engineering_license"
+              value={formData.teammate_engineering_license}
+              onChange={handleChange}
+            >
+              <option value="">Select...</option>
+              {ENGINEERING_LICENSE_FIELD_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+          </>
+        )}
+      </>
+    )}
+
+    {teammateRequiredDocumentGroups.length > 0 && (
+      <div className="form-group form-group-stack">
+        <RequiredDocumentsSelect
+          open={showTeammateRequiredDocs}
+          onToggle={() => setShowTeammateRequiredDocs((v) => !v)}
+          selectedDocuments={formData.teammate_required_documents || []}
+          onChange={handleChange}
+          name="teammate_required_documents"
+          requiredDocumentGroups={teammateRequiredDocumentGroups}
+          deckDocumentOptions={teammateDeckDocumentOptions}
+          containerRef={teammateRequiredDocsRef}
+        />
+      </div>
+    )}
+
     <label>Teammate Experience:</label>
     <select name="teammate_experience" value={formData.teammate_experience} onChange={handleChange}>
       <option value="">Select...</option>
@@ -1029,17 +1155,28 @@ const derivedEndDate = (() => {
 
     {!formData.is_doe && (
       <>
+        <label>Teammate Salary Currency: <span style={{ color: 'red' }}>*</span></label>
+        <select
+          name="teammate_salary_currency"
+          value={formData.teammate_salary_currency || formData.salary_currency || ''}
+          onChange={handleChange}
+          className={highlightClass(formData.team === 'Yes' && !formData.is_doe && !(formData.teammate_salary_currency || formData.salary_currency))}
+        >
+          <option value="">Select currency...</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="AUD">AUD</option>
+          <option value="GBP">GBP</option>
+        </select>
+
         <label>Teammate Salary: <span style={{ color: 'red' }}>*</span></label>
-<div className="form-inline-group">
-  <span>{formData.teammate_salary_currency}</span>
-  <input
-    type="number"
-    name="teammate_salary"
-    value={formData.teammate_salary || ''}
-    onChange={handleChange}
-    className={highlightClass(formData.team === 'Yes' && !formData.is_doe && !formData.teammate_salary)}
-  />
-</div>
+        <input
+          type="number"
+          name="teammate_salary"
+          value={formData.teammate_salary || ''}
+          onChange={handleChange}
+          className={highlightClass(formData.team === 'Yes' && !formData.is_doe && !formData.teammate_salary)}
+        />
       </>
     )}
   </>

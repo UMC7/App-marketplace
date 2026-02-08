@@ -1333,17 +1333,17 @@ useEffect(() => {
                     const isExpanded = expandedOfferId === offer.id;
                     const primaryScore = Number(String(offer.match_primary_score).replace('%','')) || 0;
                     const teammateScore = Number(String(offer.match_teammate_score).replace('%','')) || 0;
-                    const normalizedRequiredDocs = (() => {
-                      const raw = offer.required_documents;
-                      const docs = Array.isArray(raw)
-                        ? raw
-                        : typeof raw === 'string'
-                          ? raw.split(',').map((doc) => doc.trim()).filter(Boolean)
-                          : [];
-                      const deckLic = Array.isArray(offer.required_licenses) && offer.required_licenses[0] ? offer.required_licenses[0] : null;
-                      const engineLic = Array.isArray(offer.required_engineering_licenses) && offer.required_engineering_licenses[0] ? offer.required_engineering_licenses[0] : null;
-                      return docs.filter((doc) => doc !== deckLic && doc !== engineLic);
-                    })();
+                    const rank1DeckLic = Array.isArray(offer.required_licenses) && offer.required_licenses[0] ? offer.required_licenses[0] : null;
+                    const rank1EngineLic = Array.isArray(offer.required_engineering_licenses) && offer.required_engineering_licenses[0] ? offer.required_engineering_licenses[0] : null;
+                    const rank1DocsRaw = Array.isArray(offer.required_documents) ? offer.required_documents : (typeof offer.required_documents === 'string' ? offer.required_documents.split(',').map((d) => d.trim()).filter(Boolean) : []);
+                    const rank1DocsOnly = rank1DocsRaw.filter((doc) => doc !== rank1DeckLic && doc !== rank1EngineLic);
+                    const rank2DeckLic = Array.isArray(offer.teammate_required_licenses) && offer.teammate_required_licenses[0] ? offer.teammate_required_licenses[0] : null;
+                    const rank2EngineLic = Array.isArray(offer.teammate_required_engineering_licenses) && offer.teammate_required_engineering_licenses[0] ? offer.teammate_required_engineering_licenses[0] : null;
+                    const rank2DocsRaw = Array.isArray(offer.teammate_required_documents) ? offer.teammate_required_documents : [];
+                    const rank2DocsOnly = rank2DocsRaw.filter((doc) => doc !== rank2DeckLic && doc !== rank2EngineLic);
+                    const hasRank1 = rank1DeckLic || rank1EngineLic || rank1DocsOnly.length > 0;
+                    const hasRank2 = offer.team && (rank2DeckLic || rank2EngineLic || rank2DocsOnly.length > 0);
+                    const hasAnyRequiredDocs = hasRank1 || hasRank2;
                     const remarkParagraphs = (() => {
                       const description = offer.description || '';
                       return description
@@ -1751,17 +1751,34 @@ useEffect(() => {
 </div>
     </div>
 
-    {normalizedRequiredDocs.length > 0 && (
+    {hasAnyRequiredDocs && (
   <div className="expanded-block block6 required-docs-block">
     <div className="field-label">Required Documents / Certifications</div>
     <div className="field-value">
-      <div className="required-docs-grid">
-        {normalizedRequiredDocs.map((doc, index) => (
-          <span key={`${doc}-${index}`} className="required-doc-chip">
-            {doc}
-          </span>
-        ))}
-      </div>
+      {hasRank1 && (
+        <>
+          <div className="required-docs-rank-label">{offer.title}:</div>
+          <div className="required-docs-grid">
+            {rank1DeckLic && <span className="required-doc-chip">{rank1DeckLic}</span>}
+            {rank1EngineLic && <span className="required-doc-chip">{rank1EngineLic}</span>}
+            {rank1DocsOnly.map((doc, index) => (
+              <span key={`r1-${doc}-${index}`} className="required-doc-chip">{doc}</span>
+            ))}
+          </div>
+        </>
+      )}
+      {hasRank2 && (
+        <>
+          <div className="required-docs-rank-label">{offer.teammate_rank}:</div>
+          <div className="required-docs-grid">
+            {rank2DeckLic && <span className="required-doc-chip">{rank2DeckLic}</span>}
+            {rank2EngineLic && <span className="required-doc-chip">{rank2EngineLic}</span>}
+            {rank2DocsOnly.map((doc, index) => (
+              <span key={`r2-${doc}-${index}`} className="required-doc-chip">{doc}</span>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   </div>
 )}

@@ -311,6 +311,15 @@
   display: none;
 }
 
+.required-docs-rank-label {
+  font-weight: 700;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+.required-docs-rank-label:first-child {
+  margin-top: 0;
+}
+
 .required-docs-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

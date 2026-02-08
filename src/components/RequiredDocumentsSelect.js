@@ -9,6 +9,7 @@ const RequiredDocumentsSelect = ({
   requiredDocumentGroups = [],
   deckDocumentOptions = [],
   containerRef,
+  name = 'required_documents',
 }) => {
   const groups = React.useMemo(() => {
     if (!deckDocumentOptions || deckDocumentOptions.length === 0) {
@@ -33,7 +34,7 @@ const RequiredDocumentsSelect = ({
         selected.length > 0 ? selected.join(', ') : 'Select...'
       }
       groups={groups}
-      name="required_documents"
+      name={name}
       onChange={onChange}
       containerRef={containerRef}
       caretSymbol="▾"
