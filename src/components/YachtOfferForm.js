@@ -1242,17 +1242,19 @@ const derivedEndDate = (() => {
 </div>
 
     {/* Campo Visas */}
-    <CustomMultiSelect
-      label="Visa(s):"
-      triggerId="visas-trigger"
-      open={showVisas}
-      onToggle={() => setShowVisas((v) => !v)}
-      selected={formData.visas}
-      groups={[{ label: '', options: VISA_OPTIONS }]}
-      name="visas"
-      onChange={handleChange}
-      containerRef={visasRef}
-    />
+    <div className="form-group form-group-stack">
+      <CustomMultiSelect
+        label="Visa(s):"
+        triggerId="visas-trigger"
+        open={showVisas}
+        onToggle={() => setShowVisas((v) => !v)}
+        selected={formData.visas}
+        groups={[{ label: '', options: VISA_OPTIONS }]}
+        name="visas"
+        onChange={handleChange}
+        containerRef={visasRef}
+      />
+    </div>
 
     {/* 9. Tipo */}
     <label>Terms: <span style={{ color: 'red' }}>*</span></label>
