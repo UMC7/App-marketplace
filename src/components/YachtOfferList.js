@@ -1351,6 +1351,220 @@ useEffect(() => {
                         .map((paragraph) => paragraph.trim())
                         .filter(Boolean);
                     })();
+                    const isShoreBased = offer.work_environment === 'Shore-based';
+                    const languagesAvailable =
+                      Boolean(
+                        offer.language_1 ||
+                          offer.language_1_fluency ||
+                          offer.language_2 ||
+                          offer.language_2_fluency
+                      ) || (Array.isArray(offer.visas) && offer.visas.length > 0);
+                    const renderLanguagesBlock = (className) =>
+                      languagesAvailable ? (
+                        <div className={`expanded-block ${className}`}>
+                          <div className="field-pair">
+                            {offer.language_1 && (
+                              <div className="field-group">
+                                <div className="field-label">Language</div>
+                                <div className="field-value">{offer.language_1}</div>
+                              </div>
+                            )}
+
+                            {offer.language_1_fluency && (
+                              <div className="field-group">
+                                <div className="field-label">Fluency</div>
+                                <div className="field-value">{offer.language_1_fluency}</div>
+                              </div>
+                            )}
+
+                            {offer.language_2 && (
+                              <div className="field-group">
+                                <div className="field-label">2nd Language</div>
+                                <div className="field-value">{offer.language_2}</div>
+                              </div>
+                            )}
+
+                            {offer.language_2_fluency && (
+                              <div className="field-group">
+                                <div className="field-label">Fluency</div>
+                                <div className="field-value">{offer.language_2_fluency}</div>
+                              </div>
+                            )}
+
+                            {Array.isArray(offer.visas) && offer.visas.length > 0 && (
+                              <div className="field-group visas">
+                                <div className="field-label">Visa(s)</div>
+                                <div className="field-value">{offer.visas.join(', ')}</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : null;
+                    const renderShoreStartBlock = () => {
+                      const hasStart = offer.is_asap || offer.start_date || offer.end_date;
+                      if (!hasStart) return null;
+                      return (
+                        <div className="expanded-block block3">
+                          <div className="field-pair">
+                            {offer.type && (
+                              <div className="field-group terms">
+                                <div className="field-label">Terms</div>
+                                <div className="field-value">{offer.type}</div>
+                              </div>
+                            )}
+
+                            {(offer.is_asap || offer.start_date) && (
+                              <div className="field-group">
+                                <div className="field-label">Start Date</div>
+                                <div className="field-value">
+                                  {offer.is_asap
+                                    ? 'ASAP'
+                                    : offer.is_flexible
+                                      ? 'Flexible'
+                                      : formatDate(offer.start_date, offer.start_date_month_only)}
+                                </div>
+                              </div>
+                            )}
+
+                            {offer.end_date && (
+                              <div className="field-group">
+                                <div className="field-label">End Date</div>
+                                <div className="field-value">{formatDate(offer.end_date, offer.end_date_month_only)}</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    };
+                    const renderShoreLocationBlock = () => {
+                      const workLocation = offer.city ? 'On-Site' : 'Remote';
+                      return (
+                        <div className="expanded-block block4">
+                          <div className="field-pair">
+                            <div className="field-group">
+                              <div className="field-label">Work Location</div>
+                              <div className="field-value">{workLocation}</div>
+                            </div>
+                            {offer.city && (
+                              <div className="field-group">
+                                <div className="field-label">City</div>
+                                <div className="field-value">{offer.city}</div>
+                              </div>
+                            )}
+                            {offer.country && (
+                              <div className="field-group">
+                                <div className="field-label">Country</div>
+                                <div className="field-value">{offer.country}</div>
+                              </div>
+                            )}
+                            {offer.contact_email && (
+                              <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+                                <div
+                                  className="field-label"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    whiteSpace: 'nowrap',
+                                    position: 'relative',
+                                  }}
+                                >
+                                  <span>Email</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCopy(offer.contact_email, 'email');
+                                    }}
+                                    title="Copy email"
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      fontSize: '1em',
+                                      color: '#007BFF',
+                                      padding: 0,
+                                      marginLeft: '4px',
+                                      lineHeight: 1,
+                                      display: 'inline-block',
+                                    }}
+                                  >
+                                    📋
+                                  </button>
+                                  {copiedField === 'email' && (
+                                    <span
+                                      style={{
+                                        position: 'absolute',
+                                        top: '-1.5em',
+                                        left: '0',
+                                        fontSize: '0.75rem',
+                                        color: 'green',
+                                      }}
+                                    >
+                                      Copied!
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="field-value email" style={{ overflowWrap: 'break-word' }}>
+                                  {offer.contact_email}
+                                </div>
+                              </div>
+                            )}
+                            {offer.contact_phone && (
+                              <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+                                <div
+                                  className="field-label"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    whiteSpace: 'nowrap',
+                                    position: 'relative',
+                                  }}
+                                >
+                                  <span>Phone</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCopy(offer.contact_phone, 'phone');
+                                    }}
+                                    title="Copy phone"
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      fontSize: '1em',
+                                      color: '#007BFF',
+                                      padding: 0,
+                                      marginLeft: '4px',
+                                      lineHeight: 1,
+                                      display: 'inline-block',
+                                    }}
+                                  >
+                                    📋
+                                  </button>
+                                  {copiedField === 'phone' && (
+                                    <span
+                                      style={{
+                                        position: 'absolute',
+                                        top: '-1.5em',
+                                        left: '0',
+                                        fontSize: '0.75rem',
+                                        color: 'green',
+                                      }}
+                                    >
+                                      Copied!
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="field-value email" style={{ overflowWrap: 'break-word' }}>
+                                  {offer.contact_phone}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    };
                     return (
                       <div
                         key={offer.id}
@@ -1402,6 +1616,13 @@ useEffect(() => {
       </div>
     )}
 
+    {isShoreBased && offer.gender && (
+      <div className="field-group">
+        <div className="field-label">Sex</div>
+        <div className="field-value">{offer.gender}</div>
+      </div>
+    )}
+
     {(offer.is_doe || offer.salary) && (
       <div className="field-group salary">
         <div className="field-label">Salary</div>
@@ -1443,14 +1664,14 @@ useEffect(() => {
   </div>
 )}
 
-    {offer.type && (
+    {!isShoreBased && offer.type && (
       <div className="field-group terms">
         <div className="field-label">Terms</div>
         <div className="field-value">{offer.type}</div>
       </div>
     )}
     {/* Sex (al final del bloque 1) */}
-{!offer.team && offer.gender && (
+{!offer.team && offer.gender && !isShoreBased && (
   <div className="field-group gender">
     <div className="field-label">Sex</div>
     <div className="field-value">{offer.gender}</div>
@@ -1458,8 +1679,14 @@ useEffect(() => {
 )}
   </div>
 </div>
-
-
+      {isShoreBased ? (
+        <>
+          {renderLanguagesBlock('block2')}
+          {renderShoreStartBlock()}
+          {renderShoreLocationBlock()}
+        </>
+      ) : (
+        <>
       {(offer.yacht_type ||
   (offer.yacht_size && offer.work_environment !== 'Shore-based') ||
   offer.propulsion_type ||
@@ -1518,47 +1745,7 @@ useEffect(() => {
 </div>
 )}
 
-      {(offer.language_1 || offer.language_1_fluency || offer.language_2 || offer.language_2_fluency) && (
-  <div className="expanded-block block3">
-    <div className="field-pair">
-      {offer.language_1 && (
-        <div className="field-group">
-          <div className="field-label">Language</div>
-          <div className="field-value">{offer.language_1}</div>
-        </div>
-      )}
-
-      {offer.language_1_fluency && (
-        <div className="field-group">
-          <div className="field-label">Fluency</div>
-          <div className="field-value">{offer.language_1_fluency}</div>
-        </div>
-      )}
-
-      {offer.language_2 && (
-        <div className="field-group">
-          <div className="field-label">2nd Language</div>
-          <div className="field-value">{offer.language_2}</div>
-        </div>
-      )}
-
-      {offer.language_2_fluency && (
-        <div className="field-group">
-          <div className="field-label">Fluency</div>
-          <div className="field-value">{offer.language_2_fluency}</div>
-        </div>
-      )}
-
-      {/* Visa(s) — al final del bloque 3 */}
-      {Array.isArray(offer.visas) && offer.visas.length > 0 && (
-        <div className="field-group visas">
-          <div className="field-label">Visa(s)</div>
-          <div className="field-value">{offer.visas.join(', ')}</div>
-        </div>
-      )}
-    </div>
-  </div>
-)}
+          {renderLanguagesBlock('block3')}
 
       <div className="expanded-block block4">
   <div className="field-pair">
@@ -1749,6 +1936,8 @@ useEffect(() => {
 )}
   </div>
 </div>
+        </>
+      )}
     </div>
 
     {hasAnyRequiredDocs && (
@@ -1757,7 +1946,7 @@ useEffect(() => {
     <div className="field-value">
       {hasRank1 && (
         <>
-          <div className="required-docs-rank-label">{offer.title}:</div>
+          {offer.team && <div className="required-docs-rank-label">{offer.title}:</div>}
           <div className="required-docs-grid">
             {rank1DeckLic && <span className="required-doc-chip">{rank1DeckLic}</span>}
             {rank1EngineLic && <span className="required-doc-chip">{rank1EngineLic}</span>}
@@ -1769,7 +1958,7 @@ useEffect(() => {
       )}
       {hasRank2 && (
         <>
-          <div className="required-docs-rank-label">{offer.teammate_rank}:</div>
+          {offer.team && <div className="required-docs-rank-label">{offer.teammate_rank}:</div>}
           <div className="required-docs-grid">
             {rank2DeckLic && <span className="required-doc-chip">{rank2DeckLic}</span>}
             {rank2EngineLic && <span className="required-doc-chip">{rank2EngineLic}</span>}

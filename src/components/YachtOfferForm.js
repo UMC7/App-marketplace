@@ -1608,6 +1608,21 @@ const derivedEndDate = (() => {
       required
     />
 
+    <label>Time in Rank:</label>
+    <select name="years_in_rank" value={formData.years_in_rank} onChange={handleChange}>
+      <option value="">Select...</option>
+      {yearsOptions.map((y) => (
+        <option key={y} value={y}>{typeof y === 'string' ? y : `>${y}`}</option>
+      ))}
+    </select>
+
+    <label>Sex:</label>
+    <select name="gender" value={formData.gender} onChange={handleChange}>
+      <option value="">Any</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+    </select>
+
     {/* Salary */}
     {!formData.is_doe && (
       <>
@@ -1715,6 +1730,21 @@ const derivedEndDate = (() => {
         <option value="Conversational">Conversational</option>
       </select>
     </div>
+
+    <label>Terms: <span style={{ color: 'red' }}>*</span></label>
+    <select
+      name="type"
+      value={isDayworker ? 'DayWork' : formData.type}
+      onChange={handleChange}
+      className={highlightClass(!isDayworker && !formData.type)}
+      required
+      disabled={isDayworker}
+    >
+      <option value="">Select...</option>
+      {types.map((t) => (
+        <option key={t} value={t}>{t}</option>
+      ))}
+    </select>
 
     {/* Start Date */}
     <label>Start Date (Month/Day): <span style={{ color: 'red' }}>*</span></label>
