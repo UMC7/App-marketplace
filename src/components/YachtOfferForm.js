@@ -997,15 +997,17 @@ const derivedEndDate = (() => {
       </>
     )}
 
-    <RequiredDocumentsSelect
-      open={showRequiredDocs}
-      onToggle={() => setShowRequiredDocs((v) => !v)}
-      selectedDocuments={formData.required_documents || []}
-      onChange={handleChange}
-      requiredDocumentGroups={requiredDocumentGroups}
-      deckDocumentOptions={deckDocumentOptions}
-      containerRef={requiredDocsRef}
-    />
+    <div className="form-group form-group-stack">
+      <RequiredDocumentsSelect
+        open={showRequiredDocs}
+        onToggle={() => setShowRequiredDocs((v) => !v)}
+        selectedDocuments={formData.required_documents || []}
+        onChange={handleChange}
+        requiredDocumentGroups={requiredDocumentGroups}
+        deckDocumentOptions={deckDocumentOptions}
+        containerRef={requiredDocsRef}
+      />
+    </div>
 
     {/* 3. Años en el cargo */}
     <label>Time in Rank:</label>
