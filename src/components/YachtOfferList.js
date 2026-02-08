@@ -1852,7 +1852,7 @@ useEffect(() => {
         Direct Application
       </button>
       <button
-        className="start-chat-btn"
+        className={`start-chat-btn ${offer.is_private_chat_enabled === false ? 'start-chat-btn--disabled' : ''}`}
         disabled={offer.is_private_chat_enabled === false}
         onClick={(e) => {
           e.stopPropagation();
@@ -1872,12 +1872,12 @@ useEffect(() => {
               : undefined
         }
         style={
-          offer.is_private_chat_enabled === false || !currentUser
+          !currentUser && offer.is_private_chat_enabled !== false
             ? { opacity: 0.6, cursor: 'not-allowed' }
             : undefined
         }
       >
-        Start Private Chat
+        {offer.is_private_chat_enabled === false ? 'Private Chat disabled' : 'Start Private Chat'}
       </button>
     </div>
   )}

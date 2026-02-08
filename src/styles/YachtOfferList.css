@@ -39,12 +39,13 @@
   transform: translateY(0);
 }
 
-.start-chat-btn:disabled {
+.start-chat-btn:disabled,
+.start-chat-btn.start-chat-btn--disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  pointer-events: none;
 }
-.start-chat-btn:disabled:hover {
+.start-chat-btn:disabled:hover,
+.start-chat-btn.start-chat-btn--disabled:hover {
   background-color: var(--primary-color);
   transform: none;
 }
