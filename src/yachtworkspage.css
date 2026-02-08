@@ -433,6 +433,10 @@ body.dark-mode .required-doc-chip {
   grid-column: 2 / 3;
 }
 
+.block1 .engineering-license {
+  grid-column: 2 / 3;
+}
+
 /*
   ----------------------------------------------------------------------------
   Filter Panel and Toggles

@@ -1,4 +1,4 @@
-﻿// src/components/cv/candidate/sectionscomponents/documents/documentssectioncontroller/docmanager/titleCatalog.js
+// src/components/cv/candidate/sectionscomponents/documents/documentssectioncontroller/docmanager/titleCatalog.js
 
 const TITLE_CATALOG = [
   /* ---------------- Core documents ---------------- */
@@ -240,11 +240,8 @@ const TITLE_CATALOG = [
   {
     group: "Helideck (Yacht Helicopter Ops)",
     items: [
-      { id: "helideck_hlo", label: "Helicopter Landing Officer (HLO)" },
-      { id: "helideck_hertm", label: "Helideck Emergency Response Team Member (HERTM)" },
-      { id: "helideck_hertl", label: "Helideck Emergency Response Team Leader (HERTL)" },
-      { id: "helideck_fire", label: "Helideck Firefighting & Rescue" },
       { id: "helideck_hda", label: "Helideck Assistant / Marshalling (HDA)" },
+      { id: "helideck_hlo", label: "Helicopter Landing Officer (HLO)" },
     ],
   },
 

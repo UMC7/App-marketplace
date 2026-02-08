@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
 import '../styles/float.css';
@@ -61,6 +61,7 @@ const initialState = {
   is_flexible: false,
   is_smoke_free_yacht: false,
   is_dry_boat: false,
+  is_no_visible_tattoos: false,
   years_in_rank: '',
   gender: '',
   description: '',
@@ -131,6 +132,17 @@ useEffect(() => {
       end_day: initialValues.end_date_month_only ? '' : day,
     }));
   }, [initialValues]);
+
+useEffect(() => {
+  if (!initialValues) return;
+  const yr = initialValues.years_in_rank;
+  const te = initialValues.teammate_experience;
+  const next = {};
+  if (yr !== undefined && yr !== null) next.years_in_rank = yr === 0 ? 'Green' : yr === -1 ? 'New in rank welcome' : yr;
+  if (te !== undefined && te !== null) next.teammate_experience = te === 0 ? 'Green' : te === -1 ? 'New in rank welcome' : te;
+  if (Object.keys(next).length === 0) return;
+  setFormData(prev => ({ ...prev, ...next }));
+}, [initialValues]);
 
 useEffect(() => {
   if (!Array.isArray(initialValues?.required_licenses)) return;
@@ -661,12 +673,16 @@ const derivedEndDate = (() => {
     years_in_rank:
       formData.years_in_rank === 'Green'
         ? 0
+      : formData.years_in_rank === 'New in rank welcome'
+        ? -1
       : formData.years_in_rank
       ? Number(formData.years_in_rank)
       : null,
   teammate_experience:
     formData.teammate_experience === 'Green'
       ? 0
+      : formData.teammate_experience === 'New in rank welcome'
+        ? -1
       : formData.teammate_experience
       ? Number(formData.teammate_experience)
       : null,
@@ -725,6 +741,7 @@ const derivedEndDate = (() => {
     is_flexible: sanitizedData.is_flexible,
     is_smoke_free_yacht: sanitizedData.is_smoke_free_yacht,
     is_dry_boat: sanitizedData.is_dry_boat,
+    is_no_visible_tattoos: sanitizedData.is_no_visible_tattoos,
     holidays: sanitizedData.holidays ? Number(sanitizedData.holidays) : null,
     language_1: sanitizedData.language_1 || null,
     language_1_fluency: sanitizedData.language_1_fluency || null,
@@ -915,7 +932,7 @@ const derivedEndDate = (() => {
     <select name="years_in_rank" value={formData.years_in_rank} onChange={handleChange}>
       <option value="">Select...</option>
       {yearsOptions.map((y) => (
-        <option key={y} value={y}>{y === 'Green' ? 'Green' : `>${y}`}</option>
+        <option key={y} value={y}>{typeof y === 'string' ? y : `>${y}`}</option>
       ))}
     </select>
 
@@ -1006,7 +1023,7 @@ const derivedEndDate = (() => {
     <select name="teammate_experience" value={formData.teammate_experience} onChange={handleChange}>
       <option value="">Select...</option>
       {yearsOptions.map((y) => (
-        <option key={y} value={y}>{y === 'Green' ? 'Green' : `>${y}`}</option>
+        <option key={y} value={y}>{typeof y === 'string' ? y : `>${y}`}</option>
       ))}
     </select>
 
@@ -1042,6 +1059,7 @@ const derivedEndDate = (() => {
     <option value="Greek">Greek</option>
     <option value="Italian">Italian</option>
     <option value="Mandarin">Mandarin</option>
+    <option value="Polish">Polish</option>
     <option value="Portuguese">Portuguese</option>
     <option value="Russian">Russian</option>
     <option value="Spanish">Spanish</option>
@@ -1068,6 +1086,7 @@ const derivedEndDate = (() => {
     <option value="Greek">Greek</option>
     <option value="Italian">Italian</option>
     <option value="Mandarin">Mandarin</option>
+    <option value="Polish">Polish</option>
     <option value="Portuguese">Portuguese</option>
     <option value="Russian">Russian</option>
     <option value="Spanish">Spanish</option>
@@ -1235,6 +1254,15 @@ const derivedEndDate = (() => {
           onChange={handleChange}
         />
         <span>Dry boat</span>
+      </label>
+      <label className="form-checkbox-label">
+        <input
+          type="checkbox"
+          name="is_no_visible_tattoos"
+          checked={formData.is_no_visible_tattoos}
+          onChange={handleChange}
+        />
+        <span>No visible tattoos</span>
       </label>
     </div>
 
@@ -1471,6 +1499,7 @@ const derivedEndDate = (() => {
         <option value="Greek">Greek</option>
         <option value="Italian">Italian</option>
         <option value="Mandarin">Mandarin</option>
+        <option value="Polish">Polish</option>
         <option value="Portuguese">Portuguese</option>
         <option value="Russian">Russian</option>
         <option value="Spanish">Spanish</option>
@@ -1498,6 +1527,7 @@ const derivedEndDate = (() => {
         <option value="Greek">Greek</option>
         <option value="Italian">Italian</option>
         <option value="Mandarin">Mandarin</option>
+        <option value="Polish">Polish</option>
         <option value="Portuguese">Portuguese</option>
         <option value="Russian">Russian</option>
         <option value="Spanish">Spanish</option>

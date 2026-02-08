@@ -1054,7 +1054,7 @@ useEffect(() => {
   <details style={{ gridColumn: '1 / -1' }}>
     <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Languages</summary>
     <div style={{ marginTop: '8px' }}>
-      {['Arabic', 'Dutch', 'English', 'French', 'German', 'Greek', 'Italian', 'Mandarin', 'Portuguese', 'Russian', 'Spanish', 'Turkish', 'Ukrainian'].map((lang) => (
+      {['Arabic', 'Dutch', 'English', 'French', 'German', 'Greek', 'Italian', 'Mandarin', 'Polish', 'Portuguese', 'Russian', 'Spanish', 'Turkish', 'Ukrainian'].map((lang) => (
         <label key={lang} className="filter-checkbox-label">
           <input
             type="checkbox"
@@ -1340,13 +1340,9 @@ useEffect(() => {
                         : typeof raw === 'string'
                           ? raw.split(',').map((doc) => doc.trim()).filter(Boolean)
                           : [];
-                      const engineLic = Array.isArray(offer.required_engineering_licenses)
-                        ? offer.required_engineering_licenses[0]
-                        : null;
-                      return [
-                        ...(engineLic ? [engineLic] : []),
-                        ...docs,
-                      ];
+                      const deckLic = Array.isArray(offer.required_licenses) && offer.required_licenses[0] ? offer.required_licenses[0] : null;
+                      const engineLic = Array.isArray(offer.required_engineering_licenses) && offer.required_engineering_licenses[0] ? offer.required_engineering_licenses[0] : null;
+                      return docs.filter((doc) => doc !== deckLic && doc !== engineLic);
                     })();
                     const remarkParagraphs = (() => {
                       const description = offer.description || '';
@@ -1376,7 +1372,7 @@ useEffect(() => {
         ? 'case1'
         : 'case2'
     : ''
-} ${offer.teammate_rank && (offer.teammate_experience === null || offer.teammate_experience === undefined) ? 'no-rank2' : ''} ${Array.isArray(offer.required_licenses) && offer.required_licenses.length > 0 ? 'has-license' : ''} ${(offer.years_in_rank !== null && offer.years_in_rank !== undefined) ? 'has-time-in-rank' : ''}`}>
+} ${offer.teammate_rank && (offer.teammate_experience === null || offer.teammate_experience === undefined) ? 'no-rank2' : ''} ${Array.isArray(offer.required_licenses) && offer.required_licenses.length > 0 ? 'has-license' : ''} ${Array.isArray(offer.required_engineering_licenses) && offer.required_engineering_licenses.length > 0 ? 'has-engineering-license' : ''} ${(offer.years_in_rank !== null && offer.years_in_rank !== undefined) ? 'has-time-in-rank' : ''}`}>
   <div className="field-pair">
     {offer.title && (
       <div className="field-group position">
@@ -1391,11 +1387,17 @@ useEffect(() => {
         <div className="field-value">{offer.required_licenses[0]}</div>
       </div>
     )}
+    {Array.isArray(offer.required_engineering_licenses) && offer.required_engineering_licenses.length > 0 && (
+      <div className="field-group engineering-license">
+        <div className="field-label">Engineering License</div>
+        <div className="field-value">{offer.required_engineering_licenses[0]}</div>
+      </div>
+    )}
     {(offer.years_in_rank !== null && offer.years_in_rank !== undefined) && (
       <div className="field-group time-in-rank">
         <div className="field-label">Time in Rank</div>
         <div className="field-value">
-          {offer.years_in_rank === 0 ? 'Green' : `> ${offer.years_in_rank}`}
+          {offer.years_in_rank === 0 ? 'Green' : offer.years_in_rank === -1 ? 'New in rank welcome' : `> ${offer.years_in_rank}`}
         </div>
       </div>
     )}
@@ -1427,7 +1429,7 @@ useEffect(() => {
   <div className="field-group time-in-rank2">
     <div className="field-label">Time in Rank</div>
     <div className="field-value">
-      {offer.teammate_experience === 0 ? 'Green' : `> ${offer.teammate_experience}`}
+      {offer.teammate_experience === 0 ? 'Green' : offer.teammate_experience === -1 ? 'New in rank welcome' : `> ${offer.teammate_experience}`}
     </div>
   </div>
 )}
@@ -1577,6 +1579,13 @@ useEffect(() => {
     {offer.is_dry_boat && (
       <div className="field-group">
         <div className="field-label">Dry boat</div>
+        <div className="field-value">Yes</div>
+      </div>
+    )}
+
+    {offer.is_no_visible_tattoos && (
+      <div className="field-group">
+        <div className="field-label">No visible tattoos</div>
         <div className="field-value">Yes</div>
       </div>
     )}

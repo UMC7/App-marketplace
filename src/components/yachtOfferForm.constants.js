@@ -15,7 +15,7 @@ export const MONTHS = [
   { value: '12', label: 'December' },
 ];
 
-export const yearsOptions = ['Green', 1, 2, 2.5, 3, 5];
+export const yearsOptions = ['Green', 'New in rank welcome', 1, 2, 2.5, 3, 5];
 
 export const titles = [
   'Captain','Captain/Engineer','Skipper','Chase Boat Captain','Relief Captain',
@@ -75,6 +75,7 @@ export const ELECTRICIAN_LICENSE_OPTIONS = [
 export const ENGINEERING_LICENSE_FIELD_RANKS = ['Captain/Engineer','Deck/Engineer'];
 
 export const ENGINEERING_LICENSE_FIELD_OPTIONS = [
+  'Y3 - Yacht Engineer ≤500 GT',
   'Y4 – Yacht Engineer ≤200 GT',
   'MEO (Yachts) – Marine Engine Operator',
   'AEC 2 – Approved Engine Course 2',
@@ -158,6 +159,14 @@ export const REQUIRED_DOCUMENT_GROUPS = [
     label: 'Travel & Health',
     options: ['Vaccination - Yellow Fever'],
   },
+  {
+    label: 'Tender & PWC',
+    options: [
+      'Powerboat Level 2 / Tender Operator',
+      'PWC (Personal Watercraft)',
+      'PWC Instructor',
+    ],
+  },
   FISHING_REQUIRED_DOCUMENT_GROUP,
   WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
@@ -216,8 +225,8 @@ export const CAPTAIN_REQUIRED_DOCUMENT_GROUPS = [
   {
     label: 'Yacht Helicopter Ops',
     options: [
+      'Helideck Assistant / Marshalling (HDA)',
       'Helicopter Landing Officer (HLO)',
-      'Helideck Emergency Response Team Leader (HERTL)',
     ],
   },
   {
@@ -292,11 +301,8 @@ export const DECK_COMMAND_REQUIRED_DOCUMENT_GROUPS = [
   {
     label: 'Yacht Helicopter Ops',
     options: [
-      'Helicopter Landing Officer (HLO)',
-      'Helideck Emergency Response Team Member (HERTM)',
-      'Helideck Emergency Response Team Leader (HERTL)',
-      'Helideck Firefighting & Rescue',
       'Helideck Assistant / Marshalling (HDA)',
+      'Helicopter Landing Officer (HLO)',
     ],
   },
   {
@@ -413,8 +419,6 @@ export const DAYWORKER_REQUIRED_DOCUMENT_GROUPS = [
       "Driver's License",
     ],
   },
-  FISHING_REQUIRED_DOCUMENT_GROUP,
-  WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
 
 export const ENGINEERING_REQUIRED_DOCUMENT_GROUPS = [
@@ -511,6 +515,14 @@ export const GALLEY_REQUIRED_DOCUMENT_GROUPS = [
     label: 'Interior (Service & Hospitality)',
     options: ['Silver Service','Mixology / Bartender','Barista'],
   },
+  {
+    label: 'Tender & PWC',
+    options: [
+      'Powerboat Level 2 / Tender Operator',
+      'PWC (Personal Watercraft)',
+      'PWC Instructor',
+    ],
+  },
   FISHING_REQUIRED_DOCUMENT_GROUP,
   WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
@@ -570,6 +582,14 @@ export const INTERIOR_REQUIRED_DOCUMENT_GROUPS = [
       'Passenger Ship Safety Training',
     ],
   },
+  {
+    label: 'Tender & PWC',
+    options: [
+      'Powerboat Level 2 / Tender Operator',
+      'PWC (Personal Watercraft)',
+      'PWC Instructor',
+    ],
+  },
   FISHING_REQUIRED_DOCUMENT_GROUP,
   WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP,
 ];
@@ -621,11 +641,8 @@ export const OTHERS_REQUIRED_DOCUMENT_GROUPS = [
   {
     label: 'Yacht Helicopter Ops',
     options: [
-      'Helicopter Landing Officer (HLO)',
-      'Helideck Emergency Response Team Member (HERTM)',
-      'Helideck Emergency Response Team Leader (HERTL)',
-      'Helideck Firefighting & Rescue',
       'Helideck Assistant / Marshalling (HDA)',
+      'Helicopter Landing Officer (HLO)',
     ],
   },
   {
@@ -762,7 +779,7 @@ export const COUNTRIES = [
   'Monaco','Montenegro','Morocco','Myanmar','Netherlands','New Zealand','Nicaragua',
   'Norway','Panama','Peru','Philippines','Poland','Portugal','Qatar','Romania','Saint Barthélemy','Saint Kitts and Nevis',
   'Saint Lucia','Saint Maarten','Saint Vincent and the Grenadines','Samoa','Saudi Arabia','Seychelles',
-  'Singapore','Solomon Islands','South Africa','South Korea','Spain','Sweden','Taiwan',
+  'Singapore','Slovenia','Solomon Islands','South Africa','South Korea','Spain','Sweden','Taiwan',
   'Thailand','Trinidad and Tobago','Tunisia','Turkey','United Arab Emirates','United Kingdom',
   'United States','Uruguay','Vanuatu','Venezuela','Vietnam',
 ];
