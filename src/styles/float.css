@@ -162,3 +162,108 @@ body.dark-mode .multiselect-modal-title {
   gap: 8px;
   padding: 8px 4px;
 }
+
+/* =========================
+   Private Chat – mismo estilo que ThemeToggle (pill horizontal + handle)
+   Solo visible cuando work_environment es Onboard o Shore-based.
+   ========================= */
+.private-chat-field {
+  margin-top: 1.25em;
+  text-align: left;
+}
+
+.private-chat-field .private-chat-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-bottom: 0;
+}
+.private-chat-field .private-chat-label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--primary-color, #081a3b);
+  margin: 0;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+body.dark-mode .private-chat-field .private-chat-label {
+  color: var(--text-color);
+}
+
+/* Pill horizontal: mismo look que theme-switch-vertical pero ON/OFF */
+.private-chat-toggle {
+  width: 60px;
+  height: 30px;
+  border-radius: 30px;
+  padding: 3px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  transition: background 0.3s ease, justify-content 0.3s ease;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  position: relative;
+}
+.private-chat-toggle:focus-visible {
+  outline: 2px solid var(--accent-color, #68ada8);
+  outline-offset: 2px;
+}
+.private-chat-toggle.off {
+  background: linear-gradient(90deg, #f87171, #dc2626);
+  justify-content: flex-start;
+}
+.private-chat-toggle.on {
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+  justify-content: flex-end;
+}
+
+.private-chat-toggle-off,
+.private-chat-toggle-on {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.private-chat-toggle-off {
+  left: 8px;
+  color: #fff;
+}
+.private-chat-toggle-on {
+  right: 8px;
+  color: #fff;
+}
+/* Solo se ve la etiqueta del lado contrario al pin; la del lado del pin desaparece */
+.private-chat-toggle.off .private-chat-toggle-off {
+  opacity: 0;
+  visibility: hidden;
+}
+.private-chat-toggle.off .private-chat-toggle-on {
+  opacity: 1;
+  visibility: visible;
+}
+.private-chat-toggle.on .private-chat-toggle-off {
+  opacity: 1;
+  visibility: visible;
+}
+.private-chat-toggle.on .private-chat-toggle-on {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.private-chat-toggle-handle {
+  width: 24px;
+  height: 24px;
+  background-color: white;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+

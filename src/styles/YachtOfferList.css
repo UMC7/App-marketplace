@@ -39,6 +39,16 @@
   transform: translateY(0);
 }
 
+.start-chat-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.start-chat-btn:disabled:hover {
+  background-color: var(--primary-color);
+  transform: none;
+}
+
 .direct-apply-btn {
   background-color: #5cb8b0;
 }

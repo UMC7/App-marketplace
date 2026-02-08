@@ -94,12 +94,36 @@ const initialState = {
   salary_currency: '',
   teammate_salary_currency: '',
   visas: [],
+  is_private_chat_enabled: true,
 };
 
 
 
+/** Evita value=null en selects/inputs: normaliza null/undefined a '' o [] según el tipo en initialState */
+function normalizeInitialValues(row) {
+  if (!row || typeof row !== 'object') return {};
+  return Object.fromEntries(
+    Object.keys(row)
+      .filter((k) => k in initialState)
+      .map((k) => {
+        const v = row[k];
+        const def = initialState[k];
+        if (v == null) {
+          if (Array.isArray(def)) return [k, []];
+          if (typeof def === 'string') return [k, ''];
+          if (typeof def === 'number') return [k, ''];
+          if (typeof def === 'boolean') return [k, !!def];
+        }
+        if (Array.isArray(def) && !Array.isArray(v)) return [k, []];
+        return [k, v];
+      })
+  );
+}
+
 function YachtOfferForm({ user, onOfferPosted, initialValues, mode }) {
-  const [formData, setFormData] = useState(initialValues ? { ...initialState, ...initialValues } : initialState);
+  const [formData, setFormData] = useState(
+    initialValues ? { ...initialState, ...normalizeInitialValues(initialValues) } : initialState
+  );
   // Normaliza team para edición: boolean -> 'Yes'/'No'
 useEffect(() => {
   if (initialValues && typeof initialValues.team !== 'undefined') {
@@ -663,6 +687,69 @@ const prepareOfferForUpdate = (payload) => ({
   holidays: coerceOptionalNumber(payload.holidays),
 });
 
+/** Payload solo con columnas de la tabla (evita 400 por columnas/formato incorrecto) */
+const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
+  const base = {
+    work_environment: sanitizedData.work_environment,
+    work_location: sanitizedData.work_location || null,
+    title: sanitizedData.title,
+    city: sanitizedData.city ?? '',
+    country: sanitizedData.country ?? '',
+    type: sanitizedData.type || null,
+    start_date: sanitizedData.is_asap || (sanitizedData.is_flexible && !sanitizedData.start_date)
+      ? new Date().toISOString().split('T')[0]
+      : sanitizedData.start_date || null,
+    start_date_month_only: !!sanitizedData.start_date_month_only,
+    end_date_month_only: !!sanitizedData.end_date_month_only,
+    end_date:
+      sanitizedData.type === 'Permanent'
+        ? null
+        : sanitizedData.end_date || null,
+    is_doe: !!sanitizedData.is_doe,
+    salary: sanitizedData.is_doe ? null : coerceOptionalNumber(sanitizedData.salary),
+    salary_currency: sanitizedData.is_doe ? null : (sanitizedData.salary_currency || null),
+    years_in_rank: sanitizedData.years_in_rank,
+    description: sanitizedData.description || null,
+    contact_email: sanitizedData.contact_email || null,
+    contact_phone: sanitizedData.contact_phone || null,
+    team: sanitizedData.team === 'Yes',
+    teammate_rank: sanitizedData.team === 'Yes' ? (sanitizedData.teammate_rank || null) : null,
+    teammate_salary: sanitizedData.team === 'Yes' ? coerceOptionalNumber(sanitizedData.teammate_salary) : null,
+    teammate_salary_currency: sanitizedData.team === 'Yes' ? (sanitizedData.teammate_salary_currency || null) : null,
+    teammate_experience: sanitizedData.team === 'Yes' ? sanitizedData.teammate_experience : null,
+    flag: sanitizedData.flag || null,
+    yacht_size: sanitizedData.yacht_size || null,
+    yacht_type: sanitizedData.yacht_type || null,
+    uses: sanitizedData.uses || null,
+    required_licenses: Array.isArray(sanitizedData.required_licenses) ? sanitizedData.required_licenses : [],
+    required_engineering_licenses: Array.isArray(sanitizedData.required_engineering_licenses) ? sanitizedData.required_engineering_licenses : [],
+    required_documents: Array.isArray(sanitizedData.required_documents) ? sanitizedData.required_documents : [],
+    teammate_required_licenses: Array.isArray(sanitizedData.teammate_required_licenses) ? sanitizedData.teammate_required_licenses : [],
+    teammate_required_engineering_licenses: Array.isArray(sanitizedData.teammate_required_engineering_licenses) ? sanitizedData.teammate_required_engineering_licenses : [],
+    teammate_required_documents: Array.isArray(sanitizedData.teammate_required_documents) ? sanitizedData.teammate_required_documents : [],
+    homeport: sanitizedData.homeport || null,
+    liveaboard: sanitizedData.liveaboard || null,
+    season_type: sanitizedData.season_type || null,
+    is_asap: !!sanitizedData.is_asap,
+    is_tips: !!sanitizedData.is_tips,
+    is_flexible: !!sanitizedData.is_flexible,
+    is_smoke_free_yacht: !!sanitizedData.is_smoke_free_yacht,
+    is_dry_boat: !!sanitizedData.is_dry_boat,
+    is_no_visible_tattoos: !!sanitizedData.is_no_visible_tattoos,
+    holidays: coerceOptionalNumber(sanitizedData.holidays),
+    language_1: sanitizedData.language_1 || null,
+    language_1_fluency: sanitizedData.language_1_fluency || null,
+    language_2: sanitizedData.language_2 || null,
+    language_2_fluency: sanitizedData.language_2_fluency || null,
+    propulsion_type: sanitizedData.propulsion_type || null,
+    gender: sanitizedData.gender || null,
+    visas: Array.isArray(sanitizedData.visas) ? sanitizedData.visas : [],
+    is_private_chat_enabled: !!sanitizedData.is_private_chat_enabled,
+  };
+  if (forUpdate) return base;
+  return { ...base };
+};
+
 const handleSubmit = async (e) => {
     e.preventDefault();
     const isOnboard = formData.work_environment === 'Onboard';
@@ -767,70 +854,15 @@ const derivedEndDate = (() => {
 
     setLoading(true);
 
-    const updatePayload = prepareOfferForUpdate(sanitizedData);
+    const payload = buildOfferPayload(sanitizedData, { forUpdate: mode === 'edit' });
 
     if (mode === 'edit') {
-      // en modo edición, delega a la función onOfferPosted que viene del modal
-      await onOfferPosted(updatePayload);
-} else {
-  // en modo creación, inserta como siempre
-  const { error } = await supabase.from('yacht_work_offers').insert([{
-    user_id: user.id,
-    work_environment: sanitizedData.work_environment,
-    work_location: sanitizedData.work_location || null,
-    title: sanitizedData.title,
-    city: sanitizedData.city,
-    country: sanitizedData.country,
-    type: sanitizedData.type || null,
-      start_date: sanitizedData.is_asap || (sanitizedData.is_flexible && !sanitizedData.start_date)
-        ? new Date().toISOString().split('T')[0]
-        : sanitizedData.start_date || null,
-      start_date_month_only: !!sanitizedData.start_date_month_only,
-      end_date_month_only: !!sanitizedData.end_date_month_only,
-      end_date:
-        sanitizedData.type === 'Permanent'
-          ? null
-        : sanitizedData.end_date || null,
-    is_doe: sanitizedData.is_doe,
-    salary: sanitizedData.is_doe ? null : sanitizedData.salary,
-    salary_currency: sanitizedData.is_doe ? null : sanitizedData.salary_currency || null,
-    years_in_rank: sanitizedData.years_in_rank,
-    description: sanitizedData.description || null,
-    contact_email: sanitizedData.contact_email || null,
-    contact_phone: sanitizedData.contact_phone || null,
-    team: sanitizedData.team === 'Yes',
-    teammate_rank: sanitizedData.team === 'Yes' ? sanitizedData.teammate_rank || null : null,
-    teammate_salary: sanitizedData.team === 'Yes' ? sanitizedData.teammate_salary || null : null,
-    teammate_salary_currency: sanitizedData.team === 'Yes' ? sanitizedData.teammate_salary_currency || null : null,
-    teammate_experience: sanitizedData.team === 'Yes' ? sanitizedData.teammate_experience || null : null,
-    flag: sanitizedData.flag || null,
-    yacht_size: sanitizedData.yacht_size || null,
-    yacht_type: sanitizedData.yacht_type || null,
-    uses: sanitizedData.uses || null,
-    required_licenses: sanitizedData.required_licenses || [],
-    required_engineering_licenses: sanitizedData.required_engineering_licenses || [],
-    required_documents: sanitizedData.required_documents || [],
-    teammate_required_licenses: sanitizedData.teammate_required_licenses || [],
-    teammate_required_engineering_licenses: sanitizedData.teammate_required_engineering_licenses || [],
-    teammate_required_documents: sanitizedData.teammate_required_documents || [],
-    homeport: sanitizedData.homeport || null,
-    liveaboard: sanitizedData.liveaboard || null,
-    season_type: sanitizedData.season_type || null,
-    is_asap: sanitizedData.is_asap,
-    is_tips: sanitizedData.is_tips,
-    is_flexible: sanitizedData.is_flexible,
-    is_smoke_free_yacht: sanitizedData.is_smoke_free_yacht,
-    is_dry_boat: sanitizedData.is_dry_boat,
-    is_no_visible_tattoos: sanitizedData.is_no_visible_tattoos,
-    holidays: sanitizedData.holidays ? Number(sanitizedData.holidays) : null,
-    language_1: sanitizedData.language_1 || null,
-    language_1_fluency: sanitizedData.language_1_fluency || null,
-    language_2: sanitizedData.language_2 || null,
-    language_2_fluency: sanitizedData.language_2_fluency || null,
-    propulsion_type: sanitizedData.propulsion_type || null,
-    gender: sanitizedData.gender || null, // null = Any
-    visas: Array.isArray(sanitizedData.visas) ? sanitizedData.visas : [],
-  }]);
+      await onOfferPosted(payload);
+    } else {
+      const { error } = await supabase.from('yacht_work_offers').insert([{
+        user_id: user.id,
+        ...payload,
+      }]);
 
   if (error) {
     console.error('Error posting the offer:', error);
@@ -1841,6 +1873,28 @@ const derivedEndDate = (() => {
     />
   </>
 )}
+
+    {/* Private Chat – mismo estilo que ThemeToggle (pill + handle), solo si ya eligió Onboard o Shore-based */}
+    {(formData.work_environment === 'Onboard' || formData.work_environment === 'Shore-based') && (
+      <div className="private-chat-field">
+        <div className="private-chat-row">
+          <label htmlFor="private-chat-toggle" className="private-chat-label">Private Chat</label>
+          <div
+            id="private-chat-toggle"
+            role="switch"
+            aria-checked={formData.is_private_chat_enabled}
+            aria-label="Private Chat"
+            title={formData.is_private_chat_enabled ? 'Private chat on' : 'Private chat off'}
+            className={`private-chat-toggle ${formData.is_private_chat_enabled ? 'on' : 'off'}`}
+            onClick={() => setFormData((prev) => ({ ...prev, is_private_chat_enabled: !prev.is_private_chat_enabled }))}
+          >
+            <span className="private-chat-toggle-off" aria-hidden>OFF</span>
+            <span className="private-chat-toggle-on" aria-hidden>ON</span>
+            <div className="private-chat-toggle-handle" aria-hidden />
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* Submit */}
     <p style={{ fontStyle: 'italic', marginTop: '1.5em' }}><span style={{ color: 'red' }}>*</span> Required</p>

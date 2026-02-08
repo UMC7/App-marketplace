@@ -1853,17 +1853,29 @@ useEffect(() => {
       </button>
       <button
         className="start-chat-btn"
+        disabled={offer.is_private_chat_enabled === false}
         onClick={(e) => {
           e.stopPropagation();
+          if (offer.is_private_chat_enabled === false) return;
           if (currentUser) {
             handleRequestChat(offer.id, offer.user_id);
           } else {
             handleShowChatLoginInfo();
           }
         }}
-        aria-disabled={!currentUser}
-        title={!currentUser ? 'Sign in to start a private chat.' : undefined}
-        style={!currentUser ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+        aria-disabled={offer.is_private_chat_enabled === false || !currentUser}
+        title={
+          offer.is_private_chat_enabled === false
+            ? 'Private chat is disabled for this offer.'
+            : !currentUser
+              ? 'Sign in to start a private chat.'
+              : undefined
+        }
+        style={
+          offer.is_private_chat_enabled === false || !currentUser
+            ? { opacity: 0.6, cursor: 'not-allowed' }
+            : undefined
+        }
       >
         Start Private Chat
       </button>

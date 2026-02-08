@@ -34,7 +34,7 @@ function EditJobModal({ jobId, onClose, onUpdate }) {
   }, [jobId]);
 
   const handleUpdate = async (updatedData) => {
-    const { created_at, ...dataToUpdate } = updatedData;
+    const { id, created_at, user_id, ...dataToUpdate } = updatedData;
 
     const { error } = await supabase
       .from('yacht_work_offers')
