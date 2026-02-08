@@ -140,3 +140,25 @@ body.dark-mode .custom-multiselect .multiselect-options .form-checkbox-label {
 body.dark-mode .custom-multiselect input[type="checkbox"] {
   accent-color: var(--primary-color);
 }
+
+/* Modal multiselect (solo móvil): contenido con scroll y título */
+.multiselect-modal-content {
+  padding-right: 8px;
+  max-height: min(70vh, 400px);
+  overflow-y: auto;
+}
+.multiselect-modal-title {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-color, #081a3b);
+}
+body.dark-mode .multiselect-modal-title {
+  color: var(--text-color);
+}
+.multiselect-modal-content .form-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+}
