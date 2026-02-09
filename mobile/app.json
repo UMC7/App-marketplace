@@ -25,7 +25,7 @@
       "buildNumber": "1"
     },
     "plugins": [
-      "./plugins/withForceDarkAllowedFalse"
+      "./plugins/withForceDarkAllowedFalse","expo-notifications"
     ],
     "extra": {
       "eas": {

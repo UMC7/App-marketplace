@@ -163,7 +163,7 @@ function WebViewRootInner() {
         },
         body: JSON.stringify({
           user_id: authUserId,
-          platform: 'android',
+          platform: Platform.OS,
           token: expoPushToken,
           access_token: token,
         }),
