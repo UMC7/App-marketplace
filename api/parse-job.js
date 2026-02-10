@@ -7,6 +7,7 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const RANKS = [
   "Captain", "Captain/Engineer", "Skipper", "Chase Boat Captain", "Relief Captain",
   "Chief Officer", "2nd Officer", "3rd Officer", "Bosun", "Deck/Engineer", "Mate",
+  "Mate/Steward(ess)",
   "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster",
   "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Electrician", "Chef",
   "Head Chef", "Sous Chef", "Solo Chef", "Cook/Crew Chef", "Crew Chef/Stew", "Chef/Steward(ess)", "Butler", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
@@ -78,6 +79,9 @@ const RANK_SYNONYMS = {
   "cook/stew/ deck": "Cook/Stew/Deck",
   "buttler": "Butler",
   "valet": "Butler",
+  "mate/stew": "Mate/Steward(ess)",
+  "mate/steward": "Mate/Steward(ess)",
+  "mate/stewardess": "Mate/Steward(ess)",
   "house keeper": "Housekeeper",
   "hk": "Housekeeper",
   "head housekeeper": "Head of Housekeeping",

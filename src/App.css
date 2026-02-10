@@ -915,12 +915,56 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     padding: 0;
   }
 
+  /* Bloque 1: no cede espacio al bloque 5 */
+  .offer-card.expanded .top-row > .expanded-block.block1 {
+    flex: 1 0 0 !important;
+    min-width: 140px !important;
+    max-width: 220px !important;
+    width: auto !important;
+  }
+
+  /* Bloques 2, 3 y 4: ceden espacio al bloque 5 (menor flex-grow); min-width evita cortar a 2 líneas */
+  .offer-card.expanded .top-row > .expanded-block.block2,
+  .offer-card.expanded .top-row > .expanded-block.block3,
+  .offer-card.expanded .top-row > .expanded-block.block4 {
+    flex: 0.6 1 0 !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  /* Bloque 2: ancho mínimo para no forzar salto de línea */
+  .offer-card.expanded .top-row > .expanded-block.block2 {
+    min-width: 108px !important;
+    max-width: 200px !important;
+  }
+
+  /* Bloque 3: ancho mínimo para no forzar salto de línea */
+  .offer-card.expanded .top-row > .expanded-block.block3 {
+    min-width: 88px !important;
+    max-width: 160px !important;
+  }
+
+  /* Bloque 4: ancho mínimo para no forzar salto de línea */
+  .offer-card.expanded .top-row > .expanded-block.block4 {
+    min-width: 98px !important;
+    max-width: 180px !important;
+  }
+
   .offer-card.expanded .expanded-block.block5 {
     flex: 0 0 auto;
     margin-left: auto;
     box-sizing: border-box;
     min-width: max-content;
     padding: 0;
+  }
+
+  /* Bloque 5: ancho justo al contenido (email); no crece más de lo necesario */
+  .offer-card.expanded .top-row .expanded-block.block5 {
+    min-width: 180px !important;
+    max-width: 380px !important;
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    overflow: hidden !important;
   }
 
   .offer-card.expanded .expanded-block.block6,
@@ -955,6 +999,14 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     overflow-wrap: break-word;
   }
 
+  /* Sobrescribir estilos del email cuando está en bloque 5 dentro de top-row */
+  .offer-card.expanded .top-row .expanded-block.block5 .field-value.email {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    overflow-wrap: normal !important;
+  }
+
   .offer-card.expanded .top-row.no-wrap-mobile {
     flex-wrap: nowrap !important;
     overflow-x: auto;
@@ -983,6 +1035,41 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     padding: 0;
   }
 
+  /* Bloque 1: no cede espacio al bloque 5 */
+  .offer-card.expanded .top-row > .expanded-block.block1 {
+    flex: 1 0 0 !important;
+    min-width: 140px !important;
+    max-width: 220px !important;
+    width: auto !important;
+  }
+
+  /* Bloques 2, 3 y 4: ceden espacio al bloque 5 (menor flex-grow); min-width evita cortar a 2 líneas */
+  .offer-card.expanded .top-row > .expanded-block.block2,
+  .offer-card.expanded .top-row > .expanded-block.block3,
+  .offer-card.expanded .top-row > .expanded-block.block4 {
+    flex: 0.6 1 0 !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  /* Bloque 2: ancho mínimo para no forzar salto de línea */
+  .offer-card.expanded .top-row > .expanded-block.block2 {
+    min-width: 108px !important;
+    max-width: 200px !important;
+  }
+
+  /* Bloque 3: ancho mínimo para no forzar salto de línea */
+  .offer-card.expanded .top-row > .expanded-block.block3 {
+    min-width: 88px !important;
+    max-width: 160px !important;
+  }
+
+  /* Bloque 4: ancho mínimo para no forzar salto de línea */
+  .offer-card.expanded .top-row > .expanded-block.block4 {
+    min-width: 98px !important;
+    max-width: 180px !important;
+  }
+
   .offer-card.expanded .expanded-block.block5 {
     flex: 0 0 auto;
     margin-left: auto;
@@ -991,9 +1078,25 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     padding: 0;
   }
 
+  /* Bloque 5: ancho justo al contenido (email); no crece más de lo necesario */
+  .offer-card.expanded .top-row > .expanded-block.block5 {
+    min-width: 180px !important;
+    max-width: 380px !important;
+    flex: 0 0 auto !important;
+    width: max-content !important;
+  }
+
   .offer-card.expanded .field-value.email {
     white-space: normal;
     overflow-wrap: break-word;
+  }
+
+  /* Sobrescribir estilos del email cuando está en bloque 5 dentro de top-row */
+  .offer-card.expanded .top-row > .expanded-block.block5 .field-value.email {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    overflow-wrap: normal !important;
   }
 }
 

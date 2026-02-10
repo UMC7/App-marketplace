@@ -19,7 +19,7 @@ export const yearsOptions = ['Green', 'New in rank welcome', 1, 2, 2.5, 3, 5];
 
 export const titles = [
   'Captain','Captain/Engineer','Skipper','Chase Boat Captain','Relief Captain',
-  'Chief Officer','2nd Officer','3rd Officer','Bosun','Deck/Engineer','Mate',
+  'Chief Officer','2nd Officer','3rd Officer','Bosun','Deck/Engineer','Mate','Mate/Steward(ess)',
   'Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster',
   'Deck/Cook','Dayworker',
   'Chief Engineer','2nd Engineer','3rd Engineer','Solo Engineer','Engineer','Electrician',
@@ -44,7 +44,7 @@ export const ENGINEERING_RANKS = [
 export const DECK_LICENSE_RANKS = [
   'Captain','Captain/Engineer','Skipper','Chase Boat Captain','Relief Captain',
   'Chief Officer','2nd Officer','3rd Officer','Bosun','Deck/Engineer','Mate',
-  'Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster','Deck/Cook'
+  'Mate/Steward(ess)','Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster','Deck/Cook'
 ];
 
 export const GALLEY_DEPARTMENT_RANKS = [
@@ -92,6 +92,7 @@ export const DECK_LICENSE_MAP = {
   '2nd Officer': ['Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
   '3rd Officer': ['Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
   Mate: ['Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
+  'Mate/Steward(ess)': ['Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
   Bosun: ['OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
   'Deck/Engineer': ['OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
   'Lead Deckhand': ['OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
@@ -115,6 +116,7 @@ export const DECK_DOCUMENT_MAP = {
   Bosun: ['VHF SRC'],
   'Lead Deckhand': ['VHF SRC'],
   Deckhand: ['VHF SRC (preferred / plus)'],
+  'Mate/Steward(ess)': ['GMDSS GOC','GMDSS ROC','VHF SRC'],
   'Deck/Steward(ess)': ['VHF SRC (optional)'],
   'Deck/Carpenter': ['VHF SRC (optional)'],
   'Deck/Divemaster': ['VHF SRC (optional)'],
@@ -338,6 +340,8 @@ export const DECK_COMMAND_REQUIRED_DOCUMENT_GROUPS = [
 
 const DECK_COMMAND_ENGINE_ROOM_DOCUMENT_GROUPS = [...DECK_COMMAND_REQUIRED_DOCUMENT_GROUPS, ENGINE_ROOM_AEC_GROUP];
 
+const MATE_STEWARD_REQUIRED_DOCUMENT_GROUPS = [...DECK_COMMAND_ENGINE_ROOM_DOCUMENT_GROUPS, INTERIOR_SERVICE_HOSPITALITY_GROUP];
+
 const COMMON_DECK_HAND_REQUIRED_DOCUMENT_GROUPS = [
   {
     label: 'Commonly Required',
@@ -499,6 +503,7 @@ export const RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS = {
   'Lead Deckhand': DECK_HAND_ENGINE_ROOM_DOCUMENT_GROUPS,
   Deckhand: DECK_HAND_ENGINE_ROOM_DOCUMENT_GROUPS,
   'Deck/Steward(ess)': DECK_STEWARD_REQUIRED_DOCUMENT_GROUPS,
+  'Mate/Steward(ess)': MATE_STEWARD_REQUIRED_DOCUMENT_GROUPS,
   'Deck/Carpenter': DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS,
   'Deck/Divemaster': DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS,
   'Deck/Cook': DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS,
@@ -702,6 +707,7 @@ export const DEPARTMENT_RANK_GROUPS = [
       '2nd Officer',
       '3rd Officer',
       'Mate',
+      'Mate/Steward(ess)',
       'Bosun',
       'Deck/Engineer',
       'Lead Deckhand',

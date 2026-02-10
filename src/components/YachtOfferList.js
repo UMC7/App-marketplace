@@ -333,11 +333,12 @@ useEffect(() => {
 const RANKS = [
   "Captain", "Captain/Engineer", "Skipper", "Chase Boat Captain", "Relief Captain",
   "Chief Officer", "2nd Officer", "3rd Officer", "Bosun", "Deck/Engineer", "Mate",
+  "Mate/Steward(ess)",
   "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster", "Deck/Cook",
-  "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Electrician", "Chef",
-  "Head Chef", "Sous Chef", "Solo Chef", "Cook/Crew Chef", "Crew Chef/Stew", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
+  "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Engineer", "Electrician", "Chef",
+  "Head Chef", "Sous Chef", "Solo Chef", "Cook", "Cook/Crew Chef", "Crew Chef/Stew", "Chef/Steward(ess)", "Butler", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
   "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Housekeeper", "Head of Housekeeping", "Cook/Stew/Deck", "Cook/Steward(ess)", "Stew/Deck",
-  "Laundry/Steward(ess)", "Stew/Masseur", "Masseur", "Hairdresser/Barber", "Nanny", "Videographer", "Yoga/Pilates Instructor",
+  "Laundry/Steward(ess)", "Stew/Masseur", "Masseur", "Hairdresser/Barber", "Steward(ess)/Nanny", "Nanny", "Videographer", "Yoga/Pilates Instructor",
   "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
 ];
 
@@ -1506,7 +1507,11 @@ useEffect(() => {
                                     </span>
                                   )}
                                 </div>
-                                <div className="field-value email" style={{ overflowWrap: 'break-word' }}>
+                                <div
+                                  className="field-value email"
+                                  style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                  title={offer.contact_email}
+                                >
                                   {offer.contact_email}
                                 </div>
                               </div>
@@ -1558,7 +1563,11 @@ useEffect(() => {
                                     </span>
                                   )}
                                 </div>
-                                <div className="field-value email" style={{ overflowWrap: 'break-word' }}>
+                                <div
+                                  className="field-value email"
+                                  style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                  title={offer.contact_phone}
+                                >
                                   {offer.contact_phone}
                                 </div>
                               </div>
@@ -1878,9 +1887,13 @@ useEffect(() => {
         </span>
       )}
     </div>
-    <div className="field-value email" style={{ overflowWrap: 'break-word' }}>
-      {offer.contact_email}
-    </div>
+                                <div
+                                  className="field-value email"
+                                  style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                  title={offer.contact_email}
+                                >
+                                  {offer.contact_email}
+                                </div>
   </div>
 )}
 
@@ -1931,7 +1944,11 @@ useEffect(() => {
         </span>
       )}
     </div>
-    <div className="field-value email" style={{ overflowWrap: 'break-word' }}>
+    <div
+      className="field-value email"
+      style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+      title={offer.contact_phone}
+    >
       {offer.contact_phone}
     </div>
   </div>

@@ -92,6 +92,82 @@
     flex: 1 1 0;
   }
 
+  /* Bloque 1: no cede espacio al bloque 5 */
+  .top-row > .expanded-block.block1 {
+    flex: 1 0 0 !important;
+    min-width: 140px !important;
+    max-width: 220px !important;
+    width: auto !important;
+  }
+
+  /* Bloques 2, 3 y 4: ceden espacio al bloque 5 (menor flex-grow para no acaparar); min-width evita cortar a 2 líneas */
+  .top-row > .expanded-block.block2,
+  .top-row > .expanded-block.block3,
+  .top-row > .expanded-block.block4 {
+    flex: 0.6 1 0 !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  /* Bloque 2: ancho mínimo para no forzar salto de línea */
+  .top-row > .expanded-block.block2 {
+    min-width: 108px !important;
+    max-width: 200px !important;
+  }
+
+  /* Bloque 3: ancho mínimo para no forzar salto de línea */
+  .top-row > .expanded-block.block3 {
+    min-width: 88px !important;
+    max-width: 160px !important;
+  }
+
+  /* Mejorar el ajuste de texto en el bloque 3 para evitar espacios innecesarios */
+  .top-row > .expanded-block.block3 .field-value {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  /* Bloque 4: ancho mínimo para no forzar salto de línea */
+  .top-row > .expanded-block.block4 {
+    min-width: 98px !important;
+    max-width: 180px !important;
+  }
+
+  /* Bloque 5: ancho justo al contenido (email); no crece más de lo necesario */
+  .top-row > .expanded-block.block5 {
+    min-width: 180px !important;
+    max-width: 380px !important;
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    padding-right: var(--spacing-lg);
+    margin-right: var(--spacing-lg);
+    overflow: hidden;
+  }
+
+  /* Asegurar que el contenido interno del bloque 5 respete el ancho fijo */
+  .top-row > .expanded-block.block5 .field-pair {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Asegurar que los field-group dentro del bloque 5 respeten el ancho */
+  .top-row > .expanded-block.block5 .field-group {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Asegurar que el email se trunque correctamente */
+  .top-row > .expanded-block.block5 .field-value.email {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
   .top-row > .expanded-block:not(:last-child) .field-pair {
     position: relative;
   }
