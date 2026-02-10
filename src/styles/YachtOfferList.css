@@ -92,21 +92,20 @@
     flex: 1 1 0;
   }
 
-  /* Bloque 1: no cede espacio al bloque 5 */
-  .top-row > .expanded-block.block1 {
-    flex: 1 0 0 !important;
-    min-width: 140px !important;
-    max-width: 220px !important;
-    width: auto !important;
-  }
-
-  /* Bloques 2, 3 y 4: ceden espacio al bloque 5 (menor flex-grow para no acaparar); min-width evita cortar a 2 líneas */
+  /* Simetría base: todos participan equitativamente; límites según necesidad de contenido */
+  .top-row > .expanded-block.block1,
   .top-row > .expanded-block.block2,
   .top-row > .expanded-block.block3,
   .top-row > .expanded-block.block4 {
-    flex: 0.6 1 0 !important;
+    flex: 1 1 0 !important;
     min-width: 0 !important;
     width: auto !important;
+  }
+
+  /* Bloque 1: puede crecer más para no cortar contenido largo (ej. "Deck/ Steward(ess)") */
+  .top-row > .expanded-block.block1 {
+    min-width: 140px !important;
+    max-width: 280px !important;
   }
 
   /* Bloque 2: ancho mínimo para no forzar salto de línea */
@@ -115,10 +114,10 @@
     max-width: 200px !important;
   }
 
-  /* Bloque 3: ancho mínimo para no forzar salto de línea */
+  /* Bloque 3: límite más bajo para evitar espacio ocioso; puede crecer cuando contenido largo */
   .top-row > .expanded-block.block3 {
-    min-width: 88px !important;
-    max-width: 160px !important;
+    min-width: 100px !important;
+    max-width: 200px !important;
   }
 
   /* Mejorar el ajuste de texto en el bloque 3 para evitar espacios innecesarios */
@@ -168,11 +167,11 @@
     white-space: nowrap !important;
   }
 
-  .top-row > .expanded-block:not(:last-child) .field-pair {
+  .top-row > .expanded-block:not(:last-child) {
     position: relative;
   }
 
-  .top-row > .expanded-block:not(:last-child) .field-pair::after {
+  .top-row > .expanded-block:not(:last-child)::after {
     content: "";
     position: absolute;
     top: 0;

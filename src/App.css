@@ -915,21 +915,20 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     padding: 0;
   }
 
-  /* Bloque 1: no cede espacio al bloque 5 */
-  .offer-card.expanded .top-row > .expanded-block.block1 {
-    flex: 1 0 0 !important;
-    min-width: 140px !important;
-    max-width: 220px !important;
-    width: auto !important;
-  }
-
-  /* Bloques 2, 3 y 4: ceden espacio al bloque 5 (menor flex-grow); min-width evita cortar a 2 líneas */
+  /* Simetría base: todos participan equitativamente; límites según necesidad de contenido */
+  .offer-card.expanded .top-row > .expanded-block.block1,
   .offer-card.expanded .top-row > .expanded-block.block2,
   .offer-card.expanded .top-row > .expanded-block.block3,
   .offer-card.expanded .top-row > .expanded-block.block4 {
-    flex: 0.6 1 0 !important;
+    flex: 1 1 0 !important;
     min-width: 0 !important;
     width: auto !important;
+  }
+
+  /* Bloque 1: puede crecer más para no cortar contenido largo (ej. "Deck/ Steward(ess)") */
+  .offer-card.expanded .top-row > .expanded-block.block1 {
+    min-width: 140px !important;
+    max-width: 280px !important;
   }
 
   /* Bloque 2: ancho mínimo para no forzar salto de línea */
@@ -938,10 +937,10 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     max-width: 200px !important;
   }
 
-  /* Bloque 3: ancho mínimo para no forzar salto de línea */
+  /* Bloque 3: límite más bajo para evitar espacio ocioso; puede crecer cuando contenido largo */
   .offer-card.expanded .top-row > .expanded-block.block3 {
-    min-width: 88px !important;
-    max-width: 160px !important;
+    min-width: 100px !important;
+    max-width: 200px !important;
   }
 
   /* Bloque 4: ancho mínimo para no forzar salto de línea */
@@ -958,7 +957,7 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     padding: 0;
   }
 
-  /* Bloque 5: ancho justo al contenido (email); no crece más de lo necesario */
+  /* Bloque 5: ancho al contenido (email); no crece más de lo necesario */
   .offer-card.expanded .top-row .expanded-block.block5 {
     min-width: 180px !important;
     max-width: 380px !important;
@@ -1035,21 +1034,20 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     padding: 0;
   }
 
-  /* Bloque 1: no cede espacio al bloque 5 */
-  .offer-card.expanded .top-row > .expanded-block.block1 {
-    flex: 1 0 0 !important;
-    min-width: 140px !important;
-    max-width: 220px !important;
-    width: auto !important;
-  }
-
-  /* Bloques 2, 3 y 4: ceden espacio al bloque 5 (menor flex-grow); min-width evita cortar a 2 líneas */
+  /* Simetría base: todos participan equitativamente; límites según necesidad de contenido */
+  .offer-card.expanded .top-row > .expanded-block.block1,
   .offer-card.expanded .top-row > .expanded-block.block2,
   .offer-card.expanded .top-row > .expanded-block.block3,
   .offer-card.expanded .top-row > .expanded-block.block4 {
-    flex: 0.6 1 0 !important;
+    flex: 1 1 0 !important;
     min-width: 0 !important;
     width: auto !important;
+  }
+
+  /* Bloque 1: puede crecer más para no cortar contenido largo (ej. "Deck/ Steward(ess)") */
+  .offer-card.expanded .top-row > .expanded-block.block1 {
+    min-width: 140px !important;
+    max-width: 280px !important;
   }
 
   /* Bloque 2: ancho mínimo para no forzar salto de línea */
@@ -1058,10 +1056,10 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     max-width: 200px !important;
   }
 
-  /* Bloque 3: ancho mínimo para no forzar salto de línea */
+  /* Bloque 3: límite más bajo para evitar espacio ocioso; puede crecer cuando contenido largo */
   .offer-card.expanded .top-row > .expanded-block.block3 {
-    min-width: 88px !important;
-    max-width: 160px !important;
+    min-width: 100px !important;
+    max-width: 200px !important;
   }
 
   /* Bloque 4: ancho mínimo para no forzar salto de línea */
@@ -1078,7 +1076,7 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     padding: 0;
   }
 
-  /* Bloque 5: ancho justo al contenido (email); no crece más de lo necesario */
+  /* Bloque 5: ancho al contenido (email); no crece más de lo necesario */
   .offer-card.expanded .top-row > .expanded-block.block5 {
     min-width: 180px !important;
     max-width: 380px !important;
