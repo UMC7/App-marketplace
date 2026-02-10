@@ -22,10 +22,14 @@
     },
     "ios": {
       "bundleIdentifier": "com.yachtdaywork.app",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "plugins": [
-      "./plugins/withForceDarkAllowedFalse","expo-notifications"
+      "./plugins/withForceDarkAllowedFalse",
+      "expo-notifications"
     ],
     "extra": {
       "eas": {
