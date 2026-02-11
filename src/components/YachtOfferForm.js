@@ -2020,7 +2020,6 @@ function FilterableRankSelect({
             onClick={() => setModalOpen(true)}
           >
             <span>{summary}</span>
-            <span aria-hidden>▾</span>
           </button>
         </div>
         {modalOpen && (
