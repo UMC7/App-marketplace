@@ -1839,6 +1839,13 @@ useEffect(() => {
       </div>
     )}
 
+    {offer.local_candidates_only && (
+      <div className="field-group">
+        <div className="field-label">Local candidates only</div>
+        <div className="field-value">Yes</div>
+      </div>
+    )}
+
     {offer.contact_email && (
   <div className="field-group" style={{ gridColumn: '1 / -1' }}>
     <div

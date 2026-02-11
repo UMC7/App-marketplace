@@ -878,6 +878,11 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
   transform: translateY(1px);
 }
 
+.form-checkbox-label.gap-after-field {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
 .form-group {
   margin-bottom: 16px;
   display: block;

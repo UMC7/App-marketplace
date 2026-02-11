@@ -86,6 +86,7 @@ const initialState = {
   is_smoke_free_yacht: false,
   is_dry_boat: false,
   is_no_visible_tattoos: false,
+  local_candidates_only: false,
   years_in_rank: '',
   gender: '',
   description: '',
@@ -760,6 +761,7 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     is_smoke_free_yacht: !!sanitizedData.is_smoke_free_yacht,
     is_dry_boat: !!sanitizedData.is_dry_boat,
     is_no_visible_tattoos: !!sanitizedData.is_no_visible_tattoos,
+    local_candidates_only: !!sanitizedData.local_candidates_only,
     holidays: coerceOptionalNumber(sanitizedData.holidays),
     language_1: sanitizedData.language_1 || null,
     language_1_fluency: sanitizedData.language_1_fluency || null,
@@ -1561,6 +1563,19 @@ const derivedEndDate = (() => {
       modalTitle="Country / Region"
       searchPlaceholder="Search country or region..."
     />
+    <label className="form-checkbox-label gap-after-field">
+      <input
+        type="checkbox"
+        name="local_candidates_only"
+        checked={formData.local_candidates_only}
+        onChange={handleChange}
+      />
+      <span>Local candidates only</span>
+    </label>
+
+    {/* 17. Email de contacto */}
+    <label>Contact Email:</label>
+    <input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange} />
 
     {/* 17. Email de contacto */}
     <label>Contact Email:</label>
@@ -1860,6 +1875,15 @@ const derivedEndDate = (() => {
           <option value="">Select...</option>
           {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
+        <label className="form-checkbox-label gap-after-field">
+          <input
+            type="checkbox"
+            name="local_candidates_only"
+            checked={formData.local_candidates_only}
+            onChange={handleChange}
+          />
+          <span>Local candidates only</span>
+        </label>
       </>
     )}
 
