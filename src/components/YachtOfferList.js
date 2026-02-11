@@ -342,7 +342,7 @@ const RANKS = [
   "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
 ];
 
-const TERMS = ['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Crossing', 'DayWork'];
+const TERMS = ['Rotational', 'Permanent', 'Temporary', 'Seasonal', 'Relief', 'Delivery', 'Crossing', 'Freelance', 'DayWork'];
 
 const togglePrefMulti = (key, value) => {
   setPreferences(prev => {

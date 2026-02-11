@@ -262,6 +262,73 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     fetchMessages();
   }, [isExternal, externalThreadId, offerId, receiverId, currentUser, fetchUnreadMessages]);
 
+  useEffect(() => {
+    if (isExternal) return;
+    if (!currentUser || !offerId || !receiverId) return;
+
+    const channel = supabase
+      .channel(`yacht-work-chat-${offerId}-${receiverId}-${currentUser.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'yacht_work_messages',
+          filter: `offer_id=eq.${offerId}`,
+        },
+        async ({ new: payload }) => {
+          if (!payload) return;
+          const isRelevant =
+            (payload.sender_id === currentUser.id && payload.receiver_id === receiverId) ||
+            (payload.sender_id === receiverId && payload.receiver_id === currentUser.id);
+          if (!isRelevant) return;
+
+          setMessages((prev) => {
+            if (prev.some((msg) => msg.id === payload.id)) return prev;
+            return [...prev, payload];
+          });
+
+          if (payload.receiver_id === currentUser.id && !payload.read) {
+            await supabase
+              .from('yacht_work_messages')
+              .update({ read: true })
+              .eq('id', payload.id);
+            fetchUnreadMessages();
+          }
+        }
+      );
+
+    channel.subscribe();
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [currentUser, offerId, receiverId, fetchUnreadMessages, isExternal]);
+
+  useEffect(() => {
+    if (!isExternal || !externalThreadId) return;
+
+    const channel = supabase
+      .channel(`external-chat-${externalThreadId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'external_messages',
+          filter: `thread_id=eq.${externalThreadId}`,
+        },
+        ({ new: payload }) => {
+          if (!payload) return;
+          setMessages((prev) => (prev.some((msg) => msg.id === payload.id) ? prev : [...prev, payload]));
+        }
+      );
+
+    channel.subscribe();
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [externalThreadId, isExternal]);
+
   const handleSend = async () => {
     if (isChatClosed) return;
     if (!message && !file) return;

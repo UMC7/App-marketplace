@@ -50,7 +50,7 @@ const countriesByRegion = {
     'Latvia', 'Lithuania', 'Netherlands', 'Norway', 'Poland', 'Sweden', 'United Kingdom'
   ],
   'Western Europe': ['France', 'Gibraltar (UK)', 'Ireland', 'Italy', 'Malta', 'Monaco', 'Portugal', 'Spain'],
-  'Eastern Europe': ['Albania', 'Bulgaria', 'Croatia', 'Cyprus', 'Greece', 'Montenegro', 'Romania', 'Turkey'],
+  'Eastern Europe': ['Albania', 'Bulgaria', 'Croatia', 'Cyprus', 'Greece', 'Montenegro', 'Romania', 'Slovenia', 'Turkey'],
   'Asia': [
     'Brunei', 'China', 'India', 'Indonesia', 'Israel', 'Japan', 'Malaysia',
     'Maldives', 'Myanmar', 'Philippines', 'Singapore', 'South Korea',
