@@ -80,6 +80,8 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   const isExternal = mode === 'external' && !!externalThreadId;
 
   const { fetchUnreadMessages } = useUnreadMessages();
+  const fetchUnreadRef = useRef(fetchUnreadMessages);
+  fetchUnreadRef.current = fetchUnreadMessages;
 
   const resetFileInput = () => {
     setFile(null);
@@ -267,7 +269,9 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     if (!currentUser || !offerId || !receiverId) return;
 
     const channel = supabase
-      .channel(`yacht-work-chat-${offerId}-${receiverId}-${currentUser.id}`)
+      .channel(`yacht-work-chat-${offerId}-${receiverId}-${currentUser.id}`, {
+        config: { private: true },
+      })
       .on(
         'postgres_changes',
         {
@@ -276,8 +280,9 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
           table: 'yacht_work_messages',
           filter: `offer_id=eq.${offerId}`,
         },
-        async ({ new: payload }) => {
-          if (!payload) return;
+        async (ev) => {
+          const payload = ev?.new ?? ev?.record ?? ev;
+          if (!payload?.id) return;
           const isRelevant =
             (payload.sender_id === currentUser.id && payload.receiver_id === receiverId) ||
             (payload.sender_id === receiverId && payload.receiver_id === currentUser.id);
@@ -285,7 +290,9 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
           setMessages((prev) => {
             if (prev.some((msg) => msg.id === payload.id)) return prev;
-            return [...prev, payload];
+            const next = [...prev, payload];
+            next.sort((a, b) => new Date(a.sent_at || 0) - new Date(b.sent_at || 0));
+            return next;
           });
 
           if (payload.receiver_id === currentUser.id && !payload.read) {
@@ -293,16 +300,18 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
               .from('yacht_work_messages')
               .update({ read: true })
               .eq('id', payload.id);
-            fetchUnreadMessages();
+            fetchUnreadRef.current?.();
           }
         }
       );
 
-    channel.subscribe();
+    channel.subscribe((status, err) => {
+      if (status === 'CHANNEL_ERROR' && err) console.error('[Chat Realtime]', err);
+    });
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, [currentUser, offerId, receiverId, fetchUnreadMessages, isExternal]);
+  }, [currentUser, offerId, receiverId, isExternal]);
 
   useEffect(() => {
     if (!isExternal || !externalThreadId) return;
