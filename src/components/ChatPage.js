@@ -75,6 +75,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   const [myAvatar, setMyAvatar] = useState(null);
   const [offerMeta, setOfferMeta] = useState(null);
   const [isChatClosed, setIsChatClosed] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // External/anonymous mode flag
   const isExternal = mode === 'external' && !!externalThreadId;
@@ -262,7 +263,16 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     };
 
     fetchMessages();
-  }, [isExternal, externalThreadId, offerId, receiverId, currentUser, fetchUnreadMessages]);
+  }, [isExternal, externalThreadId, offerId, receiverId, currentUser, fetchUnreadMessages, refreshKey]);
+
+  // Refetch mensajes al volver a la app (fallback cuando Realtime se desconecta en segundo plano)
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !isExternal) setRefreshKey((k) => k + 1);
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [isExternal]);
 
   useEffect(() => {
     if (isExternal) return;
