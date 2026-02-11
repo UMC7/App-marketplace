@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
 import '../styles/float.css';
@@ -26,6 +26,8 @@ import {
   COUNTRIES,
   DEPARTMENT_RANK_GROUPS,
 } from './yachtOfferForm.constants';
+import Select from 'react-select';
+import Modal from './Modal';
 import CustomMultiSelect from './CustomMultiSelect';
 import RequiredDocumentsSelect from './RequiredDocumentsSelect';
 import RemarksField from './RemarksField';
@@ -489,16 +491,16 @@ const renderRequiredDocsSummary = () => null;
 const highlightClass = (missing) => (showMissing && missing ? 'missing-required' : '');
 const autoResizeTextarea = (e) => adjustRemarksTextareaHeight(e.target);
 
-const handleRemarksInput = (e) => {
-  autoResizeTextarea(e);
-  setRemarksTyping(true);
-  if (remarksTypingTimer.current) {
-    clearTimeout(remarksTypingTimer.current);
-  }
-  remarksTypingTimer.current = setTimeout(() => {
-    setRemarksTyping(false);
-  }, 600);
-};
+  const handleRemarksInput = (e) => {
+    autoResizeTextarea(e);
+    setRemarksTyping(true);
+    if (remarksTypingTimer.current) {
+      clearTimeout(remarksTypingTimer.current);
+    }
+    remarksTypingTimer.current = setTimeout(() => {
+      setRemarksTyping(false);
+    }, 600);
+  };
 
 const formReady = (() => {
   if (!formData.work_environment) return false;
@@ -981,22 +983,14 @@ const derivedEndDate = (() => {
 
     {/* 2. Título del puesto */}
     <label>Rank: <span style={{ color: 'red' }}>*</span></label>
-    <select
+    <FilterableRankSelect
       name="title"
       value={formData.title}
       onChange={handleChange}
       className={highlightClass(!formData.title)}
       required
-    >
-      <option value="">Select...</option>
-      {DEPARTMENT_RANK_GROUPS.map((group) => (
-        <optgroup key={group.label} label={group.label}>
-          {group.ranks.map((rank) => (
-            <option key={rank} value={rank}>{rank}</option>
-          ))}
-        </optgroup>
-      ))}
-    </select>
+      promptText="Select..."
+    />
 
     {showLicenseFields && (
       <>
@@ -1117,21 +1111,13 @@ const derivedEndDate = (() => {
 {formData.team === 'Yes' && (
   <>
     <label>Teammate Rank: <span style={{ color: 'red' }}>*</span></label>
-    <select
+    <FilterableRankSelect
       name="teammate_rank"
       value={formData.teammate_rank}
       onChange={handleChange}
       className={highlightClass(formData.team === 'Yes' && !formData.teammate_rank)}
-    >
-      <option value="">Select...</option>
-      {DEPARTMENT_RANK_GROUPS.map((group) => (
-        <optgroup key={group.label} label={group.label}>
-          {group.ranks.map((rank) => (
-            <option key={rank} value={rank}>{rank}</option>
-          ))}
-        </optgroup>
-      ))}
-    </select>
+      promptText="Select..."
+    />
 
     {showTeammateLicenseFields && teammateLicenseOptions.length > 0 && (
       <>
@@ -1958,6 +1944,152 @@ const derivedEndDate = (() => {
   </div>
   </div>
   </>
+  );
+}
+
+const MOBILE_BREAKPOINT = 768;
+
+function FilterableRankSelect({
+  name,
+  value,
+  onChange,
+  className,
+  required,
+  rankGroups = DEPARTMENT_RANK_GROUPS,
+  promptText = 'Select...',
+  ...rest
+}) {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= MOBILE_BREAKPOINT);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [searchFilter, setSearchFilter] = useState('');
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
+    window.addEventListener('resize', check);
+    check();
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  const options = useMemo(() => rankGroups.map((group) => ({
+    label: group.label,
+    options: group.ranks.map((rank) => ({ value: rank, label: rank })),
+  })), [rankGroups]);
+
+  const selectedOption = value
+    ? { value, label: value }
+    : null;
+
+  const handleChange = (option) => {
+    const event = {
+      target: { name, value: option?.value ?? '' },
+    };
+    onChange?.(event);
+  };
+
+  const filterOption = (candidate, inputValue) => {
+    if (!inputValue || !inputValue.trim()) return true;
+    const search = inputValue.trim().toLowerCase();
+    return candidate.label.toLowerCase().includes(search);
+  };
+
+  const filterRankGroups = useMemo(() => {
+    if (!searchFilter || !searchFilter.trim()) return rankGroups;
+    const q = searchFilter.trim().toLowerCase();
+    return rankGroups.map((group) => ({
+      label: group.label,
+      ranks: group.ranks.filter((rank) => rank.toLowerCase().includes(q)),
+    })).filter((g) => g.ranks.length > 0);
+  }, [rankGroups, searchFilter]);
+
+  const selectRank = (rank) => {
+    handleChange({ value: rank, label: rank });
+    setModalOpen(false);
+    setSearchFilter('');
+  };
+
+  const summary = value || promptText;
+
+  if (isMobile) {
+    return (
+      <>
+        <input type="hidden" name={name} value={value || ''} required={required} />
+        <div className={`filterable-rank-select-container rank-mobile-trigger-wrapper ${className || ''}`}>
+          <button
+            type="button"
+            className="rank-mobile-trigger"
+            onClick={() => setModalOpen(true)}
+          >
+            <span>{summary}</span>
+            <span aria-hidden>▾</span>
+          </button>
+        </div>
+        {modalOpen && (
+          <Modal onClose={() => { setModalOpen(false); setSearchFilter(''); }}>
+            <div className="rank-modal-content">
+              <h3 className="rank-modal-title">Rank</h3>
+              <input
+                type="text"
+                className="rank-modal-search"
+                placeholder="Search..."
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+                autoFocus
+              />
+              <div className="rank-modal-list">
+                {!required && (
+                  <button
+                    type="button"
+                    className="rank-modal-option"
+                    onClick={() => selectRank('')}
+                  >
+                    — Clear —
+                  </button>
+                )}
+                {filterRankGroups.map((group) => (
+                  <div key={group.label} className="rank-modal-group">
+                    <div className="rank-modal-group-label">{group.label}</div>
+                    {group.ranks.map((rank) => (
+                      <button
+                        key={rank}
+                        type="button"
+                        className={`rank-modal-option ${value === rank ? 'selected' : ''}`}
+                        onClick={() => selectRank(rank)}
+                      >
+                        {rank}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+                {filterRankGroups.length === 0 && (
+                  <div className="rank-modal-empty">No matches</div>
+                )}
+              </div>
+            </div>
+          </Modal>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <input type="hidden" name={name} value={value || ''} required={required} />
+      <Select
+        value={selectedOption}
+        onChange={handleChange}
+        options={options}
+        filterOption={filterOption}
+        isClearable={!required}
+        placeholder={promptText}
+        isSearchable
+        classNamePrefix="filterable-rank-select"
+        className={`filterable-rank-select-container ${className || ''}`}
+        styles={{
+          control: (base) => ({ ...base, minHeight: '38px' }),
+        }}
+        {...rest}
+      />
+    </>
   );
 }
 

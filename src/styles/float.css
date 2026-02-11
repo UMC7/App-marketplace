@@ -29,6 +29,15 @@
   border: 1px solid #e55353 !important;
   box-shadow: 0 0 0 2px rgba(229, 83, 83, 0.2) !important;
 }
+/* FilterableRankSelect: missing-required aplica al control interno, no al contenedor */
+.filterable-rank-select-container.missing-required {
+  border: none !important;
+  box-shadow: none !important;
+}
+.filterable-rank-select-container.missing-required .filterable-rank-select__control {
+  border-color: #e55353 !important;
+  box-shadow: 0 0 0 2px rgba(229, 83, 83, 0.2) !important;
+}
 
 /* =========================
    Multiselect (Visas)
@@ -265,5 +274,207 @@ body.dark-mode .private-chat-field .private-chat-label {
   flex-shrink: 0;
   transition: transform 0.3s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* FilterableRankSelect (react-select) - mismo estilo que inputs/selects nativos */
+.filterable-rank-select-container,
+.rank-mobile-trigger-wrapper {
+  max-width: 400px;
+  margin-bottom: 12px;
+}
+
+/* Trigger móvil: misma altura que multiselect-trigger / select nativo */
+.rank-mobile-trigger {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  border: 1px solid var(--neutral-color, #ccc);
+  border-radius: 6px;
+  padding: 10px 36px 10px 12px;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.2;
+  min-height: 38px;
+  background: #fff;
+  color: #000;
+  box-shadow: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  box-sizing: border-box;
+}
+.rank-mobile-trigger-wrapper.missing-required .rank-mobile-trigger {
+  border-color: #e55353 !important;
+  box-shadow: 0 0 0 2px rgba(229, 83, 83, 0.2) !important;
+}
+
+/* Modal Rank (móvil): título, buscador, lista */
+.rank-modal-content {
+  max-width: 400px;
+  padding-right: 8px;
+  max-height: min(70vh, 450px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.rank-modal-title {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-color, #081a3b);
+}
+.rank-modal-search {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--neutral-color, #ccc);
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background: #fff;
+  color: #000;
+}
+.rank-modal-list {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+.rank-modal-group {
+  margin-bottom: 12px;
+}
+.rank-modal-group-label {
+  font-weight: 700;
+  margin: 4px 0 6px;
+  font-size: 0.9rem;
+  color: var(--primary-color, #081a3b);
+}
+.rank-modal-option {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  color: inherit;
+}
+.rank-modal-option:hover,
+.rank-modal-option:focus {
+  background: rgba(0, 0, 0, 0.06);
+  outline: none;
+}
+.rank-modal-option.selected {
+  background: rgba(0, 0, 0, 0.08);
+  font-weight: 500;
+}
+.rank-modal-empty {
+  padding: 16px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Dark mode: Rank trigger y modal - mismo estilo que campos vecinos (input/select #262626) */
+body.dark-mode .rank-mobile-trigger {
+  background-color: #262626 !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+  min-height: 38px !important;
+}
+body.dark-mode .rank-modal-title {
+  color: var(--text-color);
+}
+body.dark-mode .rank-modal-search {
+  background-color: #262626 !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+body.dark-mode .rank-modal-search::placeholder {
+  color: var(--text-muted, #9ca3af);
+}
+body.dark-mode .rank-modal-group-label {
+  color: var(--text-color);
+}
+/* Opciones: anular estilo de botón global; filas como form-checkbox-label (sin teal) */
+body.dark-mode .rank-modal-option {
+  background: transparent !important;
+  color: var(--text-color) !important;
+  border: none !important;
+}
+body.dark-mode .rank-modal-option:hover,
+body.dark-mode .rank-modal-option:focus {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+body.dark-mode .rank-modal-option.selected {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+body.dark-mode .rank-modal-empty {
+  color: var(--text-muted, #9ca3af);
+}
+.filterable-rank-select-container .filterable-rank-select__control {
+  border: 1px solid var(--neutral-color, #ccc) !important;
+  border-radius: 6px !important;
+  min-height: 38px !important;
+  font-size: 1rem !important;
+  padding: 0 8px !important;
+  background-color: #fff !important;
+  box-shadow: none !important;
+}
+/* Focus: mismo estilo que .login-form select:focus */
+.filterable-rank-select-container .filterable-rank-select__control--is-focused {
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 2px rgba(104, 173, 168, 0.2) !important;
+  outline: none !important;
+}
+.filterable-rank-select-container .filterable-rank-select__input-container {
+  margin: 0;
+}
+.filterable-rank-select-container .filterable-rank-select__menu {
+  z-index: 1000;
+}
+
+/* Dark mode: igual que input/select nativos (background #262626, texto blanco) */
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__control {
+  background-color: #262626 !important;
+  border-color: #555 !important;
+}
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__single-value {
+  color: #fff !important;
+}
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__input-container input {
+  color: #fff !important;
+}
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__placeholder {
+  color: #9ca3af !important;
+}
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__dropdown-indicator {
+  color: #fff !important;
+}
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__clear-indicator {
+  color: #9ca3af !important;
+}
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__indicator-separator {
+  background-color: #555 !important;
+}
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__menu {
+  background-color: #262626 !important;
+  border: 1px solid #555 !important;
+}
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__menu-list {
+  background-color: #262626 !important;
+}
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__option {
+  background-color: #262626 !important;
+  color: #fff !important;
+}
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__option--is-focused {
+  background-color: #404040 !important;
+}
+body.dark-mode .filterable-rank-select-container .filterable-rank-select__group-heading {
+  color: #9ca3af !important;
 }
 
