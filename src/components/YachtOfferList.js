@@ -1263,7 +1263,6 @@ useEffect(() => {
             <option value="">Preferred Flag</option>
             <option value="Foreign Flag">Foreign Flag</option>
             <option value="United States">United States</option>
-            <option value="Monaco">Monaco</option>
           </select>
 
           {/* Minimum Salary */}

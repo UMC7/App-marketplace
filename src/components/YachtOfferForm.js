@@ -26,6 +26,7 @@ import {
   COUNTRIES,
   DEPARTMENT_RANK_GROUPS,
 } from './yachtOfferForm.constants';
+
 import Select from 'react-select';
 import Modal from './Modal';
 import CustomMultiSelect from './CustomMultiSelect';
@@ -40,6 +41,27 @@ import {
   getDeckLicenseOptionsForRank,
   getDeckDocumentOptionsForRank,
 } from './yachtOfferForm.utils';
+
+
+const COUNTRY_REGION_GROUPS = [
+  {
+    label: 'Regions',
+    ranks: [
+      'Asia',
+      'Baltic',
+      'Caribbean',
+      'Indian Ocean',
+      'Mediterranean',
+      'Red Sea',
+      'North Sea',
+      'Pacific',
+    ],
+  },
+  {
+    label: 'Countries',
+    ranks: COUNTRIES,
+  },
+];
 
 
 const initialState = {
@@ -1527,33 +1549,18 @@ const derivedEndDate = (() => {
     <input name="city" value={formData.city} onChange={handleChange} />
 
     {/* 16. Country/Region */}
-<label>Country/Region: <span style={{ color: 'red' }}>*</span></label>
-<select
-  name="country"
-  value={formData.country}
-  onChange={handleChange}
-  className={highlightClass(!formData.country)}
-  required
->
-  <option value="">Select...</option>
-
-  <optgroup label="Regions">
-    <option value="Asia">Asia</option>
-    <option value="Baltic">Baltic</option>
-    <option value="Caribbean">Caribbean</option>
-    <option value="Indian Ocean">Indian Ocean</option>
-    <option value="Mediterranean">Mediterranean</option>
-    <option value="Red Sea">Red Sea</option>
-    <option value="North Sea">North Sea</option>
-    <option value="Pacific">Pacific</option>
-  </optgroup>
-
-  <optgroup label="Countries">
-          {COUNTRIES.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-  </optgroup>
-</select>
+    <label>Country/Region: <span style={{ color: 'red' }}>*</span></label>
+    <FilterableRankSelect
+      name="country"
+      value={formData.country}
+      onChange={handleChange}
+      className={highlightClass(!formData.country)}
+      required
+      promptText="Select..."
+      optionGroups={COUNTRY_REGION_GROUPS}
+      modalTitle="Country / Region"
+      searchPlaceholder="Search country or region..."
+    />
 
     {/* 17. Email de contacto */}
     <label>Contact Email:</label>
@@ -1955,8 +1962,10 @@ function FilterableRankSelect({
   onChange,
   className,
   required,
-  rankGroups = DEPARTMENT_RANK_GROUPS,
+  optionGroups = DEPARTMENT_RANK_GROUPS,
   promptText = 'Select...',
+  modalTitle = 'Rank',
+  searchPlaceholder = 'Search...',
   ...rest
 }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= MOBILE_BREAKPOINT);
@@ -1970,10 +1979,10 @@ function FilterableRankSelect({
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  const options = useMemo(() => rankGroups.map((group) => ({
+  const options = useMemo(() => optionGroups.map((group) => ({
     label: group.label,
     options: group.ranks.map((rank) => ({ value: rank, label: rank })),
-  })), [rankGroups]);
+  })), [optionGroups]);
 
   const selectedOption = value
     ? { value, label: value }
@@ -1993,13 +2002,13 @@ function FilterableRankSelect({
   };
 
   const filterRankGroups = useMemo(() => {
-    if (!searchFilter || !searchFilter.trim()) return rankGroups;
+    if (!searchFilter || !searchFilter.trim()) return optionGroups;
     const q = searchFilter.trim().toLowerCase();
-    return rankGroups.map((group) => ({
+    return optionGroups.map((group) => ({
       label: group.label,
       ranks: group.ranks.filter((rank) => rank.toLowerCase().includes(q)),
     })).filter((g) => g.ranks.length > 0);
-  }, [rankGroups, searchFilter]);
+  }, [optionGroups, searchFilter]);
 
   const selectRank = (rank) => {
     handleChange({ value: rank, label: rank });
@@ -2025,11 +2034,11 @@ function FilterableRankSelect({
         {modalOpen && (
           <Modal onClose={() => { setModalOpen(false); setSearchFilter(''); }}>
             <div className="rank-modal-content">
-              <h3 className="rank-modal-title">Rank</h3>
+              <h3 className="rank-modal-title">{modalTitle}</h3>
               <input
                 type="text"
                 className="rank-modal-search"
-                placeholder="Search..."
+                placeholder={searchPlaceholder}
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
                 autoFocus
@@ -2073,7 +2082,7 @@ function FilterableRankSelect({
   return (
     <>
       <input type="hidden" name={name} value={value || ''} required={required} />
-      <Select
+    <Select
         value={selectedOption}
         onChange={handleChange}
         options={options}
