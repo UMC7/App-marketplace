@@ -1577,10 +1577,6 @@ const derivedEndDate = (() => {
     <label>Contact Email:</label>
     <input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange} />
 
-    {/* 17. Email de contacto */}
-    <label>Contact Email:</label>
-    <input type="email" name="contact_email" value={formData.contact_email} onChange={handleChange} />
-
     {/* 18. Teléfono de contacto */}
     <label>Contact Phone:</label>
     <input type="tel" name="contact_phone" value={formData.contact_phone} onChange={handleChange} />
