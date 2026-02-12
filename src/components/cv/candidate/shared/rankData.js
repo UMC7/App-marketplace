@@ -12,6 +12,7 @@ export const RANKS_BY_DEPT = {
     "2nd Officer",
     "3rd Officer",
     "Mate",
+    "Mate/Engineer",
     "Mate/Steward(ess)",
     "Bosun",
     "Lead Deckhand",

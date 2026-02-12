@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import '../styles/float.css';
 import {
   MONTHS,
+  YACHT_EXPERIENCE_PREFERRED,
   yearsOptions,
   titles,
   types,
@@ -16,6 +17,7 @@ import {
   CAPTAIN_TIER_DECK_RANKS,
   RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS,
   GALLEY_REQUIRED_DOCUMENT_GROUPS,
+  GALLEY_CULINARY_DOCUMENT_GROUP,
   INTERIOR_DEPARTMENT_RANKS,
   INTERIOR_REQUIRED_DOCUMENT_GROUPS,
   OTHERS_DEPARTMENT_RANKS,
@@ -86,6 +88,7 @@ const initialState = {
   is_smoke_free_yacht: false,
   is_dry_boat: false,
   is_no_visible_tattoos: false,
+  is_charter_experience_required: false,
   local_candidates_only: false,
   years_in_rank: '',
   gender: '',
@@ -190,8 +193,18 @@ useEffect(() => {
   const yr = initialValues.years_in_rank;
   const te = initialValues.teammate_experience;
   const next = {};
-  if (yr !== undefined && yr !== null) next.years_in_rank = yr === 0 ? 'Green' : yr === -1 ? 'New in rank welcome' : yr;
-  if (te !== undefined && te !== null) next.teammate_experience = te === 0 ? 'Green' : te === -1 ? 'New in rank welcome' : te;
+  if (yr !== undefined && yr !== null) {
+    next.years_in_rank = yr === 0 ? 'Green'
+      : yr === -1 ? 'New in rank welcome'
+      : yr === -2 ? YACHT_EXPERIENCE_PREFERRED
+      : yr;
+  }
+  if (te !== undefined && te !== null) {
+    next.teammate_experience = te === 0 ? 'Green'
+      : te === -1 ? 'New in rank welcome'
+      : te === -2 ? YACHT_EXPERIENCE_PREFERRED
+      : te;
+  }
   if (Object.keys(next).length === 0) return;
   setFormData(prev => ({ ...prev, ...next }));
 }, [initialValues]);
@@ -468,33 +481,38 @@ const isInteriorDepartmentRank = INTERIOR_DEPARTMENT_RANKS.includes(formData.tit
 const isOthersDepartmentRank = OTHERS_DEPARTMENT_RANKS.includes(formData.title);
 const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
-const specialRequiredDocumentGroups = RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS[formData.title];
-const requiredDocumentGroups = specialRequiredDocumentGroups
-  ? specialRequiredDocumentGroups
-  : isGalleyDepartmentRank
-    ? GALLEY_REQUIRED_DOCUMENT_GROUPS
-    : isInteriorDepartmentRank
-      ? INTERIOR_REQUIRED_DOCUMENT_GROUPS
-      : isOthersDepartmentRank
-        ? OTHERS_REQUIRED_DOCUMENT_GROUPS
-        : REQUIRED_DOCUMENT_GROUPS;
+const INTERIOR_RANKS_WITH_GALLEY_SUBGROUP = new Set([
+  'Chef/Stew/Deck',
+  'Cook/Stew/Deck',
+  'Cook/Steward(ess)',
+]);
+
+const getRequiredDocumentGroupsForRank = (rank) => {
+  if (!rank) return [];
+  const specialRequiredDocumentGroups = RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS[rank];
+  if (specialRequiredDocumentGroups) return specialRequiredDocumentGroups;
+  if (GALLEY_DEPARTMENT_RANKS.includes(rank)) return GALLEY_REQUIRED_DOCUMENT_GROUPS;
+  if (INTERIOR_DEPARTMENT_RANKS.includes(rank)) return INTERIOR_REQUIRED_DOCUMENT_GROUPS;
+  if (OTHERS_DEPARTMENT_RANKS.includes(rank)) return OTHERS_REQUIRED_DOCUMENT_GROUPS;
+  return REQUIRED_DOCUMENT_GROUPS;
+};
+
+const appendGalleyCulinarySubgroup = (groups, rank) => {
+  if (!INTERIOR_RANKS_WITH_GALLEY_SUBGROUP.has(rank)) return groups;
+  if (groups.some((group) => group.label === GALLEY_CULINARY_DOCUMENT_GROUP.label)) return groups;
+  return [...groups, GALLEY_CULINARY_DOCUMENT_GROUP];
+};
+
+const requiredDocumentGroups = appendGalleyCulinarySubgroup(
+  getRequiredDocumentGroupsForRank(formData.title),
+  formData.title
+);
 
 const teammateRank = formData.teammate_rank || '';
-const isTeammateGalley = GALLEY_DEPARTMENT_RANKS.includes(teammateRank);
-const isTeammateInterior = INTERIOR_DEPARTMENT_RANKS.includes(teammateRank);
-const isTeammateOthers = OTHERS_DEPARTMENT_RANKS.includes(teammateRank);
-const teammateSpecialGroups = teammateRank ? (RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS[teammateRank] || null) : null;
-const teammateRequiredDocumentGroups = teammateSpecialGroups
-  ? teammateSpecialGroups
-  : isTeammateGalley
-    ? GALLEY_REQUIRED_DOCUMENT_GROUPS
-    : isTeammateInterior
-      ? INTERIOR_REQUIRED_DOCUMENT_GROUPS
-      : isTeammateOthers
-        ? OTHERS_REQUIRED_DOCUMENT_GROUPS
-        : teammateRank
-          ? REQUIRED_DOCUMENT_GROUPS
-          : [];
+const teammateRequiredDocumentGroups = appendGalleyCulinarySubgroup(
+  getRequiredDocumentGroupsForRank(teammateRank),
+  teammateRank
+);
 const needsTeammateDeckLicense = teammateRank && DECK_LICENSE_RANKS.includes(teammateRank);
 const needsTeammateEngineeringLicense = teammateRank && ENGINEERING_RANKS.includes(teammateRank);
 const showTeammateLicenseFields = needsTeammateDeckLicense || needsTeammateEngineeringLicense;
@@ -761,6 +779,7 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     is_smoke_free_yacht: !!sanitizedData.is_smoke_free_yacht,
     is_dry_boat: !!sanitizedData.is_dry_boat,
     is_no_visible_tattoos: !!sanitizedData.is_no_visible_tattoos,
+    is_charter_experience_required: !!sanitizedData.is_charter_experience_required,
     local_candidates_only: !!sanitizedData.local_candidates_only,
     holidays: coerceOptionalNumber(sanitizedData.holidays),
     language_1: sanitizedData.language_1 || null,
@@ -862,14 +881,18 @@ const derivedEndDate = (() => {
         ? 0
       : formData.years_in_rank === 'New in rank welcome'
         ? -1
+      : formData.years_in_rank === YACHT_EXPERIENCE_PREFERRED
+        ? -2
       : formData.years_in_rank
       ? Number(formData.years_in_rank)
       : null,
-  teammate_experience:
-    formData.teammate_experience === 'Green'
-      ? 0
+    teammate_experience:
+      formData.teammate_experience === 'Green'
+        ? 0
       : formData.teammate_experience === 'New in rank welcome'
         ? -1
+      : formData.teammate_experience === YACHT_EXPERIENCE_PREFERRED
+        ? -2
       : formData.teammate_experience
       ? Number(formData.teammate_experience)
       : null,
@@ -1329,17 +1352,30 @@ const derivedEndDate = (() => {
 
     {/* Use */}
     <label>Use:</label>
-<select
-  name="uses"
-  value={formData.uses}
-  onChange={handleChange}
-  disabled={isDayworker}
->
+    <select
+      name="uses"
+      value={formData.uses}
+      onChange={handleChange}
+      disabled={isDayworker}
+    >
       <option value="">Select...</option>
       <option value="Private">Private</option>
       <option value="Charter (only)">Charter (only)</option>
       <option value="Private/Charter">Private/Charter</option>
     </select>
+
+    <div style={{ marginBottom: '10px' }}>
+      <label className="form-checkbox-label">
+        <input
+          type="checkbox"
+          name="is_charter_experience_required"
+          checked={formData.is_charter_experience_required}
+          onChange={handleChange}
+          disabled={isDayworker}
+        />
+        <span>Charter Experience Required</span>
+      </label>
+    </div>
 
     {/* Season Type */}
     <label>Season Type:</label>

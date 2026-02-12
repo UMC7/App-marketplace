@@ -105,7 +105,6 @@ const FilterPanel = React.forwardRef(({
           <option value="">Flag</option>
           <option value="Foreign Flag">Foreign Flag</option>
           <option value="United States">United States</option>
-          <option value="Monaco">Monaco</option>
         </select>
 
         {/* Salary From */}
