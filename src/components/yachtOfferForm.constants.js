@@ -21,7 +21,7 @@ export const yearsOptions = ['Green', YACHT_EXPERIENCE_PREFERRED, 'New in rank w
 export const titles = [
   'Captain','Captain/Engineer','Skipper','Chase Boat Captain','Relief Captain',
   'Chief Officer','2nd Officer','3rd Officer','Bosun','Deck/Engineer','Mate','Mate/Engineer','Mate/Steward(ess)',
-  'Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster',
+  'Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster','Deck/Personal Trainer',
   'Deck/Cook','Dayworker',
   'Chief Engineer','2nd Engineer','3rd Engineer','Solo Engineer','Engineer','Electrician',
   'Chef','Head Chef','Sous Chef','Solo Chef','Cook','Cook/Crew Chef','Crew Chef/Stew','Chef/Steward(ess)',
@@ -29,7 +29,7 @@ export const titles = [
   '4th Steward(ess)','Solo Steward(ess)','Junior Steward(ess)',
   'Housekeeper','Head of Housekeeping',
   'Chef/Stew/Deck','Cook/Stew/Deck','Cook/Steward(ess)','Stew/Deck','Laundry/Steward(ess)',
-  'Stew/Masseur','Masseur','Hairdresser/Barber','Steward(ess)/Nanny','Nanny',
+  'Stew/Masseur','Stew/Yoga Instructor','Masseur','Hairdresser/Barber','Steward(ess)/Nanny','Nanny',
   'Videographer','Yoga/Pilates Instructor','Personal Trainer','Dive Instrutor',
   'Water Sport Instrutor','Nurse','Other'
 ];
@@ -45,7 +45,7 @@ export const ENGINEERING_RANKS = [
 export const DECK_LICENSE_RANKS = [
   'Captain','Captain/Engineer','Skipper','Chase Boat Captain','Relief Captain',
   'Chief Officer','2nd Officer','3rd Officer','Bosun','Deck/Engineer','Mate','Mate/Engineer',
-  'Mate/Steward(ess)','Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster','Deck/Cook'
+  'Mate/Steward(ess)','Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster','Deck/Personal Trainer','Deck/Cook'
 ];
 
 export const GALLEY_DEPARTMENT_RANKS = [
@@ -103,6 +103,7 @@ export const DECK_LICENSE_MAP = {
   'Deck/Carpenter': ['Yachtmaster','Master 100 GRT / OUPV'],
   'Deck/Divemaster': ['Yachtmaster','Master 100 GRT / OUPV'],
   'Deck/Cook': ['Yachtmaster','Master 100 GRT / OUPV'],
+  'Deck/Personal Trainer': ['Yachtmaster','Master 100 GRT / OUPV'],
 };
 
 export const DECK_DOCUMENT_MAP = {
@@ -124,6 +125,7 @@ export const DECK_DOCUMENT_MAP = {
   'Deck/Carpenter': ['VHF SRC (optional)'],
   'Deck/Divemaster': ['VHF SRC (optional)'],
   'Deck/Cook': ['VHF SRC (optional)'],
+  'Deck/Personal Trainer': ['VHF SRC (optional)'],
   'Deck/Engineer': ['VHF SRC'],
 };
 
@@ -522,6 +524,7 @@ export const RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS = {
   'Mate/Steward(ess)': MATE_STEWARD_REQUIRED_DOCUMENT_GROUPS,
   'Deck/Carpenter': DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS,
   'Deck/Divemaster': DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS,
+  'Deck/Personal Trainer': DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS,
   'Deck/Cook': DECK_HAND_RANK_REQUIRED_DOCUMENT_GROUPS,
   Dayworker: DAYWORKER_REQUIRED_DOCUMENT_GROUPS,
   'Chief Engineer': ENGINEERING_REQUIRED_DOCUMENT_GROUPS,
@@ -594,6 +597,7 @@ export const INTERIOR_DEPARTMENT_RANKS = [
   'Stew/Deck',
   'Laundry/Steward(ess)',
   'Stew/Masseur',
+  'Stew/Yoga Instructor',
   'Steward(ess)/Nanny',
   'Butler',
   'Head of Housekeeping',
@@ -738,6 +742,7 @@ export const DEPARTMENT_RANK_GROUPS = [
       'Deck/Steward(ess)',
       'Deck/Carpenter',
       'Deck/Divemaster',
+      'Deck/Personal Trainer',
       'Deck/Cook',
       'Dayworker',
     ],
@@ -779,6 +784,7 @@ export const DEPARTMENT_RANK_GROUPS = [
       'Stew/Deck',
       'Laundry/Steward(ess)',
       'Stew/Masseur',
+      'Stew/Yoga Instructor',
       'Steward(ess)/Nanny',
       'Butler',
       'Head of Housekeeping',

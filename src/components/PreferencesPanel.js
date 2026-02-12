@@ -5,11 +5,11 @@ const RANKS = [
   "Chief Officer", "2nd Officer", "3rd Officer", "Bosun", "Deck/Engineer", "Mate",
   "Mate/Engineer",
   "Mate/Steward(ess)",
-  "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster", "Deck/Cook",
+  "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster", "Deck/Personal Trainer", "Deck/Cook",
   "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Engineer", "Electrician", "Chef",
   "Head Chef", "Sous Chef", "Solo Chef", "Cook", "Cook/Crew Chef", "Crew Chef/Stew", "Chef/Steward(ess)", "Butler", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
   "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Housekeeper", "Head of Housekeeping", "Chef/Stew/Deck", "Cook/Stew/Deck", "Cook/Steward(ess)", "Stew/Deck",
-  "Laundry/Steward(ess)", "Stew/Masseur", "Masseur", "Hairdresser/Barber", "Steward(ess)/Nanny", "Nanny", "Videographer", "Yoga/Pilates Instructor",
+  "Laundry/Steward(ess)", "Stew/Masseur", "Stew/Yoga Instructor", "Masseur", "Hairdresser/Barber", "Steward(ess)/Nanny", "Nanny", "Videographer", "Yoga/Pilates Instructor",
   "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
 ];
 

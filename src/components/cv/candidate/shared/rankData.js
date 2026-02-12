@@ -21,6 +21,7 @@ export const RANKS_BY_DEPT = {
     "Deck/Steward(ess)",
     "Deck/Carpenter",
     "Deck/Divemaster",
+    "Deck/Personal Trainer",
     "Dayworker",
   ],
   Engine: [
@@ -52,6 +53,7 @@ export const RANKS_BY_DEPT = {
     "Laundry/Steward(ess)",
     "Stew/Deck",
     "Stew/Masseur",
+    "Stew/Yoga Instructor",
     "Dayworker",
   ],
   Other: [
