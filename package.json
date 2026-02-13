@@ -52,5 +52,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "expo": "~54.0.32",
+    "expo-notifications": "^0.32.16"
   }
 }

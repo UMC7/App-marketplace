@@ -1,5 +1,6 @@
 // /src/admin/AdminPanel.js
 import React, { useState } from 'react';
+import AnalyticsTab from './tabs/AnalyticsTab';
 import UsersTab from './tabs/UsersTab';
 import ProductsTab from './tabs/ProductsTab';
 import ServicesTab from './tabs/ServicesTab';
@@ -13,6 +14,7 @@ import LogsTab from './tabs/LogsTab';
 import '../styles/admin.css'; // o ajusta la ruta según donde tengas tus estilos
 
 const TABS = [
+  { key: 'analytics', label: 'Analytics' },
   { key: 'users', label: 'Users' },
   { key: 'products', label: 'Products' },
   { key: 'services', label: 'Services' },
@@ -31,6 +33,7 @@ function AdminPanel() {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'analytics':     return <AnalyticsTab />;
       case 'users':         return <UsersTab />;
       case 'products':      return <ProductsTab />;
       case 'services':      return <ServicesTab />;

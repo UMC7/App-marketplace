@@ -100,6 +100,7 @@ function UsersTab({ currentUser }) {
     (page - 1) * rowsPerPage,
     page * rowsPerPage
   );
+  const totalVisibleCount = filteredUsers.length;
 
   function getPaginationNumbers() {
     const numbers = [];
@@ -160,6 +161,7 @@ function UsersTab({ currentUser }) {
       <table className="admin-table">
         <thead>
           <tr>
+            <th>#</th>
             {columns.map(col => (
               <th key={col}>{col}</th>
             ))}
@@ -167,13 +169,14 @@ function UsersTab({ currentUser }) {
           </tr>
         </thead>
         <tbody>
-          {pagedUsers.map(user => (
+          {pagedUsers.map((user, idx) => (
             <tr
               key={user.id}
               className={user.id === selectedUserId ? 'selected-row' : ''}
               onClick={() => handleRowClick(user.id)}
               style={{ cursor: 'pointer' }}
             >
+              <td>{totalVisibleCount - ((page - 1) * rowsPerPage + idx)}</td>
               {columns.map(col => (
                 <td key={col}>
                   {(col === 'description' || col === 'photos') ? (
