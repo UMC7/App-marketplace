@@ -18,6 +18,7 @@ import { WebView, type WebViewNavigation, type WebViewMessageEvent } from 'react
 import { registerRootComponent } from 'expo';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
+import * as NavigationBar from 'expo-navigation-bar';
 import Constants from 'expo-constants';
 
 if (Platform.OS === 'android') {
@@ -272,6 +273,15 @@ function WebViewRootInner() {
   useEffect(() => {
     const barStyle = systemColorScheme === 'dark' ? 'light-content' : 'dark-content';
     StatusBar.setBarStyle(barStyle, true);
+  }, [systemColorScheme]);
+
+  // Android: navigation bar color follows system theme (light/dark)
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const bg = systemColorScheme === 'dark' ? '#000000' : '#FFFFFF';
+    const barStyle = systemColorScheme === 'dark' ? 'light' : 'dark';
+    NavigationBar.setBackgroundColorAsync(bg).catch(() => {});
+    NavigationBar.setButtonStyleAsync(barStyle).catch(() => {});
   }, [systemColorScheme]);
 
   if (!WEB_URL) {
