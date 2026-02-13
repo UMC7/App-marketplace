@@ -14,6 +14,7 @@ import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import CookieBanner from './components/cookies/CookieBanner';
+import ScrollToTopOnRouteChange from './components/ScrollToTopOnRouteChange';
 import { initAnalytics } from './utils/analytics';
 import { getConsent, getThemePreference } from './components/cookies/cookiesConfig';
 
@@ -202,6 +203,7 @@ function App() {
   return (
     <Router>
       <Navbar />
+      <ScrollToTopOnRouteChange />
       <AuthRedirectHandler />
       <ToastContainer autoClose={1500} />
       <CookieBanner />

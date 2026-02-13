@@ -354,13 +354,14 @@ export function AuthProvider({ children }) {
       if (!session?.user?.id || !expoToken) return;
       const accessToken = (session.access_token || '').trim();
       if (!accessToken || accessToken.length < 50) return;
+      const platform = /iPhone|iPad|iPod/.test(navigator.userAgent || '') ? 'ios' : 'android';
       try {
         await fetch('/api/push/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
           body: JSON.stringify({
             user_id: session.user.id,
-            platform: 'android',
+            platform,
             token: expoToken,
             access_token: accessToken,
           }),

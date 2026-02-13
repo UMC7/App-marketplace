@@ -268,6 +268,12 @@ function WebViewRootInner() {
     [systemScheme]
   );
 
+  // Configure status bar to follow system theme (must run before any early return - rules of hooks)
+  useEffect(() => {
+    const barStyle = systemColorScheme === 'dark' ? 'light-content' : 'dark-content';
+    StatusBar.setBarStyle(barStyle, true);
+  }, [systemColorScheme]);
+
   if (!WEB_URL) {
     return (
       <View style={styles.container}>
@@ -277,12 +283,6 @@ function WebViewRootInner() {
       </View>
     );
   }
-
-  // Configure status bar to follow system theme
-  useEffect(() => {
-    const barStyle = systemColorScheme === 'dark' ? 'light-content' : 'dark-content';
-    StatusBar.setBarStyle(barStyle, true);
-  }, [systemColorScheme]);
 
   return (
     <View style={styles.container}>
@@ -305,12 +305,11 @@ function WebViewRootInner() {
             ref={webviewRef}
             source={{ uri: WEB_URL }}
             cacheEnabled
+            allowsBackForwardNavigationGestures
+            nestedScrollEnabled={Platform.OS === 'android'}
+            mixedContentMode="compatibility"
             style={{ backgroundColor: '#f4f6f8' }}
-            originWhitelist={[
-              'https://www.yachtdaywork.com',
-              'https://yachtdaywork.com',
-              'https://*.yachtdaywork.com',
-            ]}
+            originWhitelist={['https://*']}
             javaScriptEnabled
             domStorageEnabled
             onLoadStart={startLoader}
@@ -321,6 +320,7 @@ function WebViewRootInner() {
             onNavigationStateChange={(navState) => setCanGoBack(!!navState.canGoBack)}
             onError={handleError}
             onHttpError={handleError}
+            onContentProcessDidTerminate={handleError}
             onShouldStartLoadWithRequest={handleShouldStartLoad}
             onMessage={(event: WebViewMessageEvent) => {
               const message = event?.nativeEvent?.data;
@@ -336,20 +336,18 @@ function WebViewRootInner() {
                   const title = String(payload.title ?? '').trim() || undefined;
                   const text = String(payload.text ?? '').trim() || undefined;
                   const url = String(payload.url ?? '').trim() || undefined;
-                  
-                  // Use native system share sheet - combine text and url in message
-                  const shareMessage = [text, url].filter(Boolean).join('\n');
-                  
-                  // For Android/iOS native share sheet
+                  const shareText = [text, url].filter(Boolean).join('\n');
+                  const shareContent = shareText || url || title || '';
+
+                  if (!shareContent && !url) return;
+
                   Share.share(
                     {
                       title: title,
-                      message: shareMessage || url || title || '',
+                      message: shareContent,
                       ...(Platform.OS === 'ios' && url ? { url } : {}),
                     },
-                    {
-                      dialogTitle: title || 'Share',
-                    }
+                    { dialogTitle: title || 'Share' }
                   ).catch(() => {});
                   return;
                 }
