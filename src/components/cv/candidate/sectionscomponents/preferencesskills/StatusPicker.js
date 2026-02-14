@@ -10,6 +10,7 @@ const STATUS_OPTIONS = [
   'Freelance / Daywork',
   'Seasonal Break',
   'Sabbatical / Traveling',
+  'Actively Seeking',
   'Seeking First Yacht Role',
   'Not Available',
 ];

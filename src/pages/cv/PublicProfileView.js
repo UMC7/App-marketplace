@@ -554,11 +554,7 @@ export default function PublicProfileView() {
             console.error('docs rpc error', docsErr);
             setDocuments([]);
           } else {
-            const docs = (rows || []).filter((d) => {
-              const vis = String(d?.visibility || 'public').toLowerCase().trim();
-              return vis !== 'unlisted';
-            });
-            setDocuments(docs);
+            setDocuments(rows || []);
           }
         }
 

@@ -187,8 +187,6 @@ export default function PublicCertDocsSection({
     setViewer({ open: true, url, title: doc.title || 'Document' });
   }, [handleFromRoute]);
 
-  if (!sorted.length) return null;
-
   return (
     // ⬇️ Agregamos la clase de contenedor de tarjeta para igualarlo a otras secciones
     <section className="ppv-docs ppv-section" aria-label="Certification & Documents">
@@ -204,9 +202,10 @@ export default function PublicCertDocsSection({
         </div>
 
         {/* Resumen (Passport >6 months, etc.) — usa la lista ya filtrada (sin Unlisted) */}
-        <BasicDocsSummary documents={sorted} docFlags={docFlags} />
+        <BasicDocsSummary documents={documents} docFlags={docFlags} />
         
         {/* Lista con scroll interno: solo 5 visibles a la vez */}
+        {sorted.length > 0 ? (
         <ul
           className="ppv-docList"
           role="list"
@@ -250,6 +249,7 @@ export default function PublicCertDocsSection({
             );
           })}
         </ul>
+        ) : null}
       </div>
 
       {/* -------- Modal simple para vista del documento -------- */}

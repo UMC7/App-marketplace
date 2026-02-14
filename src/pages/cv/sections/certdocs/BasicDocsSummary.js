@@ -107,54 +107,47 @@ function ItemRow({ label, ok }) {
 
 export default function BasicDocsSummary({ documents = [], docFlags = {} }) {
   const items = useMemo(() => {
-    // REGLA DE VISIBILIDAD:
-    // - Unlisted: NO se considera.
-    // - Public/Private: sí se consideran para los indicadores.
-    const docsAll = Array.isArray(documents) ? documents : [];
-    const docs = docsAll.filter((d) => {
-      const vis = String(d?.visibility || 'public').toLowerCase().trim();
-      return vis !== 'unlisted';
-    });
+    // REGLA DE VISIBILIDAD para indicadores:
+    // - Unlisted/Private/Public: todos cuentan como "tiene documento".
+    // - El listado visible se filtra en PublicCertDocsSection.
+    const docs = Array.isArray(documents) ? documents : [];
 
     const byType = (type) => docs.filter(d => canonicalType(d) === type);
 
     // Helper: OR entre doc/flag con expiración válida si aplica
-    const notExpired = (d) => (!d?.expires_on || isFuture(d.expires_on));
     const flagTrue = (v) => v === true;
 
-    // Passport (>6 months) — SOLO se pone en verde si un documento demuestra >6m.
-    // El flag indica “tengo pasaporte”, pero no asegura >6 meses.
+    // Passport (>6 months) — si hay documento adjunto, se marca OK.
+    // El flag indica “tengo pasaporte”.
     const passport = byType('passport')[0];
-    const passportOk = !!passport && passport.expires_on
-      ? isFuture(addMonths(passport.expires_on, -6))
-      : false;
+    const passportOk = !!passport || flagTrue(docFlags?.passport6m);
 
-    // Seaman's Book — ok si hay doc válido o flag
+    // Seaman's Book — ok si hay doc o flag
     const sb = byType('seamanbook')[0];
-    const sbOk = (!!sb && notExpired(sb)) || flagTrue(docFlags?.seamansBook);
+    const sbOk = (!!sb) || flagTrue(docFlags?.seamansBook);
 
-    // STCW Basic Safety (A-VI/1) — ok si hay doc (no suele caducar) o flag
+    // STCW Basic Safety (A-VI/1) — ok si hay doc o flag
     const stcw = byType('stcw').find(d => /vi\/?1|basic\s*safety|bst/i.test(norm(d.title || d.type)));
     const stcwOk = (!!stcw) || flagTrue(docFlags?.stcwBasic);
 
-    // ENG1 — ok si no vencido o flag
+    // ENG1 — ok si hay doc o flag
     const eng1 = byType('eng1')[0];
-    const eng1Ok = ((!!eng1 && notExpired(eng1)) || flagTrue(docFlags?.eng1));
+    const eng1Ok = ((!!eng1) || flagTrue(docFlags?.eng1));
 
-    // Schengen Visa — ok si doc (no vencido) o flag
+    // Schengen Visa — ok si doc o flag
     const schengen = byType('visa').find(d => /schengen/i.test(norm(d.title || d.type)));
-    const schengenOk = ((!!schengen && notExpired(schengen)) || flagTrue(docFlags?.schengenVisa));
+    const schengenOk = ((!!schengen) || flagTrue(docFlags?.schengenVisa));
 
-    // US Visa — ok si doc (no vencido) o flag
+    // US Visa — ok si doc o flag
     const usVisa = byType('visa').find(d =>
       /\b(us|b1\/?b2|b1|c1\/?d)\b/i.test(norm(d.title || d.type))
     );
-    const usOk = ((!!usVisa && notExpired(usVisa)) || flagTrue(docFlags?.usVisa));
+    const usOk = ((!!usVisa) || flagTrue(docFlags?.usVisa));
 
     // === NUEVOS 3 ÍTEMS (segunda fila) ===
-    // Driving License — ok si doc (no vencido) o flag
+    // Driving License — ok si doc o flag
     const drivingDoc = docs.find(d => /driver|driving|licen[cs]e/i.test(norm(d.title || d.type)));
-    const drivingOk = ((!!drivingDoc && notExpired(drivingDoc)) || flagTrue(docFlags?.drivingLicense));
+    const drivingOk = ((!!drivingDoc) || flagTrue(docFlags?.drivingLicense));
 
     // PDSD Course — ok si doc o flag
     const pdsdDoc = docs.find(d => /pdsd/i.test(norm(d.title || d.type)));

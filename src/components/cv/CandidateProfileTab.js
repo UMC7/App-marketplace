@@ -99,6 +99,11 @@ export default function CandidateProfileTab() {
   const [primaryDepartment, setPrimaryDepartment] = useState('');
   const [primaryRank, setPrimaryRank] = useState('');
   const [targetRanks, setTargetRanks] = useState([]);
+  const [deptRanksBaseline, setDeptRanksBaseline] = useState({
+    department: '',
+    rank: '',
+    targets: [],
+  });
   const [availability, setAvailability] = useState('');
   const [locations, setLocations] = useState([]);
   const [languages, setLanguages] = useState([]);
@@ -116,11 +121,20 @@ export default function CandidateProfileTab() {
   const [status, setStatus] = useState('');
   const [languageLevels, setLanguageLevels] = useState([]);
   const [deptSpecialties, setDeptSpecialties] = useState([]);
+  const [prefsSkillsBaseline, setPrefsSkillsBaseline] = useState(null);
   const [onboardPrefs, setOnboardPrefs] = useState({});
   const [programTypes, setProgramTypes] = useState([]);
   const [dietaryRequirements, setDietaryRequirements] = useState([]);
 
   const [lifestyleHabits, setLifestyleHabits] = useState({
+    tattoosVisible: '',
+    smoking: '',
+    vaping: '',
+    alcohol: '',
+    dietaryAllergies: [],
+    fitness: '',
+  });
+  const [lifestyleBaseline, setLifestyleBaseline] = useState({
     tattoosVisible: '',
     smoking: '',
     vaping: '',
@@ -141,6 +155,7 @@ const DEFAULT_DOC_FLAGS = {
   covidVaccine: null,
 };
 const [docFlags, setDocFlags] = useState({ ...DEFAULT_DOC_FLAGS });
+const [docFlagsBaseline, setDocFlagsBaseline] = useState({ ...DEFAULT_DOC_FLAGS });
 
 function buildFullPrefsSkillsPayload() {
   return {
@@ -273,6 +288,10 @@ function buildFullPrefsSkillsPayload() {
     if (error) throw error;
     const updated = Array.isArray(data) ? data[0] : null;
     if (updated) setProfile(updated);
+    setDocFlagsBaseline({
+      ...DEFAULT_DOC_FLAGS,
+      ...(payload?.docFlags && typeof payload.docFlags === 'object' ? payload.docFlags : {}),
+    });
     toast.success('Document flags saved');
   } catch (e) {
     toast.error(e.message || 'Could not save document flags');
@@ -375,6 +394,11 @@ function buildFullPrefsSkillsPayload() {
           setPrimaryDepartment(data?.primary_department || '');
           setPrimaryRank(data?.primary_role || '');
           setTargetRanks(Array.isArray(data?.target_ranks) ? data.target_ranks : []);
+          setDeptRanksBaseline({
+            department: data?.primary_department || '',
+            rank: data?.primary_role || '',
+            targets: Array.isArray(data?.target_ranks) ? data.target_ranks : [],
+          });
 
           setAvailability(data?.availability || '');
           setLocations(Array.isArray(data?.locations) ? data.locations : []);
@@ -436,13 +460,52 @@ function buildFullPrefsSkillsPayload() {
           setDietaryRequirements(Array.isArray(ps?.dietaryRequirements) ? ps.dietaryRequirements : []);
           setOnboardPrefs(ps?.onboardPrefs && typeof ps.onboardPrefs === 'object' ? ps.onboardPrefs : {});
           setStatus(ps?.status || '');
+          setPrefsSkillsBaseline({
+            status: ps?.status || '',
+            availability: ps?.availability ?? (data?.availability || ''),
+            regionsSeasons: Array.isArray(ps?.regionsSeasons)
+              ? ps.regionsSeasons
+              : (Array.isArray(data?.regions) ? data.regions : []),
+            contracts: Array.isArray(ps?.contracts)
+              ? ps.contracts
+              : (Array.isArray(data?.contract_types) ? data.contract_types : []),
+            languageLevels: Array.isArray(ps?.languageLevels)
+              ? ps.languageLevels
+              : normalizeLanguageLevels(data?.languages),
+            deptSpecialties: Array.isArray(ps?.deptSpecialties)
+              ? ps.deptSpecialties
+              : (Array.isArray(data?.skills) ? data.skills : []),
+            rateSalary: ps?.rateSalary && typeof ps.rateSalary === 'object'
+              ? ps.rateSalary
+              : (data?.compensation && typeof data.compensation === 'object'
+                ? data.compensation
+                : { currency: 'USD', dayRateMin: '', salaryMin: '' }),
+            rotation: Array.isArray(ps?.rotation) ? ps.rotation : (ps?.rotation ? [ps.rotation] : []),
+            vesselTypes: Array.isArray(ps?.vesselTypes) ? ps.vesselTypes : [],
+            vesselSizeRange: ps?.vesselSizeRange ?? [],
+            programTypes: Array.isArray(ps?.programTypes) ? ps.programTypes : [],
+            dietaryRequirements: Array.isArray(ps?.dietaryRequirements) ? ps.dietaryRequirements : [],
+            onboardPrefs: ps?.onboardPrefs && typeof ps.onboardPrefs === 'object' ? ps.onboardPrefs : {},
+          });
           setDocFlags({
+            ...DEFAULT_DOC_FLAGS,
+            ...(ps && typeof ps.docFlags === 'object' ? ps.docFlags : {}),
+          });
+          setDocFlagsBaseline({
             ...DEFAULT_DOC_FLAGS,
             ...(ps && typeof ps.docFlags === 'object' ? ps.docFlags : {}),
           });
 
           const lh = ps && typeof ps.lifestyleHabits === 'object' ? ps.lifestyleHabits : {};
           setLifestyleHabits({
+            tattoosVisible: lh.tattoosVisible || '',
+            smoking: lh.smoking || '',
+            vaping: lh.vaping || '',
+            alcohol: lh.alcohol || '',
+            dietaryAllergies: Array.isArray(lh.dietaryAllergies) ? lh.dietaryAllergies : [],
+            fitness: lh.fitness || '',
+          });
+          setLifestyleBaseline({
             tattoosVisible: lh.tattoosVisible || '',
             smoking: lh.smoking || '',
             vaping: lh.vaping || '',
@@ -744,6 +807,11 @@ const generateShortHandle = () => {
 
       if (error) throw error;
       setProfile(data);
+      setDeptRanksBaseline({
+        department: data?.primary_department || '',
+        rank: data?.primary_role || '',
+        targets: Array.isArray(data?.target_ranks) ? data.target_ranks : [],
+      });
       toast.success('Department & ranks saved');
     } catch (e) {
       toast.error(e.message || 'Could not save department & ranks');
@@ -808,6 +876,31 @@ const generateShortHandle = () => {
       if (error) throw error;
       const updated = Array.isArray(data) ? data[0] : null;
       if (updated) setProfile(updated);
+      setPrefsSkillsBaseline({
+        status,
+        availability,
+        regionsSeasons,
+        contracts,
+        languageLevels,
+        deptSpecialties,
+        rateSalary,
+        rotation,
+        vesselTypes,
+        vesselSizeRange,
+        programTypes,
+        dietaryRequirements,
+        onboardPrefs,
+      });
+      setLifestyleBaseline({
+        tattoosVisible: lifestyleHabits?.tattoosVisible || '',
+        smoking: lifestyleHabits?.smoking || '',
+        vaping: lifestyleHabits?.vaping || '',
+        alcohol: lifestyleHabits?.alcohol || '',
+        dietaryAllergies: Array.isArray(lifestyleHabits?.dietaryAllergies)
+          ? lifestyleHabits.dietaryAllergies
+          : [],
+        fitness: lifestyleHabits?.fitness || '',
+      });
       toast.success('Preferences & Skills saved');
     } catch (e) {
       toast.error(e.message || 'Could not save Preferences & Skills');
@@ -1027,6 +1120,127 @@ const generateShortHandle = () => {
   const hasPersonal =
     !!(personal.first_name?.trim() && personal.last_name?.trim() && personal.email_public?.trim());
 
+  const normalizeTargets = (arr) => {
+    if (!Array.isArray(arr) || arr.length === 0) return '[]';
+    const cleaned = arr
+      .map((t) => ({
+        department: String(t?.department || '').trim(),
+        rank: String(t?.rank || '').trim(),
+      }))
+      .filter((t) => t.department || t.rank)
+      .sort((a, b) => {
+        const ad = a.department.toLowerCase();
+        const bd = b.department.toLowerCase();
+        if (ad < bd) return -1;
+        if (ad > bd) return 1;
+        const ar = a.rank.toLowerCase();
+        const br = b.rank.toLowerCase();
+        if (ar < br) return -1;
+        if (ar > br) return 1;
+        return 0;
+      });
+    return JSON.stringify(cleaned);
+  };
+
+  const normalizePrefsValue = (val) => {
+    if (Array.isArray(val)) {
+      return val
+        .map((v) => normalizePrefsValue(v))
+        .sort((a, b) => {
+          const sa = JSON.stringify(a);
+          const sb = JSON.stringify(b);
+          if (sa < sb) return -1;
+          if (sa > sb) return 1;
+          return 0;
+        });
+    }
+    if (val && typeof val === 'object') {
+      const out = {};
+      Object.keys(val).sort().forEach((k) => {
+        out[k] = normalizePrefsValue(val[k]);
+      });
+      return out;
+    }
+    if (typeof val === 'string') return val.trim();
+    return val ?? null;
+  };
+
+  const prefsSkillsSnapshot = (src) => JSON.stringify(normalizePrefsValue(src || {}));
+
+  const deptRanksDirty = useMemo(() => {
+    const dept = String(primaryDepartment || '').trim();
+    const rank = String(primaryRank || '').trim();
+    const baseDept = String(deptRanksBaseline.department || '').trim();
+    const baseRank = String(deptRanksBaseline.rank || '').trim();
+    if (dept !== baseDept || rank !== baseRank) return true;
+    return normalizeTargets(targetRanks) !== normalizeTargets(deptRanksBaseline.targets);
+  }, [primaryDepartment, primaryRank, targetRanks, deptRanksBaseline]);
+
+  const prefsSkillsDirty = useMemo(() => {
+    if (!prefsSkillsBaseline) return false;
+    const current = {
+      status,
+      availability,
+      regionsSeasons,
+      contracts,
+      languageLevels,
+      deptSpecialties,
+      rateSalary,
+      rotation,
+      vesselTypes,
+      vesselSizeRange,
+      programTypes,
+      dietaryRequirements,
+      onboardPrefs,
+    };
+    return prefsSkillsSnapshot(current) !== prefsSkillsSnapshot(prefsSkillsBaseline);
+  }, [
+    status,
+    availability,
+    regionsSeasons,
+    contracts,
+    languageLevels,
+    deptSpecialties,
+    rateSalary,
+    rotation,
+    vesselTypes,
+    vesselSizeRange,
+    programTypes,
+    dietaryRequirements,
+    onboardPrefs,
+    prefsSkillsBaseline,
+  ]);
+
+  const lifestyleDirty = useMemo(() => {
+    const normalizeLifestyle = (src) => JSON.stringify(normalizePrefsValue({
+      tattoosVisible: src?.tattoosVisible || '',
+      smoking: src?.smoking || '',
+      vaping: src?.vaping || '',
+      alcohol: src?.alcohol || '',
+      dietaryAllergies: Array.isArray(src?.dietaryAllergies) ? src.dietaryAllergies : [],
+      fitness: src?.fitness || '',
+    }));
+    return normalizeLifestyle(lifestyleHabits) !== normalizeLifestyle(lifestyleBaseline);
+  }, [lifestyleHabits, lifestyleBaseline]);
+
+  const docFlagsDirty = useMemo(() => {
+    const normalizeFlags = (src) =>
+      JSON.stringify(
+        normalizePrefsValue({
+          passport6m: src?.passport6m ?? null,
+          schengenVisa: src?.schengenVisa ?? null,
+          stcwBasic: src?.stcwBasic ?? null,
+          seamansBook: src?.seamansBook ?? null,
+          eng1: src?.eng1 ?? null,
+          usVisa: src?.usVisa ?? null,
+          drivingLicense: src?.drivingLicense ?? null,
+          pdsd: src?.pdsd ?? null,
+          covidVaccine: src?.covidVaccine ?? null,
+        })
+      );
+    return normalizeFlags(docFlags) !== normalizeFlags(docFlagsBaseline);
+  }, [docFlags, docFlagsBaseline]);
+
   const hasDeptRanks = !!(primaryDepartment && primaryRank);
 
   const hasExperienceHeuristic =
@@ -1068,6 +1282,7 @@ const generateShortHandle = () => {
   const isProfessional = profileMode === 'professional';
   const showRequired = !isProfessional;
   const showOptional = !isLite;
+  const deptRanksSaveDisabled = saving || (showRequired && !hasDeptRanks) || !deptRanksDirty;
 
   const personalProgress = isLite
     ? {
@@ -1203,6 +1418,16 @@ const galleryImagesCount = Array.isArray(gallery)
   : 0;
 const meetsPhotosImagesMin = galleryImagesCount >= 3;
 
+const galleryDirty = useMemo(() => {
+  const current = Array.isArray(gallery)
+    ? gallery.map((g) => String(g?.path || '').trim()).filter(Boolean).sort()
+    : [];
+  const base = Array.isArray(persistedPaths)
+    ? persistedPaths.map((p) => String(p || '').trim()).filter(Boolean).sort()
+    : [];
+  return JSON.stringify(current) !== JSON.stringify(base);
+}, [gallery, persistedPaths]);
+
 const progressSections = {
   personal: personalProgress,
   dept_ranks: deptRanksProgress,
@@ -1223,10 +1448,14 @@ const meetsPrefsMin =
     languageLevels.some((ll) => ll && ll.lang && ll.level)) &&
   (Array.isArray(deptSpecialties) && deptSpecialties.length > 0);
 
+  const prefsSkillsSaveDisabled = saving || (showRequired && !meetsPrefsMin) || !prefsSkillsDirty;
+
   const meetsLifestyleMin =
   !!(lifestyleHabits?.tattoosVisible && String(lifestyleHabits.tattoosVisible).trim()) &&
   Array.isArray(lifestyleHabits?.dietaryAllergies) && lifestyleHabits.dietaryAllergies.length > 0 &&
   !!(lifestyleHabits?.fitness && String(lifestyleHabits.fitness).trim());
+
+  const lifestyleSaveDisabled = saving || (showRequired && !meetsLifestyleMin) || !lifestyleDirty;
 
   const meetsMediaMin = Array.isArray(gallery) && gallery.length >= 3;
 
@@ -1439,8 +1668,15 @@ const meetsPrefsMin =
               <div className="cp-actions" style={{ marginTop: 10 }}>
                 <button
                   type="submit"
-                  disabled={saving || (showRequired && !hasDeptRanks)}
-                  title={showRequired && !hasDeptRanks ? 'Please choose Primary department and Primary rank' : undefined}
+                  disabled={deptRanksSaveDisabled}
+                  title={
+                    showRequired && !hasDeptRanks
+                      ? 'Please choose Primary department and Primary rank'
+                      : !deptRanksDirty
+                        ? 'No changes to save'
+                        : undefined
+                  }
+                  style={{ cursor: deptRanksSaveDisabled ? 'not-allowed' : 'pointer' }}
                 >
                   Save
                 </button>
@@ -1513,12 +1749,15 @@ const meetsPrefsMin =
               <div className="cp-actions" style={{ marginTop: 12 }}>
                 <button
                   type="submit"
-                  disabled={saving || (showRequired && !meetsPrefsMin)}
+                  disabled={prefsSkillsSaveDisabled}
                   title={
                     showRequired && !meetsPrefsMin
                       ? 'Complete Status, Availability, at least one Language with proficiency and at least one Specific skill'
-                      : undefined
+                      : !prefsSkillsDirty
+                        ? 'No changes to save'
+                        : undefined
                   }
+                  style={{ cursor: prefsSkillsSaveDisabled ? 'not-allowed' : 'pointer' }}
                 >
                   Save
                 </button>
@@ -1537,17 +1776,20 @@ const meetsPrefsMin =
                   mode={profileMode}
                 />
                 <div className="cp-actions" style={{ marginTop: 12 }}>
-                  <button
-                    type="submit"
-                    disabled={saving || (showRequired && !meetsLifestyleMin)}
-                    title={
-                      showRequired && !meetsLifestyleMin
-                        ? 'Complete: Visible tattoos, add at least one Dietary allergy (or “None”), and select Fitness / sport activity'
+                <button
+                  type="submit"
+                  disabled={lifestyleSaveDisabled}
+                  title={
+                    showRequired && !meetsLifestyleMin
+                      ? 'Complete: Visible tattoos, add at least one Dietary allergy (or “None”), and select Fitness / sport activity'
+                      : !lifestyleDirty
+                        ? 'No changes to save'
                         : undefined
-                    }
-                  >
-                    Save
-                  </button>
+                  }
+                  style={{ cursor: lifestyleSaveDisabled ? 'not-allowed' : 'pointer' }}
+                >
+                  Save
+                </button>
                 </div>
               </form>
             </div>
@@ -1570,6 +1812,7 @@ const meetsPrefsMin =
                 onDocFlagsChange={setDocFlags}
                 onSaveDocFlags={handleSaveDocFlags}
                 savingDocFlags={savingDocFlags}
+                docFlagsDirty={docFlagsDirty}
               />
             </div>
           ) : null}
@@ -1598,8 +1841,15 @@ const meetsPrefsMin =
                 <button
                   type="button"
                   onClick={handleSaveGallery}
-                  disabled={savingGallery || !meetsPhotosImagesMin}
-                  title={!meetsPhotosImagesMin ? 'Add at least 3 images to enable Save' : undefined}
+                  disabled={savingGallery || !meetsPhotosImagesMin || !galleryDirty}
+                  title={
+                    !meetsPhotosImagesMin
+                      ? 'Add at least 3 images to enable Save'
+                      : !galleryDirty
+                        ? 'No changes to save'
+                        : undefined
+                  }
+                  style={{ cursor: savingGallery || !meetsPhotosImagesMin || !galleryDirty ? 'not-allowed' : 'pointer' }}
                 >
                   Save
                 </button>

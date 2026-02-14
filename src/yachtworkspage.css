@@ -1338,13 +1338,20 @@ body:not(.dark-mode) .filters-panel h3 {
 }
 
 .seajobs-analytics-rank-change.seajobs-analytics-rank-same {
-  opacity: 0.5;
+  opacity: 0.85;
+  color: #7c8798;
 }
 
 body.dark-mode .seajobs-analytics-rank-change,
 [data-theme="dark"] .seajobs-analytics-rank-change {
   color: var(--color-secondary);
   opacity: 0.8;
+}
+
+body.dark-mode .seajobs-analytics-rank-change.seajobs-analytics-rank-same,
+[data-theme="dark"] .seajobs-analytics-rank-change.seajobs-analytics-rank-same {
+  color: #c1c9d2;
+  opacity: 0.9;
 }
 
 body.dark-mode .seajobs-analytics-rank-change.seajobs-analytics-rank-up,
@@ -1450,15 +1457,28 @@ body.dark-mode .seajobs-analytics-row-label,
   max-width: 100%;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 820px) {
   .module-header-row {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: baseline;
+    flex-wrap: nowrap;
+    gap: 6px;
+    justify-content: flex-start;
+  }
+
+  .module-header-row h1 {
+    font-size: 1.5rem;
+    flex: 0 0 auto;
   }
 
   .module-header-row span {
-    white-space: normal;
+    font-size: 0.95rem;
+    white-space: nowrap;
     top: 0;
+    min-width: 0;
+    flex: 0 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

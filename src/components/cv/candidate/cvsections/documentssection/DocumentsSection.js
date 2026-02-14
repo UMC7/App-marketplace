@@ -11,6 +11,7 @@ export default function DocumentsSection({
   onChangeDocFlag,
   onSaveDocFlags,
   savingDocFlags,
+  docFlagsDirty = true,
 }) {
   const quickItems = [
     { key: "passport6m",     label: "Passport >6 months" },
@@ -102,14 +103,23 @@ export default function DocumentsSection({
             disabled={
               !!savingDocFlags ||
               typeof onSaveDocFlags !== "function" ||
-              !allFlagsSelected
+              !allFlagsSelected ||
+              !docFlagsDirty
             }
             aria-label="Save document flags"
             title={
               !allFlagsSelected
                 ? "Complete all required fields (*) before saving"
+                : !docFlagsDirty
+                ? "No changes to save"
                 : undefined
             }
+            style={{
+              cursor:
+                savingDocFlags || !allFlagsSelected || !docFlagsDirty
+                  ? "not-allowed"
+                  : "pointer",
+            }}
           >
             {savingDocFlags ? "Saving…" : "Save"}
           </button>

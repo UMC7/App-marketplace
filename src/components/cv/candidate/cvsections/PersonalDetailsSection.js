@@ -21,6 +21,7 @@ import {
 
 export default function PersonalDetailsSection({ profile, onSaved, mode = 'professional' }) {
   const [saving, setSaving] = useState(false);
+  const [baseline, setBaseline] = useState(null);
   const isLite = mode === 'lite';
   const isProfessional = mode === 'professional';
   const showRequired = !isProfessional;
@@ -112,7 +113,109 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
     setInstagram(profile.instagram || '');
     setFacebook(profile.facebook || '');
     setWebsite(profile.website || '');
+
+    setBaseline({
+      firstName: profile.first_name || '',
+      lastName: profile.last_name || '',
+      email: profile.email_public || '',
+      phoneCC: String(profile.phone_cc || '').replace(/[^\d]/g, ''),
+      phoneNum: profile.phone_number || '',
+      gender: profile.gender || '',
+      residenceCountry: profile.residence_country || '',
+      country: profile.country || '',
+      cityPort: profile.city_port || '',
+      commPref: profile.contact_pref || '',
+      nationalities: Array.isArray(profile.nationalities) ? profile.nationalities : [],
+      birthMonth: profile.birth_month || '',
+      birthYear: profile.birth_year || '',
+      waSame: !!profile.whatsapp_same,
+      waCC: String(profile.whatsapp_cc || '').replace(/[^\d]/g, ''),
+      waNum: profile.whatsapp_number || '',
+      linkedin: profile.linkedin || '',
+      instagram: profile.instagram || '',
+      facebook: profile.facebook || '',
+      website: profile.website || '',
+    });
   }, [profile]);
+
+  const normalizeList = (arr) => {
+    if (!Array.isArray(arr)) return [];
+    return [...new Set(arr.map((v) => String(v || '').trim()).filter(Boolean))].sort();
+  };
+
+  const snapshot = (data) => {
+    if (!data) return '';
+    return JSON.stringify({
+      firstName: String(data.firstName || '').trim(),
+      lastName: String(data.lastName || '').trim(),
+      email: String(data.email || '').trim(),
+      phoneCC: String(data.phoneCC || '').replace(/[^\d]/g, ''),
+      phoneNum: String(data.phoneNum || '').trim(),
+      gender: String(data.gender || '').trim(),
+      residenceCountry: String(data.residenceCountry || '').trim(),
+      country: String(data.country || '').trim(),
+      cityPort: String(data.cityPort || '').trim(),
+      commPref: String(data.commPref || '').trim(),
+      nationalities: normalizeList(data.nationalities),
+      birthMonth: String(data.birthMonth || '').trim(),
+      birthYear: String(data.birthYear || '').trim(),
+      waSame: !!data.waSame,
+      waCC: String(data.waCC || '').replace(/[^\d]/g, ''),
+      waNum: String(data.waNum || '').trim(),
+      linkedin: String(data.linkedin || '').trim(),
+      instagram: String(data.instagram || '').trim(),
+      facebook: String(data.facebook || '').trim(),
+      website: String(data.website || '').trim(),
+    });
+  };
+
+  const isDirty = useMemo(() => {
+    const current = {
+      firstName,
+      lastName,
+      email,
+      phoneCC,
+      phoneNum,
+      gender,
+      residenceCountry,
+      country,
+      cityPort,
+      commPref,
+      nationalities,
+      birthMonth,
+      birthYear,
+      waSame,
+      waCC,
+      waNum,
+      linkedin,
+      instagram,
+      facebook,
+      website,
+    };
+    return snapshot(current) !== snapshot(baseline);
+  }, [
+    firstName,
+    lastName,
+    email,
+    phoneCC,
+    phoneNum,
+    gender,
+    residenceCountry,
+    country,
+    cityPort,
+    commPref,
+    nationalities,
+    birthMonth,
+    birthYear,
+    waSame,
+    waCC,
+    waNum,
+    linkedin,
+    instagram,
+    facebook,
+    website,
+    baseline,
+  ]);
 
   function addNationality() {
     if (!natToAdd) return;
@@ -241,6 +344,28 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
       if (error) throw error;
       toast.success('Personal details saved');
       onSaved && onSaved(data);
+      setBaseline({
+        firstName: data?.first_name || '',
+        lastName: data?.last_name || '',
+        email: data?.email_public || '',
+        phoneCC: String(data?.phone_cc || '').replace(/[^\d]/g, ''),
+        phoneNum: data?.phone_number || '',
+        gender: data?.gender || '',
+        residenceCountry: data?.residence_country || '',
+        country: data?.country || '',
+        cityPort: data?.city_port || '',
+        commPref: data?.contact_pref || '',
+        nationalities: Array.isArray(data?.nationalities) ? data.nationalities : [],
+        birthMonth: data?.birth_month || '',
+        birthYear: data?.birth_year || '',
+        waSame: !!data?.whatsapp_same,
+        waCC: String(data?.whatsapp_cc || '').replace(/[^\d]/g, ''),
+        waNum: data?.whatsapp_number || '',
+        linkedin: data?.linkedin || '',
+        instagram: data?.instagram || '',
+        facebook: data?.facebook || '',
+        website: data?.website || '',
+      });
     } catch (err) {
       toast.error(err.message || 'Could not save personal details');
     } finally {
@@ -561,7 +686,14 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
 
       {/* Actions */}
       <div className="cp-actions" style={{ marginTop: 12 }}>
-        <button type="submit" disabled={saving || !isSectionComplete}>Save</button>
+        <button
+          type="submit"
+          disabled={saving || !isSectionComplete || !isDirty}
+          title={!isDirty ? 'No changes to save' : undefined}
+          style={{ cursor: saving || !isSectionComplete || !isDirty ? 'not-allowed' : 'pointer' }}
+        >
+          Save
+        </button>
       </div>
     </form>
   );

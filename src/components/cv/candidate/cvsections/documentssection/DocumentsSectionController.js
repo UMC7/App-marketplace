@@ -25,6 +25,7 @@ export default function DocumentsSectionController({
   onDocFlagsChange,
   onSaveDocFlags,
   savingDocFlags,
+  docFlagsDirty,
 }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("bulk");
@@ -192,6 +193,7 @@ export default function DocumentsSectionController({
         onChangeDocFlag={handleChangeDocFlag}
         onSaveDocFlags={handleSaveDocFlagsClick}
         savingDocFlags={!!savingDocFlags}
+        docFlagsDirty={docFlagsDirty}
       />
       <DocumentsManagerDialog
         open={open}

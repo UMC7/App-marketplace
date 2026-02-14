@@ -67,7 +67,6 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = '
         about: payload.about_me,
         statement: payload.professional_statement,
       });
-      toast?.success?.("Saved.");
     } catch (err) {
       console.error(err);
       toast?.error?.("Could not save. Please try again.");

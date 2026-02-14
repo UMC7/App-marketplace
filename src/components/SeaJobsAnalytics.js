@@ -267,11 +267,11 @@ export default function SeaJobsAnalytics({ offers, isMobile }) {
                             : `Bajo ${-rankChange} puesto${rankChange < -1 ? 's' : ''}`
                       }
                     >
-                      {rankChange === 0
-                        ? '0'
-                        : rankChange > 0
-                          ? `\u2191${rankChange}`
-                          : `\u2193${Math.abs(rankChange)}`}
+                        {rankChange === 0
+                          ? '\u2192'
+                          : rankChange > 0
+                            ? `\u2191${rankChange}`
+                            : `\u2193${Math.abs(rankChange)}`}
                     </span>
                   )}
                   {getLocationIcon(name)}
@@ -319,7 +319,7 @@ export default function SeaJobsAnalytics({ offers, isMobile }) {
                       }
                     >
                       {rankChange === 0
-                        ? '0'
+                        ? '\u2192'
                         : rankChange > 0
                           ? `\u2191${rankChange}`
                           : `\u2193${Math.abs(rankChange)}`}
