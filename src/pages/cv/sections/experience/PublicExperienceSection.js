@@ -480,6 +480,9 @@ function KvRow({ items=[], cols=2 }){
   const computedCols = Math.min(cols, Math.max(visible.length, 1)); // 1..cols
   const rowRef = useRef(null);
   const [dots, setDots] = React.useState([]);
+  const isSolo = visible.length === 1;
+  const isRemarks = isSolo && String(visible[0]?.label || '').toLowerCase() === 'remarks';
+  const soloCenter = isSolo && !isRemarks;
 
   useLayoutEffect(() => {
     const el = rowRef.current;
@@ -534,7 +537,11 @@ function KvRow({ items=[], cols=2 }){
   if(!visible.length) return null;
 
   return (
-    <div className="ppv-kvRow" data-cols={computedCols} ref={rowRef}>
+    <div
+      className={`ppv-kvRow${soloCenter ? ' ppv-kvRow--solo' : ''}${isRemarks ? ' ppv-kvRow--remarks' : ''}`}
+      data-cols={computedCols}
+      ref={rowRef}
+    >
       {visible.map((it,i)=>(
         <div key={i} className="ppv-kvItem">
           <span className="ppv-kvLabel">{it.label}</span>
@@ -559,7 +566,7 @@ function KvRow({ items=[], cols=2 }){
             userSelect: 'none',
           }}
         >
-          •
+          {'\u2022'}
         </span>
       ))}
     </div>

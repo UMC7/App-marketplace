@@ -1,5 +1,5 @@
 // src/pages/cv/sections/certdocs/PublicCertDocsSection.js
-import React, { useMemo, useState, useCallback, useRef, useLayoutEffect } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useLayoutEffect, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import supabase from '../../../../supabase';
 import BasicDocsSummary from './BasicDocsSummary';
@@ -81,6 +81,26 @@ export default function PublicCertDocsSection({
   /** 🔹 NUEVO: flags provenientes del perfil (prefs_skills.docFlags) */
   docFlags = {},
 }) {
+  const [isAdminViewer, setIsAdminViewer] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const role =
+          data?.user?.user_metadata?.app_metadata?.role ||
+          data?.user?.app_metadata?.role ||
+          null;
+        if (!cancelled) setIsAdminViewer(role === 'admin');
+      } catch {
+        if (!cancelled) setIsAdminViewer(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   // Modal viewer
   const [viewer, setViewer] = useState({ open: false, url: '', title: '' });
 
@@ -150,18 +170,20 @@ export default function PublicCertDocsSection({
 
     // 🔹 Emitimos evento de "cv_download" (interpretado como apertura de documento del CV)
     try {
-      const ownerUserId = doc?.owner_user_id || doc?.user_id || null;
-      const handle = handleFromRoute || doc?.handle || null;
-      emitCvDownload({
-        ownerUserId,
-        handle,
-        extra: {
-          doc_id: doc?.id || null,
-          title: doc?.title || null,
-          ext: inferExt(path) || null,
-                  visibility: doc?.visibility || 'public',
-        },
-      });
+      if (!isAdminViewer) {
+        const ownerUserId = doc?.owner_user_id || doc?.user_id || null;
+        const handle = handleFromRoute || doc?.handle || null;
+        emitCvDownload({
+          ownerUserId,
+          handle,
+          extra: {
+            doc_id: doc?.id || null,
+            title: doc?.title || null,
+            ext: inferExt(path) || null,
+            visibility: doc?.visibility || 'public',
+          },
+        });
+      }
     } catch { /* no-op */ }
 
     if (/^https?:\/\//i.test(path)) {
@@ -185,7 +207,7 @@ export default function PublicCertDocsSection({
     }
     url = toOriginalSupabaseUrl(url);
     setViewer({ open: true, url, title: doc.title || 'Document' });
-  }, [handleFromRoute]);
+  }, [handleFromRoute, isAdminViewer]);
 
   return (
     // ⬇️ Agregamos la clase de contenedor de tarjeta para igualarlo a otras secciones

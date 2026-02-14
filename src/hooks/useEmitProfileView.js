@@ -28,6 +28,11 @@ export default function useEmitProfileView(profile) {
 
         const { data } = await supabase.auth.getUser();
         const currentUserId = data?.user?.id || null;
+        const role =
+          data?.user?.user_metadata?.app_metadata?.role ||
+          data?.user?.app_metadata?.role ||
+          null;
+        if (role === 'admin') return;
         if (currentUserId && ownerUserId && currentUserId === ownerUserId) return;
         if (cancelled) return;
 

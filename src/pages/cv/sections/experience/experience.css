@@ -468,3 +468,20 @@ body.dark-mode .ppv-previewRibbon {
   text-align: left;
   align-items: flex-start;
 }
+
+/* Fila de 1 columna que NO es remarks (centrar) */
+.ppv-kvRow.ppv-kvRow--solo[data-cols="1"] {
+  justify-items: center;
+}
+.ppv-kvRow.ppv-kvRow--solo[data-cols="1"] .ppv-kvItem,
+.ppv-kvRow.ppv-kvRow--solo[data-cols="1"] .ppv-kvLabel,
+.ppv-kvRow.ppv-kvRow--solo[data-cols="1"] .ppv-kvValue {
+  text-align: center;
+  align-items: center;
+}
+.ppv-kvRow.ppv-kvRow--solo[data-cols="1"] .ppv-kvValue {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-bottom: 8px;
+}

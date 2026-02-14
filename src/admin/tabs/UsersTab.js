@@ -25,7 +25,31 @@ function UsersTab({ currentUser }) {
       .from('users')
       .select('*')
       .order('created_at', { ascending: false });
-    if (!error) setUsers(data || []);
+    if (!error) {
+      const rows = data || [];
+      const ids = rows.map((u) => u.id).filter(Boolean);
+      let handleMap = new Map();
+      if (ids.length) {
+        const { data: profiles } = await supabase
+          .from('public_profiles')
+          .select('user_id, handle')
+          .in('user_id', ids);
+        handleMap = new Map(
+          (profiles || []).map((p) => [String(p.user_id), p.handle])
+        );
+      }
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const withCv = rows.map((u) => {
+        const cvMode = String(u.cv_mode || '').toLowerCase();
+        const handle = handleMap.get(String(u.id)) || '';
+        const hasCv = (cvMode === 'lite' || cvMode === 'professional') && handle;
+        return {
+          ...u,
+          cv_link: hasCv ? `${origin}/cv/${handle}` : '',
+        };
+      });
+      setUsers(withCv);
+    }
     setLoading(false);
     setSelectedUserId(null);
     setPage(1);
@@ -197,6 +221,14 @@ function UsersTab({ currentUser }) {
                       }}
                       rows={1}
                     />
+                  ) : col === 'cv_link' ? (
+                    user[col] ? (
+                      <a href={user[col]} target="_blank" rel="noreferrer">
+                        Open CV
+                      </a>
+                    ) : (
+                      '—'
+                    )
                   ) : (
                     String(user[col])
                   )}
