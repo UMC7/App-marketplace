@@ -77,7 +77,7 @@ export default function AnalyticsJobsTab() {
       setError('');
       const { data, error: fetchError } = await supabase
         .from('yacht_work_offers')
-        .select('id, created_at, country, work_location, work_environment, status, team, yacht_type, type');
+        .select('id, created_at, country, work_location, work_environment, status, team, yacht_type, type, title');
       if (!isMounted) return;
       if (fetchError) {
         setError(fetchError.message || 'Failed to load jobs.');
@@ -116,6 +116,7 @@ export default function AnalyticsJobsTab() {
     const regionCounts = new Map();
     const environmentCounts = new Map();
     const typeCounts = new Map();
+    const rankCountsLast7 = new Map();
     const statusCounts = new Map();
     let teamYes = 0;
     let teamNo = 0;
@@ -161,6 +162,8 @@ export default function AnalyticsJobsTab() {
         const hour = parts.hour;
         if (localDate >= last7Start && localDate <= todayLocal) {
           last7DayCounts.set(dayKey, (last7DayCounts.get(dayKey) || 0) + 1);
+          const title = String(j.title || '').trim() || 'Other';
+          rankCountsLast7.set(title, (rankCountsLast7.get(title) || 0) + 1);
         }
 
         if (created >= last24Start && created <= now) {
@@ -193,6 +196,10 @@ export default function AnalyticsJobsTab() {
     const topTypes = Array.from(typeCounts.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
+    const totalLast7 = Array.from(last7DayCounts.values()).reduce((a, b) => a + b, 0);
+    const topRanksLast7 = Array.from(rankCountsLast7.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
     const topStatuses = Array.from(statusCounts.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
@@ -212,12 +219,20 @@ export default function AnalyticsJobsTab() {
       topRegions,
       topEnvironments,
       topTypes,
+      topRanksLast7,
+      totalLast7,
       topStatuses,
     };
   }, [jobs]);
 
   const formatPercent = (count) => {
     const total = stats.totalJobs || 0;
+    if (!total) return '0.0%';
+    return `${((count / total) * 100).toFixed(1)}%`;
+  };
+
+  const formatPercentLast7 = (count) => {
+    const total = stats.totalLast7 || 0;
     if (!total) return '0.0%';
     return `${((count / total) * 100).toFixed(1)}%`;
   };
@@ -255,7 +270,7 @@ export default function AnalyticsJobsTab() {
             </div>
             <div className="admin-card">
               <h4>Status</h4>
-              <div>{stats.topStatuses[0] ? `${stats.topStatuses[0][0]}: ${stats.topStatuses[0][1]}` : '—'}</div>
+              <div>{stats.topStatuses[0] ? `${stats.topStatuses[0][0]}: ${stats.topStatuses[0][1]}` : '?'}</div>
               <div>{stats.topStatuses[1] ? `${stats.topStatuses[1][0]}: ${stats.topStatuses[1][1]}` : ''}</div>
             </div>
           </div>
@@ -431,6 +446,34 @@ export default function AnalyticsJobsTab() {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div className="analytics-block">
+            <h4>Top Ranks (7 days)</h4>
+            <p style={{ fontSize: 12, color: '#777', marginBottom: 8 }}>Por offer.title, jobs creados en ?ltimos 7 d?as</p>
+            <table className="admin-table analytics-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Jobs</th>
+                  <th>%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.topRanksLast7.map(([name, count]) => (
+                  <tr key={name}>
+                    <td>{name}</td>
+                    <td>{count}</td>
+                    <td>{formatPercentLast7(count)}</td>
+                  </tr>
+                ))}
+                {stats.topRanksLast7.length === 0 && (
+                  <tr>
+                    <td colSpan={3}>No rank data in last 7 days.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </>
       )}
