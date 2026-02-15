@@ -41,7 +41,7 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = '
     (statement ?? "") !== (baseline.statement ?? "");
 
   // ⬇️ Requisito: “Short summary” debe tener contenido para poder guardar
-  const canSave = dirty && (showRequired ? (about || "").trim().length > 0 : true);
+  const canSave = dirty;
 
   const handleSave = async () => {
     if (readOnly) return;
@@ -52,11 +52,7 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = '
       professional_statement: (statement || "").trim(),
     };
 
-    if (showRequired && !payload.about_me) {
-      // Doble verificación por si acaso (defensa en profundidad)
-      toast?.error?.("Short summary is required.");
-      return;
-    }
+    // allow partial saves even if minimums not met
 
     try {
       setSaving(true);

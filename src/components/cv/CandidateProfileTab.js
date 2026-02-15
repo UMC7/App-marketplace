@@ -128,6 +128,8 @@ export default function CandidateProfileTab({ adminUserId = null }) {
   const [onboardPrefs, setOnboardPrefs] = useState({});
   const [programTypes, setProgramTypes] = useState([]);
   const [dietaryRequirements, setDietaryRequirements] = useState([]);
+  const [prefsLiteCache, setPrefsLiteCache] = useState(null);
+  const [prefsProCache, setPrefsProCache] = useState(null);
 
   const [lifestyleHabits, setLifestyleHabits] = useState({
     tattoosVisible: '',
@@ -160,24 +162,14 @@ const DEFAULT_DOC_FLAGS = {
 const [docFlags, setDocFlags] = useState({ ...DEFAULT_DOC_FLAGS });
 const [docFlagsBaseline, setDocFlagsBaseline] = useState({ ...DEFAULT_DOC_FLAGS });
 
-function buildFullPrefsSkillsPayload() {
+function buildLitePrefsPayload() {
   return {
     ...buildPrefsSkillsPayload({
       status,
       availability,
-      regionsSeasons,
-      contracts,
       languageLevels,
       deptSpecialties,
-      rateSalary,
-      rotation,
-      vesselTypes,
-      vesselSizeRange,
-      programTypes,
-      dietaryRequirements,
-      onboardPrefs,
     }),
-
     lifestyleHabits,
     docFlags,
   };
@@ -216,6 +208,68 @@ function buildFullPrefsSkillsPayload() {
   const [savingGallery, setSavingGallery] = useState(false);
   const candidateProfileModalTimer = useRef(null);
   const [showCandidateProfileModal, setShowCandidateProfileModal] = useState(false);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+
+  function normalizeLanguageLevels(arr) {
+    if (!Array.isArray(arr)) return [];
+    return arr.map((item) => {
+      if (typeof item === 'string') {
+        try {
+          if (item.trim().startsWith('{')) {
+            const obj = JSON.parse(item);
+            if (obj && obj.lang) return { lang: obj.lang, level: obj.level || '' };
+          }
+          if (item.includes(':')) {
+            const [lang, level] = item.split(':');
+            return { lang: lang?.trim(), level: level?.trim() };
+          }
+          return { lang: item, level: '' };
+        } catch {
+          return { lang: item, level: '' };
+        }
+      }
+      if (item && typeof item === 'object' && item.lang) {
+        return { lang: item.lang, level: item.level || '' };
+      }
+      return { lang: String(item ?? ''), level: '' };
+    });
+  }
+
+  function applyLitePrefs(ps = {}) {
+    setStatus(ps?.status || '');
+    setAvailability(ps?.availability || '');
+    setLanguageLevels(Array.isArray(ps?.languageLevels) ? normalizeLanguageLevels(ps.languageLevels) : []);
+    setDeptSpecialties(Array.isArray(ps?.deptSpecialties) ? ps.deptSpecialties : []);
+    const lh = ps && typeof ps.lifestyleHabits === 'object' ? ps.lifestyleHabits : {};
+    setLifestyleHabits({
+      tattoosVisible: lh.tattoosVisible || '',
+      smoking: lh.smoking || '',
+      vaping: lh.vaping || '',
+      alcohol: lh.alcohol || '',
+      dietaryAllergies: Array.isArray(lh.dietaryAllergies) ? lh.dietaryAllergies : [],
+      fitness: lh.fitness || '',
+    });
+    setDocFlags({
+      ...DEFAULT_DOC_FLAGS,
+      ...(ps && typeof ps.docFlags === 'object' ? ps.docFlags : {}),
+    });
+  }
+
+  function applyProPrefs(ps = {}) {
+    setRegionsSeasons(Array.isArray(ps?.regionsSeasons) ? ps.regionsSeasons : []);
+    setContracts(Array.isArray(ps?.contracts) ? ps.contracts : []);
+    setRotation(Array.isArray(ps?.rotation) ? ps.rotation : (ps?.rotation ? [ps.rotation] : []));
+    setVesselTypes(Array.isArray(ps?.vesselTypes) ? ps.vesselTypes : []);
+    setVesselSizeRange(ps?.vesselSizeRange ?? []);
+    setRateSalary(
+      ps?.rateSalary && typeof ps.rateSalary === 'object'
+        ? ps.rateSalary
+        : { currency: 'USD', dayRateMin: '', salaryMin: '' }
+    );
+    setProgramTypes(Array.isArray(ps?.programTypes) ? ps.programTypes : []);
+    setDietaryRequirements(Array.isArray(ps?.dietaryRequirements) ? ps.dietaryRequirements : []);
+    setOnboardPrefs(ps?.onboardPrefs && typeof ps.onboardPrefs === 'object' ? ps.onboardPrefs : {});
+  }
 
   useEffect(() => {
     const mode = isAdminView
@@ -263,6 +317,10 @@ function buildFullPrefsSkillsPayload() {
     setShowCandidateProfileModal(false);
   };
 
+  const handleCloseUnlockModal = () => {
+    setShowUnlockModal(false);
+  };
+
   const handleModeChange = async (nextMode) => {
     if (!nextMode || nextMode === profileMode) return;
     if (isAdminView) {
@@ -293,12 +351,15 @@ function buildFullPrefsSkillsPayload() {
   if (!profile?.id) return;
   setSavingDocFlags(true);
   try {
-    const payload = buildFullPrefsSkillsPayload();
+    const payload = buildLitePrefsPayload();
 
-    const { data, error } = await supabase.rpc('rpc_save_prefs_skills', { payload });
+    const { data, error } = await supabase.rpc('rpc_save_prefs_skills_lite', { payload });
     if (error) throw error;
     const updated = Array.isArray(data) ? data[0] : null;
-    if (updated) setProfile(updated);
+    if (updated) {
+      setProfile(updated);
+      if (updated.prefs_skills_lite) setPrefsLiteCache(updated.prefs_skills_lite);
+    }
     setDocFlagsBaseline({
       ...DEFAULT_DOC_FLAGS,
       ...(payload?.docFlags && typeof payload.docFlags === 'object' ? payload.docFlags : {}),
@@ -359,30 +420,7 @@ function buildFullPrefsSkillsPayload() {
   useEffect(() => {
     let cancelled = false;
 
-    function normalizeLanguageLevels(arr) {
-      if (!Array.isArray(arr)) return [];
-      return arr.map((item) => {
-        if (typeof item === 'string') {
-          try {
-            if (item.trim().startsWith('{')) {
-              const obj = JSON.parse(item);
-              if (obj && obj.lang) return { lang: obj.lang, level: obj.level || '' };
-            }
-            if (item.includes(':')) {
-              const [lang, level] = item.split(':');
-              return { lang: lang?.trim(), level: level?.trim() };
-            }
-            return { lang: item, level: '' };
-          } catch {
-            return { lang: item, level: '' };
-          }
-        }
-        if (item && typeof item === 'object' && item.lang) {
-          return { lang: item.lang, level: item.level || '' };
-        }
-        return { lang: String(item ?? ''), level: '' };
-      });
-    }
+    // normalizeLanguageLevels is defined above
 
     async function init() {
       setLoading(true);
@@ -445,88 +483,67 @@ function buildFullPrefsSkillsPayload() {
           setLanguageLevels(normalizeLanguageLevels(data?.languages));
           setDeptSpecialties(Array.isArray(data?.skills) ? data.skills : []);
 
-          const ps = (data && data.prefs_skills && typeof data.prefs_skills === 'object') ? data.prefs_skills : {};
+          const psLite = (data && data.prefs_skills_lite && typeof data.prefs_skills_lite === 'object')
+            ? data.prefs_skills_lite
+            : {};
+          const psPro = (data && data.prefs_skills_pro && typeof data.prefs_skills_pro === 'object')
+            ? data.prefs_skills_pro
+            : {};
+          setPrefsLiteCache(psLite);
+          setPrefsProCache(psPro);
 
-          setAvailability(
-            ps?.availability ?? (data?.availability || '')
-          );
+          const seedLite = (psLite && Object.keys(psLite).length) ? psLite : {};
+          const seedPro = (psPro && Object.keys(psPro).length) ? psPro : {};
 
-          setLanguageLevels(
-            Array.isArray(ps?.languageLevels)
-              ? ps.languageLevels
-              : normalizeLanguageLevels(data?.languages)
-          );
+          const useLite = profileMode === 'lite' || !seedPro;
+          if (useLite) applyLitePrefs(seedLite);
+          else applyProPrefs(seedPro);
 
-          setRegionsSeasons(
-            Array.isArray(ps?.regionsSeasons)
-              ? ps.regionsSeasons
-              : (Array.isArray(data?.regions) ? data.regions : [])
-          );
-
-          setRateSalary(
-            ps?.rateSalary && typeof ps.rateSalary === 'object'
-              ? ps.rateSalary
-              : (data?.compensation && typeof data.compensation === 'object'
-                ? data.compensation
-                : { currency: 'USD', dayRateMin: '', salaryMin: '' })
-          );
-
-          setContracts(
-            Array.isArray(ps?.contracts)
-              ? ps.contracts
-              : (Array.isArray(data?.contract_types) ? data.contract_types : [])
-          );
-
-          setDeptSpecialties(
-            Array.isArray(ps?.deptSpecialties)
-              ? ps.deptSpecialties
-              : (Array.isArray(data?.skills) ? data.skills : [])
-          );
-
-          setRotation(Array.isArray(ps?.rotation) ? ps.rotation : (ps?.rotation ? [ps.rotation] : []));
-          setVesselTypes(Array.isArray(ps?.vesselTypes) ? ps.vesselTypes : []);
-          setVesselSizeRange(ps?.vesselSizeRange ?? []); // acepta [] o {min,max,unit}
-          setProgramTypes(Array.isArray(ps?.programTypes) ? ps.programTypes : []);
-          setDietaryRequirements(Array.isArray(ps?.dietaryRequirements) ? ps.dietaryRequirements : []);
-          setOnboardPrefs(ps?.onboardPrefs && typeof ps.onboardPrefs === 'object' ? ps.onboardPrefs : {});
-          setStatus(ps?.status || '');
           setPrefsSkillsBaseline({
-            status: ps?.status || '',
-            availability: ps?.availability ?? (data?.availability || ''),
-            regionsSeasons: Array.isArray(ps?.regionsSeasons)
-              ? ps.regionsSeasons
+            status: (useLite ? seedLite : seedPro)?.status || '',
+            availability: (useLite ? seedLite : seedPro)?.availability ?? (data?.availability || ''),
+            regionsSeasons: Array.isArray((useLite ? seedLite : seedPro)?.regionsSeasons)
+              ? (useLite ? seedLite : seedPro).regionsSeasons
               : (Array.isArray(data?.regions) ? data.regions : []),
-            contracts: Array.isArray(ps?.contracts)
-              ? ps.contracts
+            contracts: Array.isArray((useLite ? seedLite : seedPro)?.contracts)
+              ? (useLite ? seedLite : seedPro).contracts
               : (Array.isArray(data?.contract_types) ? data.contract_types : []),
-            languageLevels: Array.isArray(ps?.languageLevels)
-              ? ps.languageLevels
+            languageLevels: Array.isArray((useLite ? seedLite : seedPro)?.languageLevels)
+              ? (useLite ? seedLite : seedPro).languageLevels
               : normalizeLanguageLevels(data?.languages),
-            deptSpecialties: Array.isArray(ps?.deptSpecialties)
-              ? ps.deptSpecialties
+            deptSpecialties: Array.isArray((useLite ? seedLite : seedPro)?.deptSpecialties)
+              ? (useLite ? seedLite : seedPro).deptSpecialties
               : (Array.isArray(data?.skills) ? data.skills : []),
-            rateSalary: ps?.rateSalary && typeof ps.rateSalary === 'object'
-              ? ps.rateSalary
+            rateSalary: (useLite ? seedLite : seedPro)?.rateSalary && typeof (useLite ? seedLite : seedPro).rateSalary === 'object'
+              ? (useLite ? seedLite : seedPro).rateSalary
               : (data?.compensation && typeof data.compensation === 'object'
                 ? data.compensation
                 : { currency: 'USD', dayRateMin: '', salaryMin: '' }),
-            rotation: Array.isArray(ps?.rotation) ? ps.rotation : (ps?.rotation ? [ps.rotation] : []),
-            vesselTypes: Array.isArray(ps?.vesselTypes) ? ps.vesselTypes : [],
-            vesselSizeRange: ps?.vesselSizeRange ?? [],
-            programTypes: Array.isArray(ps?.programTypes) ? ps.programTypes : [],
-            dietaryRequirements: Array.isArray(ps?.dietaryRequirements) ? ps.dietaryRequirements : [],
-            onboardPrefs: ps?.onboardPrefs && typeof ps.onboardPrefs === 'object' ? ps.onboardPrefs : {},
+            rotation: Array.isArray((useLite ? seedLite : seedPro)?.rotation)
+              ? (useLite ? seedLite : seedPro).rotation
+              : ((useLite ? seedLite : seedPro)?.rotation ? [(useLite ? seedLite : seedPro).rotation] : []),
+            vesselTypes: Array.isArray((useLite ? seedLite : seedPro)?.vesselTypes) ? (useLite ? seedLite : seedPro).vesselTypes : [],
+            vesselSizeRange: (useLite ? seedLite : seedPro)?.vesselSizeRange ?? [],
+            programTypes: Array.isArray((useLite ? seedLite : seedPro)?.programTypes) ? (useLite ? seedLite : seedPro).programTypes : [],
+            dietaryRequirements: Array.isArray((useLite ? seedLite : seedPro)?.dietaryRequirements)
+              ? (useLite ? seedLite : seedPro).dietaryRequirements
+              : [],
+            onboardPrefs: (useLite ? seedLite : seedPro)?.onboardPrefs && typeof (useLite ? seedLite : seedPro).onboardPrefs === 'object'
+              ? (useLite ? seedLite : seedPro).onboardPrefs
+              : {},
           });
+
+          const docSrc = seedLite;
           setDocFlags({
             ...DEFAULT_DOC_FLAGS,
-            ...(ps && typeof ps.docFlags === 'object' ? ps.docFlags : {}),
+            ...(docSrc && typeof docSrc.docFlags === 'object' ? docSrc.docFlags : {}),
           });
           setDocFlagsBaseline({
             ...DEFAULT_DOC_FLAGS,
-            ...(ps && typeof ps.docFlags === 'object' ? ps.docFlags : {}),
+            ...(docSrc && typeof docSrc.docFlags === 'object' ? docSrc.docFlags : {}),
           });
 
-          const lh = ps && typeof ps.lifestyleHabits === 'object' ? ps.lifestyleHabits : {};
+          const lh = docSrc && typeof docSrc.lifestyleHabits === 'object' ? docSrc.lifestyleHabits : {};
           setLifestyleHabits({
             tattoosVisible: lh.tattoosVisible || '',
             smoking: lh.smoking || '',
@@ -581,6 +598,15 @@ function buildFullPrefsSkillsPayload() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!profile) return;
+    if (profileMode === 'lite') {
+      applyLitePrefs(prefsLiteCache || {});
+    } else {
+      applyProPrefs(prefsProCache || {});
+    }
+  }, [profileMode, prefsLiteCache, prefsProCache, profile]);
 
   const mapDbVisibilityToUi = (v) => {
     const s = String(v || '').toLowerCase();
@@ -809,14 +835,7 @@ const generateShortHandle = () => {
     e.preventDefault();
     if (!profile?.id) return;
 
-    if (!primaryDepartment) {
-      toast.error('Please choose a department.');
-      return;
-    }
-    if (!primaryRank) {
-      toast.error('Please choose a primary rank.');
-      return;
-    }
+      // allow partial save even if minimums not met
     if (Array.isArray(targetRanks) && targetRanks.length > 3) {
       toast.error('You can select up to 3 target ranks.');
       return;
@@ -885,32 +904,33 @@ const generateShortHandle = () => {
     if (!canEdit) return;
     e.preventDefault();
     if (!profile?.id) return;
-
-  const payload = {
-    ...buildPrefsSkillsPayload({
-      status,
-      availability,
-      regionsSeasons,
-      contracts,
-      languageLevels,
-      deptSpecialties,
-      rateSalary,
-      rotation,
-      vesselTypes,
-      vesselSizeRange,
-      programTypes,
-      dietaryRequirements,
-      onboardPrefs,
-    }),
-    lifestyleHabits,
-  };
+  const payload = isLite
+    ? buildLitePrefsPayload()
+    : buildPrefsSkillsPayload({
+        regionsSeasons,
+        contracts,
+        rotation,
+        vesselTypes,
+        vesselSizeRange,
+        rateSalary,
+        programTypes,
+        dietaryRequirements,
+        onboardPrefs,
+      });
 
     setSaving(true);
     try {
-      const { data, error } = await supabase.rpc('rpc_save_prefs_skills', { payload });
+      const { data, error } = await supabase.rpc(
+        isLite ? 'rpc_save_prefs_skills_lite' : 'rpc_save_prefs_skills_pro',
+        { payload }
+      );
       if (error) throw error;
       const updated = Array.isArray(data) ? data[0] : null;
-      if (updated) setProfile(updated);
+      if (updated) {
+        setProfile(updated);
+        if (updated.prefs_skills_lite) setPrefsLiteCache(updated.prefs_skills_lite);
+        if (updated.prefs_skills_pro) setPrefsProCache(updated.prefs_skills_pro);
+      }
       setPrefsSkillsBaseline({
         status,
         availability,
@@ -1320,7 +1340,7 @@ const generateShortHandle = () => {
   const isProfessional = profileMode === 'professional';
   const showRequired = !isProfessional;
   const showOptional = !isLite;
-  const deptRanksSaveDisabled = saving || (showRequired && !hasDeptRanks) || !deptRanksDirty;
+  const deptRanksSaveDisabled = saving || !deptRanksDirty;
 
   const personalProgress = isLite
     ? {
@@ -1486,30 +1506,42 @@ const meetsPrefsMin =
     languageLevels.some((ll) => ll && ll.lang && ll.level)) &&
   (Array.isArray(deptSpecialties) && deptSpecialties.length > 0);
 
-  const prefsSkillsSaveDisabled = saving || (showRequired && !meetsPrefsMin) || !prefsSkillsDirty;
+  const prefsSkillsSaveDisabled = saving || !prefsSkillsDirty;
+
+  const liteSnapshot = isLite
+    ? {
+        status,
+        availability,
+        languageLevels,
+        deptSpecialties,
+        lifestyleHabits,
+        docFlags,
+      }
+    : (prefsLiteCache || {});
 
   const meetsLifestyleMin =
-  !!(lifestyleHabits?.tattoosVisible && String(lifestyleHabits.tattoosVisible).trim()) &&
-  Array.isArray(lifestyleHabits?.dietaryAllergies) && lifestyleHabits.dietaryAllergies.length > 0 &&
-  !!(lifestyleHabits?.fitness && String(lifestyleHabits.fitness).trim());
+  !!(liteSnapshot?.lifestyleHabits?.tattoosVisible && String(liteSnapshot.lifestyleHabits.tattoosVisible).trim()) &&
+  Array.isArray(liteSnapshot?.lifestyleHabits?.dietaryAllergies) && liteSnapshot.lifestyleHabits.dietaryAllergies.length > 0 &&
+  !!(liteSnapshot?.lifestyleHabits?.fitness && String(liteSnapshot.lifestyleHabits.fitness).trim());
 
-  const lifestyleSaveDisabled = saving || (showRequired && !meetsLifestyleMin) || !lifestyleDirty;
+  const lifestyleSaveDisabled = saving || !lifestyleDirty;
 
   const meetsMediaMin = Array.isArray(gallery) && gallery.length >= 3;
+  const gallerySaveDisabled = savingGallery || !galleryDirty || !canEdit;
 
   const meetsAboutMin = !!(profile?.about_me && String(profile.about_me).trim());
 
   const meetsPrefsSkillsMin =
-    !!(status && String(status).trim()) &&
-    !!(availability && String(availability).trim()) &&
-    hasLanguagesWithLevel(languageLevels) &&
-    hasDeptSkills(deptSpecialties);
+    !!(liteSnapshot?.status && String(liteSnapshot.status).trim()) &&
+    !!(liteSnapshot?.availability && String(liteSnapshot.availability).trim()) &&
+    hasLanguagesWithLevel(liteSnapshot?.languageLevels) &&
+    hasDeptSkills(liteSnapshot?.deptSpecialties);
 
   const meetsExperienceMin = Number(expCount || 0) >= 1;
 
   const meetsEducationMin = Number(educationCount || 0) >= 1;
 
-  const meetsDocumentsMin = docsMeetMin(docs) && allDocFlagsSelected(docFlags);
+  const meetsDocumentsMin = docsMeetMin(docs) && allDocFlagsSelected(liteSnapshot?.docFlags || {});
 
   const meetsReferencesMin = Number(refsCount || 0) >= 1;
 
@@ -1586,6 +1618,19 @@ const meetsPrefsMin =
           </div>
         </Modal>
       )}
+      {showUnlockModal && (
+        <Modal onClose={handleCloseUnlockModal}>
+          <div style={{ maxWidth: 520 }}>
+            <h3 style={{ marginTop: 0 }}>Complete Lite to unlock Professional</h3>
+            <p>
+              Professional mode is locked until your Lite profile is 100% complete.
+            </p>
+            <button className="landing-button" type="button" onClick={handleCloseUnlockModal}>
+              Got it
+            </button>
+          </div>
+        </Modal>
+      )}
       <div className={`candidate-profile-tab ${isLite ? 'cp-mode-lite' : 'cp-mode-professional'}${isAdminView ? ' cp-admin-view' : ''}`}>
         <h2>Candidate Profile</h2>
         {isAdminView && (
@@ -1609,8 +1654,14 @@ const meetsPrefsMin =
           role="tab"
           aria-selected={!isLite ? 'true' : 'false'}
           className={`cp-mode-tab ${!isLite ? 'active' : ''}`}
-          onClick={() => handleModeChange('professional')}
-          disabled={savingMode || (!isShareReady && !isAdminView)}
+          onClick={() => {
+            if (!isShareReady && !isAdminView) {
+              setShowUnlockModal(true);
+              return;
+            }
+            handleModeChange('professional');
+          }}
+          aria-disabled={savingMode || (!isShareReady && !isAdminView) ? 'true' : 'false'}
           title={!isShareReady ? 'Complete Lite before unlocking Professional' : undefined}
         >
           Professional
@@ -1724,13 +1775,9 @@ const meetsPrefsMin =
                   type="submit"
                   disabled={deptRanksSaveDisabled || !canEdit}
                   title={
-                    showRequired && !hasDeptRanks
-                      ? 'Please choose Primary department and Primary rank'
-                      : !deptRanksDirty
-                        ? 'No changes to save'
-                        : undefined
+                    !deptRanksDirty ? 'No changes to save' : undefined
                   }
-                  style={{ cursor: deptRanksSaveDisabled ? 'not-allowed' : 'pointer' }}
+                  style={{ cursor: (deptRanksSaveDisabled || !canEdit) ? 'not-allowed' : 'pointer' }}
                 >
                   Save
                 </button>
@@ -1809,13 +1856,9 @@ const meetsPrefsMin =
                   type="submit"
                   disabled={prefsSkillsSaveDisabled || !canEdit}
                   title={
-                    showRequired && !meetsPrefsMin
-                      ? 'Complete Status, Availability, at least one Language with proficiency and at least one Specific skill'
-                      : !prefsSkillsDirty
-                        ? 'No changes to save'
-                        : undefined
+                    !prefsSkillsDirty ? 'No changes to save' : undefined
                   }
-                  style={{ cursor: prefsSkillsSaveDisabled ? 'not-allowed' : 'pointer' }}
+                  style={{ cursor: (prefsSkillsSaveDisabled || !canEdit) ? 'not-allowed' : 'pointer' }}
                 >
                   Save
                 </button>
@@ -1840,13 +1883,9 @@ const meetsPrefsMin =
                   type="submit"
                   disabled={lifestyleSaveDisabled || !canEdit}
                   title={
-                    showRequired && !meetsLifestyleMin
-                      ? 'Complete: Visible tattoos, add at least one Dietary allergy (or “None”), and select Fitness / sport activity'
-                      : !lifestyleDirty
-                        ? 'No changes to save'
-                        : undefined
+                    !lifestyleDirty ? 'No changes to save' : undefined
                   }
-                  style={{ cursor: lifestyleSaveDisabled ? 'not-allowed' : 'pointer' }}
+                  style={{ cursor: (lifestyleSaveDisabled || !canEdit) ? 'not-allowed' : 'pointer' }}
                 >
                   Save
                 </button>
@@ -1909,15 +1948,13 @@ const meetsPrefsMin =
                 <button
                   type="button"
                   onClick={handleSaveGallery}
-                  disabled={savingGallery || !meetsPhotosImagesMin || !galleryDirty || !canEdit}
+                  disabled={gallerySaveDisabled}
                   title={
-                    !meetsPhotosImagesMin
-                      ? 'Add at least 3 images to enable Save'
-                      : !galleryDirty
+                    !galleryDirty
                         ? 'No changes to save'
                         : undefined
                   }
-                  style={{ cursor: savingGallery || !meetsPhotosImagesMin || !galleryDirty ? 'not-allowed' : 'pointer' }}
+                  style={{ cursor: gallerySaveDisabled ? 'not-allowed' : 'pointer' }}
                 >
                   Save
                 </button>

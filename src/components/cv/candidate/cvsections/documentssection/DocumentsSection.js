@@ -108,20 +108,17 @@ export default function DocumentsSection({
               readOnly ||
               !!savingDocFlags ||
               typeof onSaveDocFlags !== "function" ||
-              !allFlagsSelected ||
               !docFlagsDirty
             }
             aria-label="Save document flags"
             title={
-              !allFlagsSelected
-                ? "Complete all required fields (*) before saving"
-                : !docFlagsDirty
+              !docFlagsDirty
                 ? "No changes to save"
                 : undefined
             }
             style={{
               cursor:
-                savingDocFlags || !allFlagsSelected || !docFlagsDirty
+                readOnly || savingDocFlags || !docFlagsDirty
                   ? "not-allowed"
                   : "pointer",
             }}

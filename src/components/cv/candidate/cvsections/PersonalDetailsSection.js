@@ -274,20 +274,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
     e.preventDefault();
     if (!profile?.id) return;
 
-    // validaciones mínimas (mismo criterio que deshabilita el botón)
-    if (showRequired) {
-      if (!(firstName || '').trim()) return toast.error('First name is required');
-      if (!(lastName || '').trim())  return toast.error('Last name is required');
-      if (!isEmailValid) return toast.error('Valid email is required');
-      if (!hasPhoneCC || !hasPhoneNum) return toast.error('Mobile phone (country code and number) is required');
-      if (!country)  return toast.error('Current country is required');
-      if (!(cityPort || '').trim()) return toast.error('Current city / port is required');
-      if (!birthMonth) return toast.error('Birth month is required');
-      if (!birthYear)  return toast.error('Birth year is required');
-      if (!Array.isArray(nationalities) || nationalities.length === 0) {
-        return toast.error('At least one nationality is required');
-      }
-    }
+    // allow partial saves even if minimums not met
 
     const { cc: pcc, num: pnum } = normalizePhone(phoneCC, phoneNum);
     let wcc = waCC, wnum = waNum;
@@ -690,9 +677,9 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
       <div className="cp-actions" style={{ marginTop: 12 }}>
         <button
           type="submit"
-          disabled={readOnly || saving || !isSectionComplete || !isDirty}
+          disabled={readOnly || saving || !isDirty}
           title={!isDirty ? 'No changes to save' : undefined}
-          style={{ cursor: saving || !isSectionComplete || !isDirty ? 'not-allowed' : 'pointer' }}
+          style={{ cursor: saving || !isDirty ? 'not-allowed' : 'pointer' }}
         >
           Save
         </button>
