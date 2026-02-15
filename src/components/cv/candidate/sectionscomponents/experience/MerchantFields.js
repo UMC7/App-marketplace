@@ -156,12 +156,23 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
 
   if (!isActive) return null;
 
+  const missDept = !editing.department;
+  const missRole = !editing.role || (editing.role === 'Other' && !String(editing.role_other || '').trim());
+  const missVessel = !String(editing.vessel_or_employer || '').trim();
+  const missVesselType = !editing.vessel_type;
+  const missEmployer = !String(editing.employer_name || '').trim();
+  const missLength = !String(editing.loa_m || editing.length_m || '').trim();
+  const missStart = !String(editing.start_month || '').trim();
+  const missEnd = !editing.is_current && !String(editing.end_month || '').trim();
+  const missTerms = !String(editing.contract || '').trim();
+  const missRegions = !Array.isArray(editing.regionsArr) || editing.regionsArr.length === 0;
+
   if (isLite && !showAllFields) {
     return (
       <>
         {/* ROW A — Department, Rank (+other), Vessel, Vessel type */}
         <div className="cp-row-exp-a">
-          <div>
+          <div className={missDept ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Department')}</label>
             <select
               className="cp-input"
@@ -184,7 +195,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
             </select>
           </div>
 
-          <div>
+          <div className={missRole ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Rank')}</label>
             <select
               className="cp-input"
@@ -203,7 +214,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
             {String(editing.department).toLowerCase() === 'other' &&
               editing.role === 'Other' && (
                 <input
-                  className="cp-input"
+                  className={`cp-input ${missRole ? 'cp-missing-input' : ''}`}
                   style={{ marginTop: 8 }}
                   placeholder="Write your rank…"
                   value={editing.role_other || ''}
@@ -214,7 +225,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
               )}
           </div>
 
-          <div>
+          <div className={missVessel ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Vessel')}</label>
             <input
               className="cp-input"
@@ -226,7 +237,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
             />
           </div>
 
-          <div>
+          <div className={missVesselType ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Vessel type')}</label>
             <select
               className="cp-input"
@@ -246,7 +257,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
         </div>
 
         <div className="cp-row-exp-b" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-          <div>
+          <div className={missEmployer ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Company / Employer')}</label>
             <input
               className="cp-input"
@@ -258,7 +269,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
             />
           </div>
 
-          <div>
+          <div className={missLength ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Length (m)')}</label>
             <input
               className="cp-input"
@@ -275,7 +286,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
             />
           </div>
 
-          <div>
+          <div className={missStart ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Start date')}</label>
             <input
               className="cp-input"
@@ -294,7 +305,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
             />
           </div>
 
-          <div>
+          <div className={missEnd ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('End date')}</label>
             <input
               className="cp-input"
@@ -328,7 +339,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
         </div>
 
         <div className="cp-row-exp-c">
-          <div>
+          <div className={missTerms ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Terms')}</label>
             <select
               className="cp-input"
@@ -344,7 +355,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
             </select>
           </div>
 
-          <div>
+          <div className={missRegions ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Regions')}</label>
             <div className="cp-row-exp-c__regions">
               <select
@@ -462,7 +473,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
   return (
     <>
       <div className="cp-row-exp-a">
-        <div>
+        <div className={missDept ? 'cp-missing' : ''}>
           <label className="cp-label">{reqLabel('Department')}</label>
           <select
             className="cp-input"
@@ -485,7 +496,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
           </select>
         </div>
 
-        <div>
+        <div className={missRole ? 'cp-missing' : ''}>
           <label className="cp-label">{reqLabel('Rank')}</label>
           <select
             className="cp-input"
@@ -503,19 +514,19 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
 
           {String(editing.department).toLowerCase() === 'other' &&
             editing.role === 'Other' && (
-              <input
-                className="cp-input"
-                style={{ marginTop: 8 }}
-                placeholder="Write your rank…"
-                value={editing.role_other || ''}
-                onChange={(e) =>
-                  setEditing({ ...editing, role_other: e.target.value })
-                }
-              />
-            )}
+            <input
+              className={`cp-input ${missRole ? 'cp-missing-input' : ''}`}
+              style={{ marginTop: 8 }}
+              placeholder="Write your rank…"
+              value={editing.role_other || ''}
+              onChange={(e) =>
+                setEditing({ ...editing, role_other: e.target.value })
+              }
+            />
+          )}
         </div>
 
-        <div>
+        <div className={missVessel ? 'cp-missing' : ''}>
           <label className="cp-label">{reqLabel('Vessel')}</label>
           <input
             className="cp-input"
@@ -527,7 +538,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
           />
         </div>
 
-        <div>
+        <div className={missVesselType ? 'cp-missing' : ''}>
           <label className="cp-label">{reqLabel('Vessel type')}</label>
           <select
             className="cp-input"
@@ -547,7 +558,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
       </div>
 
       <div className="cp-row-exp-b" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-        <div>
+        <div className={missEmployer ? 'cp-missing' : ''}>
           <label className="cp-label">{reqLabel('Company / Employer')}</label>
           <input
             className="cp-input"
@@ -559,7 +570,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
           />
         </div>
 
-        <div>
+        <div className={missLength ? 'cp-missing' : ''}>
           <label className="cp-label">{reqLabel('Length (m)')}</label>
           <input
             className="cp-input"
@@ -576,7 +587,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
           />
         </div>
 
-        <div>
+        <div className={missStart ? 'cp-missing' : ''}>
           <label className="cp-label">{reqLabel('Start date')}</label>
           <input
             className="cp-input"
@@ -595,7 +606,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
           />
         </div>
 
-        <div>
+        <div className={missEnd ? 'cp-missing' : ''}>
           <label className="cp-label">{reqLabel('End date')}</label>
           <input
             className="cp-input"
@@ -629,7 +640,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
       </div>
 
       <div className="cp-row-exp-c">
-        <div>
+        <div className={missTerms ? 'cp-missing' : ''}>
           <label className="cp-label">{reqLabel('Terms')}</label>
           <select
             className="cp-input"
@@ -645,7 +656,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
           </select>
         </div>
 
-        <div>
+        <div className={missRegions ? 'cp-missing' : ''}>
           <label className="cp-label">{reqLabel('Regions')}</label>
           <div className="cp-row-exp-c__regions">
             <select

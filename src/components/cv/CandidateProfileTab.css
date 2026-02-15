@@ -239,6 +239,21 @@ body.dark-mode .candidate-profile-tab.cp-mode-lite{
   box-shadow: var(--focus);
 }
 
+/* Missing required fields */
+.cp-missing .cp-input,
+.cp-missing .cp-select,
+.cp-missing .cp-textarea,
+.cp-missing .input,
+.cp-missing-input,
+.cp-missing-input.cp-input,
+.cp-missing-input.cp-select,
+.cp-missing-input.cp-textarea,
+.cp-missing .dropzone,
+.dropzone.is-missing {
+  border-color: #e05252 !important;
+  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
+}
+
 .cp-label--disabled{
   color: var(--muted);
   opacity: .7;

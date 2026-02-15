@@ -66,6 +66,14 @@ export default function ShoreFields({ editing, setEditing, mode = 'professional'
   const optLabel = (text) => (showLiteLabels ? `${text} (Optional)` : text);
   if (!editing || editing.type !== 'shore') return null;
 
+  const missEmployer = !String(editing.vessel_or_employer || '').trim();
+  const missRole = !String(editing.role || '').trim();
+  const missContract = !String(editing.contract || '').trim();
+  const missIndustry = !String(editing.vessel_type || '').trim();
+  const missLocation = !String(editing.location_country || '').trim();
+  const missStart = !String(editing.start_month || '').trim();
+  const missEnd = !editing.is_current && !String(editing.end_month || '').trim();
+
   const remarksLen = (editing?.remarks || '').length;
   const remarksLabel = showLiteLabels
     ? `Remarks (${remarksLen}/200) (Optional)`
@@ -76,7 +84,7 @@ export default function ShoreFields({ editing, setEditing, mode = 'professional'
       {showRequired ? (
         <>
           <div className="cp-row-exp-a">
-            <div>
+            <div className={missEmployer ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('Employer / Company')}</label>
               <input
                 className="cp-input"
@@ -86,7 +94,7 @@ export default function ShoreFields({ editing, setEditing, mode = 'professional'
               />
             </div>
 
-            <div>
+            <div className={missRole ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('Role / Rank')}</label>
               <input
                 className="cp-input"
@@ -96,7 +104,7 @@ export default function ShoreFields({ editing, setEditing, mode = 'professional'
               />
             </div>
 
-            <div>
+            <div className={missContract ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('Contract')}</label>
               <select
                 className="cp-input"
@@ -110,7 +118,7 @@ export default function ShoreFields({ editing, setEditing, mode = 'professional'
               </select>
             </div>
 
-            <div>
+            <div className={missIndustry ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('Industry')}</label>
               <select
                 className="cp-input"
@@ -126,7 +134,7 @@ export default function ShoreFields({ editing, setEditing, mode = 'professional'
           </div>
 
           <div className="cp-row-exp-a">
-            <div>
+            <div className={missLocation ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('Location (country)')}</label>
               <select
                 className="cp-input"
@@ -140,7 +148,7 @@ export default function ShoreFields({ editing, setEditing, mode = 'professional'
               </select>
             </div>
 
-            <div>
+            <div className={missStart ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('Start date')}</label>
               <input
                 className="cp-input"
@@ -159,7 +167,7 @@ export default function ShoreFields({ editing, setEditing, mode = 'professional'
               />
             </div>
 
-            <div>
+            <div className={missEnd ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('End date')}</label>
               <input
                 className="cp-input"

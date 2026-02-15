@@ -114,7 +114,7 @@ export default function ReferencesEditor({
 
           <div className="list">
             {items.length === 0 && (
-              <div className="empty">No references yet.</div>
+              <div className={`empty ${mode === 'lite' ? 'cp-missing-input' : ''}`}>No references yet.</div>
             )}
             {items.map((it, i) => (
               <ReferenceCard
@@ -140,6 +140,9 @@ export default function ReferencesEditor({
           color:var(--muted);
           border-radius:12px;
           background: linear-gradient(180deg, var(--card), var(--card-2));
+          width: 100%;
+          box-sizing: border-box;
+          grid-column: 1 / -1;
         }
 
         /* Botones: heredan tokens del contenedor (light/dark) */

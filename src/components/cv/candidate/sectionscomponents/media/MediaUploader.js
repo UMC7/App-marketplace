@@ -6,6 +6,7 @@ export default function MediaUploader({
   onChange,
   onUpload,
   max = 9,
+  minPhotos = 3,
   accept = "image/*,video/*",
   showGrid = true,
 }) {
@@ -21,7 +22,9 @@ export default function MediaUploader({
   }, [value]);
 
   const countVideos = (arr) => (arr || []).filter((m) => m?.type === "video").length;
+  const countImages = (arr) => (arr || []).filter((m) => (m?.type || '') !== "video").length;
   const hasVideo = countVideos(items) > 0;
+  const missingMinPhotos = countImages(items) < minPhotos;
 
   const remaining = Math.max(0, max - items.length);
   const canAddMore = remaining > 0;
@@ -199,7 +202,7 @@ export default function MediaUploader({
       {/* Zona de subida */}
       <div
         ref={dropRef}
-        className={`dropzone ${!canAddMore ? "disabled" : ""}`}
+        className={`dropzone ${!canAddMore ? "disabled" : ""} ${missingMinPhotos ? "is-missing" : ""}`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}

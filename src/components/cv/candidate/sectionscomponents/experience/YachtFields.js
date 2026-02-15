@@ -97,6 +97,17 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
 
   if (!editing || editing.type !== 'yacht') return null;
 
+  const missDept = !editing.department;
+  const missRole = !editing.role || (editing.role === 'Other' && !String(editing.role_other || '').trim());
+  const missVessel = !String(editing.vessel_or_employer || '').trim();
+  const missVesselType = !editing.vessel_type;
+  const missLength = !String(editing.length_m || '').trim();
+  const missStart = !String(editing.start_month || '').trim();
+  const missEnd = !editing.is_current && !String(editing.end_month || '').trim();
+  const missUse = !String(editing.use || '').trim();
+  const missTerms = !String(editing.contract || '').trim();
+  const missRegions = !Array.isArray(editing.regionsArr) || editing.regionsArr.length === 0;
+
   const addRegion = () => {
     const r = regionPick;
     if (!r) return;
@@ -126,7 +137,7 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
     <>
       {showRequired ? (
         <div className="cp-row-exp-a">
-          <div>
+          <div className={missDept ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Department')}</label>
             <select
               className="cp-input"
@@ -147,7 +158,7 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
             </select>
           </div>
 
-          <div>
+          <div className={missRole ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Rank')}</label>
             <select
               className="cp-input"
@@ -164,7 +175,7 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
             {(['other', 'others'].includes(String(editing.department).toLowerCase())) &&
               editing.role === 'Other' && (
                 <input
-                  className="cp-input"
+                  className={`cp-input ${missRole ? 'cp-missing-input' : ''}`}
                   style={{ marginTop: 8 }}
                   placeholder="Write your rank…"
                   value={editing.role_other || ''}
@@ -173,7 +184,7 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
               )}
           </div>
 
-          <div>
+          <div className={missVessel ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Vessel')}</label>
             <input
               className="cp-input"
@@ -183,7 +194,7 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
             />
           </div>
 
-          <div>
+          <div className={missVesselType ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Vessel type')}</label>
             <select
               className="cp-input"
@@ -202,7 +213,7 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
       {showRequired ? (
         <div className="cp-row-exp-b cp-row-exp-b--yacht-req">
           <div className="cp-row-exp-b__req">
-            <div>
+            <div className={missLength ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('Length (m)')}</label>
               <input
                 className="cp-input"
@@ -213,7 +224,7 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
               />
             </div>
 
-            <div>
+            <div className={missStart ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('Start date')}</label>
               <input
                 className="cp-input"
@@ -232,7 +243,7 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
               />
             </div>
 
-            <div>
+            <div className={missEnd ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('End date')}</label>
               <input
                 className="cp-input"
@@ -263,7 +274,7 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
             </div>
           </div>
 
-          <div>
+          <div className={missUse ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Use')}</label>
             <select
               className="cp-input"
@@ -277,7 +288,7 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
             </select>
           </div>
 
-          <div>
+          <div className={missTerms ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Terms')}</label>
             <select
               className="cp-input"
@@ -295,7 +306,7 @@ export default function YachtFields({ editing, setEditing, mode = 'professional'
 
       {showRequired ? (
         <div className="cp-row-exp-c">
-          <div>
+          <div className={missRegions ? 'cp-missing' : ''}>
             <label className="cp-label">{reqLabel('Regions')}</label>
             <div className="cp-row-exp-c__regions">
               <select

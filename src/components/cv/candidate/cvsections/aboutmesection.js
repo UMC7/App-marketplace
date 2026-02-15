@@ -84,6 +84,7 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = '
           onChange={setAbout}
           showRequiredMark={!isLite}
           readOnly={readOnly}
+          isMissing={!readOnly && !(about || '').trim()}
         />
       ) : null}
       {showOptional ? (

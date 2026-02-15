@@ -149,15 +149,15 @@ export default function CandidateProfileTab({ adminUserId = null }) {
   });
 
 const DEFAULT_DOC_FLAGS = {
-  passport6m: null,
-  schengenVisa: null,
-  stcwBasic: null,
-  seamansBook: null,
-  eng1: null,
-  usVisa: null,
-  drivingLicense: null,
-  pdsd: null,
-  covidVaccine: null,
+  passport6m: false,
+  schengenVisa: false,
+  stcwBasic: false,
+  seamansBook: false,
+  eng1: false,
+  usVisa: false,
+  drivingLicense: false,
+  pdsd: false,
+  covidVaccine: false,
 };
 const [docFlags, setDocFlags] = useState({ ...DEFAULT_DOC_FLAGS });
 const [docFlagsBaseline, setDocFlagsBaseline] = useState({ ...DEFAULT_DOC_FLAGS });
@@ -208,6 +208,7 @@ function buildLitePrefsPayload() {
   const [savingGallery, setSavingGallery] = useState(false);
   const candidateProfileModalTimer = useRef(null);
   const [showCandidateProfileModal, setShowCandidateProfileModal] = useState(false);
+  const [needsDocFlagsSave, setNeedsDocFlagsSave] = useState(false);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
 
   function normalizeLanguageLevels(arr) {
@@ -534,6 +535,7 @@ function buildLitePrefsPayload() {
           });
 
           const docSrc = seedLite;
+          const hasDocFlagsInDb = !!(docSrc && typeof docSrc.docFlags === 'object');
           setDocFlags({
             ...DEFAULT_DOC_FLAGS,
             ...(docSrc && typeof docSrc.docFlags === 'object' ? docSrc.docFlags : {}),
@@ -542,6 +544,9 @@ function buildLitePrefsPayload() {
             ...DEFAULT_DOC_FLAGS,
             ...(docSrc && typeof docSrc.docFlags === 'object' ? docSrc.docFlags : {}),
           });
+          if (!hasDocFlagsInDb) {
+            setNeedsDocFlagsSave(true);
+          }
 
           const lh = docSrc && typeof docSrc.lifestyleHabits === 'object' ? docSrc.lifestyleHabits : {};
           setLifestyleHabits({
@@ -607,6 +612,28 @@ function buildLitePrefsPayload() {
       applyProPrefs(prefsProCache || {});
     }
   }, [profileMode, prefsLiteCache, prefsProCache, profile]);
+
+  useEffect(() => {
+    if (!needsDocFlagsSave) return;
+    if (isAdminView || !canEdit) return;
+    if (!profile?.id || savingDocFlags) return;
+    const payload = { docFlags: { ...DEFAULT_DOC_FLAGS, ...(docFlags || {}) } };
+    (async () => {
+      try {
+        setSavingDocFlags(true);
+        const { data, error } = await supabase.rpc('rpc_save_prefs_skills_lite', { payload });
+        if (error) throw error;
+        const updated = Array.isArray(data) ? data[0] : null;
+        if (updated?.prefs_skills_lite) setPrefsLiteCache(updated.prefs_skills_lite);
+        setDocFlagsBaseline(payload.docFlags);
+      } catch (_e) {
+        // keep silent; user can still manually save
+      } finally {
+        setSavingDocFlags(false);
+        setNeedsDocFlagsSave(false);
+      }
+    })();
+  }, [needsDocFlagsSave, isAdminView, canEdit, profile?.id, savingDocFlags, docFlags]);
 
   const mapDbVisibilityToUi = (v) => {
     const s = String(v || '').toLowerCase();

@@ -114,6 +114,7 @@ export default function DepartmentRankSection({
               value={currentDept || ""}
               onChange={emitDept}
               required={showRequiredMark}
+              className={!currentDept ? 'cp-missing' : ''}
             />
           </div>
 
@@ -123,6 +124,7 @@ export default function DepartmentRankSection({
               value={currentPrimaryRole || ""}
               onChange={emitPrimaryRole}
               required={showRequiredMark}
+              className={!currentPrimaryRole ? 'cp-missing' : ''}
             />
           </div>
         </div>

@@ -30,21 +30,24 @@ export default function DocumentsSection({
     (it) => typeof (docFlags?.[it.key]) === "boolean"
   );
 
-  const valOf = (v) => (v === true ? "yes" : v === false ? "no" : "");
+  const valOf = (v) => (v === true ? "yes" : "no");
   const parseVal = (s) => (s === "yes" ? true : s === "no" ? false : null);
 
   return (
     <>
       <header className="cv-section-head">
         {typeof onOpenManager === "function" ? (
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onOpenManager}
-            aria-label="Open Documents Manager"
-          >
-            Add Document
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onOpenManager}
+              aria-label="Open Documents Manager"
+            >
+              Add Document
+            </button>
+            <span className="cp-muted">Min 3 documents with file upload</span>
+          </div>
         ) : (
           <small className="cv-section-hint">
             {readOnly ? "Read-only view" : "Manager coming soon"}
@@ -89,7 +92,6 @@ export default function DocumentsSection({
               aria-label={it.label}
               aria-required="true"
             >
-              <option value="">Select...</option>
               <option value="yes">Yes</option>
               <option value="no">No</option>
             </select>
@@ -130,11 +132,11 @@ export default function DocumentsSection({
 
       <div className="cv-section-body">
         {docs.length === 0 ? (
-          <div className="cv-empty-state">
+          <div className={`cv-empty-state ${docs.length < 3 ? 'cp-missing-input' : ''}`}>
             <p>No documents yet.</p>
           </div>
         ) : (
-          <ul className="cv-docs-list">
+          <ul className={`cv-docs-list ${docs.length < 3 ? 'cp-missing-input' : ''}`}>
             {docs.map((d) => {
               const issued = d.issuedOn ? safeDate(d.issuedOn) : null;
               const expires = d.expiresOn ? safeDate(d.expiresOn) : null;

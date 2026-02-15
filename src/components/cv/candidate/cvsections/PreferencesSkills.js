@@ -106,6 +106,19 @@ export default function PreferencesSkills({
   const isLite = mode === 'lite';
   const isProfessional = mode === 'professional';
 
+  const hasLanguagesWithLevel = (arr) =>
+    Array.isArray(arr) && arr.some((ll) => ll && ll.lang && String(ll.lang).trim() && ll.level && String(ll.level).trim());
+
+  const hasDeptSkills = (arr) =>
+    Array.isArray(arr) && arr.some((it) => {
+      if (!it) return false;
+      if (typeof it === 'string') return String(it).trim().length > 0;
+      const deptOk = !!(it.department || it.dept || it.name);
+      const skillsArr = it.skills || it.items || it.list || [];
+      const skillsOk = Array.isArray(skillsArr) ? skillsArr.length > 0 : false;
+      return deptOk && skillsOk;
+    });
+
   const twoCol = {
     display: 'grid',
     gap: 12,
@@ -113,6 +126,10 @@ export default function PreferencesSkills({
   };
 
   if (isLite) {
+    const missStatus = !(status && String(status).trim());
+    const missAvailability = !(availability && String(availability).trim());
+    const missLang = !hasLanguagesWithLevel(languageLevels);
+    const missSkills = !hasDeptSkills(deptSpecialties);
     return (
       <div className="cp-form">
         <div style={twoCol}>
@@ -123,23 +140,31 @@ export default function PreferencesSkills({
               gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
             }}
           >
-            <StatusPicker value={status} onChange={onChangeStatus} showRequiredMark={false} />
-            <AvailabilityPicker value={availability} onChange={onChangeAvailability} showRequiredMark={false} />
+            <div className={missStatus ? 'cp-missing' : ''}>
+              <StatusPicker value={status} onChange={onChangeStatus} showRequiredMark={false} />
+            </div>
+            <div className={missAvailability ? 'cp-missing' : ''}>
+              <AvailabilityPicker value={availability} onChange={onChangeAvailability} showRequiredMark={false} />
+            </div>
           </div>
         </div>
 
         <div style={twoCol}>
-          <LanguageProficiencyPicker
-            value={languageLevels}
-            onChange={onChangeLanguageLevels}
-            showRequiredMark={false}
-          />
-          <DepartmentSpecialtiesInput
-            value={deptSpecialties}
-            onChange={onChangeDeptSpecialties}
-            showRequiredMark={false}
-            isMobile={isMobile}
-          />
+          <div className={missLang ? 'cp-missing' : ''}>
+            <LanguageProficiencyPicker
+              value={languageLevels}
+              onChange={onChangeLanguageLevels}
+              showRequiredMark={false}
+            />
+          </div>
+          <div className={missSkills ? 'cp-missing' : ''}>
+            <DepartmentSpecialtiesInput
+              value={deptSpecialties}
+              onChange={onChangeDeptSpecialties}
+              showRequiredMark={false}
+              isMobile={isMobile}
+            />
+          </div>
         </div>
       </div>
     );

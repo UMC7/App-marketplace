@@ -43,10 +43,10 @@ const ALLERGIES = [
   'Gluten',
 ];
 
-function SelectField({ label, options, value, onChange }) {
+function SelectField({ label, options, value, onChange, className = '' }) {
   const opts = useMemo(() => options || [], [options]);
   return (
-    <div className="lh-field">
+    <div className={`lh-field ${className}`}>
       <label className="cp-label">{label}</label>
       <select
         className="cp-select cp-input"
@@ -81,6 +81,9 @@ export default function LifestyleHabitsSection({ value, onChange, mode = 'profes
   };
 
   const setField = (k) => (next) => onChange({ ...v, [k]: next });
+  const missTattoos = showRequired && !(v.tattoosVisible || '').trim();
+  const missAllergies = showRequired && (!Array.isArray(v.dietaryAllergies) || v.dietaryAllergies.length === 0);
+  const missFitness = showRequired && !(v.fitness || '').trim();
 
   // Asignar valores por defecto si los campos están vacíos
   useEffect(() => {
@@ -129,6 +132,7 @@ export default function LifestyleHabitsSection({ value, onChange, mode = 'profes
             options={TATTOOS}
             value={v.tattoosVisible}
             onChange={setField('tattoosVisible')}
+            className={missTattoos ? 'cp-missing' : ''}
           />
         ) : null}
 
@@ -158,7 +162,7 @@ export default function LifestyleHabitsSection({ value, onChange, mode = 'profes
         ) : null}
 
         {showRequired ? (
-          <div className="lh-field">
+          <div className={`lh-field ${missAllergies ? 'cp-missing' : ''}`}>
             <label className="cp-label">{reqLabel('Dietary allergies')}</label>
             <div className="lh-allergies-controls">
               <select
@@ -202,6 +206,7 @@ export default function LifestyleHabitsSection({ value, onChange, mode = 'profes
             options={FITNESS}
             value={v.fitness}
             onChange={setField('fitness')}
+            className={missFitness ? 'cp-missing' : ''}
           />
         ) : null}
       </div>

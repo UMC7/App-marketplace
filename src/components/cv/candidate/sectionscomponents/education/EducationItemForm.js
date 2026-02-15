@@ -105,6 +105,17 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel, sh
     );
   }, [institution, program, levelType, country, startMonth, startYear, endMonth, endYear, current]);
 
+  const miss = {
+    institution: !institution.trim(),
+    program: !program.trim(),
+    levelType: !levelType.trim(),
+    country: !country.trim(),
+    startMonth: !startMonth,
+    startYear: !startYear,
+    endMonth: !current && !endMonth,
+    endYear: !current && !endYear,
+  };
+
   function handleSubmit(ev) {
     ev.preventDefault();
     if (!validate()) return;
@@ -126,7 +137,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel, sh
   return (
     <form className="cv-form education-form cp-form" onSubmit={handleSubmit} noValidate>
       <div className="cp-grid cp-grid-2 education-form-grid">
-        <div className="field">
+        <div className={`field ${miss.institution ? 'cp-missing' : ''}`}>
           <label className="cp-label">{reqLabel('Institution')}</label>
           <input
             className="cp-input"
@@ -138,7 +149,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel, sh
           {errors.institution && <p className="field-error">{errors.institution}</p>}
         </div>
 
-        <div className="field">
+        <div className={`field ${miss.program ? 'cp-missing' : ''}`}>
           <label className="cp-label">{reqLabel('Program / Degree')}</label>
           <input
             className="cp-input"
@@ -150,7 +161,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel, sh
           {errors.program && <p className="field-error">{errors.program}</p>}
         </div>
 
-        <div className="field">
+        <div className={`field ${miss.levelType ? 'cp-missing' : ''}`}>
           <label className="cp-label">{reqLabel('Level / Type')}</label>
           <select
             className="cp-select"
@@ -167,7 +178,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel, sh
           {errors.levelType && <p className="field-error">{errors.levelType}</p>}
         </div>
 
-        <div className="field">
+        <div className={`field ${miss.country ? 'cp-missing' : ''}`}>
           <label className="cp-label">{reqLabel('Country')}</label>
           <select
             className="cp-select"
@@ -184,7 +195,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel, sh
           {errors.country && <p className="field-error">{errors.country}</p>}
         </div>
 
-        <div className="field">
+        <div className={`field ${miss.startMonth || miss.startYear ? 'cp-missing' : ''}`}>
           <label className="cp-label">{reqLabel('Start')}</label>
           <div className="cp-grid cp-grid-2">
             <select
@@ -219,7 +230,7 @@ export default function EducationItemForm({ initialValue, onSubmit, onCancel, sh
           )}
         </div>
 
-        <div className="field">
+        <div className={`field ${miss.endMonth || miss.endYear ? 'cp-missing' : ''}`}>
           <label className="cp-label">{reqLabel('End')}</label>
           <div className="cp-grid cp-grid-2">
             <select

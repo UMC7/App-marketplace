@@ -267,6 +267,19 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
     birthYear,
     nationalities,
   ]);
+
+  const miss = {
+    firstName: showRequired && !(firstName || '').trim(),
+    lastName: showRequired && !(lastName || '').trim(),
+    email: showRequired && !isEmailValid,
+    phoneCC: showRequired && !hasPhoneCC,
+    phoneNum: showRequired && !hasPhoneNum,
+    country: showRequired && !country,
+    cityPort: showRequired && !(cityPort || '').trim(),
+    birthMonth: showRequired && !birthMonth,
+    birthYear: showRequired && !birthYear,
+    nationalities: showRequired && (!Array.isArray(nationalities) || nationalities.length === 0),
+  };
   // ────────────────────────────────────────────────────────────────────────────
 
   async function save(e) {
@@ -366,7 +379,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
       <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0 }}>
       {showRequired ? (
         <div className="cp-row-personal-1">
-          <div>
+          <div className={miss.firstName ? 'cp-missing' : ''}>
             <label className="cp-label" htmlFor="pd-first-name">
               First name {showRequiredMark ? <span aria-hidden="true">*</span> : null}
             </label>
@@ -379,7 +392,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
             />
           </div>
 
-          <div>
+          <div className={miss.lastName ? 'cp-missing' : ''}>
             <label className="cp-label" htmlFor="pd-last-name">
               Last name {showRequiredMark ? <span aria-hidden="true">*</span> : null}
             </label>
@@ -392,7 +405,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
             />
           </div>
 
-          <div>
+          <div className={miss.email ? 'cp-missing' : ''}>
             <label className="cp-label" htmlFor="pd-email">
               Email {showRequiredMark ? <span aria-hidden="true">*</span> : null}
             </label>
@@ -415,7 +428,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
             <div className="cp-personal-phone">
               <div className="cp-phone-block">
                 <div className="cp-right-phone-row cp-right-phone-row--inline">
-                <div className="cp-cell-cc">
+                <div className={`cp-cell-cc ${miss.phoneCC ? 'cp-missing' : ''}`}>
                   <label className="cp-label cp-nowrap" htmlFor="pd-phone-cc">
                     Mobile <span className="cp-cc-sub">(code) {showRequiredMark ? <span aria-hidden="true">*</span> : null}</span>
                   </label>
@@ -433,7 +446,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
                   </div>
                 </div>
 
-                <div className="cp-cell-num">
+                <div className={`cp-cell-num ${miss.phoneNum ? 'cp-missing' : ''}`}>
                   <label className="cp-label" htmlFor="pd-phone-num">
                     Number {showRequiredMark ? <span aria-hidden="true">*</span> : null}
                   </label>
@@ -479,7 +492,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
 
             <div className="cp-personal-birth">
               <div className="cp-birth-block">
-                <div>
+                <div className={miss.birthMonth ? 'cp-missing' : ''}>
                   <label className="cp-label" htmlFor="pd-birth-month">
                     Birth month {showRequiredMark ? <span aria-hidden="true">*</span> : null}
                   </label>
@@ -499,7 +512,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
                   </select>
                 </div>
 
-                <div>
+                <div className={miss.birthYear ? 'cp-missing' : ''}>
                   <label className="cp-label" htmlFor="pd-birth-year">
                     Birth year {showRequiredMark ? <span aria-hidden="true">*</span> : null}
                   </label>
@@ -530,7 +543,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
       {showRequired ? (
         <>
           <div className="cp-row-personal-3">
-            <div>
+            <div className={miss.country ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('Current country')}</label>
               <select
                 className="cp-input"
@@ -544,7 +557,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
               </select>
             </div>
 
-            <div>
+            <div className={miss.cityPort ? 'cp-missing' : ''}>
               <label className="cp-label">{reqLabel('Current city / port')}</label>
               <input
                 className="cp-input"
@@ -554,7 +567,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
               />
             </div>
 
-            <div>
+            <div className={miss.nationalities ? 'cp-missing' : ''}>
               <label className="cp-label" htmlFor="pd-nat-select">
                 Nationalities {showRequiredMark ? <span aria-hidden="true">*</span> : null}
               </label>

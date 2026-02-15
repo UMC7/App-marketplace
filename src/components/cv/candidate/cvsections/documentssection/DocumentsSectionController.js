@@ -7,15 +7,15 @@ import { toast } from "react-toastify";
 import "../../../../../styles/cv/docs.css";
 
 const DEFAULT_DOC_FLAGS = {
-  passport6m: null,
-  schengenVisa: null,
-  stcwBasic: null,
-  seamansBook: null,
-  eng1: null,
-  usVisa: null,
-  drivingLicense: null,
-  pdsd: null,
-  covidVaccine: null,
+  passport6m: false,
+  schengenVisa: false,
+  stcwBasic: false,
+  seamansBook: false,
+  eng1: false,
+  usVisa: false,
+  drivingLicense: false,
+  pdsd: false,
+  covidVaccine: false,
 };
 
 export default function DocumentsSectionController({
