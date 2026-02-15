@@ -6,7 +6,12 @@ import { toast } from 'react-toastify';
 import EducationItemCard from '../sectionscomponents/education/EducationItemCard';
 import EducationItemForm from '../sectionscomponents/education/EducationItemForm';
 
-export default function EducationSection({ userId: userIdProp, showRequiredMark = true, mode = 'professional' }) {
+export default function EducationSection({
+  userId: userIdProp,
+  showRequiredMark = true,
+  mode = 'professional',
+  readOnly = false,
+}) {
   const [userId, setUserId] = useState(userIdProp || null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +77,7 @@ export default function EducationSection({ userId: userIdProp, showRequiredMark 
   }, [userId]);
 
   async function createItem(payload) {
+    if (readOnly) return;
     const insert = {
       user_id: userId,
       institution: payload.institution,
@@ -102,6 +108,7 @@ export default function EducationSection({ userId: userIdProp, showRequiredMark 
   }
 
   async function updateItem(id, payload) {
+    if (readOnly) return;
     const update = {
       institution: payload.institution,
       program: payload.program,
@@ -133,6 +140,7 @@ export default function EducationSection({ userId: userIdProp, showRequiredMark 
   }
 
   async function deleteItem(id) {
+    if (readOnly) return;
     const { error } = await supabase
       .from('cv_education')
       .delete()
@@ -151,7 +159,7 @@ export default function EducationSection({ userId: userIdProp, showRequiredMark 
     <>
       {/* Barra de acción superior */}
       <div className="cp-actions" style={{ marginBottom: 8 }}>
-        {!creating && !editing && (
+        {!creating && !editing && !readOnly && (
           <>
             <button type="button" className="cp-btn-add" onClick={() => setCreating(true)}>
               + Add education
@@ -166,7 +174,7 @@ export default function EducationSection({ userId: userIdProp, showRequiredMark 
       </div>
 
       {/* Crear (sin título interno) */}
-      {creating && (
+      {!readOnly && creating && (
         <div style={formWrapperStyle}>
           <EducationItemForm
             onSubmit={(p) => createItem(p)}
@@ -177,7 +185,7 @@ export default function EducationSection({ userId: userIdProp, showRequiredMark 
       )}
 
       {/* Editar (sin título interno) */}
-      {editing && (
+      {!readOnly && editing && (
         <div style={formWrapperStyle}>
           <EducationItemForm
             initialValue={{
@@ -218,8 +226,8 @@ export default function EducationSection({ userId: userIdProp, showRequiredMark 
                 endYear: it.end_year,
                 current: it.current,
               }}
-              onEdit={() => setEditing(it)}
-              onDelete={() => deleteItem(it.id)}
+              onEdit={readOnly ? undefined : () => setEditing(it)}
+              onDelete={readOnly ? undefined : () => deleteItem(it.id)}
             />
           ))}
         </>

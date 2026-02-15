@@ -62,6 +62,7 @@ export default function EducationItemCard({ item, onEdit, onDelete }) {
           className="btn"
           style={{ width: '100%' }}
           onClick={() => onEdit && onEdit(item)}
+          disabled={!onEdit}
           aria-label="Edit education item"
         >
           Edit
@@ -71,6 +72,7 @@ export default function EducationItemCard({ item, onEdit, onDelete }) {
           type="button"
           className="btn small danger"
           onClick={() => onDelete && onDelete(item)}
+          disabled={!onDelete}
           aria-label="Delete education item"
         >
           Delete

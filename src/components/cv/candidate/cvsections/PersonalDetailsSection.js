@@ -19,7 +19,7 @@ import {
   NATIONALITIES,
 } from '../sectionscomponents/personal';
 
-export default function PersonalDetailsSection({ profile, onSaved, mode = 'professional' }) {
+export default function PersonalDetailsSection({ profile, onSaved, mode = 'professional', readOnly = false }) {
   const [saving, setSaving] = useState(false);
   const [baseline, setBaseline] = useState(null);
   const isLite = mode === 'lite';
@@ -270,6 +270,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
   // ────────────────────────────────────────────────────────────────────────────
 
   async function save(e) {
+    if (readOnly) return;
     e.preventDefault();
     if (!profile?.id) return;
 
@@ -375,6 +376,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
 
   return (
     <form onSubmit={save} className="cp-form">
+      <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0 }}>
       {showRequired ? (
         <div className="cp-row-personal-1">
           <div>
@@ -688,13 +690,14 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
       <div className="cp-actions" style={{ marginTop: 12 }}>
         <button
           type="submit"
-          disabled={saving || !isSectionComplete || !isDirty}
+          disabled={readOnly || saving || !isSectionComplete || !isDirty}
           title={!isDirty ? 'No changes to save' : undefined}
           style={{ cursor: saving || !isSectionComplete || !isDirty ? 'not-allowed' : 'pointer' }}
         >
           Save
         </button>
       </div>
+      </fieldset>
     </form>
   );
 }

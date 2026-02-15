@@ -1,10 +1,12 @@
 // src/pages/tabs/UsersTab.js
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabase';
 import Modal from '../../components/Modal';
 
 // Recibe currentUser como prop o usa tu contexto
 function UsersTab({ currentUser }) {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
@@ -180,6 +182,9 @@ function UsersTab({ currentUser }) {
           style={{ width: 240, padding: 6 }}
         />
       </div>
+      <div style={{ marginBottom: 12, fontSize: 14 }}>
+        Selected user: {selectedUserId ? selectedUserId : 'None'}
+      </div>
 
       {loading && <p>Loading users...</p>}
       <table className="admin-table">
@@ -190,6 +195,7 @@ function UsersTab({ currentUser }) {
               <th key={col}>{col}</th>
             ))}
             <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -240,6 +246,25 @@ function UsersTab({ currentUser }) {
                 ) : (
                   <span style={{ color: '#237b23', fontWeight: 'bold' }}>Active</span>
                 )}
+              </td>
+              <td>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRowClick(user.id);
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid #444',
+                    background: user.id === selectedUserId ? '#444' : 'transparent',
+                    color: user.id === selectedUserId ? '#fff' : 'inherit',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {user.id === selectedUserId ? 'Selected' : 'Select'}
+                </button>
               </td>
             </tr>
           ))}
@@ -309,6 +334,13 @@ function UsersTab({ currentUser }) {
           disabled={!selectedUserId}
         >
           Edit
+        </button>
+        <button
+          className="admin-action-button"
+          onClick={() => navigate(`/admin/candidate/${selectedUserId}`)}
+          disabled={!selectedUserId}
+        >
+          View Candidate Profile
         </button>
         <button
           className="admin-action-button admin-action-delete"

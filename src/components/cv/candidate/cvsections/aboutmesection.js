@@ -5,7 +5,7 @@ import SectionCard from "../sectionscomponents/aboutme/SectionCard";
 import AboutMeEditor from "../sectionscomponents/aboutme/AboutMeEditor";
 import ProfessionalStatementEditor from "../sectionscomponents/aboutme/ProfessionalStatementEditor";
 
-export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = 'professional' }) {
+export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = 'professional', readOnly = false }) {
   const isLite = mode === 'lite';
   const isProfessional = mode === 'professional';
   const showRequired = !isProfessional;
@@ -44,6 +44,7 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = '
   const canSave = dirty && (showRequired ? (about || "").trim().length > 0 : true);
 
   const handleSave = async () => {
+    if (readOnly) return;
     if (!canSave || saving) return;
 
     const payload = {
@@ -86,17 +87,18 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = '
           value={about}
           onChange={setAbout}
           showRequiredMark={!isLite}
+          readOnly={readOnly}
         />
       ) : null}
       {showOptional ? (
-        <ProfessionalStatementEditor value={statement} onChange={setStatement} />
+        <ProfessionalStatementEditor value={statement} onChange={setStatement} readOnly={readOnly} />
       ) : null}
 
       <div className="section-actions" style={{ marginTop: 16 }}>
         <button
           type="button"
           className="btn btn-primary"
-          disabled={!canSave || saving}
+          disabled={readOnly || !canSave || saving}
           onClick={handleSave}
         >
           {saving ? "Saving..." : "Save"}

@@ -12,6 +12,7 @@ export default function DocumentsSection({
   onSaveDocFlags,
   savingDocFlags,
   docFlagsDirty = true,
+  readOnly = false,
 }) {
   const quickItems = [
     { key: "passport6m",     label: "Passport >6 months" },
@@ -45,7 +46,9 @@ export default function DocumentsSection({
             Add Document
           </button>
         ) : (
-          <small className="cv-section-hint">Manager coming soon</small>
+          <small className="cv-section-hint">
+            {readOnly ? "Read-only view" : "Manager coming soon"}
+          </small>
         )}
       </header>
 
@@ -75,6 +78,7 @@ export default function DocumentsSection({
                   ? onChangeDocFlag(it.key, parseVal(e.target.value))
                   : undefined
               }
+              disabled={readOnly}
               style={{
                 minWidth: 120,
                 padding: "6px 8px",
@@ -101,6 +105,7 @@ export default function DocumentsSection({
             className="btn btn-secondary"
             onClick={onSaveDocFlags}
             disabled={
+              readOnly ||
               !!savingDocFlags ||
               typeof onSaveDocFlags !== "function" ||
               !allFlagsSelected ||
@@ -175,6 +180,7 @@ export default function DocumentsSection({
                           : undefined
                       }
                       aria-label={`Edit ${d.title || "document"}`}
+                      disabled={readOnly}
                     >
                       Edit
                     </button>
@@ -186,7 +192,7 @@ export default function DocumentsSection({
                       onClick={() =>
                         typeof onDeleteDoc === "function" ? onDeleteDoc(d) : undefined
                       }
-                      disabled={!onDeleteDoc || String(busyId || "") === String(d.id)}
+                      disabled={readOnly || !onDeleteDoc || String(busyId || "") === String(d.id)}
                       aria-label={`Delete ${d.title || "document"}`}
                     >
                       {String(busyId || "") === String(d.id) ? "Deleting…" : "Delete"}

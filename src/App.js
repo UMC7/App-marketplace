@@ -32,6 +32,7 @@ import YachtWorksPage from './pages/YachtWorksPage';
 import EventsPage from './pages/EventsPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import AdminPanel from './admin/AdminPanel';
+import AdminCandidateProfilePage from './admin/AdminCandidateProfilePage';
 import LegalPage from './pages/legal/LegalPage';
 import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage';
 import ExternalChatPage from './pages/ExternalChatPage';
@@ -158,8 +159,16 @@ function AppRoutes({ currentUser }) {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute adminOnly>
                 <AdminPanel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/candidate/:userId"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminCandidateProfilePage />
               </ProtectedRoute>
             }
           />

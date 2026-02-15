@@ -11,6 +11,7 @@ export default function ReferencesEditor({
   onDelete,
   showRequiredMark = true,
   mode = 'professional',
+  readOnly = false,
 }) {
   const [items, setItems] = useState(Array.isArray(value) ? value : []);
   const [editingIndex, setEditingIndex] = useState(-1);
@@ -26,15 +27,22 @@ export default function ReferencesEditor({
   };
 
   const canAdd = useMemo(
-    () => items.length < max && editingIndex === -1,
-    [items, max, editingIndex]
+    () => !readOnly && items.length < max && editingIndex === -1,
+    [items, max, editingIndex, readOnly]
   );
 
-  const handleAdd = () => setEditingIndex(items.length);
-  const handleEdit = (i) => setEditingIndex(i);
+  const handleAdd = () => {
+    if (readOnly) return;
+    setEditingIndex(items.length);
+  };
+  const handleEdit = (i) => {
+    if (readOnly) return;
+    setEditingIndex(i);
+  };
   const handleCancel = () => setEditingIndex(-1);
 
   const handleSave = async (refObj) => {
+    if (readOnly) return;
     let persisted = refObj;
 
     if (typeof onUpsert === "function") {
@@ -61,6 +69,7 @@ export default function ReferencesEditor({
   };
 
   const handleDelete = async (i) => {
+    if (readOnly) return;
     const target = items[i];
     if (!target) return;
 
@@ -83,7 +92,7 @@ export default function ReferencesEditor({
 
   return (
     <div className="cv-ref-editor">
-      {editingIndex !== -1 ? (
+      {!readOnly && editingIndex !== -1 ? (
         <ReferenceForm
           initialValue={items[editingIndex]}
           onCancel={handleCancel}
@@ -111,8 +120,8 @@ export default function ReferencesEditor({
               <ReferenceCard
                 key={i}
                 item={it}
-                onEdit={() => handleEdit(i)}
-                onDelete={() => handleDelete(i)}
+                onEdit={readOnly ? undefined : () => handleEdit(i)}
+                onDelete={readOnly ? undefined : () => handleDelete(i)}
               />
             ))}
           </div>

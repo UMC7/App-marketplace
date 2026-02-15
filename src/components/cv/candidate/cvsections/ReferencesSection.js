@@ -17,6 +17,7 @@ export default function ReferencesSection({
   profileId,          // <- opcional: si viene, cargamos/guardamos en DB
   onCountChange,      // <- opcional: notificación de cantidad actual
   showRequiredMark = true,
+  readOnly = false,
 }) {
   const [local, setLocal] = useState(Array.isArray(value) ? value : []);
   const controlled = typeof onChange === "function";
@@ -108,6 +109,7 @@ export default function ReferencesSection({
       onDelete={enablePersistence ? handleDelete : undefined}
       showRequiredMark={showRequiredMark}
       mode={mode}
+      readOnly={readOnly}
     />
   );
 }

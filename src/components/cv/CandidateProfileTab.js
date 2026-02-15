@@ -85,14 +85,17 @@ function personalMeetsMin(p) {
 const CANDIDATE_PROFILE_MODAL_KEY = 'seajobs_candidate_profile_modal_seen';
 const CANDIDATE_PROFILE_MODAL_DELAY_MS = 5000;
 
-export default function CandidateProfileTab() {
+export default function CandidateProfileTab({ adminUserId = null }) {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const isAdminView = !!adminUserId;
+  const canEdit = !isAdminView;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState('');
-  const [profileMode, setProfileMode] = useState('professional');
+  const [targetUser, setTargetUser] = useState(null);
+  const [profileMode, setProfileMode] = useState('lite');
   const [savingMode, setSavingMode] = useState(false);
   const [headline, setHeadline] = useState('');
   const [summary, setSummary] = useState('');
@@ -215,13 +218,16 @@ function buildFullPrefsSkillsPayload() {
   const [showCandidateProfileModal, setShowCandidateProfileModal] = useState(false);
 
   useEffect(() => {
-    const mode = currentUser?.app_metadata?.cv_mode;
+    const mode = isAdminView
+      ? String(targetUser?.cv_mode || '').toLowerCase()
+      : currentUser?.app_metadata?.cv_mode;
     if (mode === 'lite' || mode === 'professional') {
       setProfileMode(mode);
     }
-  }, [currentUser?.app_metadata?.cv_mode]);
+  }, [isAdminView, targetUser?.cv_mode, currentUser?.app_metadata?.cv_mode]);
 
   useEffect(() => {
+    if (isAdminView) return;
     try {
       const seen = localStorage.getItem(CANDIDATE_PROFILE_MODAL_KEY);
       if (seen) {
@@ -259,6 +265,10 @@ function buildFullPrefsSkillsPayload() {
 
   const handleModeChange = async (nextMode) => {
     if (!nextMode || nextMode === profileMode) return;
+    if (isAdminView) {
+      setProfileMode(nextMode);
+      return;
+    }
     if (nextMode === 'professional' && !isShareReady) return;
     const prev = profileMode;
     setProfileMode(nextMode);
@@ -279,6 +289,7 @@ function buildFullPrefsSkillsPayload() {
   };
 
   const handleSaveDocFlags = async () => {
+  if (!canEdit) return;
   if (!profile?.id) return;
   setSavingDocFlags(true);
   try {
@@ -377,8 +388,27 @@ function buildFullPrefsSkillsPayload() {
       setLoading(true);
       setError('');
       try {
-        const { data, error } = await supabase.rpc('rpc_create_or_get_profile');
+        if (isAdminView && !adminUserId) {
+          throw new Error('Missing admin target user id.');
+        }
+
+        if (isAdminView) {
+          const { data: userRow, error: uErr } = await supabase
+            .from('users')
+            .select('id, cv_mode, is_candidate, first_name, last_name, email')
+            .eq('id', adminUserId)
+            .single();
+          if (uErr) throw uErr;
+          if (!cancelled) setTargetUser(userRow || null);
+        }
+
+        const { data, error } = isAdminView
+          ? await supabase.rpc('rpc_get_profile_for_admin', { target_user_id: adminUserId })
+          : await supabase.rpc('rpc_create_or_get_profile');
         if (error) throw error;
+        if (isAdminView && !data?.id) {
+          throw new Error('Profile not found.');
+        }
 
         const rawGallery = Array.isArray(data?.gallery) ? data.gallery : [];
         const hydratedGallery = await hydrateGallery(rawGallery);
@@ -693,7 +723,8 @@ const generateShortHandle = () => {
 };
 
   const handleRotate = async () => {
-  if (!profile?.id) return;
+    if (!canEdit) return;
+    if (!profile?.id) return;
 
   const ok = window.confirm(
     'Rotate link?\nYour current CV link will stop working and a new one will be generated.'
@@ -734,6 +765,7 @@ const generateShortHandle = () => {
 };
 
   const handleSavePersonal = async (e) => {
+    if (!canEdit) return;
     e.preventDefault();
     if (!profile?.id) return;
 
@@ -773,6 +805,7 @@ const generateShortHandle = () => {
   };
 
   const handleSaveDeptRanks = async (e) => {
+    if (!canEdit) return;
     e.preventDefault();
     if (!profile?.id) return;
 
@@ -821,6 +854,7 @@ const generateShortHandle = () => {
   };
 
   const handleSaveBasics = async (e) => {
+    if (!canEdit) return;
     e.preventDefault();
     if (!profile?.id) return;
 
@@ -848,6 +882,7 @@ const generateShortHandle = () => {
   };
 
   const handleSaveDetails = async (e) => {
+    if (!canEdit) return;
     e.preventDefault();
     if (!profile?.id) return;
 
@@ -948,6 +983,7 @@ const generateShortHandle = () => {
   };
 
   const handleSaveAbout = async ({ about_me, professional_statement }) => {
+    if (!canEdit) return;
     if (!profile?.id) return;
     setSaving(true);
     try {
@@ -973,6 +1009,7 @@ const generateShortHandle = () => {
   };
 
   const handleSaveGallery = async () => {
+    if (!canEdit) return;
     if (!profile?.id) return;
     setSavingGallery(true);
     try {
@@ -1020,6 +1057,7 @@ const generateShortHandle = () => {
   };
 
   const handleSaveDocs = async (nextDocs = [], pendingFiles) => {
+    if (!canEdit) return;
     try {
       setDocs(Array.isArray(nextDocs) ? nextDocs : []);
 
@@ -1491,6 +1529,14 @@ const meetsPrefsMin =
   );
 
   useEffect(() => {
+    if (isAdminView) return;
+    if (!isShareReady && profileMode !== 'lite') {
+      setProfileMode('lite');
+    }
+  }, [isAdminView, isShareReady, profileMode]);
+
+  useEffect(() => {
+    if (isAdminView) return;
     if (!profile?.id) return;
     if (shareReadyPersistTimer) clearTimeout(shareReadyPersistTimer);
     const t = setTimeout(async () => {
@@ -1540,8 +1586,13 @@ const meetsPrefsMin =
           </div>
         </Modal>
       )}
-      <div className={`candidate-profile-tab ${isLite ? 'cp-mode-lite' : 'cp-mode-professional'}`}>
+      <div className={`candidate-profile-tab ${isLite ? 'cp-mode-lite' : 'cp-mode-professional'}${isAdminView ? ' cp-admin-view' : ''}`}>
         <h2>Candidate Profile</h2>
+        {isAdminView && (
+          <div className="ppv-previewRibbon" role="status" aria-live="polite">
+            Admin view (read-only). You can review all data but changes are disabled.
+          </div>
+        )}
         <div className="cp-mode-tabs" role="tablist" aria-label="Candidate profile mode">
         <button
           type="button"
@@ -1559,7 +1610,7 @@ const meetsPrefsMin =
           aria-selected={!isLite ? 'true' : 'false'}
           className={`cp-mode-tab ${!isLite ? 'active' : ''}`}
           onClick={() => handleModeChange('professional')}
-          disabled={savingMode || !isShareReady}
+          disabled={savingMode || (!isShareReady && !isAdminView)}
           title={!isShareReady ? 'Complete Lite before unlocking Professional' : undefined}
         >
           Professional
@@ -1582,7 +1633,7 @@ const meetsPrefsMin =
           {/* Shareable link (AL TOPE) */}
           <div className="cp-card">
           <div className="cp-actions cp-shareActions" role="group" aria-label="Share actions">
-            <button className="cp-btn" type="button" onClick={openAnalytics} disabled={saving}>
+            <button className="cp-btn" type="button" onClick={openAnalytics} disabled={saving || !canEdit}>
               Analytics
             </button>
             {/* Preview siempre habilitado si hay URL */}
@@ -1600,7 +1651,7 @@ const meetsPrefsMin =
               className="cp-btn"
               type="button"
               onClick={handleCopy}
-              disabled={!publicUrl || saving || !isShareReady}
+              disabled={!publicUrl || saving || !isShareReady || !canEdit}
               title={
                 !publicUrl
                   ? 'Link not generated yet'
@@ -1616,7 +1667,7 @@ const meetsPrefsMin =
               className="cp-btn cp-rotate"
               type="button"
               onClick={handleRotate}
-              disabled={!profile || saving || !isShareReady}
+              disabled={!profile || saving || !isShareReady || !canEdit}
               title={
                 !isShareReady
                   ? 'Complete the minimum required fields to enable rotate'
@@ -1635,6 +1686,7 @@ const meetsPrefsMin =
               profile={profile}
               onSaved={(data) => setProfile(data)}
               mode={profileMode}
+              readOnly={!canEdit}
             />
           </div>
 
@@ -1647,28 +1699,30 @@ const meetsPrefsMin =
                 : 'Add optional target ranks (up to 3).'}
             </p>
             <form onSubmit={handleSaveDeptRanks} className="cp-form">
-              <DepartmentRankSectionNew
-                department={primaryDepartment}
-                onDepartmentChange={(v) => setPrimaryDepartment(v)}
-                role={primaryRank}
-                onRoleChange={(v) => setPrimaryRank(v)}
-                targets={targetRanks}
-                onTargetsChange={(arr) => setTargetRanks(arr)}
-                maxTargets={3}
-                primaryDepartment={primaryDepartment}
-                onChangePrimaryDepartment={(v) => setPrimaryDepartment(v)}
-                primaryRank={primaryRank}
-                onChangePrimaryRank={(v) => setPrimaryRank(v)}
-                targetRanks={targetRanks}
-                onChangeTargetRanks={(arr) => setTargetRanks(arr)}
-                showTargets={showOptional}
-                showPrimary={showRequired}
-                showRequiredMark={!isLite}
-              />
+              <fieldset disabled={!canEdit} style={{ border: 0, padding: 0, margin: 0 }}>
+                <DepartmentRankSectionNew
+                  department={primaryDepartment}
+                  onDepartmentChange={(v) => setPrimaryDepartment(v)}
+                  role={primaryRank}
+                  onRoleChange={(v) => setPrimaryRank(v)}
+                  targets={targetRanks}
+                  onTargetsChange={(arr) => setTargetRanks(arr)}
+                  maxTargets={3}
+                  primaryDepartment={primaryDepartment}
+                  onChangePrimaryDepartment={(v) => setPrimaryDepartment(v)}
+                  primaryRank={primaryRank}
+                  onChangePrimaryRank={(v) => setPrimaryRank(v)}
+                  targetRanks={targetRanks}
+                  onChangeTargetRanks={(arr) => setTargetRanks(arr)}
+                  showTargets={showOptional}
+                  showPrimary={showRequired}
+                  showRequiredMark={!isLite}
+                />
+              </fieldset>
               <div className="cp-actions" style={{ marginTop: 10 }}>
                 <button
                   type="submit"
-                  disabled={deptRanksSaveDisabled}
+                  disabled={deptRanksSaveDisabled || !canEdit}
                   title={
                     showRequired && !hasDeptRanks
                       ? 'Please choose Primary department and Primary rank'
@@ -1693,6 +1747,7 @@ const meetsPrefsMin =
                 onCountChange={(n) => setExpCount(Number(n) || 0)}
                 mode="lite"
                 showAllFields
+                readOnly={!canEdit}
               />
             </div>
           ) : null}
@@ -1704,6 +1759,7 @@ const meetsPrefsMin =
               profile={profile}
               onSave={handleSaveAbout}
               mode={profileMode}
+              readOnly={!canEdit}
             />
           </div>
 
@@ -1711,45 +1767,47 @@ const meetsPrefsMin =
           <div className="cp-card">
             <h3 className="cp-h3">Preferences &amp; Skills</h3>
             <form onSubmit={handleSaveDetails} className="cp-form">
-              <PreferencesSkills
-                status={status}
-                onChangeStatus={setStatus}
-                availability={availability}
-                onChangeAvailability={setAvailability}
-                locations={locations}
-                onChangeLocations={setLocations}
-                languages={languages}
-                onChangeLanguages={setLanguages}
-                skills={skills}
-                onChangeSkills={setSkills}
-                contracts={contracts}
-                onChangeContracts={setContracts}
-                rotation={rotation}
-                onChangeRotation={setRotation}
-                vesselTypes={vesselTypes}
-                onChangeVesselTypes={setVesselTypes}
-                vesselSizeRange={vesselSizeRange}
-                onChangeVesselSizeRange={setVesselSizeRange}
-                regionsSeasons={regionsSeasons}
-                onChangeRegionsSeasons={setRegionsSeasons}
-                rateSalary={rateSalary}
-                onChangeRateSalary={setRateSalary}
-                languageLevels={languageLevels}
-                onChangeLanguageLevels={setLanguageLevels}
-                deptSpecialties={deptSpecialties}
-                onChangeDeptSpecialties={setDeptSpecialties}
-                onboardPrefs={onboardPrefs}
-                onChangeOnboardPrefs={setOnboardPrefs}
-                programTypes={programTypes}
-                onChangeProgramTypes={setProgramTypes}
-                dietaryRequirements={dietaryRequirements}
-                onChangeDietaryRequirements={setDietaryRequirements}
-                mode={profileMode}
-              />
+              <fieldset disabled={!canEdit} style={{ border: 0, padding: 0, margin: 0 }}>
+                <PreferencesSkills
+                  status={status}
+                  onChangeStatus={setStatus}
+                  availability={availability}
+                  onChangeAvailability={setAvailability}
+                  locations={locations}
+                  onChangeLocations={setLocations}
+                  languages={languages}
+                  onChangeLanguages={setLanguages}
+                  skills={skills}
+                  onChangeSkills={setSkills}
+                  contracts={contracts}
+                  onChangeContracts={setContracts}
+                  rotation={rotation}
+                  onChangeRotation={setRotation}
+                  vesselTypes={vesselTypes}
+                  onChangeVesselTypes={setVesselTypes}
+                  vesselSizeRange={vesselSizeRange}
+                  onChangeVesselSizeRange={setVesselSizeRange}
+                  regionsSeasons={regionsSeasons}
+                  onChangeRegionsSeasons={setRegionsSeasons}
+                  rateSalary={rateSalary}
+                  onChangeRateSalary={setRateSalary}
+                  languageLevels={languageLevels}
+                  onChangeLanguageLevels={setLanguageLevels}
+                  deptSpecialties={deptSpecialties}
+                  onChangeDeptSpecialties={setDeptSpecialties}
+                  onboardPrefs={onboardPrefs}
+                  onChangeOnboardPrefs={setOnboardPrefs}
+                  programTypes={programTypes}
+                  onChangeProgramTypes={setProgramTypes}
+                  dietaryRequirements={dietaryRequirements}
+                  onChangeDietaryRequirements={setDietaryRequirements}
+                  mode={profileMode}
+                />
+              </fieldset>
               <div className="cp-actions" style={{ marginTop: 12 }}>
                 <button
                   type="submit"
-                  disabled={prefsSkillsSaveDisabled}
+                  disabled={prefsSkillsSaveDisabled || !canEdit}
                   title={
                     showRequired && !meetsPrefsMin
                       ? 'Complete Status, Availability, at least one Language with proficiency and at least one Specific skill'
@@ -1770,15 +1828,17 @@ const meetsPrefsMin =
             <div className="cp-card">
               <h3 className="cp-h3">Lifestyle &amp; Habits</h3>
               <form onSubmit={handleSaveDetails} className="cp-form">
-                <LifestyleHabitsSection
-                  value={lifestyleHabits}
-                  onChange={setLifestyleHabits}
-                  mode={profileMode}
-                />
+                <fieldset disabled={!canEdit} style={{ border: 0, padding: 0, margin: 0 }}>
+                  <LifestyleHabitsSection
+                    value={lifestyleHabits}
+                    onChange={setLifestyleHabits}
+                    mode={profileMode}
+                  />
+                </fieldset>
                 <div className="cp-actions" style={{ marginTop: 12 }}>
                 <button
                   type="submit"
-                  disabled={lifestyleSaveDisabled}
+                  disabled={lifestyleSaveDisabled || !canEdit}
                   title={
                     showRequired && !meetsLifestyleMin
                       ? 'Complete: Visible tattoos, add at least one Dietary allergy (or “None”), and select Fitness / sport activity'
@@ -1798,7 +1858,12 @@ const meetsPrefsMin =
           {showRequired ? (
             <div className="cp-card">
               <h3 className="cp-h3">Education (Studies)</h3>
-              <EducationSection showRequiredMark={!isLite} mode={profileMode} />
+              <EducationSection
+                showRequiredMark={!isLite}
+                mode={profileMode}
+                readOnly={!canEdit}
+                userId={isAdminView ? adminUserId : undefined}
+              />
             </div>
           ) : null}
 
@@ -1813,6 +1878,7 @@ const meetsPrefsMin =
                 onSaveDocFlags={handleSaveDocFlags}
                 savingDocFlags={savingDocFlags}
                 docFlagsDirty={docFlagsDirty}
+                readOnly={!canEdit}
               />
             </div>
           ) : null}
@@ -1825,6 +1891,7 @@ const meetsPrefsMin =
                 onCountChange={(n) => setRefsCount(Number(n) || 0)}
                 showRequiredMark={!isLite}
                 mode={profileMode}
+                readOnly={!canEdit}
               />
             </div>
           ) : null}
@@ -1836,12 +1903,13 @@ const meetsPrefsMin =
                 value={gallery}
                 onChange={setGallery}
                 onUpload={handleUploadMedia}
+                readOnly={!canEdit}
               />
               <div className="cp-actions" style={{ marginTop: 12 }}>
                 <button
                   type="button"
                   onClick={handleSaveGallery}
-                  disabled={savingGallery || !meetsPhotosImagesMin || !galleryDirty}
+                  disabled={savingGallery || !meetsPhotosImagesMin || !galleryDirty || !canEdit}
                   title={
                     !meetsPhotosImagesMin
                       ? 'Add at least 3 images to enable Save'

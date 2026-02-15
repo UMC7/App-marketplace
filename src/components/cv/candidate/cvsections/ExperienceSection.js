@@ -254,6 +254,7 @@ export default function ExperienceSection({
   targetForFull = 3,
   mode = 'professional',
   showAllFields = false,
+  readOnly = false,
 }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -371,12 +372,14 @@ export default function ExperienceSection({
   }, [items, onCountChange, onProgressChange, targetForFull, profileId, profile?.id]);
 
   function startEdit(row) {
+    if (readOnly) return;
     const obj = dbRowToEditing(row);
     setEditing(obj);
     setTimeout(scrollEditorIntoView, 0);
   }
 
   function startAdd() {
+    if (readOnly) return;
     setEditing({ type: '' });
     setTimeout(scrollEditorIntoView, 0);
   }
@@ -410,6 +413,7 @@ export default function ExperienceSection({
   }
 
   async function saveEditing() {
+    if (readOnly) return;
     const pid = profileId || profile?.id;
     if (!pid || !editing) return;
 
@@ -691,6 +695,7 @@ export default function ExperienceSection({
   };
 
   async function handleDelete(row) {
+    if (readOnly) return;
     const pid = profileId || profile?.id;
     if (!row?.id) return;
     try {
@@ -763,7 +768,7 @@ export default function ExperienceSection({
   return (
     <div>
       <div className="cp-actions" style={{ marginBottom: 8 }}>
-        {!editing && (
+        {!editing && !readOnly && (
           <>
             <button className="cp-btn-add" onClick={startAdd}>
               + Add experience
@@ -873,7 +878,12 @@ export default function ExperienceSection({
 
       {/* Tarjetas (3 por fila en desktop gracias al contenedor padre del perfil) */}
       {items.map((it) => (
-        <ItemRow key={it.id} it={it} onEdit={startEdit} onDelete={handleDelete} />
+        <ItemRow
+          key={it.id}
+          it={it}
+          onEdit={readOnly ? undefined : startEdit}
+          onDelete={readOnly ? undefined : handleDelete}
+        />
       ))}
     </div>
   );

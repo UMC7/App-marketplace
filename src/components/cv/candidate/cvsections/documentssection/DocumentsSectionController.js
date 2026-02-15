@@ -26,6 +26,7 @@ export default function DocumentsSectionController({
   onSaveDocFlags,
   savingDocFlags,
   docFlagsDirty,
+  readOnly = false,
 }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("bulk");
@@ -185,28 +186,31 @@ export default function DocumentsSectionController({
     <>
       <DocumentsSection
         docs={orderedDocs}
-        onOpenManager={handleOpen}
-        onEditDoc={handleEditDoc}
-        onDeleteDoc={handleDeleteDoc}
+        onOpenManager={readOnly ? undefined : handleOpen}
+        onEditDoc={readOnly ? undefined : handleEditDoc}
+        onDeleteDoc={readOnly ? undefined : handleDeleteDoc}
         busyId={busyId}
         docFlags={docFlags}
-        onChangeDocFlag={handleChangeDocFlag}
-        onSaveDocFlags={handleSaveDocFlagsClick}
+        onChangeDocFlag={readOnly ? undefined : handleChangeDocFlag}
+        onSaveDocFlags={readOnly ? undefined : handleSaveDocFlagsClick}
         savingDocFlags={!!savingDocFlags}
         docFlagsDirty={docFlagsDirty}
+        readOnly={readOnly}
       />
-      <DocumentsManagerDialog
-        open={open}
-        onClose={handleClose}
-        initialDocs={
-          mode === "single" && editDoc
-            ? [editDoc]
-            : mode === "add"
-            ? []
-            : docs
-        }
-        onSave={handleSave}
-      />
+      {!readOnly && (
+        <DocumentsManagerDialog
+          open={open}
+          onClose={handleClose}
+          initialDocs={
+            mode === "single" && editDoc
+              ? [editDoc]
+              : mode === "add"
+              ? []
+              : docs
+          }
+          onSave={handleSave}
+        />
+      )}
     </>
   );
 }

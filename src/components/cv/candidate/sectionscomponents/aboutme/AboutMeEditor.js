@@ -1,7 +1,7 @@
 // src/components/cv/candidate/sectionscomponents/aboutme/AboutMeEditor.js
 import React, { useMemo } from "react";
 
-export default function AboutMeEditor({ value = "", onChange, showRequiredMark = true }) {
+export default function AboutMeEditor({ value = "", onChange, showRequiredMark = true, readOnly = false }) {
   const MAX = 800;
   const length = useMemo(() => (value || "").length, [value]);
 
@@ -30,6 +30,7 @@ export default function AboutMeEditor({ value = "", onChange, showRequiredMark =
         placeholder="Write a concise summary about you (3–6 lines)."
         className="input textarea"
         maxLength={MAX}
+        readOnly={readOnly}
         style={{
           width: "100%",
           boxSizing: "border-box",
