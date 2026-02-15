@@ -5,7 +5,7 @@ const TITLE_CATALOG = [
   {
     group: "Core Documents",
     items: [
-      { id: "cv", label: "CV / Résumé", aliases: ["Resume"] },
+      { id: "cv", label: "CV / Resume", aliases: ["Resume"] },
       { id: "cover_letter", label: "Cover Letter" },
       {
         id: "reference_letter",

@@ -10,6 +10,8 @@ export default function DocumentTitleSelect({
   disabled = false,
   autoFocus = false,
   name,
+  isMissing = false,
+  isRequired = false,
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -178,7 +180,7 @@ export default function DocumentTitleSelect({
   return (
     <div ref={rootRef} className="doc-title-select" style={wrapStyle}>
       <div
-        className={`dts-input-wrap${disabled ? " is-disabled" : ""}`}
+        className={`dts-input-wrap${disabled ? " is-disabled" : ""}${isRequired ? " cp-required" : ""}${isMissing ? " cp-missing-input" : ""}`}
         style={inputWrapStyle}
         onClick={openDropdown}
       >
@@ -197,25 +199,7 @@ export default function DocumentTitleSelect({
           aria-expanded={open}
           style={inputStyle}
         />
-        <div style={rightIconsStyle}>
-          {value ? (
-            <button
-              type="button"
-              title="Clear"
-              aria-label="Clear"
-              onClick={(e) => {
-                e.stopPropagation();
-                setQuery("");
-                if (typeof onChange === "function") onChange("");
-                if (inputRef.current) inputRef.current.focus();
-                setOpen(true);
-              }}
-              style={iconBtnStyle}
-            >
-              ×
-            </button>
-          ) : null}
-          <span aria-hidden="true" style={chevStyle}>▾</span>
+        <div style={rightIconsStyle}><span aria-hidden="true" style={chevStyle}>▾</span>
         </div>
       </div>
 
@@ -271,7 +255,6 @@ export default function DocumentTitleSelect({
 const wrapStyle = {
   position: "relative",
   width: "100%",
-  maxWidth: "640px",
 };
 
 const inputWrapStyle = {
@@ -279,9 +262,10 @@ const inputWrapStyle = {
   alignItems: "center",
   border: "1px solid var(--input-bd, rgba(0,0,0,.15))",
   borderRadius: 8,
-  padding: "6px 8px",
+  padding: "0 10px",
   background: "var(--input-bg, #fff)",
   color: "var(--text-color, #111827)",
+  minHeight: "var(--doc-input-h, 40px)",
 };
 
 const inputStyle = {
@@ -289,9 +273,11 @@ const inputStyle = {
   border: "none",
   outline: "none",
   fontSize: 14,
-  padding: "4px 6px",
+  padding: "4px 0",
   background: "transparent",
   color: "inherit",
+  height: "var(--doc-input-h, 40px)",
+  lineHeight: "calc(var(--doc-input-h, 40px) - 2px)",
 };
 
 const rightIconsStyle = {
@@ -362,3 +348,4 @@ const liStyle = {
 const liActiveStyle = {
   background: "var(--chip-bg, rgba(37,99,235,.12))",
 };
+

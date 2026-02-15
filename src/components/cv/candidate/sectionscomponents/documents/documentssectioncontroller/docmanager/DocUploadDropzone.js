@@ -1,13 +1,17 @@
 // src/components/cv/candidate/sectionscomponents/documents/documentssectioncontroller/docmanager/DocUploadDropzone.js
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { extractMetadataFromText } from "./docExtraction";
+// Auto-extraction removed (manual entry only)
 
 export default function DocUploadDropzone({
   onAdd,
-  accept = ["application/pdf", "image/*"],
+  accept = [
+    "application/pdf",
+    "image/*",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+  ],
   maxFiles = 10,
   maxSizeBytes = 10 * 1024 * 1024,
-  extractText,
 }) {
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -61,30 +65,17 @@ export default function DocUploadDropzone({
         const fileMap = new Map();
 
         for (const f of ok) {
-          let text = "";
-          try {
-            if (typeof extractText === "function") {
-              text = await safeExtractText(extractText, f);
-            }
-          } catch {
-            setMessages((prev) => [
-              ...prev,
-              `Could not read text from “${f.name}”. Using filename only.`,
-            ]);
-          }
-
-          const meta = extractMetadataFromText(text, { filename: f.name }) || {};
           const id = `tmp-${Date.now().toString(36)}-${Math.random()
             .toString(36)
             .slice(2, 6)}`;
 
           const doc = {
             id,
-            title: (meta.title || "Untitled document").trim(),
-            originalTitle: meta.originalTitle || undefined,
-            issuedOn: meta.issuedOn || "",
-            expiresOn: meta.expiresOn || "",
-            visibility: "unlisted",
+            title: "",
+            originalTitle: f.name || undefined,
+            issuedOn: "",
+            expiresOn: null,
+            visibility: "",
             mimeType: f.type || undefined,
             sizeBytes: typeof f.size === "number" ? f.size : undefined,
           };
@@ -104,7 +95,7 @@ export default function DocUploadDropzone({
         setBusy(false);
       }
     },
-    [onAdd, maxFiles, maxSizeBytes, acceptSet, extractText]
+    [onAdd, maxFiles, maxSizeBytes, acceptSet]
   );
 
   const onInputChange = useCallback(
@@ -156,7 +147,6 @@ export default function DocUploadDropzone({
           }
         }}
         aria-label="Upload documents"
-        style={dropzoneStyle}
       >
         <input
           ref={inputRef}
@@ -166,18 +156,14 @@ export default function DocUploadDropzone({
           multiple
           hidden
         />
-        <div className="doc-dropzone__content" style={contentStyle}>
-          <div className="doc-dropzone__title">Drop files here</div>
-          <div className="doc-dropzone__subtitle">or</div>
+        <div className="doc-dropzone__content">
+          <div className="doc-dropzone__title">Upload files</div>
+          <div className="doc-dropzone__subtitle">Drop here or browse</div>
           <button type="button" className="btn" onClick={handleBrowse} disabled={busy}>
-            Select files
+            Browse files
           </button>
           <div className="doc-dropzone__hint">
-            Accepted: {acceptText}. Max size: {formatBytes(maxSizeBytes)}. Up to {maxFiles} files.
-          </div>
-          {/* Nota visible para remarcar que cada documento requiere archivo adjunto */}
-          <div className="doc-dropzone__req" style={{ fontSize: 12, opacity: 0.85 }}>
-            Attachment <strong>*</strong> is required for each document.
+            PDF, images, Word • Max {formatBytes(maxSizeBytes)} • Up to {maxFiles} files
           </div>
           {busy && <div className="doc-dropzone__status">Reading files...</div>}
         </div>
@@ -192,16 +178,6 @@ export default function DocUploadDropzone({
       )}
     </div>
   );
-}
-
-async function safeExtractText(extractTextFn, file) {
-  try {
-    const out = await extractTextFn(file);
-    if (typeof out !== "string") return "";
-    return out.replace(/\u0000/g, " ").slice(0, 2_000_000);
-  } catch {
-    return "";
-  }
 }
 
 function isAcceptedFile(file, acceptArr) {
@@ -220,13 +196,13 @@ function isAcceptedFile(file, acceptArr) {
   const allowsPdf = acceptArr.includes("application/pdf");
   const allowsImages =
     acceptArr.includes("image/*") || acceptArr.some((p) => p.startsWith("image/"));
+  const allowsWord =
+    acceptArr.includes("application/vnd.openxmlformats-officedocument.wordprocessingml.document") ||
+    acceptArr.includes("application/msword");
 
   if (allowsPdf && /\.pdf(\?.*)?$/i.test(name)) return true;
-  if (
-    allowsImages &&
-    /\.(png|jpe?g|webp|bmp|tiff?|gif)$/i.test(name)
-  )
-    return true;
+  if (allowsImages && /\.(png|jpe?g|webp|bmp|tiff?|gif)$/i.test(name)) return true;
+  if (allowsWord && /\.(docx?|dotx?)$/i.test(name)) return true;
 
   return false;
 }
@@ -251,16 +227,4 @@ function formatBytes(bytes) {
   return `${(bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
-const dropzoneStyle = {
-  border: "2px dashed rgba(0,0,0,.2)",
-  borderRadius: "12px",
-  padding: "18px",
-  background: "var(--card-bg, #fafafa)",
-};
 
-const contentStyle = {
-  display: "grid",
-  gap: "6px",
-  justifyItems: "center",
-  textAlign: "center",
-};

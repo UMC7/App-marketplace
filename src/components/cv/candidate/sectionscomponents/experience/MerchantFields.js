@@ -697,8 +697,14 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
       </div>
 
       {showOptional ? (
-        <div className="cp-row-exp-b" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-          <div>
+        <div
+          className="cp-row-exp-b"
+          style={{
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+            gap: 12,
+          }}
+        >
+          <div style={{ gridColumn: 'span 1' }}>
             <label className="cp-label">{optLabel('GT')}</label>
             <input
               className="cp-input"
@@ -710,7 +716,7 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
           </div>
 
           {techPowerVisible ? (
-            <div>
+            <div style={{ gridColumn: 'span 2' }}>
               <label className="cp-label">{optLabel('Engine power')}</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 8 }}>
                 <input

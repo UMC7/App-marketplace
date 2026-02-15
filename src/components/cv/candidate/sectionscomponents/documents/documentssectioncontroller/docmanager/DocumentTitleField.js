@@ -11,6 +11,8 @@ export default function DocumentTitleField({
   disabled = false,
   name,
   autoFocus = false,
+  isMissing = false,
+  isRequired = false,
 }) {
   const [mode, setMode] = useState(defaultMode === "manual" ? "manual" : "select");
   const [manual, setManual] = useState(value || "");
@@ -29,8 +31,8 @@ export default function DocumentTitleField({
   const desc = useMemo(
     () =>
       mode === "select"
-        ? "Pick one canonical title from the list (you can type to search)."
-        : "Type a custom title if it’s not in the list.",
+        ? "Pick one title from the list."
+        : "Type a custom title.",
     [mode]
   );
 
@@ -76,6 +78,8 @@ export default function DocumentTitleField({
           value={value}
           onChange={(v) => typeof onChange === "function" && onChange(v)}
           placeholder="Search a title…"
+          isMissing={isMissing}
+          isRequired={isRequired}
           allowCustom={true}
           disabled={disabled}
           autoFocus={autoFocus}
@@ -95,6 +99,7 @@ export default function DocumentTitleField({
             }}
             placeholder={placeholder}
             disabled={disabled}
+            className={`doc-input${isRequired ? " cp-required" : ""}${isMissing ? " cp-missing-input" : ""}`}
             style={manualInputStyle}
           />
         </div>
@@ -103,7 +108,7 @@ export default function DocumentTitleField({
   );
 }
 
-const wrapStyle = { width: "100%", maxWidth: 680 };
+const wrapStyle = { width: "100%" };
 
 const labelRowStyle = {
   display: "flex",
@@ -134,7 +139,7 @@ const chipActiveStyle = {
 const helpStyle = {
   margin: "6px 0 10px",
   fontSize: 12,
-  color: "#666",
+  color: "var(--muted, #475569)",
 };
 
 const manualWrapStyle = {
@@ -144,10 +149,6 @@ const manualWrapStyle = {
 
 const manualInputStyle = {
   width: "100%",
-  border: "1px solid rgba(0,0,0,.15)",
-  borderRadius: 8,
-  padding: "8px 10px",
-  fontSize: 14,
-  outline: "none",
-  background: "#fff",
 };
+
+

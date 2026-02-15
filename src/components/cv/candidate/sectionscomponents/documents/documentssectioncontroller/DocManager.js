@@ -32,7 +32,8 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
   };
 
   const handleToggleNoExpiry = (id, noExpiry) => {
-    handleChange(id, { expiresOn: noExpiry ? "" : new Date().toISOString().slice(0, 10) });
+    // "" = no expiry, null = user must pick a date
+    handleChange(id, { expiresOn: noExpiry ? "" : null });
   };
 
   const validateDoc = (d) => {
@@ -69,8 +70,11 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
         <div className="doc-manager__titles">
           <h3 className="doc-manager__title">Documents Manager</h3>
           <p className="doc-manager__subtitle">
-            Add your CV and certificates. Edit the detected fields before publishing.
+            Upload your CV and certificates.
           </p>
+        </div>
+        <div className="doc-manager__stats">
+          {stats.total} item{stats.total === 1 ? "" : "s"}
         </div>
       </header>
 
@@ -81,24 +85,13 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
             onAdd={handleAddFromDropzone}
             extractText={safeExtractIfPdf}
           />
-          <span className="doc-manager__hint">
-            Drag &amp; drop or select PDF/images. <strong>Attachment *</strong> is required for each document.
-          </span>
-        </div>
-        <div className="doc-manager__right">
-          <small className="doc-manager__stats">
-            {stats.total} item{stats.total === 1 ? "" : "s"} • {stats.withExpiry} with expiry
-          </small>
         </div>
       </section>
 
-      {/* LIST */}
-      <section className="doc-manager__list">
-        {docs.length === 0 ? (
-          <div className="doc-manager__empty">
-            <p>No documents yet. Drop files above to start.</p>
-          </div>
-        ) : (
+      {/* LIST (only after files exist) */}
+      {docs.length > 0 ? (
+        <section className="doc-manager__list">
+          <div className="doc-manager__note">Attachment * is required for each document.</div>
           <ul className="doc-list">
             {docs.map((d, idx) => {
               const v = validations[idx];
@@ -107,7 +100,7 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
                   <div className="doc-item__main">
                     {/* Title */}
                     <div className="doc-field">
-                      <label className="doc-label">Title (EN) <strong>*</strong></label>
+                      <label className="doc-label">Title</label>
                       <DocumentTitleField
                         value={d.title}
                         onChange={(val) => handleChange(d.id, { title: val })}
@@ -115,6 +108,8 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
                         allowSwitch={false}
                         placeholder="e.g., STCW Basic Safety Training"
                         name={`title-${d.id}`}
+                        isMissing={!v?.hasTitle}
+                        isRequired
                       />
                     </div>
 
@@ -122,10 +117,10 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
                     <div className="doc-grid doc-grid--compact">
                       <div className="doc-dates">
                         <div className="doc-field">
-                          <label className="doc-label">Issue date <strong>*</strong></label>
+                          <label className="doc-label">Issue date</label>
                           <input
                             type="date"
-                            className="doc-input doc-input--date"
+                            className={`doc-input doc-input--date cp-required${!v?.hasIssue ? " cp-missing-input" : ""}`}
                             value={safeDateInputValue(d.issuedOn)}
                             onChange={(e) =>
                               handleChange(d.id, { issuedOn: e.target.value })
@@ -134,21 +129,21 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
                         </div>
 
                         <div className="doc-field">
-                          <label className="doc-label">Expiry date (or check “No expiry”) <strong>*</strong></label>
+                          <label className="doc-label">Expiry date</label>
                           <input
                             type="date"
-                            className="doc-input doc-input--date"
+                            className={`doc-input doc-input--date cp-required${!v?.expiryOk ? " cp-missing-input" : ""}`}
                             value={safeDateInputValue(d.expiresOn)}
                             onChange={(e) =>
                               handleChange(d.id, { expiresOn: e.target.value })
                             }
-                            disabled={!d.expiresOn}
+                            disabled={d.expiresOn === ""}
                           />
                           <div className="doc-checkbox">
                             <input
                               id={`noexp-${d.id}`}
                               type="checkbox"
-                              checked={!d.expiresOn}
+                              checked={d.expiresOn === ""}
                               onChange={(e) =>
                                 handleToggleNoExpiry(d.id, e.target.checked)
                               }
@@ -159,14 +154,15 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
                       </div>
 
                       <div className="doc-field">
-                        <label className="doc-label">Visibility <strong>*</strong></label>
+                        <label className="doc-label">Visibility</label>
                         <select
-                          className="doc-input"
+                          className={`doc-input cp-required${!v?.hasVisibility ? " cp-missing-input" : ""}`}
                           value={d.visibility}
                           onChange={(e) =>
                             handleChange(d.id, { visibility: e.target.value })
                           }
                         >
+                          <option value="">Select...</option>
                           <option value="public">Public</option>
                           <option value="unlisted">Unlisted</option>
                           <option value="private">Private</option>
@@ -200,8 +196,8 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
               );
             })}
           </ul>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       {/* FOOTER */}
       <footer className="doc-manager__footer">
@@ -233,10 +229,10 @@ export default function DocManager({ initialDocs = [], onSave, onClose }) {
 function coerceDoc(raw) {
   const d = { ...(raw || {}) };
   d.id = String(d.id || `tmp-${Math.random().toString(36).slice(2)}`);
-  d.title = String(d.title || "Untitled document");
+  d.title = typeof d.title === "string" ? d.title : "";
   d.originalTitle = d.originalTitle ? String(d.originalTitle) : undefined;
   d.issuedOn = normalizeDateInput(d.issuedOn);
-  d.expiresOn = normalizeDateInput(d.expiresOn);
+  d.expiresOn = normalizeExpiryInput(d.expiresOn);
   d.visibility = toVisibility(d.visibility);
   d.mimeType = d.mimeType ? String(d.mimeType) : undefined;
   d.sizeBytes = typeof d.sizeBytes === "number" ? d.sizeBytes : undefined;
@@ -249,7 +245,7 @@ function normalizeDoc(d) {
     title: (d.title || "").trim(),
     originalTitle: d.originalTitle ? String(d.originalTitle).trim() : undefined,
     issuedOn: normalizeDateOutput(d.issuedOn),
-    expiresOn: normalizeDateOutput(d.expiresOn),
+    expiresOn: normalizeExpiryOutput(d.expiresOn),
     visibility: toVisibility(d.visibility),
     mimeType: d.mimeType ? String(d.mimeType) : undefined,
     sizeBytes: typeof d.sizeBytes === "number" ? d.sizeBytes : undefined,
@@ -258,7 +254,7 @@ function normalizeDoc(d) {
 
 function toVisibility(v) {
   const s = String(v || "").toLowerCase();
-  return s === "public" || s === "private" || s === "unlisted" ? s : "unlisted";
+  return s === "public" || s === "private" || s === "unlisted" ? s : "";
 }
 
 function isYmd(v) {
@@ -282,7 +278,19 @@ function normalizeDateInput(v) {
   }
 }
 
+function normalizeExpiryInput(v) {
+  if (v === "") return "";
+  if (v === null || v === undefined) return null;
+  return normalizeDateInput(v) || null;
+}
+
 function normalizeDateOutput(v) {
+  const s = normalizeDateInput(v);
+  return s || undefined;
+}
+
+function normalizeExpiryOutput(v) {
+  if (v === "") return "";
   const s = normalizeDateInput(v);
   return s || undefined;
 }
@@ -302,3 +310,4 @@ function formatBytes(bytes) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${(bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
+

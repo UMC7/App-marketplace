@@ -121,6 +121,10 @@ export default function DocumentsSectionController({
 
   const handleDeleteDoc = async (doc) => {
     if (!doc?.id) return;
+    if (String(doc.id).startsWith("tmp-")) {
+      setDocs((prev) => prev.filter((d) => String(d.id) !== String(doc.id)));
+      return;
+    }
     const ok = window.confirm(
       `Delete "${doc.title || "document"}"?\nThis will remove it from your profile permanently.`
     );

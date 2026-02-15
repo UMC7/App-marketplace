@@ -114,7 +114,7 @@ export default function ReferencesEditor({
 
           <div className="list">
             {items.length === 0 && (
-              <div className={`empty ${mode === 'lite' ? 'cp-missing-input' : ''}`}>No references yet.</div>
+              <div className={`empty ${mode === 'lite' ? 'cp-missing-block' : ''}`}>No references yet.</div>
             )}
             {items.map((it, i) => (
               <ReferenceCard

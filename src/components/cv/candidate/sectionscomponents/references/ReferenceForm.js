@@ -45,17 +45,22 @@ export default function ReferenceForm({
 
   const validate = () => {
     const e = {};
-    if (!model.name?.trim()) e.name = "Required";
-    if (!model.role?.trim()) e.role = "Required";
-    if (!model.company?.trim()) e.company = "Required";
-    if (!model.phone?.trim()) e.phone = "Required";
-    if (!model.email?.trim()) e.email = "Required";
-    if (
-      model.email?.trim() &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(model.email.trim())
-    ) {
-      e.email = "Invalid email";
+    const name = model.name?.trim() || "";
+    const role = model.role?.trim() || "";
+    const company = model.company?.trim() || "";
+    const phone = model.phone?.trim() || "";
+    const email = model.email?.trim() || "";
+    const emailOk = !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!name) e.name = "Required";
+    if (!role) e.role = "Required";
+    if (!company) e.company = "Required";
+    if (!phone && !email) {
+      e.phone = "Required";
+      e.email = "Required";
     }
+    if (email && !emailOk) e.email = "Invalid email";
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -91,16 +96,14 @@ export default function ReferenceForm({
     onSave?.(payload);
   };
 
-  const requiredFilled =
-    !!model.name?.trim() &&
-    !!model.role?.trim() &&
-    !!model.company?.trim() &&
-    !!model.phone?.trim() &&
-    !!model.email?.trim();
-  const emailLooksOk =
-    !!model.email?.trim() &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(model.email.trim());
-  const canSave = requiredFilled && emailLooksOk;
+  const nameOk = !!model.name?.trim();
+  const roleOk = !!model.role?.trim();
+  const companyOk = !!model.company?.trim();
+  const phoneOk = !!model.phone?.trim();
+  const emailVal = model.email?.trim() || "";
+  const emailOk = !emailVal || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
+  const contactOk = phoneOk || !!emailVal;
+  const canSave = nameOk && roleOk && companyOk && contactOk && emailOk;
 
   const reqLabel = (text) => (showRequiredMark ? `${text} *` : text);
   const optLabel = (text) => (showRequiredMark ? text : `${text} (Optional)`);
@@ -115,6 +118,7 @@ export default function ReferenceForm({
             value={model.name}
             onChange={(e) => setField("name", e.target.value)}
             placeholder="e.g., Mathilde Larrey"
+            className={!nameOk ? "cp-missing-input" : ""}
           />
           {errors.name && <em className="err">{errors.name}</em>}
         </label>
@@ -126,6 +130,7 @@ export default function ReferenceForm({
             value={model.role}
             onChange={(e) => setField("role", e.target.value)}
             placeholder="e.g., Chief Stew"
+            className={!roleOk ? "cp-missing-input" : ""}
           />
           {errors.role && <em className="err">{errors.role}</em>}
         </label>
@@ -137,6 +142,7 @@ export default function ReferenceForm({
             value={model.company}
             onChange={(e) => setField("company", e.target.value)}
             placeholder="e.g., M/Y Euphoria II"
+            className={!companyOk ? "cp-missing-input" : ""}
           />
           {errors.company && <em className="err">{errors.company}</em>}
         </label>
@@ -148,6 +154,7 @@ export default function ReferenceForm({
             value={model.phone}
             onChange={(e) => setField("phone", e.target.value)}
             placeholder="+33 6 95 38 27 57"
+            className={!phoneOk && !emailVal ? "cp-missing-input" : ""}
           />
           {errors.phone && <em className="err">{errors.phone}</em>}
         </label>
@@ -159,6 +166,7 @@ export default function ReferenceForm({
             value={model.email}
             onChange={(e) => setField("email", e.target.value)}
             placeholder="name@domain.com"
+            className={(!emailVal && !phoneOk) || (emailVal && !emailOk) ? "cp-missing-input" : ""}
           />
           {errors.email && <em className="err">{errors.email}</em>}
         </label>
@@ -212,6 +220,10 @@ export default function ReferenceForm({
           padding: 10px 12px;
           outline: none;
           transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+        }
+        .cv-ref-form input.cp-missing-input{
+          border-color:#e05252 !important;
+          box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.25) !important;
         }
         .cv-ref-form input::placeholder{ color: var(--muted-2); opacity: .9; }
         .cv-ref-form input:focus{

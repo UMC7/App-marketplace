@@ -254,6 +254,14 @@ body.dark-mode .candidate-profile-tab.cp-mode-lite{
   box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
 }
 
+/* Missing empty blocks (docs/references/dropzone) */
+.cp-missing-block,
+.dropzone.is-missing {
+  border: 1px dashed #e05252 !important;
+  border-radius: 12px;
+  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
+}
+
 .cp-label--disabled{
   color: var(--muted);
   opacity: .7;

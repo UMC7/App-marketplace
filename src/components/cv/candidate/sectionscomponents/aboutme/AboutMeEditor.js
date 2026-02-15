@@ -28,7 +28,7 @@ export default function AboutMeEditor({ value = "", onChange, showRequiredMark =
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
         placeholder="Write a concise summary about you (3–6 lines)."
-        className={`input textarea ${isMissing ? 'cp-missing-input' : ''}`}
+        className={`input textarea cp-textarea ${isMissing ? 'cp-missing-input' : ''}`}
         maxLength={MAX}
         readOnly={readOnly}
         style={{

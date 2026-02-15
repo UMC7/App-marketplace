@@ -100,7 +100,7 @@ export default function DocumentsSection({
       </div>
 
       {/* Botón Save independiente para los 9 selectores */}
-      <div className="cv-section-body" style={{ marginTop: 8 }}>
+      <div className="cv-section-body" style={{ marginTop: 8, marginBottom: 10 }}>
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <button
             type="button"
@@ -130,13 +130,13 @@ export default function DocumentsSection({
         </div>
       </div>
 
-      <div className="cv-section-body">
+      <div className="cv-section-body" style={{ marginTop: 6 }}>
         {docs.length === 0 ? (
-          <div className={`cv-empty-state ${docs.length < 3 ? 'cp-missing-input' : ''}`}>
+          <div className={`cv-empty-state ${docs.length < 3 ? 'cp-missing-block' : ''}`}>
             <p>No documents yet.</p>
           </div>
         ) : (
-          <ul className={`cv-docs-list ${docs.length < 3 ? 'cp-missing-input' : ''}`}>
+          <ul className={`cv-docs-list ${docs.length < 3 ? 'cp-missing-block' : ''}`}>
             {docs.map((d) => {
               const issued = d.issuedOn ? safeDate(d.issuedOn) : null;
               const expires = d.expiresOn ? safeDate(d.expiresOn) : null;

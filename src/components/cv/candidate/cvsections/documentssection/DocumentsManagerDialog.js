@@ -38,13 +38,13 @@ export default function DocumentsManagerDialog({
 
   return (
     <div
-      className="cv-modal-backdrop"
+      className="cv-modal-backdrop doc-modal-backdrop"
       role="presentation"
       onClick={handleBackdrop}
       style={backdropStyle}
     >
       <div
-        className="cv-modal-panel"
+        className="cv-modal-panel doc-modal-panel"
         role="dialog"
         aria-modal="true"
         aria-label="Documents manager"
@@ -74,9 +74,9 @@ const backdropStyle = {
   inset: 0,
   background: "rgba(0,0,0,.5)",
   display: "flex",
-  alignItems: "flex-start",
+  alignItems: "center",
   justifyContent: "center",
-  padding: "80px 16px 16px", // espacio superior para navbar
+  padding: "16px",
   zIndex: 4000, // por encima del navbar
 };
 
@@ -85,7 +85,7 @@ const panelStyle = {
   color: "var(--text, #111)",
   width: "100%",
   maxWidth: "980px",
-  maxHeight: "calc(100vh - 120px)", // respeta navbar + padding
+  maxHeight: "calc(100vh - 32px)",
   display: "flex",
   flexDirection: "column",
   borderRadius: "12px",
@@ -95,8 +95,8 @@ const panelStyle = {
 
 const bodyStyle = {
   position: "relative",
-  flex: 1,
+  flex: "0 1 auto",
   overflow: "auto",
-  padding: "12px",
+  padding: "12px 12px 8px",
   background: "var(--card-2, #f7f7f7)",
 };

@@ -133,7 +133,7 @@
 .doc-manager {
   display: grid;
   gap: 16px;
-  padding-bottom: 80px;
+  padding-bottom: 12px;
   --doc-input-h: 40px;
 }
 
@@ -160,9 +160,15 @@
   font-size: 0.95rem;
 }
 
+.doc-manager__stats {
+  color: var(--muted, #475569);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
 .doc-manager__toolbar {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
@@ -178,7 +184,19 @@
 }
 .doc-manager__right { display: flex; gap: 8px; align-items: center; }
 .doc-manager__hint { color: var(--muted, #475569); font-size: 0.9rem; }
-.doc-manager__stats { color: var(--muted, #475569); }
+
+.doc-manager__step {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted, #475569);
+  margin: 2px 0 8px;
+}
+
+.doc-manager__note {
+  font-size: 0.9rem;
+  color: var(--muted, #475569);
+  margin: 0 0 12px;
+}
 
 .doc-manager__list { width: 100%; margin-top: 4px; }
 .doc-manager__empty {
@@ -245,15 +263,17 @@
 /* ====== Altura UNIFORME para Title / Date / Select ====== */
 .doc-input {
   width: 100%;
+  box-sizing: border-box;
   min-height: var(--doc-input-h);
   height: var(--doc-input-h);
   line-height: calc(var(--doc-input-h) - 2px);
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 0 10px;
+  border-radius: 6px;
   border: 1px solid var(--input-bd, #cbd5e1);
   background: var(--input-bg, #ffffff);
   color: var(--text, #0f172a);
   font-size: 0.95rem;
+  box-shadow: none;
 }
 
 input.doc-input[type="date"],
@@ -261,7 +281,7 @@ input.doc-input[type="date"],
   min-height: var(--doc-input-h);
   height: var(--doc-input-h);
   line-height: calc(var(--doc-input-h) - 2px);
-  padding: 8px 10px;
+  padding: 0 10px;
 }
 
 .doc-field .dts-input-wrap {
@@ -282,12 +302,56 @@ input.doc-input[type="date"],
   font-size: 0.95rem;
 }
 
+.doc-title-select .dts-input-wrap {
+  min-height: 38px;
+  height: var(--doc-input-h);
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid var(--input-bd, #cbd5e1);
+  background: var(--input-bg, #ffffff);
+  box-shadow: none !important;
+  padding: 0 10px;
+}
+
+.doc-title-select input {
+  height: 100%;
+  line-height: calc(var(--doc-input-h) - 2px);
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  appearance: none;
+}
+
+.doc-title-field {
+  max-width: 50%;
+}
+
+@media (max-width: 900px) {
+  .doc-title-field {
+    max-width: 100%;
+  }
+}
+
 .doc-input::placeholder { color: var(--muted, #475569); opacity: .9; }
 .doc-input:focus,
 .doc-field .dts-input-wrap:focus-within {
   outline: none;
   border-color: var(--accent-2, #2563eb);
   box-shadow: var(--focus, 0 0 0 2px rgba(37,99,235,.25));
+}
+
+/* Required fields (subtle highlight) */
+.doc-manager .cp-required {
+  border-color: rgba(104, 173, 168, 0.65);
+  box-shadow: 0 0 0 1px rgba(104, 173, 168, 0.2);
+}
+
+/* Missing required fields (force over local styles) */
+.doc-manager .cp-missing-input {
+  border-color: #e05252 !important;
+  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
 }
 
 .doc-checkbox {
@@ -328,7 +392,7 @@ input.doc-input[type="date"],
   bottom: 0;
   background: var(--card, #ffffff);
   border-top: 1px solid var(--line, #e2e8f0);
-  padding: 12px 0 16px;
+  padding: 10px 0;
   display: flex;
   justify-content: center;
   z-index: 10;
@@ -368,6 +432,47 @@ input.doc-input[type="date"],
   text-align: center;
 }
 .dropzone * { color: var(--muted, #475569); }
+
+/* DocManager dropzone */
+.doc-dropzone {
+  border: 2px dashed var(--line, #e2e8f0);
+  border-radius: 12px;
+  padding: 18px;
+  background: linear-gradient(180deg, var(--card), var(--card-2));
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.doc-dropzone.is-over {
+  border-color: var(--accent, #14b8a6);
+  box-shadow: var(--focus, 0 0 0 2px rgba(37,99,235,.25));
+}
+.doc-dropzone__content{
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+}
+.doc-dropzone__title{ font-weight: 700; }
+.doc-dropzone__subtitle{ color: var(--muted, #475569); }
+.doc-dropzone__hint{
+  color: var(--muted, #475569);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 720px) {
+  .doc-manager__toolbar { gap: 12px; }
+  .doc-manager__stats { width: 100%; }
+}
+
+@media (max-width: 720px) {
+  .cv-modal-backdrop.doc-modal-backdrop {
+    padding: calc(56px + env(safe-area-inset-top, 0px)) 12px calc(72px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+    align-items: center;
+  }
+  .cv-modal-panel.doc-modal-panel {
+    max-height: calc(100vh - 140px) !important;
+  }
+}
 
 /* ---------- Dark mode ---------- */
 [data-theme='dark'] .cv-section {
