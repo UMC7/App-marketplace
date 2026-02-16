@@ -36,10 +36,11 @@ function JobDashboard({ offer, onClose }) {
       if (error) {
         console.warn('Failed to load job metrics', error);
       } else if (data) {
+        const row = Array.isArray(data) ? data[0] : data;
         setMetrics({
-          views: Number(data.views || 0),
-          privateChats: Number(data.private_chats || 0),
-          direct: Number(data.direct || 0),
+          views: Number(row?.views || 0),
+          privateChats: Number(row?.private_chats || 0),
+          direct: Number(row?.direct || 0),
         });
       }
       setLoading(false);
