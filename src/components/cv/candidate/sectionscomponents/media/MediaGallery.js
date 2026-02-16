@@ -299,31 +299,64 @@ export default function MediaGallery({
         /* ===== Lightbox ===== */
         .lightbox {
           position:fixed; inset:0; background:rgba(0,0,0,.7);
-          display:flex; align-items:center; justify-content:center; z-index:1000;
+          display:flex; align-items:center; justify-content:center;
+          z-index:1100; /* por encima del navbar (z-index: 1002) */
         }
         .lightbox-inner {
           position:relative; width: min(92vw, 1100px); height: min(92vh, 720px);
-          background:var(--card, #ffffff); border:1px solid var(--line, #e2e8f0); border-radius:12px; overflow:hidden;
+          background:#000; border-radius:12px; overflow:hidden;
           display:flex; align-items:center; justify-content:center;
         }
         .lb-content {
           width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
-          gap:8px; padding:16px;
+          gap:8px; padding:16px; background:#000;
         }
         .lb-content img, .lb-content video {
           max-width:100%; max-height: calc(100% - 40px);
-          object-fit:contain; background:var(--card-2, #f8fafc);
+          object-fit:contain; background:#000;
         }
-        .lb-caption { color:var(--muted-2, #6b7280); font-size:.95rem; text-align:center; }
+        .lb-caption { color:rgba(255,255,255,.75); font-size:.95rem; text-align:center; }
 
-        .lb-close, .lb-nav {
-          position:absolute; top:10px; background:var(--btn-bg, rgba(0,0,0,.55)); color:var(--btn-tx, #fff);
-          border:1px solid var(--btn-bd, rgba(255,255,255,.25)); border-radius:8px; cursor:pointer;
-          padding:6px 10px; font-size:16px;
+        /* Botón cerrar: X blanca mínima como en otros modales */
+        .lb-close {
+          position:absolute; top:12px; right:12px;
+          width:36px; height:36px;
+          display:flex; align-items:center; justify-content:center;
+          background:transparent; color:#fff;
+          border:none; border-radius:999px;
+          font-size:1.6rem; line-height:1; cursor:pointer;
+          z-index:10;
         }
-        .lb-close { right:10px; }
-        .lb-nav.left { left:10px; top:50%; transform:translateY(-50%); font-size:22px; padding:6px 12px; }
-        .lb-nav.right { right:10px; top:50%; transform:translateY(-50%); font-size:22px; padding:6px 12px; }
+        .lb-close:hover { background:rgba(255,255,255,.15); }
+
+        /* Nav: botones circulares en los lados, sin franja sobre la imagen */
+        .lb-nav {
+          position:absolute; top:50%; transform:translateY(-50%);
+          width:44px; height:44px; min-width:44px; min-height:44px;
+          display:flex; align-items:center; justify-content:center;
+          background:rgba(0,0,0,.5); color:#fff;
+          border:1px solid rgba(255,255,255,.25); border-radius:999px;
+          font-size:22px; line-height:1; cursor:pointer;
+          z-index:10;
+        }
+        .lb-nav:hover { background:rgba(0,0,0,.65); }
+        .lb-nav.left { left:12px; }
+        .lb-nav.right { right:12px; }
+
+        /* Móvil: nav más compactos en los bordes, X siempre blanca */
+        @media (max-width: 768px), (hover: none) {
+          .lb-close {
+            top: max(12px, env(safe-area-inset-top));
+            right: max(12px, env(safe-area-inset-right));
+            width:40px; height:40px; font-size:1.5rem;
+          }
+          .lb-nav {
+            width:40px; height:40px; min-width:40px; min-height:40px;
+            background:rgba(0,0,0,.45); backdrop-filter:blur(4px);
+          }
+          .lb-nav.left { left:8px; }
+          .lb-nav.right { right:8px; }
+        }
       `}</style>
     </div>
   );
