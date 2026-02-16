@@ -485,6 +485,17 @@ body.dark-mode .profile-action-buttons .delete-btn:hover {
   background-color: #ffb3b3 !important;
 }
 
+/* Azul oscuro para Dashboard */
+body.dark-mode .profile-action-buttons .dashboard-btn {
+  background-color: #c25a12 !important;
+  color: #fff2e0 !important;
+  border: 1px solid #e07a2a !important;
+}
+
+body.dark-mode .profile-action-buttons .dashboard-btn:hover {
+  background-color: #d06618 !important;
+}
+
 /*  Estilos personalizados en modo oscuro para pestaña “My Posted Events” */
 
 /* Botón Edit y ahora también Cancel y Postpone en gris intermedio */

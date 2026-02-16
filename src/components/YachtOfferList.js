@@ -9,6 +9,7 @@ import OfferTimeline from './OfferTimeline';
 import '../styles/YachtOfferList.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
+import { toast } from 'react-toastify';
 
 function YachtOfferList({
   offers,
@@ -578,9 +579,17 @@ useEffect(() => {
   const iconImg = { width: 22, height: 22, display: 'block' };
   const shareIcon = { fontSize: 22, color: '#111' };
 
-  const handleStartChat = (offerId, employerId) => {
-    setActiveChat({ offerId, receiverId: employerId });
-  };
+const handleStartChat = (offerId, employerId) => {
+  if (offerId) {
+    supabase
+      .from('job_offer_events')
+      .insert([{ offer_id: offerId, event_type: 'private_chat', actor_id: currentUser?.id || null }])
+      .then(({ error }) => {
+        if (error) console.warn('private_chat log error', error);
+      });
+  }
+  setActiveChat({ offerId, receiverId: employerId });
+};
 
   const handleRequestChat = (offerId, employerId) => {
     if (!chatIntroSeen) {
@@ -623,11 +632,32 @@ useEffect(() => {
     }
   };
 
-  const handleDirectApply = () => {
-    const allowed = currentUser && directApplicationReady;
-    setDirectApplyModalType(allowed ? 'success' : 'profile_required');
-    setShowDirectApplyModal(true);
-  };
+const handleDirectApply = async (offerId) => {
+  const allowed = currentUser && directApplicationReady;
+  if (!offerId) {
+    toast.error('Offer not found. Please refresh and try again.');
+    return;
+  }
+  if (allowed && offerId) {
+    const { error: rpcErr } = await supabase.rpc('rpc_submit_direct_application', {
+      p_offer_id: offerId,
+    });
+    if (rpcErr) {
+      console.warn('direct_apply rpc error', rpcErr);
+      toast.error('Could not submit application. Please try again.');
+      return;
+    }
+
+    const { error: logErr } = await supabase
+      .from('job_offer_events')
+      .insert([{ offer_id: offerId, event_type: 'direct_apply', actor_id: currentUser?.id || null }]);
+    if (logErr) {
+      console.warn('direct_apply log error', logErr);
+    }
+  }
+  setDirectApplyModalType(allowed ? 'success' : 'profile_required');
+  setShowDirectApplyModal(true);
+};
 
   const handleCloseDirectApply = () => {
     setShowDirectApplyModal(false);
@@ -808,6 +838,18 @@ useEffect(() => {
       return id;
     });
   };
+
+  const lastExpandedRef = useRef(null);
+  useEffect(() => {
+    if (!expandedOfferId || expandedOfferId === lastExpandedRef.current) return;
+    lastExpandedRef.current = expandedOfferId;
+    supabase
+      .from('job_offer_events')
+      .insert([{ offer_id: expandedOfferId, event_type: 'view', actor_id: currentUser?.id || null }])
+      .then(({ error }) => {
+        if (error) console.warn('view log error', error);
+      });
+  }, [expandedOfferId, currentUser?.id]);
 
   return (
     <div>

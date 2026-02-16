@@ -878,11 +878,11 @@ const OfferTimeline = ({
   </div>
   {!isOwner && (
     <div className="chat-actions">
-      <button
+        <button
         className="direct-apply-btn"
         onClick={(e) => {
           e.stopPropagation();
-          handleDirectApply();
+          handleDirectApply(offer.id);
         }}
         type="button"
       >

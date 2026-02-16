@@ -149,6 +149,16 @@
   background-color: #ffebee;
 }
 
+/* ✅ Botón Dashboard */
+.profile-action-buttons .dashboard-btn {
+  background-color: #e8eefc;
+  color: #1f3a8a;
+  border: 1px solid #c7d2fe;
+}
+.profile-action-buttons .dashboard-btn:hover {
+  background-color: #dbe4ff;
+}
+
 /* ✅ Botón Confirmar (verde) */
 .profile-action-buttons .success-btn {
   background-color: #e8f5e9;
