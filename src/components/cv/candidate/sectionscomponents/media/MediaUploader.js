@@ -163,16 +163,20 @@ export default function MediaUploader({
   );
 
   const handleFileInput = (ev) => {
-    const chosen = ev.target.files;
+    // En móviles (especialmente Android), ev.target.files es una referencia viva:
+    // al hacer ev.target.value = "" se invalida el FileList. Hay que copiar
+    // los archivos ANTES de limpiar el input para que sigan disponibles.
+    const chosen = Array.from(ev.target.files || []);
     ev.target.value = "";
-    addFiles(chosen);
+    if (chosen.length > 0) addFiles(chosen);
   };
 
   const handleDrop = (ev) => {
     ev.preventDefault();
     ev.stopPropagation();
     dropRef.current?.classList.remove("drag-over");
-    addFiles(ev.dataTransfer.files);
+    const files = Array.from(ev.dataTransfer?.files || []);
+    if (files.length > 0) addFiles(files);
   };
 
   const handleDragOver = (ev) => {
