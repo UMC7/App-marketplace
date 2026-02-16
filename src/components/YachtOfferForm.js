@@ -529,7 +529,7 @@ const teammateDeckDocumentOptions = needsTeammateDeckLicense && !isTeammateCapta
 
 const renderRequiredDocsSummary = () => null;
 
-const highlightClass = (missing) => (showMissing && missing ? 'missing-required' : '');
+const highlightClass = (missing) => (missing ? 'missing-required' : '');
 const autoResizeTextarea = (e) => adjustRemarksTextareaHeight(e.target);
 
   const handleRemarksInput = (e) => {

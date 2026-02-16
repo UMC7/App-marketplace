@@ -26,8 +26,15 @@
 }
 
 .missing-required {
-  border: 1px solid #e55353 !important;
-  box-shadow: 0 0 0 2px rgba(229, 83, 83, 0.2) !important;
+  border: 1px solid #e05252 !important;
+  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
+}
+body.dark-mode .missing-required,
+body.dark-mode input.missing-required,
+body.dark-mode select.missing-required,
+body.dark-mode textarea.missing-required {
+  border-color: #e05252 !important;
+  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
 }
 /* FilterableRankSelect: missing-required aplica al control interno, no al contenedor */
 .filterable-rank-select-container.missing-required {
@@ -35,8 +42,12 @@
   box-shadow: none !important;
 }
 .filterable-rank-select-container.missing-required .filterable-rank-select__control {
-  border-color: #e55353 !important;
-  box-shadow: 0 0 0 2px rgba(229, 83, 83, 0.2) !important;
+  border-color: #e05252 !important;
+  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
+}
+body.dark-mode .filterable-rank-select-container.missing-required .filterable-rank-select__control {
+  border-color: #e05252 !important;
+  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
 }
 
 /* =========================
