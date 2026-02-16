@@ -15,6 +15,9 @@ export default function MediaUploader({
   const [err, setErr] = useState("");
   const fileRef = useRef(null);
   const dropRef = useRef(null);
+  const inputIdRef = useRef(
+    `media-uploader-${Math.random().toString(36).slice(2, 9)}`
+  );
 
   // Mantener sincronía con el valor controlado del padre
   useEffect(() => {
@@ -200,15 +203,15 @@ export default function MediaUploader({
       </div>
 
       {/* Zona de subida */}
-      <div
+      <label
         ref={dropRef}
         className={`dropzone ${!canAddMore ? "disabled" : ""} ${missingMinPhotos ? "is-missing" : ""}`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        onClick={() => !busy && canAddMore && fileRef.current?.click()}
+        htmlFor={inputIdRef.current}
         role="button"
-        tabIndex={0}
+        tabIndex={canAddMore && !busy ? 0 : -1}
         title={
           !canAddMore
             ? "Maximum number of media reached"
@@ -219,10 +222,11 @@ export default function MediaUploader({
       >
         <input
           ref={fileRef}
+          id={inputIdRef.current}
           type="file"
           accept={accept}
           multiple
-          style={{ display: "none" }}
+          className="file-input"
           onChange={handleFileInput}
           disabled={!canAddMore || busy}
         />
@@ -232,7 +236,7 @@ export default function MediaUploader({
           </div>
           <div className="dz-sub">or click to browse • up to {remaining} more</div>
         </div>
-      </div>
+      </label>
 
       {/* Grilla interna opcional */}
       {showGrid && (
@@ -285,6 +289,7 @@ export default function MediaUploader({
         .req { color:var(--muted-2); font-size:.85rem; font-weight:500; }
 
         .dropzone {
+          position:relative;
           border:2px dashed var(--line); 
           border-radius:12px; 
           padding:18px;
@@ -301,6 +306,13 @@ export default function MediaUploader({
         .dropzone.drag-over { border-color:var(--accent); background:var(--card-2); }
         .dz-cta { color:var(--text); font-weight:500; }
         .dz-sub { color:var(--muted-2); font-size:.9rem; margin-top:2px; }
+        .file-input {
+          position:absolute;
+          inset:0;
+          opacity:0;
+          cursor:pointer;
+        }
+        .dropzone.disabled .file-input { cursor:not-allowed; }
 
         .grid {
           display:grid;
@@ -394,3 +406,12 @@ export default function MediaUploader({
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
