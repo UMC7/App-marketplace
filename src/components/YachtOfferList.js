@@ -96,7 +96,7 @@ const [pendingChat, setPendingChat] = useState(null);
   const [chatQueryHandled, setChatQueryHandled] = useState(false);
 const [showDirectApplyModal, setShowDirectApplyModal] = useState(false);
 const [directApplyModalType, setDirectApplyModalType] = useState(null);
-  const [directApplicationReady, setDirectApplicationReady] = useState(false);
+const [directApplicationReady, setDirectApplicationReady] = useState(false);
   const [appliedOfferIds, setAppliedOfferIds] = useState(new Set());
 const [activeChat, setActiveChat] = useState(null);
 const [expandedWeeks, setExpandedWeeks] = useState({});
@@ -109,6 +109,25 @@ const chatIntroScheduledRef = useRef(false);
   const collapseTargetRef = useRef(null);
   const CHAT_INTRO_KEY = 'seajobs_private_chat_intro_seen';
   const CHAT_INTRO_DELAY_MS = 5000;
+  const APPLIED_LS_KEY = currentUser?.id ? `job_applied_offers_${currentUser.id}` : null;
+
+const readAppliedFromStorage = () => {
+  if (!APPLIED_LS_KEY) return new Set();
+  try {
+    const raw = localStorage.getItem(APPLIED_LS_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const writeAppliedToStorage = (nextSet) => {
+  if (!APPLIED_LS_KEY) return;
+  try {
+    localStorage.setItem(APPLIED_LS_KEY, JSON.stringify(Array.from(nextSet)));
+  } catch {}
+};
 
 const getScrollOffset = () => {
   const nav = document.querySelector('.navbar-container');
@@ -283,6 +302,10 @@ useEffect(() => {
       cancelled = true;
     };
   }
+  const localApplied = readAppliedFromStorage();
+  if (!cancelled && localApplied.size) {
+    setAppliedOfferIds(localApplied);
+  }
   const fetchApplied = async () => {
     const { data, error } = await supabase
       .from('job_direct_applications')
@@ -291,11 +314,15 @@ useEffect(() => {
     if (cancelled) return;
     if (error) {
       console.warn('Failed to load applied offers', error);
-      setAppliedOfferIds(new Set());
+      if (localApplied.size === 0) {
+        setAppliedOfferIds(new Set());
+      }
       return;
     }
     const ids = new Set((data || []).map((r) => r.offer_id));
-    setAppliedOfferIds(ids);
+    const merged = new Set([...localApplied, ...ids]);
+    setAppliedOfferIds(merged);
+    writeAppliedToStorage(merged);
   };
   fetchApplied();
   return () => {
@@ -687,7 +714,12 @@ const handleDirectApply = async (offerId) => {
     if (logErr) {
       console.warn('direct_apply log error', logErr);
     }
-    setAppliedOfferIds((prev) => new Set(prev).add(offerId));
+    setAppliedOfferIds((prev) => {
+      const next = new Set(prev);
+      next.add(offerId);
+      writeAppliedToStorage(next);
+      return next;
+    });
   }
   setDirectApplyModalType(allowed ? 'success' : 'profile_required');
   setShowDirectApplyModal(true);
