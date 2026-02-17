@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import Modal from '../Modal';
 import '../../styles/JobDashboard.css';
 import supabase from '../../supabase';
@@ -23,6 +23,17 @@ function JobDashboard({ offer, onClose }) {
   const [benchLoading, setBenchLoading] = useState(false);
   const [applications, setApplications] = useState([]);
   const [appsLoading, setAppsLoading] = useState(false);
+  const [appStatuses, setAppStatuses] = useState({
+    newCount: 0,
+    reviewedCount: 0,
+    shortlistedCount: 0,
+    removedCount: 0,
+  });
+  const [appsExpanded, setAppsExpanded] = useState({
+    shortlisted: true,
+    new: true,
+    reviewed: true,
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -90,7 +101,7 @@ function JobDashboard({ offer, onClose }) {
       setAppsLoading(true);
       const { data, error } = await supabase
         .from('job_direct_applications')
-        .select('id, candidate_user_id, candidate_profile_id, match_score, created_at')
+        .select('id, candidate_user_id, candidate_profile_id, match_score, created_at, status, reviewed_at')
         .eq('offer_id', offer.id)
         .order('match_score', { ascending: false })
         .order('created_at', { ascending: false });
@@ -107,7 +118,7 @@ function JobDashboard({ offer, onClose }) {
       if (profileIds.length) {
         const { data: profiles, error: pErr } = await supabase
           .from('public_profiles')
-          .select('id, first_name, last_name, primary_role, primary_department, city_port, country, availability, headline, hero_image_url')
+          .select('id, handle, first_name, last_name, primary_role, primary_department, city_port, country, availability, headline, hero_image_url')
           .in('id', profileIds);
         if (!pErr && profiles) {
           profileMap = profiles.reduce((acc, p) => {
@@ -121,6 +132,19 @@ function JobDashboard({ offer, onClose }) {
         profile: r.candidate_profile_id ? profileMap[r.candidate_profile_id] : null,
       }));
       setApplications(enriched);
+      const statusAgg = enriched.reduce(
+        (acc, r) => {
+          const raw = r.status || 'new';
+          const status = raw === 'in_review' ? 'reviewed' : raw;
+          if (status === 'shortlisted') acc.shortlistedCount += 1;
+          else if (status === 'removed') acc.removedCount += 1;
+          else if (status === 'reviewed') acc.reviewedCount += 1;
+          else acc.newCount += 1;
+          return acc;
+        },
+        { newCount: 0, reviewedCount: 0, shortlistedCount: 0, removedCount: 0 }
+      );
+      setAppStatuses(statusAgg);
       setAppsLoading(false);
     }
     fetchApplications();
@@ -129,13 +153,6 @@ function JobDashboard({ offer, onClose }) {
     };
   }, [offer?.id]);
 
-  if (!offer) return null;
-
-  const postedDate = offer?.created_at
-    ? new Date(offer.created_at).toLocaleDateString('en-GB')
-    : '-';
-  const location = [offer?.city, offer?.country].filter(Boolean).join(', ') || '-';
-  const statusLabel = offer?.status === 'paused' ? 'Paused' : 'Active';
   const formatNum = (v) => (Number.isFinite(v) ? Math.round(v) : 0);
   const deltaLabel = (current, avg) => {
     if (!Number.isFinite(avg) || avg <= 0) return 'No benchmark yet';
@@ -144,6 +161,70 @@ function JobDashboard({ offer, onClose }) {
     const sign = pct > 0 ? '+' : '';
     return `${sign}${pct}% vs avg`;
   };
+
+  const groupedApplications = useMemo(() => {
+    const groups = { shortlisted: [], new: [], reviewed: [] };
+    applications.forEach((app) => {
+      const rawStatus = app.status || 'new';
+      if (rawStatus === 'removed') return;
+      const status = rawStatus === 'in_review' ? 'reviewed' : rawStatus;
+      if (status === 'shortlisted') groups.shortlisted.push(app);
+      else if (status === 'reviewed') groups.reviewed.push(app);
+      else groups.new.push(app);
+    });
+    return groups;
+  }, [applications]);
+
+  const toggleAppsGroup = (key) => {
+    setAppsExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const updateApplicationStatus = async (applicationId, status, opts = {}) => {
+    const nextStatus = status === 'in_review' ? 'reviewed' : status;
+    const payload = { status: nextStatus };
+    if (opts.setReviewedAt) payload.reviewed_at = new Date().toISOString();
+    const { error } = await supabase
+      .from('job_direct_applications')
+      .update(payload)
+      .eq('id', applicationId);
+    if (error) {
+      console.warn('Failed to update application status', error);
+      return;
+    }
+    setApplications((prev) =>
+      prev.map((app) => (
+        app.id === applicationId
+          ? {
+              ...app,
+              status: nextStatus,
+              ...(opts.setReviewedAt ? { reviewed_at: new Date().toISOString() } : {}),
+            }
+          : app
+      ))
+    );
+    setAppStatuses((prev) => {
+      const counts = { ...prev };
+      const updated = applications.find((a) => a.id === applicationId);
+      const prevStatus = (updated?.status || 'new') === 'in_review' ? 'reviewed' : (updated?.status || 'new');
+      if (prevStatus === 'shortlisted') counts.shortlistedCount -= 1;
+      else if (prevStatus === 'removed') counts.removedCount -= 1;
+      else if (prevStatus === 'reviewed') counts.reviewedCount -= 1;
+      else counts.newCount -= 1;
+      if (nextStatus === 'shortlisted') counts.shortlistedCount += 1;
+      else if (nextStatus === 'removed') counts.removedCount += 1;
+      else if (nextStatus === 'reviewed') counts.reviewedCount += 1;
+      else counts.newCount += 1;
+      return counts;
+    });
+  };
+
+  if (!offer) return null;
+
+  const postedDate = offer?.created_at
+    ? new Date(offer.created_at).toLocaleDateString('en-GB')
+    : '-';
+  const location = [offer?.city, offer?.country].filter(Boolean).join(', ') || '-';
+  const statusLabel = offer?.status === 'paused' ? 'Paused' : 'Active';
 
   return (
     <Modal onClose={onClose} contentClassName="job-dashboard-modal">
@@ -190,31 +271,122 @@ function JobDashboard({ offer, onClose }) {
             <div className="jd-card-title">Direct Applications</div>
             {appsLoading ? (
               <div className="jd-empty">Loading applications...</div>
-            ) : applications.length === 0 ? (
+            ) : (applications.filter((a) => a.status !== 'removed').length === 0) ? (
               <div className="jd-empty">No direct applications yet.</div>
             ) : (
               <div className="jd-apps">
-                {applications.map((app) => {
-                  const p = app.profile;
-                  const name = p
-                    ? `${p.first_name || ''} ${p.last_name || ''}`.trim()
-                    : 'Candidate';
-                  const role = p?.primary_role || '';
-                  const loc = [p?.city_port, p?.country].filter(Boolean).join(', ');
-                  return (
-                    <div key={app.id} className="jd-app-row">
-                      <div className="jd-app-main">
-                        <div className="jd-app-name">{name || 'Candidate'}</div>
-                        <div className="jd-app-sub">
-                          {[role, loc].filter(Boolean).join(' • ') || '—'}
-                        </div>
-                      </div>
-                      <div className="jd-app-score">
-                        {Math.round(Number(app.match_score || 0))}%
-                      </div>
+                {[
+                  { key: 'shortlisted', label: 'Shortlisted', items: groupedApplications.shortlisted },
+                  { key: 'new', label: 'New', items: groupedApplications.new },
+                  { key: 'reviewed', label: 'Reviewed', items: groupedApplications.reviewed },
+                ]
+                  .filter((group) => group.items.length > 0)
+                  .map((group) => (
+                  <div key={group.key} className="jd-app-group">
+                    <div
+                      className="jd-app-group-header"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => toggleAppsGroup(group.key)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') toggleAppsGroup(group.key);
+                      }}
+                    >
+                      <span className="jd-app-group-label">
+                        <span className="jd-icon">{appsExpanded[group.key] ? '\u25BC' : '\u25B6'}</span>
+                        <span>{group.label}</span>
+                      </span>
+                      <span className="jd-app-group-count">{group.items.length}</span>
                     </div>
-                  );
-                })}
+                    {appsExpanded[group.key] && (
+                      <div className="jd-app-group-list">
+                        {group.items.map((app) => {
+                          const p = app.profile;
+                          const name = p
+                            ? `${p.first_name || ''} ${p.last_name || ''}`.trim()
+                            : 'Candidate';
+                          const role = p?.primary_role || '';
+                          const loc = [p?.city_port, p?.country].filter(Boolean).join(', ');
+                          const handle = p?.handle;
+                          const profileUrl = handle ? `/cv/${handle}` : '';
+                          const rawStatus = app.status || 'new';
+                          const status = rawStatus === 'in_review' ? 'reviewed' : rawStatus;
+                          const isNew = status === 'new';
+                          const isShortlisted = status === 'shortlisted';
+                          const wasReviewed = !!app.reviewed_at || status === 'reviewed';
+                          return (
+                            <div
+                              key={app.id}
+                              className={`jd-app-row${isNew ? ' is-new' : ''}${isShortlisted ? ' is-shortlisted' : ''}${status === 'removed' ? ' is-removed' : ''}`}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => {
+                                if (profileUrl) window.open(profileUrl, '_blank', 'noopener,noreferrer');
+                                if (status === 'new') updateApplicationStatus(app.id, 'reviewed', { setReviewedAt: true });
+                              }}
+                              onKeyDown={(e) => {
+                                if ((e.key === 'Enter' || e.key === ' ') && profileUrl) {
+                                  e.preventDefault();
+                                  window.open(profileUrl, '_blank', 'noopener,noreferrer');
+                                  if (status === 'new') updateApplicationStatus(app.id, 'reviewed', { setReviewedAt: true });
+                                }
+                              }}
+                              title={profileUrl ? 'Open Digital CV' : 'Digital CV not available'}
+                            >
+                              <div className="jd-app-main">
+                                <div className="jd-app-name">{name || 'Candidate'}</div>
+                                <div className="jd-app-sub">
+                                  {[role, loc].filter(Boolean).join(` \u2022 `) || '-'}
+                                </div>
+                              </div>
+                              <div className="jd-app-actions">
+                                <button
+                                  type="button"
+                                  className={`jd-app-btn jd-app-btn-shortlist${status === 'shortlisted' ? ' active' : ''}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (status === 'shortlisted') {
+                                      updateApplicationStatus(app.id, wasReviewed ? 'reviewed' : 'new');
+                                      return;
+                                    }
+                                    if (status === 'removed') {
+                                      updateApplicationStatus(app.id, wasReviewed ? 'reviewed' : 'new');
+                                      return;
+                                    }
+                                    updateApplicationStatus(app.id, 'shortlisted');
+                                  }}
+                                  title="Shortlist"
+                                >
+                                  <span className="jd-icon">{isShortlisted ? '\u2713' : '\u2605'}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="jd-app-btn jd-app-btn-remove"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (status === 'removed') {
+                                      updateApplicationStatus(app.id, wasReviewed ? 'reviewed' : 'new');
+                                      return;
+                                    }
+                                    const ok = window.confirm('Remove this application?');
+                                    if (!ok) return;
+                                    updateApplicationStatus(app.id, 'removed');
+                                  }}
+                                  title="Remove"
+                                >
+                                  <span className="jd-icon">{'\u2715'}</span>
+                                </button>
+                                <div className="jd-app-score">
+                                  {Math.round(Number(app.match_score || 0))}%
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </section>
@@ -224,15 +396,15 @@ function JobDashboard({ offer, onClose }) {
             <div className="jd-pipeline">
               <div className="jd-pipeline-row">
                 <span>New</span>
-                <span className="jd-pill">0</span>
+                <span className="jd-pill">{appStatuses.newCount}</span>
               </div>
               <div className="jd-pipeline-row">
-                <span>In Review</span>
-                <span className="jd-pill">0</span>
+                <span>Reviewed</span>
+                <span className="jd-pill">{appStatuses.reviewedCount}</span>
               </div>
               <div className="jd-pipeline-row">
                 <span>Shortlisted</span>
-                <span className="jd-pill">0</span>
+                <span className="jd-pill">{appStatuses.shortlistedCount}</span>
               </div>
               <div className="jd-pipeline-row">
                 <span>Hired</span>
@@ -340,10 +512,27 @@ function JobDashboard({ offer, onClose }) {
           .jd-pipeline { display:flex; flex-direction:column; gap:8px; }
           .jd-pipeline-row { display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border-radius:8px; background:rgba(0,0,0,0.03); }
           .jd-pill { min-width:28px; text-align:center; padding:2px 8px; border-radius:999px; background:rgba(0,0,0,0.12); font-weight:600; font-size:0.8rem; }
-          .jd-apps { display:flex; flex-direction:column; gap:10px; }
-          .jd-app-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border-radius:10px; border:1px solid rgba(0,0,0,0.08); background:rgba(0,0,0,0.02); }
+          .jd-apps { display:flex; flex-direction:column; gap:14px; }
+          .jd-app-group { display:flex; flex-direction:column; gap:8px; }
+          .jd-app-group-header { display:flex; align-items:center; justify-content:space-between; font-weight:700; font-size:0.95rem; cursor:pointer; user-select:none; }
+          .jd-app-group-label { display:inline-flex; align-items:center; gap:6px; }
+          .jd-app-group-count { font-size:0.85rem; opacity:0.7; }
+          .jd-app-group-list { display:flex; flex-direction:column; gap:10px; }
+          .jd-app-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border-radius:10px; border:1px solid rgba(0,0,0,0.08); background:rgba(0,0,0,0.02); cursor:pointer; }
+          .jd-app-row:hover { background:rgba(0,0,0,0.05); }
+          .jd-app-row.is-new { border-color: #22c55e; box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18); }
+          .jd-app-row.is-shortlisted { border-color: #f59e0b; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.18); }
+          .jd-app-row.is-removed { opacity: 0.6; }
           .jd-app-name { font-weight:600; }
           .jd-app-sub { font-size:0.85rem; color:var(--muted-2, #6b7280); margin-top:2px; }
+          .jd-app-actions { display:flex; align-items:center; gap:8px; }
+          .jd-icon { font-family:"Segoe UI Symbol","Noto Sans Symbols 2","Noto Sans Symbols","Segoe UI",system-ui,sans-serif; }
+          .jd-app-btn { width:26px; height:26px; border-radius:8px; border:1px solid rgba(0,0,0,0.08); background:rgba(0,0,0,0.04); font-size:13px; line-height:1; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease; }
+          .jd-app-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,0,0,0.18); }
+          .jd-app-btn-shortlist { color:#166534; }
+          .jd-app-btn-shortlist.active { background:rgba(202, 138, 4, 0.18); border-color:rgba(202, 138, 4, 0.5); color:#a16207; }
+          .jd-app-btn-remove { color:#b91c1c; }
+          .jd-app-btn-remove:hover { background:rgba(239, 68, 68, 0.16); border-color:rgba(239, 68, 68, 0.5); }
           .jd-app-score { min-width:54px; text-align:center; font-weight:700; background:rgba(0,0,0,0.12); border-radius:999px; padding:4px 10px; }
           .jd-benchmark { display:flex; flex-direction:column; gap:14px; }
           .jd-benchmark-row { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-radius:10px; background:rgba(0,0,0,0.04); }
@@ -375,6 +564,12 @@ function JobDashboard({ offer, onClose }) {
           body.dark-mode .jd-app-row { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.1); }
           body.dark-mode .jd-pill { background:rgba(255,255,255,0.18); }
           body.dark-mode .jd-app-score { background:rgba(255,255,255,0.18); }
+          body.dark-mode .jd-app-btn { background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.18); }
+          body.dark-mode .jd-app-row.is-new { border-color:#22c55e !important; box-shadow:0 0 0 2px rgba(34,197,94,0.28) !important; }
+          body.dark-mode .jd-app-row.is-shortlisted { border-color:#f59e0b !important; box-shadow:0 0 0 2px rgba(245,158,11,0.28) !important; }
+          body.dark-mode .jd-app-btn-shortlist { color:#22c55e !important; background:rgba(34, 197, 94, 0.18) !important; border-color:rgba(34, 197, 94, 0.65) !important; }
+          body.dark-mode .jd-app-btn-shortlist.active { background:rgba(202, 138, 4, 0.28) !important; border-color:rgba(202, 138, 4, 0.8) !important; color:#fbbf24 !important; }
+          body.dark-mode .jd-app-btn-remove { color:#ef4444 !important; background:rgba(239, 68, 68, 0.18) !important; border-color:rgba(239, 68, 68, 0.6) !important; }
         `}</style>
       </div>
     </Modal>

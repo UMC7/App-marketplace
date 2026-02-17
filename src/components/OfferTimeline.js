@@ -115,6 +115,7 @@ const OfferTimeline = ({
   handleShowChatLoginInfo,
   offersLoading,
   currentUser,
+  appliedOfferIds,
 }) => {
   const iconBarStyle = { display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 };
   const roundBtn = {
@@ -878,15 +879,17 @@ const OfferTimeline = ({
   </div>
   {!isOwner && (
     <div className="chat-actions">
-        <button
+      <button
         className="direct-apply-btn"
         onClick={(e) => {
           e.stopPropagation();
           handleDirectApply(offer.id);
         }}
         type="button"
+        disabled={appliedOfferIds?.has?.(offer.id)}
+        title={appliedOfferIds?.has?.(offer.id) ? 'Application submitted' : undefined}
       >
-        Direct Application
+        {appliedOfferIds?.has?.(offer.id) ? 'Application Submitted' : 'Direct Application'}
       </button>
       <button
         className={`start-chat-btn ${offer.is_private_chat_enabled === false ? 'start-chat-btn--disabled' : ''}`}

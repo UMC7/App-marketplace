@@ -96,7 +96,8 @@ const [pendingChat, setPendingChat] = useState(null);
   const [chatQueryHandled, setChatQueryHandled] = useState(false);
 const [showDirectApplyModal, setShowDirectApplyModal] = useState(false);
 const [directApplyModalType, setDirectApplyModalType] = useState(null);
-const [directApplicationReady, setDirectApplicationReady] = useState(false);
+  const [directApplicationReady, setDirectApplicationReady] = useState(false);
+  const [appliedOfferIds, setAppliedOfferIds] = useState(new Set());
 const [activeChat, setActiveChat] = useState(null);
 const [expandedWeeks, setExpandedWeeks] = useState({});
 const [expandedDays, setExpandedDays] = useState({});
@@ -269,6 +270,34 @@ useEffect(() => {
   };
 
   fetchShareReady();
+  return () => {
+    cancelled = true;
+  };
+}, [currentUser?.id]);
+
+useEffect(() => {
+  let cancelled = false;
+  if (!currentUser?.id) {
+    setAppliedOfferIds(new Set());
+    return () => {
+      cancelled = true;
+    };
+  }
+  const fetchApplied = async () => {
+    const { data, error } = await supabase
+      .from('job_direct_applications')
+      .select('offer_id')
+      .eq('candidate_user_id', currentUser.id);
+    if (cancelled) return;
+    if (error) {
+      console.warn('Failed to load applied offers', error);
+      setAppliedOfferIds(new Set());
+      return;
+    }
+    const ids = new Set((data || []).map((r) => r.offer_id));
+    setAppliedOfferIds(ids);
+  };
+  fetchApplied();
   return () => {
     cancelled = true;
   };
@@ -638,6 +667,10 @@ const handleDirectApply = async (offerId) => {
     toast.error('Offer not found. Please refresh and try again.');
     return;
   }
+  if (appliedOfferIds.has(offerId)) {
+    toast.info('Application already submitted.');
+    return;
+  }
   if (allowed && offerId) {
     const { error: rpcErr } = await supabase.rpc('rpc_submit_direct_application', {
       p_offer_id: offerId,
@@ -654,6 +687,7 @@ const handleDirectApply = async (offerId) => {
     if (logErr) {
       console.warn('direct_apply log error', logErr);
     }
+    setAppliedOfferIds((prev) => new Set(prev).add(offerId));
   }
   setDirectApplyModalType(allowed ? 'success' : 'profile_required');
   setShowDirectApplyModal(true);
@@ -911,6 +945,7 @@ const handleDirectApply = async (offerId) => {
         handleShowChatLoginInfo={handleShowChatLoginInfo}
         offersLoading={offersLoading}
         currentUser={currentUser}
+        appliedOfferIds={appliedOfferIds}
       />
 
       {showChatIntro && (
