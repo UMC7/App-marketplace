@@ -166,6 +166,13 @@ function Pill({ children }) {
 /* =========================
    Componente principal
 ========================= */
+const LIFESTYLE_DISPLAY_DEFAULTS = {
+  smoking: 'Non-smoker',
+  vaping: 'None',
+  alcohol: 'None',
+  fitness: 'None',
+};
+
 export default function PublicLifestyleHabitsSection({ profile }) {
   // Fuente: columna lifestyle_habits (o fallback a prefs_skills.lifestyleHabits)
   const lh = useMemo(() => {
@@ -174,11 +181,11 @@ export default function PublicLifestyleHabitsSection({ profile }) {
       profile?.prefs_skills?.lifestyleHabits ||
       {};
     return {
-      smoking: src.smoking || '',
-      vaping: src.vaping || '',
-      alcohol: src.alcohol || '',
-      fitness: src.fitness || '',
-      tattoosVisible: src.tattoosVisible || '',          // "Yes"/"No"/""
+      smoking: (src.smoking || '').trim() || LIFESTYLE_DISPLAY_DEFAULTS.smoking,
+      vaping: (src.vaping || '').trim() || LIFESTYLE_DISPLAY_DEFAULTS.vaping,
+      alcohol: (src.alcohol || '').trim() || LIFESTYLE_DISPLAY_DEFAULTS.alcohol,
+      fitness: (src.fitness || '').trim() || LIFESTYLE_DISPLAY_DEFAULTS.fitness,
+      tattoosVisible: src.tattoosVisible || '',
       dietaryAllergies: Array.isArray(src.dietaryAllergies)
         ? src.dietaryAllergies
         : [],

@@ -1,6 +1,5 @@
 // src/components/cv/candidate/cvsections/PreferencesSkills.js
 import React from 'react';
-import supabase from '../../../../supabase';
 
 import {
   AvailabilityPicker,
@@ -50,13 +49,6 @@ export function buildPrefsSkillsPayload({
   if (onboardPrefs !== undefined)         payload.onboardPrefs = onboardPrefs;
 
   return payload;
-}
-
-export async function savePreferencesSkills(props) {
-  const payload = buildPrefsSkillsPayload(props);
-  const { data, error } = await supabase.rpc('rpc_save_prefs_skills', { payload });
-  if (error) throw error;
-  return Array.isArray(data) ? data[0] ?? null : null;
 }
 
 function useIsMobile() {

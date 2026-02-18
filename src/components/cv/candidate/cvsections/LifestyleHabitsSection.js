@@ -82,6 +82,9 @@ export default function LifestyleHabitsSection({ value, onChange, mode = 'profes
 
   const setField = (k) => (next) => onChange({ ...v, [k]: next });
   const missTattoos = showRequired && !(v.tattoosVisible || '').trim();
+  const missSmoking = showRequired && !(v.smoking || '').trim();
+  const missVaping = showRequired && !(v.vaping || '').trim();
+  const missAlcohol = showRequired && !(v.alcohol || '').trim();
   const missAllergies = showRequired && (!Array.isArray(v.dietaryAllergies) || v.dietaryAllergies.length === 0);
   const missFitness = showRequired && !(v.fitness || '').trim();
 
@@ -136,27 +139,30 @@ export default function LifestyleHabitsSection({ value, onChange, mode = 'profes
           />
         ) : null}
 
-        {showOptional ? (
+        {(showOptional || isLite) ? (
           <>
             <SelectField
-              label="Smoking habits"
+              label={isLite ? reqLabel('Smoking habits') : 'Smoking habits'}
               options={SMOKING}
               value={v.smoking}
               onChange={setField('smoking')}
+              className={missSmoking ? 'cp-missing' : ''}
             />
 
             <SelectField
-              label="Vaping"
+              label={isLite ? reqLabel('Vaping') : 'Vaping'}
               options={VAPING}
               value={v.vaping}
               onChange={setField('vaping')}
+              className={missVaping ? 'cp-missing' : ''}
             />
 
             <SelectField
-              label="Alcohol consumption"
+              label={isLite ? reqLabel('Alcohol consumption') : 'Alcohol consumption'}
               options={ALCOHOL}
               value={v.alcohol}
               onChange={setField('alcohol')}
+              className={missAlcohol ? 'cp-missing' : ''}
             />
           </>
         ) : null}

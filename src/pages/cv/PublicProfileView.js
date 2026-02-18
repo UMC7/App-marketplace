@@ -470,14 +470,25 @@ export default function PublicProfileView() {
 
         const { data: freshPR } = await supabase
           .from('public_profiles')
-          .select('prefs_skills, languages, skills, share_ready')
+          .select('prefs_skills, prefs_skills_lite, prefs_skills_pro, languages, skills, share_ready')
           .eq('id', baseRow.id)
           .single();
 
+        // Merge prefs: los datos reales están en prefs_skills_lite (Lite) y prefs_skills_pro (Professional)
+        // El CV debe leer de ambas fuentes para mostrar availability, languages, skills, lifestyle, etc.
+        const liteData = freshPR && typeof freshPR.prefs_skills_lite === 'object' && freshPR.prefs_skills_lite !== null
+          ? freshPR.prefs_skills_lite
+          : {};
+        const proData = freshPR && typeof freshPR.prefs_skills_pro === 'object' && freshPR.prefs_skills_pro !== null
+          ? freshPR.prefs_skills_pro
+          : {};
+        const legacyPrefs = freshPR && typeof freshPR.prefs_skills === 'object' && freshPR.prefs_skills !== null
+          ? freshPR.prefs_skills
+          : (baseRow?.prefs_skills ?? {});
         const mergedPrefs =
-          freshPR && typeof freshPR.prefs_skills === 'object' && freshPR.prefs_skills !== null
-            ? { ...(baseRow?.prefs_skills || {}), ...freshPR.prefs_skills }
-            : (baseRow?.prefs_skills ?? null);
+          Object.keys(liteData).length || Object.keys(proData).length
+            ? { ...legacyPrefs, ...liteData, ...proData }
+            : (legacyPrefs && Object.keys(legacyPrefs).length ? legacyPrefs : (baseRow?.prefs_skills ?? null));
         const mergedLanguages =
           (freshPR && freshPR.languages != null) ? freshPR.languages
             : (baseRow?.languages ?? exposed?.languages ?? null);

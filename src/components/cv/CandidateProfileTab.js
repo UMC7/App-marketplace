@@ -244,11 +244,11 @@ function buildLitePrefsPayload() {
     const lh = ps && typeof ps.lifestyleHabits === 'object' ? ps.lifestyleHabits : {};
     setLifestyleHabits({
       tattoosVisible: lh.tattoosVisible || '',
-      smoking: lh.smoking || '',
-      vaping: lh.vaping || '',
-      alcohol: lh.alcohol || '',
+      smoking: (lh.smoking || '').trim() || 'Non-smoker',
+      vaping: (lh.vaping || '').trim() || 'None',
+      alcohol: (lh.alcohol || '').trim() || 'None',
       dietaryAllergies: Array.isArray(lh.dietaryAllergies) ? lh.dietaryAllergies : [],
-      fitness: lh.fitness || '',
+      fitness: (lh.fitness || '').trim() || 'None',
     });
     setDocFlags({
       ...DEFAULT_DOC_FLAGS,
@@ -274,10 +274,10 @@ function buildLitePrefsPayload() {
 
   useEffect(() => {
     const mode = isAdminView
-      ? String(targetUser?.cv_mode || '').toLowerCase()
-      : currentUser?.app_metadata?.cv_mode;
+      ? 'lite'
+      : (currentUser?.app_metadata?.cv_mode || targetUser?.cv_mode);
     if (mode === 'lite' || mode === 'professional') {
-      setProfileMode(mode);
+      setProfileMode(String(mode).toLowerCase());
     }
   }, [isAdminView, targetUser?.cv_mode, currentUser?.app_metadata?.cv_mode]);
 
@@ -376,6 +376,7 @@ function buildLitePrefsPayload() {
   const [persistedPaths, setPersistedPaths] = useState([]);
   const [expCount, setExpCount] = useState(0);
   const [refsCount, setRefsCount] = useState(0);
+  const [adminRefs, setAdminRefs] = useState([]);
   const publicUrl = useMemo(() => {
     if (!profile?.handle) return '';
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -549,21 +550,22 @@ function buildLitePrefsPayload() {
           }
 
           const lh = docSrc && typeof docSrc.lifestyleHabits === 'object' ? docSrc.lifestyleHabits : {};
-          setLifestyleHabits({
+          const lhDefaults = {
+            smoking: (lh.smoking || '').trim() || 'Non-smoker',
+            vaping: (lh.vaping || '').trim() || 'None',
+            alcohol: (lh.alcohol || '').trim() || 'None',
+            fitness: (lh.fitness || '').trim() || 'None',
+          };
+          const lhMerged = {
             tattoosVisible: lh.tattoosVisible || '',
-            smoking: lh.smoking || '',
-            vaping: lh.vaping || '',
-            alcohol: lh.alcohol || '',
+            ...lhDefaults,
             dietaryAllergies: Array.isArray(lh.dietaryAllergies) ? lh.dietaryAllergies : [],
-            fitness: lh.fitness || '',
-          });
+          };
+          setLifestyleHabits(lhMerged);
           setLifestyleBaseline({
             tattoosVisible: lh.tattoosVisible || '',
-            smoking: lh.smoking || '',
-            vaping: lh.vaping || '',
-            alcohol: lh.alcohol || '',
+            ...lhDefaults,
             dietaryAllergies: Array.isArray(lh.dietaryAllergies) ? lh.dietaryAllergies : [],
-            fitness: lh.fitness || '',
           });
 
           setPersonal((p) => ({
@@ -734,6 +736,38 @@ useEffect(() => {
   })();
   return () => { cancelled = true; };
 }, [profile?.id]);
+
+  // En vista admin: RLS puede bloquear public_references; cargar refs vía RPC público
+  useEffect(() => {
+    if (!isAdminView || !profile?.handle) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: refRows, error } = await supabase.rpc('rpc_public_references_by_handle', { handle_in: profile.handle });
+        if (cancelled) return;
+        if (error) {
+          setAdminRefs([]);
+          setRefsCount(0);
+          return;
+        }
+        const normalized = (refRows || []).map((r) => ({
+          id: r.id,
+          name: r.name || '',
+          role: r.role || '',
+          vessel_company: r.vessel_company || '',
+          email: r.email || '',
+          phone: r.phone || '',
+          attachment_path: r.attachment_path ?? r.file_url ?? null,
+          attachment_name: r.attachment_name || r.title || r.name || '',
+        }));
+        setAdminRefs(normalized);
+        setRefsCount(normalized.length);
+      } catch {
+        if (!cancelled) setAdminRefs([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isAdminView, profile?.handle]);
 
   const openAnalytics = () => {
     const h = profile?.handle;
@@ -1433,12 +1467,15 @@ const experienceProgress = { count: expCount > 0 ? 1 : 0, total: 1 };
     ? {
         count:
           (lifestyleHabits?.tattoosVisible ? 1 : 0) +
+          (lifestyleHabits?.smoking ? 1 : 0) +
+          (lifestyleHabits?.vaping ? 1 : 0) +
+          (lifestyleHabits?.alcohol ? 1 : 0) +
           (Array.isArray(lifestyleHabits?.dietaryAllergies) &&
           lifestyleHabits.dietaryAllergies.length > 0
             ? 1
             : 0) +
           (lifestyleHabits?.fitness ? 1 : 0),
-        total: 3,
+        total: 6,
       }
     : {
         count:
@@ -1493,15 +1530,14 @@ const referencesProgress = { count: refsCount > 0 ? 1 : 0, total: 1 };
 
 const educationProgress = { count: (educationCount || 0) > 0 ? 1 : 0, total: 1 };
 
-const mediaProgress = {
-  count: Math.min(gallery.length, isLite ? 3 : 9),
-  total: isLite ? 3 : 9,
-};
-
 const galleryImagesCount = Array.isArray(gallery)
   ? gallery.filter((it) => (it?.type || inferTypeByName(it?.name || it?.path || it?.url || '')) === 'image').length
   : 0;
-const meetsPhotosImagesMin = galleryImagesCount >= 3;
+
+const mediaProgress = {
+  count: Math.min(galleryImagesCount, isLite ? 3 : 9),
+  total: isLite ? 3 : 9,
+};
 
 const galleryDirty = useMemo(() => {
   const current = Array.isArray(gallery)
@@ -1548,12 +1584,15 @@ const meetsPrefsMin =
 
   const meetsLifestyleMin =
   !!(liteSnapshot?.lifestyleHabits?.tattoosVisible && String(liteSnapshot.lifestyleHabits.tattoosVisible).trim()) &&
+  !!(liteSnapshot?.lifestyleHabits?.smoking && String(liteSnapshot.lifestyleHabits.smoking).trim()) &&
+  !!(liteSnapshot?.lifestyleHabits?.vaping && String(liteSnapshot.lifestyleHabits.vaping).trim()) &&
+  !!(liteSnapshot?.lifestyleHabits?.alcohol && String(liteSnapshot.lifestyleHabits.alcohol).trim()) &&
   Array.isArray(liteSnapshot?.lifestyleHabits?.dietaryAllergies) && liteSnapshot.lifestyleHabits.dietaryAllergies.length > 0 &&
   !!(liteSnapshot?.lifestyleHabits?.fitness && String(liteSnapshot.lifestyleHabits.fitness).trim());
 
   const lifestyleSaveDisabled = saving || !lifestyleDirty;
 
-  const meetsMediaMin = Array.isArray(gallery) && gallery.length >= 3;
+  const meetsMediaMin = galleryImagesCount >= 3;
   const gallerySaveDisabled = savingGallery || !galleryDirty || !canEdit;
 
   const meetsAboutMin = !!(profile?.about_me && String(profile.about_me).trim());
@@ -1928,7 +1967,8 @@ const meetsPrefsMin =
                 showRequiredMark={!isLite}
                 mode={profileMode}
                 readOnly={!canEdit}
-                userId={isAdminView ? adminUserId : undefined}
+                userId={isAdminView ? undefined : undefined}
+                handleForAdminLoad={isAdminView ? profile?.handle : undefined}
               />
             </div>
           ) : null}
@@ -1953,7 +1993,9 @@ const meetsPrefsMin =
             <div className="cp-card">
               <h3 className="cp-h3">References</h3>
               <ReferencesSection
-                profileId={profile?.id}
+                profileId={isAdminView ? undefined : profile?.id}
+                value={isAdminView ? adminRefs : undefined}
+                onChange={isAdminView ? (next) => { setAdminRefs(Array.isArray(next) ? next : []); setRefsCount(Array.isArray(next) ? next.length : 0); } : undefined}
                 onCountChange={(n) => setRefsCount(Number(n) || 0)}
                 showRequiredMark={!isLite}
                 mode={profileMode}

@@ -5,6 +5,16 @@ import SectionCard from "../sectionscomponents/aboutme/SectionCard";
 import AboutMeEditor from "../sectionscomponents/aboutme/AboutMeEditor";
 import ProfessionalStatementEditor from "../sectionscomponents/aboutme/ProfessionalStatementEditor";
 
+/**
+ * Normaliza saltos de línea introducidos por móvil (wrapping estrecho o pegado desde otra app).
+ * Solo sustituye \n simple por espacio cuando la línea siguiente continúa la frase (minúscula).
+ * Mantiene \n\n (párrafos) y \n antes de mayúscula (nueva frase/intención).
+ */
+function normalizeLongText(text) {
+  if (!text || typeof text !== "string") return text;
+  return text.replace(/(\n)(?!\n)\s*(?=[a-záéíóúñü])/g, " ");
+}
+
 export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = 'professional', readOnly = false }) {
   const isLite = mode === 'lite';
   const isProfessional = mode === 'professional';
@@ -48,8 +58,8 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = '
     if (!canSave || saving) return;
 
     const payload = {
-      about_me: (about || "").trim(),
-      professional_statement: (statement || "").trim(),
+      about_me: normalizeLongText((about || "").trim()),
+      professional_statement: normalizeLongText((statement || "").trim()),
     };
 
     // allow partial saves even if minimums not met

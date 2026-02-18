@@ -8,6 +8,7 @@ import EducationItemForm from '../sectionscomponents/education/EducationItemForm
 
 export default function EducationSection({
   userId: userIdProp,
+  handleForAdminLoad,
   showRequiredMark = true,
   mode = 'professional',
   readOnly = false,
@@ -48,33 +49,48 @@ export default function EducationSection({
     };
   }, [userIdProp]);
 
-  // cargar items
+  // cargar items: por handle (admin, mismo RPC que el CV) o por user_id
   useEffect(() => {
-    if (!userId) return;
     let cancelled = false;
     async function load() {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('cv_education')
-        .select('*')
-        .eq('user_id', userId)
-        .order('start_year', { ascending: false })
-        .order('start_month', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      if (cancelled) return;
-      if (error) {
-        toast.error('Failed to load Education.');
-      } else {
-        setItems(data || []);
+      try {
+        if (handleForAdminLoad && handleForAdminLoad.trim()) {
+          const { data, error } = await supabase.rpc('rpc_public_education_by_handle', {
+            handle_in: handleForAdminLoad.trim(),
+          });
+          if (cancelled) return;
+          if (error) {
+            toast.error('Failed to load Education.');
+            setItems([]);
+          } else {
+            setItems(Array.isArray(data) ? data : []);
+          }
+        } else if (userId) {
+          const { data, error } = await supabase
+            .from('cv_education')
+            .select('*')
+            .eq('user_id', userId)
+            .order('start_year', { ascending: false })
+            .order('start_month', { ascending: false })
+            .order('created_at', { ascending: false });
+          if (cancelled) return;
+          if (error) {
+            toast.error('Failed to load Education.');
+            setItems([]);
+          } else {
+            setItems(data || []);
+          }
+        } else {
+          setItems([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     }
     load();
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
+    return () => { cancelled = true; };
+  }, [userId, handleForAdminLoad]);
 
   async function createItem(payload) {
     if (readOnly) return;
