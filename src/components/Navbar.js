@@ -191,10 +191,15 @@ function Navbar() {
     navigate('/login');
   };
 
-const handleOpenChat = (offerId, receiverId) => {
+const handleOpenChat = (offerId, receiverId, options = {}) => {
 
   if (offerId === '__external__') {
     setActiveChat({ external: true, threadId: receiverId });
+    return;
+  }
+
+  if (offerId === '__admin__') {
+    setActiveChat({ admin: true, threadId: options.adminThreadId, adminUserId: receiverId });
     return;
   }
 
@@ -455,6 +460,20 @@ const handleOpenChat = (offerId, receiverId) => {
             <ChatPage
               mode="external"
               externalThreadId={activeChat.threadId}
+              onBack={() => {
+                setActiveChat(null);
+                setShowChatList(true);
+              }}
+              onClose={() => {
+                setActiveChat(null);
+                setShowChatList(false);
+              }}
+            />
+          ) : activeChat.admin ? (
+            <ChatPage
+              mode="admin"
+              adminThreadId={activeChat.threadId}
+              adminUserId={activeChat.adminUserId}
               onBack={() => {
                 setActiveChat(null);
                 setShowChatList(true);

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabase';
 import Modal from '../../components/Modal';
+import ChatPage from '../../components/ChatPage';
 
 // Recibe currentUser como prop o usa tu contexto
 function UsersTab({ currentUser }) {
@@ -12,6 +13,11 @@ function UsersTab({ currentUser }) {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({});
+  const [adminUser, setAdminUser] = useState(null);
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [chatThreadId, setChatThreadId] = useState(null);
+  const [chatUserId, setChatUserId] = useState(null);
+  const [chatLoading, setChatLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const rowsPerPage = 50;
@@ -19,6 +25,14 @@ function UsersTab({ currentUser }) {
   useEffect(() => {
     fetchUsers();
     // eslint-disable-next-line
+  }, []);
+
+  useEffect(() => {
+    const loadAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setAdminUser(user);
+    };
+    loadAdmin();
   }, []);
 
   async function fetchUsers() {
@@ -168,6 +182,53 @@ function UsersTab({ currentUser }) {
     ? users.find(e => e.id === selectedUserId)
     : null;
 
+  const openAdminChat = async (userId) => {
+    if (!userId) return;
+    let admin = adminUser;
+    if (!admin) {
+      const { data: { user } } = await supabase.auth.getUser();
+      admin = user || null;
+      setAdminUser(admin);
+    }
+    if (!admin?.id) {
+      alert('Unable to load admin user.');
+      return;
+    }
+    if (admin.id === userId) {
+      alert('You cannot start a chat with yourself.');
+      return;
+    }
+
+    setChatLoading(true);
+    const { data: existing } = await supabase
+      .from('admin_threads')
+      .select('id')
+      .eq('admin_id', admin.id)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    let threadId = existing?.id;
+    if (!threadId) {
+      const { data: created, error: createError } = await supabase
+        .from('admin_threads')
+        .insert({ admin_id: admin.id, user_id: userId })
+        .select('id')
+        .single();
+
+      if (createError) {
+        alert(`Error creating admin chat: ${createError.message}`);
+        setChatLoading(false);
+        return;
+      }
+      threadId = created?.id;
+    }
+
+    setChatThreadId(threadId);
+    setChatUserId(userId);
+    setChatModalOpen(true);
+    setChatLoading(false);
+  };
+
   return (
     <div>
       <h3>Users</h3>
@@ -264,6 +325,25 @@ function UsersTab({ currentUser }) {
                   }}
                 >
                   {user.id === selectedUserId ? 'Selected' : 'Select'}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openAdminChat(user.id);
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid #1b2430',
+                    background: '#1b2430',
+                    color: '#e2e8f0',
+                    cursor: chatLoading ? 'not-allowed' : 'pointer',
+                    marginLeft: 8,
+                  }}
+                  disabled={chatLoading}
+                >
+                  Chat
                 </button>
               </td>
             </tr>
@@ -378,6 +458,17 @@ function UsersTab({ currentUser }) {
             ))}
             <button type="submit" style={{ marginTop: 10 }}>Save</button>
           </form>
+        </Modal>
+      )}
+
+      {chatModalOpen && chatThreadId && chatUserId && (
+        <Modal onClose={() => setChatModalOpen(false)}>
+          <ChatPage
+            mode="admin"
+            adminThreadId={chatThreadId}
+            adminUserId={chatUserId}
+            onClose={() => setChatModalOpen(false)}
+          />
         </Modal>
       )}
 

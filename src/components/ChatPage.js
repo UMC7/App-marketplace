@@ -56,7 +56,7 @@ const getDateLabel = (date) => {
 const formatTime = (date) =>
   date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
-function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId }) {
+function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId, adminThreadId, adminUserId }) {
   const [messages, setMessages] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [message, setMessage] = useState('');
@@ -79,6 +79,8 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
   // External/anonymous mode flag
   const isExternal = mode === 'external' && !!externalThreadId;
+  const isAdminThread = mode === 'admin' && !!adminThreadId;
+  const otherUserId = isAdminThread ? adminUserId : receiverId;
 
   const { fetchUnreadMessages } = useUnreadMessages();
   const fetchUnreadRef = useRef(fetchUnreadMessages);
@@ -145,7 +147,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     fetchUser();
   }, []);
 
-  // Load counterpart profile (internal) or set Anonymous (external)
+  // Load counterpart profile (internal/admin) or set Anonymous (external)
   useEffect(() => {
     const loadOther = async () => {
       if (isExternal) {
@@ -153,11 +155,11 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         setOtherAvatar(null);
         return;
       }
-      if (!receiverId) return;
+      if (!otherUserId) return;
       const { data, error } = await supabase
         .from('users')
         .select('nickname, avatar_url')
-        .eq('id', receiverId)
+        .eq('id', otherUserId)
         .single();
       if (!error && data) {
         setOtherNickname(data.nickname || 'User');
@@ -165,11 +167,11 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       }
     };
     loadOther();
-  }, [isExternal, receiverId]);
+  }, [isExternal, otherUserId]);
 
   useEffect(() => {
     const loadOffer = async () => {
-      if (isExternal || !offerId) {
+      if (isExternal || isAdminThread || !offerId) {
         setOfferMeta(null);
         return;
       }
@@ -183,13 +185,13 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       }
     };
     loadOffer();
-  }, [isExternal, offerId]);
+  }, [isExternal, isAdminThread, offerId]);
 
   // Marcar como leídas las notificaciones de este chat al abrir la conversación
   useEffect(() => {
-    if (isExternal || !currentUser?.id || !offerId || !receiverId) return;
+    if (isExternal || isAdminThread || !currentUser?.id || !offerId || !receiverId) return;
     markNotificationsForChatAsRead(supabase, currentUser.id, offerId, receiverId);
-  }, [isExternal, currentUser?.id, offerId, receiverId]);
+  }, [isExternal, isAdminThread, currentUser?.id, offerId, receiverId]);
 
   // Load messages (internal vs external)
   useEffect(() => {
@@ -206,6 +208,33 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
         if (!error) {
           setMessages(data || []);
+        }
+        return;
+      }
+
+      if (isAdminThread) {
+        setIsChatClosed(false);
+        const { data, error } = await supabase
+          .from('admin_messages')
+          .select('*')
+          .eq('thread_id', adminThreadId)
+          .order('sent_at', { ascending: true });
+
+        if (!error) {
+          setMessages(data || []);
+
+          const unreadIds = (data || [])
+            .filter((msg) => msg.receiver_id === currentUser.id && !msg.read)
+            .map((msg) => msg.id);
+
+          if (unreadIds.length > 0) {
+            await supabase
+              .from('admin_messages')
+              .update({ read: true })
+              .in('id', unreadIds);
+
+            fetchUnreadMessages();
+          }
         }
         return;
       }
@@ -263,7 +292,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     };
 
     fetchMessages();
-  }, [isExternal, externalThreadId, offerId, receiverId, currentUser, fetchUnreadMessages, refreshKey]);
+  }, [isExternal, isAdminThread, externalThreadId, adminThreadId, offerId, receiverId, currentUser, fetchUnreadMessages, refreshKey]);
 
   // Refetch mensajes al volver a la app (fallback cuando Realtime se desconecta en segundo plano)
   useEffect(() => {
@@ -275,7 +304,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   }, [isExternal]);
 
   useEffect(() => {
-    if (isExternal) return;
+    if (isExternal || isAdminThread) return;
     if (!currentUser || !offerId || !receiverId) return;
 
     const channel = supabase
@@ -321,7 +350,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUser, offerId, receiverId, isExternal]);
+  }, [currentUser, offerId, receiverId, isExternal, isAdminThread]);
 
   useEffect(() => {
     if (!isExternal || !externalThreadId) return;
@@ -348,9 +377,102 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     };
   }, [externalThreadId, isExternal]);
 
+  useEffect(() => {
+    if (!isAdminThread || !adminThreadId || !currentUser) return;
+
+    const channel = supabase
+      .channel(`admin-chat-${adminThreadId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'admin_messages',
+          filter: `thread_id=eq.${adminThreadId}`,
+        },
+        async ({ new: payload }) => {
+          if (!payload?.id) return;
+          setMessages((prev) => (prev.some((msg) => msg.id === payload.id) ? prev : [...prev, payload]));
+          if (payload.receiver_id === currentUser.id && !payload.read) {
+            await supabase
+              .from('admin_messages')
+              .update({ read: true })
+              .eq('id', payload.id);
+            fetchUnreadRef.current?.();
+          }
+        }
+      );
+
+    channel.subscribe();
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [isAdminThread, adminThreadId, currentUser]);
+
   const handleSend = async () => {
     if (isChatClosed) return;
     if (!message && !file) return;
+
+    if (isAdminThread) {
+      if (!adminThreadId || !otherUserId) return;
+
+      let fileUrl = null;
+      if (file) {
+        if (!validateFile(file)) return;
+        setUploading(true);
+        const path = `admin-chat/${adminThreadId}/${Date.now()}_${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('chat-uploads')
+          .upload(path, file);
+        if (uploadError) {
+          setUploading(false);
+          setFileError(uploadError.message || 'Upload failed.');
+          console.error('Error uploading file:', uploadError);
+          return;
+        }
+        const oneWeekSeconds = 60 * 60 * 24 * 7;
+        const { data, error: signError } = await supabase.storage
+          .from('chat-uploads')
+          .createSignedUrl(path, oneWeekSeconds);
+        if (signError || !data?.signedUrl) {
+          setUploading(false);
+          setFileError(signError?.message || 'Failed to sign file.');
+          console.error('Error signing file:', signError);
+          return;
+        }
+        fileUrl = data.signedUrl;
+        setUploading(false);
+      }
+
+      const text = message.trim();
+      const payload = {
+        thread_id: adminThreadId,
+        sender_id: currentUser.id,
+        receiver_id: otherUserId,
+        message: text || '',
+        file_url: fileUrl || null,
+        sent_at: new Date().toISOString(),
+        read: false,
+      };
+
+      const { error } = await supabase.from('admin_messages').insert([payload]);
+      if (!error) {
+        setMessage('');
+        resetFileInput();
+        setFileError('');
+
+        const { data: updated } = await supabase
+          .from('admin_messages')
+          .select('*')
+          .eq('thread_id', adminThreadId)
+          .order('sent_at', { ascending: true });
+        setMessages(updated || []);
+      } else {
+        setFileError(error.message || 'Failed to send message.');
+        console.error('Error sending message:', error);
+      }
+      return;
+    }
 
     // External (anonymous) chat: text only (MVP)
     if (isExternal) {
@@ -443,7 +565,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
   const renderMessages = () => (
     <div className="chat-messages">
-      {!isExternal && (
+      {!isExternal && !isAdminThread && (
         <div className="safety-notice" role="note">
           <h4 className="safety-notice-title">⚠️ Safety Notice</h4>
           {DISCLAIMER_PARAGRAPHS.map((paragraph, idx) => (
@@ -460,7 +582,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
             : msg.sender_id === currentUser.id;
 
           const text = isExternal ? msg.content : msg.message;
-          const isSystemMessage = !isExternal && typeof text === 'string'
+          const isSystemMessage = !isExternal && !isAdminThread && typeof text === 'string'
             && (text.startsWith('[system] ') || text === 'The other user has deleted this conversation.');
           const systemText = isSystemMessage
             ? text.replace(/^\[system\]\s*/, '')
@@ -531,12 +653,12 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
                 {text && extractUrls(text).map((url, idx) => (
                   <LinkPreview key={`link-${msg.id}-${idx}`} url={url} />
                 ))}
-                {!isExternal && msg.file_url && (
-                  <a
-                    href={msg.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="chat-file-link"
+        {!isExternal && msg.file_url && (
+          <a
+            href={msg.file_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="chat-file-link"
                   >
                     📎 View file
                   </a>
@@ -634,7 +756,11 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     );
   };
 
-  const headerLabel = isExternal ? 'Anonymous chat' : `Offer private chat – ${otherNickname}`;
+  const headerLabel = isExternal
+    ? 'Anonymous chat'
+    : isAdminThread
+      ? `Admin chat – ${otherNickname}`
+      : `Offer private chat – ${otherNickname}`;
   const offerLabel = offerMeta?.teammate_rank || offerMeta?.title;
   const handleOpenOffer = () => {
     if (!offerId) return;
@@ -652,7 +778,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         <div className="chat-back-bar">
           <button className="chat-back-btn" onClick={onBack}>⬅ Back</button>
         </div>
-        {!isExternal && offerLabel && (
+        {!isExternal && !isAdminThread && offerLabel && (
           <button className="chat-offer-link" type="button" onClick={handleOpenOffer}>
             Position: {offerLabel} · View job
           </button>
@@ -672,7 +798,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
           <button className="chat-back-btn" onClick={onBack}>⬅ Back</button>
         </div>
       )}
-      {!isExternal && offerLabel && (
+      {!isExternal && !isAdminThread && offerLabel && (
         <button className="chat-offer-link" type="button" onClick={handleOpenOffer}>
           Position: {offerLabel} · View job
         </button>

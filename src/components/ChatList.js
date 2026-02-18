@@ -82,6 +82,15 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
         return;
       }
 
+      const { data: adminThreads, error: adminErr } = await supabase
+        .from('admin_threads')
+        .select('id, admin_id, user_id, created_at')
+        .or(`admin_id.eq.${currentUser.id},user_id.eq.${currentUser.id}`);
+
+      if (adminErr) {
+        console.error('Error fetching admin threads:', adminErr);
+      }
+
       const uniqueChats = {};
       for (const msg of messages || []) {
         const otherUser =
@@ -101,10 +110,13 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
       }
 
       const chatArray = Object.values(uniqueChats);
-      const userIds = [...new Set(chatArray.map((c) => c.user_id))];
+      const adminOtherIds = (adminThreads || []).map((thread) =>
+        thread.admin_id === currentUser.id ? thread.user_id : thread.admin_id
+      );
+      const userIds = [...new Set([...chatArray.map((c) => c.user_id), ...adminOtherIds])];
       const offerIds = [...new Set(chatArray.map((c) => c.offer_id))];
 
-      const [{ data: users }, { data: offers }, { data: unreadRows }] = await Promise.all([
+      const [{ data: users }, { data: offers }, { data: unreadRows }, { data: adminUnreadRows }] = await Promise.all([
         userIds.length
           ? supabase.from('users').select('id, nickname, avatar_url').in('id', userIds)
           : Promise.resolve({ data: [] }),
@@ -114,6 +126,11 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
         supabase
           .from('yacht_work_messages')
           .select('offer_id, sender_id')
+          .eq('receiver_id', currentUser.id)
+          .eq('read', false),
+        supabase
+          .from('admin_messages')
+          .select('thread_id')
           .eq('receiver_id', currentUser.id)
           .eq('read', false),
       ]);
@@ -149,6 +166,10 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
         acc[key] = (acc[key] || 0) + 1;
         return acc;
       }, {});
+      const adminUnreadMap = (adminUnreadRows || []).reduce((acc, row) => {
+        acc[row.thread_id] = (acc[row.thread_id] || 0) + 1;
+        return acc;
+      }, {});
 
       const internalRows = chatArray.map((chat) => {
         const state = stateMap[getChatKey(chat.offer_id, chat.user_id)];
@@ -162,6 +183,31 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
           unreadCount: unreadMap[getChatKey(chat.offer_id, chat.user_id)] || 0,
         };
       });
+
+      const adminRows = [];
+      for (const thread of adminThreads || []) {
+        const otherUserId = thread.admin_id === currentUser.id ? thread.user_id : thread.admin_id;
+        const { data: last } = await supabase
+          .from('admin_messages')
+          .select('sent_at')
+          .eq('thread_id', thread.id)
+          .order('sent_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        adminRows.push({
+          offer_id: '__admin__',
+          user_id: otherUserId,
+          thread_id: thread.id,
+          sent_at: last?.sent_at || thread.created_at,
+          nickname: usersMap[otherUserId]?.nickname || 'User',
+          avatar_url: usersMap[otherUserId]?.avatar_url || null,
+          offerTitle: 'Admin chats',
+          locked: false,
+          deleted_at: null,
+          unreadCount: adminUnreadMap[thread.id] || 0,
+        });
+      }
 
       const { data: threads, error: extErr } = await supabase
         .from('external_threads')
@@ -196,8 +242,8 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
         });
       }
 
-      const merged = [...internalRows, ...externalRows]
-        .filter((row) => row.offer_id === '__external__' || !row.deleted_at)
+      const merged = [...internalRows, ...adminRows, ...externalRows]
+        .filter((row) => row.offer_id === '__external__' || row.offer_id === '__admin__' || !row.deleted_at)
         .sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at));
 
       setChatSummaries(merged);
@@ -208,12 +254,13 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
   }, [currentUser]);
 
   const handleOpenOffer = (offerId) => {
+    if (offerId === '__external__' || offerId === '__admin__') return;
     if (onOpenOffer) onOpenOffer();
     navigate(`/yacht-works?open=${offerId}`);
   };
 
   const handleToggleLock = async (chat) => {
-    if (!currentUser || chat.offer_id === '__external__') return;
+    if (!currentUser || chat.offer_id === '__external__' || chat.offer_id === '__admin__') return;
     const key = getChatKey(chat.offer_id, chat.user_id);
     if (actionBusy[key]) return;
 
@@ -249,7 +296,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
   };
 
   const handleDelete = async (chat) => {
-    if (!currentUser || chat.offer_id === '__external__') return;
+    if (!currentUser || chat.offer_id === '__external__' || chat.offer_id === '__admin__') return;
     if (chat.locked) return;
 
     const confirmed = window.confirm('Delete this conversation?');
@@ -367,16 +414,16 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                   fontWeight: 600,
                   border: '1px solid rgba(255,255,255,0.08)',
                   marginBottom: '8px',
-                  cursor: group.key === '__external__' ? 'default' : 'pointer',
+                  cursor: (group.key === '__external__' || group.key === '__admin__') ? 'default' : 'pointer',
                   textAlign: 'left',
                 }}
                 title={group.title}
                 type="button"
                 onClick={() => {
-                  if (group.key === '__external__') return;
+                  if (group.key === '__external__' || group.key === '__admin__') return;
                   handleOpenOffer(group.key);
                 }}
-                disabled={group.key === '__external__'}
+                disabled={group.key === '__external__' || group.key === '__admin__'}
               >
                 {group.title}
               </button>
@@ -384,6 +431,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                 {group.items.map((chat) => {
                   const chatKey = getChatKey(chat.offer_id, chat.user_id);
                   const isExternal = chat.offer_id === '__external__';
+                  const isAdmin = chat.offer_id === '__admin__';
                   const isBusy = !!actionBusy[chatKey];
                   const unreadCount = chat.unreadCount || 0;
 
@@ -412,7 +460,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                             flex: '1 1 auto',
                             minWidth: 0,
                           }}
-                          onClick={() => onOpenChat(chat.offer_id, chat.user_id)}
+                          onClick={() => onOpenChat(chat.offer_id, chat.user_id, { adminThreadId: chat.thread_id })}
                         >
                           <Avatar
                             nickname={chat.nickname || 'User'}
@@ -433,7 +481,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                             <strong style={{ flex: '0 0 auto' }}>{chat.nickname}</strong>
                           </span>
                         </button>
-                        {!isExternal && (
+                        {!isExternal && !isAdmin && (
                           <div
                             style={{
                               display: 'flex',

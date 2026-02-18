@@ -13,11 +13,18 @@ export function UnreadMessagesProvider({ children }) {
 
   const fetchUnreadMessages = useCallback(async () => {
     if (!currentUser) return;
-    const { data, error } = await supabase
-      .from('yacht_work_messages')
-      .select('id, offer_id, sender_id')
-      .eq('receiver_id', currentUser.id)
-      .eq('read', false);
+    const [{ data, error }, { data: adminData }] = await Promise.all([
+      supabase
+        .from('yacht_work_messages')
+        .select('id, offer_id, sender_id')
+        .eq('receiver_id', currentUser.id)
+        .eq('read', false),
+      supabase
+        .from('admin_messages')
+        .select('id')
+        .eq('receiver_id', currentUser.id)
+        .eq('read', false),
+    ]);
 
     if (!error && data) {
       const { data: deletedStates, error: stateError } = await supabase
@@ -27,7 +34,8 @@ export function UnreadMessagesProvider({ children }) {
         .not('deleted_at', 'is', null);
 
       if (stateError) {
-        setUnreadCount(data.length);
+        const adminCount = adminData?.length || 0;
+        setUnreadCount(data.length + adminCount);
         return;
       }
 
@@ -53,7 +61,8 @@ export function UnreadMessagesProvider({ children }) {
           .in('id', idsToMarkRead);
       }
 
-      setUnreadCount(visibleUnread.length);
+      const adminCount = adminData?.length || 0;
+      setUnreadCount(visibleUnread.length + adminCount);
     }
   }, [currentUser]);
 
@@ -101,11 +110,40 @@ export function UnreadMessagesProvider({ children }) {
       )
       .subscribe();
 
+    const adminChannel = supabase
+      .channel(`unread-admin-messages-${currentUser.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'admin_messages',
+          filter: `receiver_id=eq.${currentUser.id}`,
+        },
+        () => {
+          scheduleFetchUnread();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'admin_messages',
+          filter: `receiver_id=eq.${currentUser.id}`,
+        },
+        () => {
+          scheduleFetchUnread();
+        }
+      )
+      .subscribe();
+
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
       supabase.removeChannel(channel);
+      supabase.removeChannel(adminChannel);
     };
   }, [currentUser]);
 
