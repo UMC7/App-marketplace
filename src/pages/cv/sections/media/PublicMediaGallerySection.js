@@ -8,6 +8,11 @@ function inferType(u = '', explicit) {
   const s = String(u).toLowerCase();
   return /\.(mp4|webm|mov|m4v|avi|mkv)$/.test(s) ? 'video' : 'image';
 }
+function isHeicUrl(u = '') {
+  const s = String(u).toLowerCase();
+  const clean = s.split('?')[0].split('#')[0];
+  return clean.endsWith('.heic') || clean.endsWith('.heif');
+}
 function getThumbUrl(u = '') { return u; }
 function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
 
@@ -79,6 +84,7 @@ export default function PublicMediaGallerySection({
 
   const [active, setActive] = useState(Math.min(Math.floor(items.length/2), Math.max(0, items.length-1)));
   const trackRef = useRef(null);
+  const [thumbs, setThumbs] = useState({});
 
   useEffect(() => {
     function onKey(e) {
@@ -88,6 +94,60 @@ export default function PublicMediaGallerySection({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [items.length]);
+
+  useEffect(() => {
+    let alive = true;
+    const newThumbs = {};
+    const urlsToRevoke = [];
+
+    const run = async () => {
+      const heicItems = items.filter((it) => it?.type === 'image' && isHeicUrl(it.url));
+      if (!heicItems.length) {
+        setThumbs({});
+        return;
+      }
+
+      try {
+        const mod = await import('heic2any');
+        const heic2any = mod?.default || mod;
+
+        await Promise.all(
+          heicItems.map(async (it) => {
+            try {
+              const res = await fetch(it.url);
+              const blob = await res.blob();
+              const converted = await heic2any({ blob, toType: 'image/jpeg', quality: 0.9 });
+              const outBlob = Array.isArray(converted) ? converted[0] : converted;
+              const objectUrl = URL.createObjectURL(outBlob);
+              newThumbs[it.url] = objectUrl;
+              urlsToRevoke.push(objectUrl);
+            } catch {
+              newThumbs[it.url] = '';
+            }
+          })
+        );
+      } catch {
+        heicItems.forEach((it) => {
+          newThumbs[it.url] = '';
+        });
+      }
+
+      if (alive) {
+        setThumbs(newThumbs);
+      } else {
+        urlsToRevoke.forEach((u) => URL.revokeObjectURL(u));
+      }
+    };
+
+    run();
+
+    return () => {
+      alive = false;
+      Object.values(thumbs || {}).forEach((u) => {
+        if (u) URL.revokeObjectURL(u);
+      });
+    };
+  }, [items]);
 
   const [lbOpen, setLbOpen] = useState(false);
   const [lbItem, setLbItem] = useState(null);
@@ -153,7 +213,16 @@ export default function PublicMediaGallerySection({
                 title={isVideo ? 'Play video' : 'View photo'}
               >
                 {isVideo && <span className="pmg-badgeVideo">▶</span>}
-                <img src={getThumbUrl(it.url)} loading="lazy" alt="" draggable="false" />
+                {isVideo ? (
+                  <video src={it.url} preload="metadata" muted playsInline />
+                ) : (
+                  <img
+                    src={thumbs[it.url] || getThumbUrl(it.url)}
+                    loading="lazy"
+                    alt=""
+                    draggable="false"
+                  />
+                )}
               </button>
             );
           })}

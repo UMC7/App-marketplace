@@ -11,6 +11,13 @@ export default function MediaGallery({
 }) {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [current, setCurrent] = useState(0);
+  const [thumbs, setThumbs] = useState({});
+
+  const isHeicUrl = (u = "") => {
+    const s = String(u).toLowerCase();
+    const clean = s.split("?")[0].split("#")[0];
+    return clean.endsWith(".heic") || clean.endsWith(".heif");
+  };
 
   const gridColsClass = useMemo(() => {
     const cols = Math.max(1, Math.min(4, columns));
@@ -44,6 +51,60 @@ export default function MediaGallery({
 
   const currentItem = items[current];
 
+  useEffect(() => {
+    let alive = true;
+    const newThumbs = {};
+    const urlsToRevoke = [];
+
+    const run = async () => {
+      const heicItems = items.filter((it) => it?.type !== "video" && isHeicUrl(it.url));
+      if (!heicItems.length) {
+        setThumbs({});
+        return;
+      }
+
+      try {
+        const mod = await import("heic2any");
+        const heic2any = mod?.default || mod;
+
+        await Promise.all(
+          heicItems.map(async (it) => {
+            try {
+              const res = await fetch(it.url);
+              const blob = await res.blob();
+              const converted = await heic2any({ blob, toType: "image/jpeg", quality: 0.9 });
+              const outBlob = Array.isArray(converted) ? converted[0] : converted;
+              const objectUrl = URL.createObjectURL(outBlob);
+              newThumbs[it.url] = objectUrl;
+              urlsToRevoke.push(objectUrl);
+            } catch {
+              newThumbs[it.url] = "";
+            }
+          })
+        );
+      } catch {
+        heicItems.forEach((it) => {
+          newThumbs[it.url] = "";
+        });
+      }
+
+      if (alive) {
+        setThumbs(newThumbs);
+      } else {
+        urlsToRevoke.forEach((u) => URL.revokeObjectURL(u));
+      }
+    };
+
+    run();
+
+    return () => {
+      alive = false;
+      Object.values(thumbs || {}).forEach((u) => {
+        if (u) URL.revokeObjectURL(u);
+      });
+    };
+  }, [items]);
+
   return (
     <div className="media-gallery">
       <div className={`grid ${gridColsClass}`}>
@@ -62,7 +123,11 @@ export default function MediaGallery({
               {m.type === "video" ? (
                 <video src={m.url} preload="metadata" />
               ) : (
-                <img src={m.url} alt={m.name || `media-${i}`} loading="lazy" />
+                <img
+                  src={thumbs[m.url] || m.url}
+                  alt={m.name || `media-${i}`}
+                  loading="lazy"
+                />
               )}
 
               {/* Toolbar (desktop: arriba; móvil: abajo sin la X) */}

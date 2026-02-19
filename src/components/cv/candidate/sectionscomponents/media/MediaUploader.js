@@ -48,6 +48,29 @@ export default function MediaUploader({
   };
 
   const toPreviewURL = (file) => URL.createObjectURL(file);
+  const isHeic = (file) => {
+    const mt = (file?.type || "").toLowerCase();
+    if (mt === "image/heic" || mt === "image/heif") return true;
+    const name = (file?.name || "").toLowerCase();
+    return name.endsWith(".heic") || name.endsWith(".heif");
+  };
+  const convertHeicToJpeg = async (file) => {
+    const mod = await import("heic2any");
+    const heic2any = mod?.default || mod;
+    const converted = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.9,
+    });
+    const blob = Array.isArray(converted) ? converted[0] : converted;
+    const safeName = (file?.name || "photo")
+      .replace(/\.(heic|heif)$/i, "")
+      .replace(/[^\w.\-]+/g, "_");
+    return new File([blob], `${safeName}.jpg`, {
+      type: "image/jpeg",
+      lastModified: Date.now(),
+    });
+  };
 
   const addFiles = useCallback(
     async (filesList) => {
@@ -61,12 +84,25 @@ export default function MediaUploader({
       let videoTaken = alreadyHasVideo ? 1 : 0;
 
       const incoming = Array.from(filesList);
+      const normalized = [];
+      for (const f of incoming) {
+        if (isHeic(f)) {
+          try {
+            const jpg = await convertHeicToJpeg(f);
+            normalized.push(jpg);
+          } catch (e) {
+            nextErr = nextErr || "HEIC conversion failed. Please upload JPG/PNG.";
+          }
+        } else {
+          normalized.push(f);
+        }
+      }
       const allowed = [];
-      for (let i = 0; i < incoming.length; i++) {
+      for (let i = 0; i < normalized.length; i++) {
         // Respetar el máximo total
         if (items.length + allowed.length >= MAX_TOTAL) break;
 
-        const f = incoming[i];
+        const f = normalized[i];
         const kind = inferType(f);
 
         if (kind === "video") {

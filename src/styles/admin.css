@@ -1,6 +1,7 @@
 .admin-panel {
   padding: 20px;
   font-family: 'Inter', sans-serif;
+  padding-bottom: 36px;
 }
 
 .admin-panel h2 {
@@ -291,6 +292,51 @@ body.dark-mode .admin-panel tr:nth-child(even),
   max-width: 100%;
 }
 
+/* Oculta el scrollbar horizontal nativo de la tabla (mantiene scroll) */
+.admin-panel table {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+.admin-panel table::-webkit-scrollbar {
+  height: 0;
+}
+
+/* Si hay wrappers con overflow horizontal en analytics, también oculta su scrollbar */
+.admin-panel .analytics-block {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.admin-panel .analytics-block::-webkit-scrollbar {
+  height: 0;
+}
+
+.admin-scrollbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: rgba(8, 26, 59, 0.08);
+  z-index: 200;
+  display: none;
+}
+
+.admin-scrollbar[data-active="true"] {
+  display: block;
+}
+
+.admin-scrollbar-inner {
+  height: 1px;
+}
+
+@media (max-width: 900px) {
+  .admin-scrollbar {
+    display: none !important;
+  }
+}
+
 @media (max-width: 768px) and (orientation: portrait) {
   .admin-menu-toggle {
     display: inline-flex;
@@ -372,6 +418,11 @@ body.dark-mode .admin-tabs,
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .admin-scrollbar,
+[data-theme="dark"] .admin-scrollbar {
+  background: rgba(148, 163, 184, 0.2);
 }
 
 .analytics-subtabs {
