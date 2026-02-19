@@ -98,6 +98,7 @@ const initialState = {
   link_facebook: '',
   link_instagram: '',
   link_x: '',
+  posting_duration: '1 month',
   team: 'No',
   teammate_rank: '',
   teammate_required_license: '',
@@ -138,7 +139,10 @@ function normalizeInitialValues(row) {
         const def = initialState[k];
         if (v == null) {
           if (Array.isArray(def)) return [k, []];
-          if (typeof def === 'string') return [k, ''];
+          if (typeof def === 'string') {
+            if (k === 'posting_duration') return [k, def];
+            return [k, ''];
+          }
           if (typeof def === 'number') return [k, ''];
           if (typeof def === 'boolean') return [k, !!def];
         }
@@ -753,6 +757,7 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     salary_currency: sanitizedData.is_doe ? null : (sanitizedData.salary_currency || null),
     years_in_rank: sanitizedData.years_in_rank,
     description: sanitizedData.description || null,
+    posting_duration: sanitizedData.posting_duration || '1 month',
     contact_email: sanitizedData.contact_email || null,
     contact_phone: sanitizedData.contact_phone || null,
     team: sanitizedData.team === 'Yes',
@@ -1633,6 +1638,19 @@ const derivedEndDate = (() => {
       onImprove={improveRemarks}
     />
 
+    <label>Posting Duration:</label>
+    <select
+      name="posting_duration"
+      value={formData.posting_duration || '1 month'}
+      onChange={handleChange}
+    >
+      <option value="1 week">1 week</option>
+      <option value="2 weeks">2 weeks</option>
+      <option value="3 weeks">3 weeks</option>
+      <option value="1 month">1 month</option>
+      <option value="Manual removal">Manual removal</option>
+    </select>
+
           </>
     )}
 
@@ -1950,6 +1968,18 @@ const derivedEndDate = (() => {
       onUndo={undoRemarks}
       onImprove={improveRemarks}
     />
+    <label>Posting Duration:</label>
+    <select
+      name="posting_duration"
+      value={formData.posting_duration || '1 month'}
+      onChange={handleChange}
+    >
+      <option value="1 week">1 week</option>
+      <option value="2 weeks">2 weeks</option>
+      <option value="3 weeks">3 weeks</option>
+      <option value="1 month">1 month</option>
+      <option value="Manual removal">Manual removal</option>
+    </select>
   </>
 )}
 
