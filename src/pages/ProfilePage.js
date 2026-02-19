@@ -85,6 +85,7 @@ function ProfilePage() {
   const [editingJobId, setEditingJobId] = useState(null);
   const [editingEventId, setEditingEventId] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openDashboardOfferId, setOpenDashboardOfferId] = useState(null);
   const {
     userDetails,
     candidateEnabled,
@@ -129,6 +130,14 @@ useEffect(() => {
     setActiveTab(tab);
   }
 
+  const dashOfferId = params.get('jobDashboard');
+  if (dashOfferId) {
+    setOpenDashboardOfferId(dashOfferId);
+    setActiveTab('empleos');
+  } else {
+    setOpenDashboardOfferId(null);
+  }
+
   const refreshTarget = params.get('refresh');
   if (refreshTarget) {
     const refetchMap = {
@@ -146,6 +155,14 @@ useEffect(() => {
     navigate(qs ? `/profile?${qs}` : '/profile', { replace: true });
   }
 }, [location.search]);
+
+const clearJobDashboardParam = () => {
+  const params = new URLSearchParams(location.search);
+  if (!params.has('jobDashboard')) return;
+  params.delete('jobDashboard');
+  const qs = params.toString();
+  navigate(qs ? `/profile?${qs}` : '/profile', { replace: true });
+};
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -392,6 +409,8 @@ useEffect(() => {
             onTogglePause={handlePauseToggleJob}
             onEdit={setEditingJobId}
             onDelete={handleDeleteJob}
+            openDashboardOfferId={openDashboardOfferId}
+            onDashboardClosed={clearJobDashboardParam}
           />
         );
 

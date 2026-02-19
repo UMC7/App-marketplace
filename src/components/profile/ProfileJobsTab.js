@@ -2,7 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import '../../styles/JobDashboard.css';
 import JobDashboard from '../jobs/JobDashboard';
 
-const ProfileJobsTab = ({ jobOffers, onTogglePause, onEdit, onDelete }) => {
+const ProfileJobsTab = ({
+  jobOffers,
+  onTogglePause,
+  onEdit,
+  onDelete,
+  openDashboardOfferId,
+  onDashboardClosed,
+}) => {
   const [dashboardOffer, setDashboardOffer] = useState(null);
   const [expandedDates, setExpandedDates] = useState({});
 
@@ -25,6 +32,17 @@ const ProfileJobsTab = ({ jobOffers, onTogglePause, onEdit, onDelete }) => {
     });
     setExpandedDates(next);
   }, [groupedByDate.dates.join('|')]);
+
+  useEffect(() => {
+    if (!openDashboardOfferId) return;
+    if (dashboardOffer?.id === openDashboardOfferId) return;
+    const match = (jobOffers || []).find(
+      (offer) => String(offer.id) === String(openDashboardOfferId)
+    );
+    if (match) {
+      setDashboardOffer(match);
+    }
+  }, [openDashboardOfferId, jobOffers, dashboardOffer?.id]);
 
   const toggleDate = (dateKey) => {
     setExpandedDates((prev) => ({
@@ -134,7 +152,10 @@ const ProfileJobsTab = ({ jobOffers, onTogglePause, onEdit, onDelete }) => {
       {dashboardOffer && (
         <JobDashboard
           offer={dashboardOffer}
-          onClose={() => setDashboardOffer(null)}
+          onClose={() => {
+            setDashboardOffer(null);
+            if (typeof onDashboardClosed === 'function') onDashboardClosed();
+          }}
         />
       )}
     </>

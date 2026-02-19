@@ -73,13 +73,18 @@ const handleItemClick = async (n) => {
     return;
   }
 
+  const dashboardOfferId = d?.offer_id || d?.job_id || d?.jobDashboard;
+  const targetIsDashboard = d?.target === "job_dashboard";
+
   const targetIsSeaJobs = d?.target === "seajobs" || d?.path === "/seajobs" || d?.path === "/yacht-works";
   const targetIsChat = d?.target === "chat" || (d?.offer_id && !targetIsSeaJobs);
   const jobId = d?.job_id || d?.query?.open;
   const offerId = d?.offer_id;
 
   let url = null;
-  if (targetIsSeaJobs && jobId) {
+  if (targetIsDashboard && dashboardOfferId) {
+    url = `/profile?tab=empleos&jobDashboard=${encodeURIComponent(dashboardOfferId)}`;
+  } else if (targetIsSeaJobs && jobId) {
     const basePath = d?.path || "/yacht-works";
     url = `${basePath}?open=${encodeURIComponent(jobId)}`;
   } else if (targetIsChat && offerId) {
