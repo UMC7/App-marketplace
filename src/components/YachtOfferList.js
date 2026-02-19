@@ -97,6 +97,19 @@ const [pendingChat, setPendingChat] = useState(null);
 const [showDirectApplyModal, setShowDirectApplyModal] = useState(false);
 const [directApplyModalType, setDirectApplyModalType] = useState(null);
 const [directApplicationReady, setDirectApplicationReady] = useState(false);
+const [showMatchPreview, setShowMatchPreview] = useState(false);
+const [matchPreviewLoading, setMatchPreviewLoading] = useState(false);
+const [matchPreviewScore, setMatchPreviewScore] = useState(null);
+const [pendingApplyOfferId, setPendingApplyOfferId] = useState(null);
+const [applySubmitting, setApplySubmitting] = useState(false);
+const getMatchTone = (score) => {
+  if (score == null || Number.isNaN(score)) return { color: '#9ca3af' };
+  const pct = Number(score);
+  if (pct >= 80) return { color: '#22c55e' };
+  if (pct >= 60) return { color: '#84cc16' };
+  if (pct >= 40) return { color: '#f59e0b' };
+  return { color: '#ef4444' };
+};
   const [appliedOfferIds, setAppliedOfferIds] = useState(new Set());
 const [activeChat, setActiveChat] = useState(null);
 const [expandedWeeks, setExpandedWeeks] = useState({});
@@ -688,7 +701,7 @@ const handleStartChat = (offerId, employerId) => {
     }
   };
 
-const handleDirectApply = async (offerId) => {
+const submitDirectApply = async (offerId) => {
   const allowed = currentUser && directApplicationReady;
   if (!offerId) {
     toast.error('Offer not found. Please refresh and try again.');
@@ -725,9 +738,65 @@ const handleDirectApply = async (offerId) => {
   setShowDirectApplyModal(true);
 };
 
+const handleDirectApply = async (offerId) => {
+  const allowed = currentUser && directApplicationReady;
+  if (!offerId) {
+    toast.error('Offer not found. Please refresh and try again.');
+    return;
+  }
+  if (appliedOfferIds.has(offerId)) {
+    toast.info('Application already submitted.');
+    return;
+  }
+  if (!allowed) {
+    setDirectApplyModalType('profile_required');
+    setShowDirectApplyModal(true);
+    return;
+  }
+
+  setPendingApplyOfferId(offerId);
+  setMatchPreviewLoading(true);
+  setShowMatchPreview(true);
+  setMatchPreviewScore(null);
+  try {
+    const { data, error } = await supabase.rpc('rpc_preview_direct_application_match', {
+      p_offer_id: offerId,
+    });
+    if (error) {
+      console.warn('direct_apply preview error', error);
+      setMatchPreviewScore(null);
+    } else {
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        console.warn('direct_apply preview empty result', data);
+      }
+      const row = Array.isArray(data) ? data[0] : data;
+      const score = row?.match_score ?? row?.score ?? row?.match ?? null;
+      setMatchPreviewScore(score != null ? Number(score) : null);
+    }
+  } catch (e) {
+    setMatchPreviewScore(null);
+  } finally {
+    setMatchPreviewLoading(false);
+  }
+};
+
   const handleCloseDirectApply = () => {
     setShowDirectApplyModal(false);
     setDirectApplyModalType(null);
+  };
+  const handleCloseMatchPreview = () => {
+    if (applySubmitting) return;
+    setShowMatchPreview(false);
+    setMatchPreviewLoading(false);
+    setPendingApplyOfferId(null);
+  };
+  const handleProceedAfterPreview = async () => {
+    if (!pendingApplyOfferId || applySubmitting) return;
+    setApplySubmitting(true);
+    await submitDirectApply(pendingApplyOfferId);
+    setApplySubmitting(false);
+    setShowMatchPreview(false);
+    setPendingApplyOfferId(null);
   };
 
   const handleGoToCandidateProfile = () => {
@@ -1055,6 +1124,50 @@ const handleDirectApply = async (offerId) => {
             </button>
             <button className="landing-button" onClick={handleCloseDirectApply} style={{ backgroundColor: '#ccc' }}>
               Maybe later
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  </Modal>
+)}
+
+      {showMatchPreview && (
+  <Modal onClose={handleCloseMatchPreview}>
+    <div style={{ maxWidth: 520 }}>
+      <h3 style={{ marginTop: 0 }}>Match score</h3>
+      {matchPreviewLoading ? (
+        <p className="direct-apply-instruction">Calculating your match…</p>
+      ) : (
+        <>
+          <p className="direct-apply-instruction">
+            Your estimated match for this job is{' '}
+            <strong>
+              <span style={getMatchTone(matchPreviewScore)}>
+                {matchPreviewScore == null || Number.isNaN(matchPreviewScore)
+                  ? 'N/A'
+                  : `${Math.round(matchPreviewScore)}%`}
+              </span>
+            </strong>.
+          </p>
+          <p className="direct-apply-instruction">
+            If the percentage is not high, the chances of getting the job are low. The ideal is to apply
+            to jobs where your match percentage is high.
+          </p>
+          <p className="direct-apply-instruction">
+            Do you still want to proceed with your Direct Application?
+          </p>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: 16 }}>
+            <button className="landing-button" onClick={handleProceedAfterPreview} disabled={applySubmitting}>
+              {applySubmitting ? 'Submitting…' : 'Proceed'}
+            </button>
+            <button
+              className="landing-button"
+              onClick={handleCloseMatchPreview}
+              style={{ backgroundColor: '#ccc' }}
+              disabled={applySubmitting}
+            >
+              Cancel
             </button>
           </div>
         </>

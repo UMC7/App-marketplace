@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import '../../styles/JobDashboard.css';
 import JobDashboard from '../jobs/JobDashboard';
+import supabase from '../../supabase';
 
 const ProfileJobsTab = ({
   jobOffers,
@@ -12,6 +13,7 @@ const ProfileJobsTab = ({
 }) => {
   const [dashboardOffer, setDashboardOffer] = useState(null);
   const [expandedDates, setExpandedDates] = useState({});
+  const [offersWithNewApps, setOffersWithNewApps] = useState(new Set());
 
   const groupedByDate = useMemo(() => {
     const groups = new Map();
@@ -32,6 +34,66 @@ const ProfileJobsTab = ({
     });
     setExpandedDates(next);
   }, [groupedByDate.dates.join('|')]);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchNewApps = async () => {
+      const offerIds = (jobOffers || []).map((o) => o.id).filter(Boolean);
+      if (!offerIds.length) {
+        if (mounted) setOffersWithNewApps(new Set());
+        return;
+      }
+      const next = new Set();
+      const chunkSize = 50;
+      for (let i = 0; i < offerIds.length; i += chunkSize) {
+        const chunk = offerIds.slice(i, i + chunkSize);
+        const { data, error } = await supabase
+          .from('job_direct_applications')
+          .select('offer_id, status')
+          .in('offer_id', chunk)
+          .neq('status', 'removed');
+        if (error) {
+          console.warn('Failed to load new applications', error);
+          continue;
+        }
+        (data || []).forEach((row) => {
+          const status = row?.status || 'new';
+          if (status === 'new') next.add(row.offer_id);
+        });
+      }
+      if (!mounted) return;
+      setOffersWithNewApps(next);
+    };
+
+    fetchNewApps();
+    return () => {
+      mounted = false;
+    };
+  }, [jobOffers]);
+
+  const refreshNewApplications = async () => {
+    const offerIds = (jobOffers || []).map((o) => o.id).filter(Boolean);
+    if (!offerIds.length) {
+      setOffersWithNewApps(new Set());
+      return;
+    }
+    const next = new Set();
+    const chunkSize = 50;
+    for (let i = 0; i < offerIds.length; i += chunkSize) {
+      const chunk = offerIds.slice(i, i + chunkSize);
+      const { data, error } = await supabase
+        .from('job_direct_applications')
+        .select('offer_id, status')
+        .in('offer_id', chunk)
+        .neq('status', 'removed');
+      if (error) return;
+      (data || []).forEach((row) => {
+        const status = row?.status || 'new';
+        if (status === 'new') next.add(row.offer_id);
+      });
+    }
+    setOffersWithNewApps(next);
+  };
 
   useEffect(() => {
     if (!openDashboardOfferId) return;
@@ -82,7 +144,10 @@ const ProfileJobsTab = ({
                 {isOpen && (
                   <div className="profile-products-container">
                     {offers.map((offer) => (
-                      <div key={offer.id} className="profile-card">
+                      <div
+                        key={offer.id}
+                        className={`profile-card${offersWithNewApps.has(offer.id) ? ' has-new-apps' : ''}`}
+                      >
                         <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
                           {offer.title}
                         </div>
@@ -154,6 +219,7 @@ const ProfileJobsTab = ({
           offer={dashboardOffer}
           onClose={() => {
             setDashboardOffer(null);
+            refreshNewApplications();
             if (typeof onDashboardClosed === 'function') onDashboardClosed();
           }}
         />
