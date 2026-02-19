@@ -141,11 +141,12 @@ serve(async (req) => {
       title: "New application",
       body: `${candidateName} applied to ${offerTitle}.`,
       data: {
-        target: "seajobs",
+        target: "job_dashboard",
         job_id: offer.id,
         offer_id: offer.id,
+        jobDashboard: offer.id,
         candidate_user_id: payload.candidate_user_id,
-        path: "/yacht-works",
+        path: "/profile",
       },
     }),
   });
