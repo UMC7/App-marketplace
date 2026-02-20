@@ -138,6 +138,7 @@ const ProfileUserTab = ({
           onChange={onChange}
           inputMode="numeric"
           pattern="[0-9]*"
+          maxLength={3}
           style={{ width: '70px' }}
           required
         />
@@ -176,6 +177,7 @@ const ProfileUserTab = ({
           onChange={onChange}
           inputMode="numeric"
           pattern="[0-9]*"
+          maxLength={3}
           style={{
             width: '70px',
             ...(isAltPhoneDuplicate ? highlightStyle : null),

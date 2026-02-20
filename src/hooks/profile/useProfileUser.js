@@ -160,9 +160,18 @@ const useProfileUser = ({ currentUser, activeTab, setActiveTab }) => {
     [currentUser]
   );
 
+  const normalizePhoneCode = (val) => {
+    const digits = (val || '').replace(/\D/g, '').replace(/^0+/, '');
+    return digits.slice(0, 3);
+  };
+
   const handleUserFormChange = useCallback((e) => {
     const { name, value } = e.target;
-    if (['phoneCode', 'phone', 'altPhoneCode', 'altPhone'].includes(name)) {
+    if (['phoneCode', 'altPhoneCode'].includes(name)) {
+      setUserForm((prev) => ({ ...prev, [name]: normalizePhoneCode(value) }));
+      return;
+    }
+    if (['phone', 'altPhone'].includes(name)) {
       const digitsOnly = value.replace(/\D/g, '');
       setUserForm((prev) => ({ ...prev, [name]: digitsOnly }));
       return;

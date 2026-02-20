@@ -128,8 +128,8 @@ const handleNicknameChange = (e) => {
   }, [form.nickname, nicknameError]);
 
   const normalizePhoneCode = (val) => {
-    const digits = (val || '').replace(/\D/g, '');
-    return digits.replace(/^0+/, '');
+    const digits = (val || '').replace(/\D/g, '').replace(/^0+/, '');
+    return digits.slice(0, 3);
   };
 
   const handleChange = (e) => {
@@ -535,6 +535,7 @@ try {
             value={form.phoneCode}
             inputMode="numeric"
             pattern="[0-9]*"
+            maxLength={3}
             style={{ width: '70px' }}
             className={highlightClass('phoneCode')}
             required
@@ -562,6 +563,7 @@ try {
             value={form.altPhoneCode}
             inputMode="numeric"
             pattern="[0-9]*"
+            maxLength={3}
             style={{ width: '70px' }}
             className={isAltPhoneDuplicate ? 'missing-required' : ''}
           />
