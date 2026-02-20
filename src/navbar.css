@@ -8,6 +8,7 @@
   --text-dark: #1c1c1c;
   --font-header: 'Playfair Display', serif;
   --font-body: 'Inter', sans-serif;
+  --mobile-fab-offset: 72px;
 
   /* Color por defecto del navbar (modo claro) */
   --navbar-bg-color: #8c8c8c;

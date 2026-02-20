@@ -1,0 +1,75 @@
+.admin-chat-fab {
+  position: fixed;
+  left: 18px;
+  bottom: 22px;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 1px solid rgba(8, 26, 59, 0.18);
+  background: linear-gradient(135deg, rgba(127, 209, 202, 0.55) 0%, rgba(74, 167, 159, 0.55) 100%);
+  color: #0b1f3c;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 10px 22px rgba(6, 24, 44, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  z-index: 1200;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+}
+
+.admin-chat-fab:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #7fd1ca 0%, #4aa79f 100%);
+  box-shadow:
+    0 14px 26px rgba(6, 24, 44, 0.22),
+    0 0 0 6px rgba(104, 173, 168, 0.16);
+}
+
+.admin-chat-fab:active {
+  transform: translateY(0);
+  background: linear-gradient(135deg, #7fd1ca 0%, #4aa79f 100%);
+}
+
+body.dark-mode .admin-chat-fab,
+[data-theme="dark"] .admin-chat-fab {
+  background: linear-gradient(135deg, rgba(127, 209, 202, 0.28) 0%, rgba(74, 167, 159, 0.28) 100%);
+  border-color: rgba(127, 209, 202, 0.22);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+body.dark-mode .admin-chat-fab:hover,
+[data-theme="dark"] .admin-chat-fab:hover {
+  background: linear-gradient(135deg, #7fd1ca 0%, #4aa79f 100%);
+}
+
+.admin-chat-fab:focus-visible {
+  outline: 2px solid #0b1f3c;
+  outline-offset: 3px;
+}
+
+.admin-chat-fab--loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-chat-fab .material-icons {
+  font-size: 22px;
+  line-height: 1;
+}
+
+@media (max-width: 900px), (hover: none) and (pointer: coarse) {
+  .admin-chat-fab {
+    width: 44px;
+    height: 44px;
+    left: 14px;
+    bottom: calc(var(--mobile-fab-offset, 72px) + env(safe-area-inset-bottom, 0px));
+  }
+}

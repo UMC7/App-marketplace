@@ -42,6 +42,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AnimatedLayout from './layouts/AnimatedLayout';
 import LoadingSpinner from './components/LoadingSpinner';
+import AdminChatButton from './components/AdminChatButton';
 
 // ✅ NUEVO: detalle de evento (para deep links o uso futuro)
 import EventDetail from './pages/EventDetail';
@@ -216,6 +217,7 @@ function App() {
       <AuthRedirectHandler />
       <ToastContainer autoClose={1500} />
       <CookieBanner />
+      <AdminChatButton />
 
       <div className="main-content">
         <AppRoutes currentUser={currentUser} />
