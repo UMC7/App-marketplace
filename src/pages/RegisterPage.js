@@ -6,6 +6,7 @@ import supabase from '../supabase';
 import { toast } from 'react-toastify';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
+import '../styles/float.css';
 
 function RegisterPage() {
   const [form, setForm] = useState({
@@ -126,9 +127,18 @@ const handleNicknameChange = (e) => {
     return () => clearTimeout(t);
   }, [form.nickname, nicknameError]);
 
+  const normalizePhoneCode = (val) => {
+    const digits = (val || '').replace(/\D/g, '');
+    return digits.replace(/^0+/, '');
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (['phoneCode', 'phone', 'altPhoneCode', 'altPhone'].includes(name)) {
+    if (['phoneCode', 'altPhoneCode'].includes(name)) {
+      setForm({ ...form, [name]: normalizePhoneCode(value) });
+      return;
+    }
+    if (['phone', 'altPhone'].includes(name)) {
       const digitsOnly = value.replace(/\D/g, '');
       setForm({ ...form, [name]: digitsOnly });
       return;
@@ -312,10 +322,7 @@ try {
 
   const birthYears = Array.from({ length: 80 }, (_, i) => 2008 - i);
 
-  const highlightStyle = {
-    border: '1px solid #e55353',
-    boxShadow: '0 0 0 2px rgba(229, 83, 83, 0.2)',
-  };
+  const highlightClass = (key) => (missing[key] ? 'missing-required' : '');
 
   const normalizeEmail = (email) => (email || '').trim().toLowerCase();
 
@@ -350,8 +357,6 @@ try {
     confirmPassword: !form.confirmPassword || form.password !== form.confirmPassword,
     acceptedTerms: !acceptedTerms,
   };
-
-  const shouldHighlight = (key) => showMissing && missing[key];
 
   const isFormComplete = () => {
     const {
@@ -447,7 +452,7 @@ try {
           placeholder="Name"
           onChange={handleChange}
           required
-          style={shouldHighlight('firstName') ? highlightStyle : undefined}
+          className={highlightClass('firstName')}
         />
 
         <label>
@@ -458,7 +463,7 @@ try {
           placeholder="Last Name"
           onChange={handleChange}
           required
-          style={shouldHighlight('lastName') ? highlightStyle : undefined}
+          className={highlightClass('lastName')}
         />
 
         <label>
@@ -468,7 +473,7 @@ try {
           name="birthYear"
           onChange={handleChange}
           required
-          style={shouldHighlight('birthYear') ? highlightStyle : undefined}
+          className={highlightClass('birthYear')}
         >
           <option value="">Year of Birth</option>
           {birthYears.map((year) => (
@@ -488,7 +493,7 @@ try {
           onChange={handleNicknameChange}
           maxLength={7}
           required
-          style={shouldHighlight('nickname') ? highlightStyle : undefined}
+          className={highlightClass('nickname')}
         />
         {!nicknameError && form.nickname && (
           <p
@@ -530,10 +535,8 @@ try {
             value={form.phoneCode}
             inputMode="numeric"
             pattern="[0-9]*"
-            style={{
-              width: '70px',
-              ...(shouldHighlight('phoneCode') ? highlightStyle : null),
-            }}
+            style={{ width: '70px' }}
+            className={highlightClass('phoneCode')}
             required
           />
           <input
@@ -543,10 +546,8 @@ try {
             value={form.phone}
             inputMode="numeric"
             pattern="[0-9]*"
-            style={{
-              flex: 1,
-              ...(shouldHighlight('phone') ? highlightStyle : null),
-            }}
+            style={{ flex: 1 }}
+            className={highlightClass('phone')}
             required
           />
         </div>
@@ -561,10 +562,8 @@ try {
             value={form.altPhoneCode}
             inputMode="numeric"
             pattern="[0-9]*"
-            style={{
-              width: '70px',
-              ...(isAltPhoneDuplicate ? highlightStyle : null),
-            }}
+            style={{ width: '70px' }}
+            className={isAltPhoneDuplicate ? 'missing-required' : ''}
           />
           <input
             name="altPhone"
@@ -573,10 +572,8 @@ try {
             value={form.altPhone}
             inputMode="numeric"
             pattern="[0-9]*"
-            style={{
-              flex: 1,
-              ...(isAltPhoneDuplicate ? highlightStyle : null),
-            }}
+            style={{ flex: 1 }}
+            className={isAltPhoneDuplicate ? 'missing-required' : ''}
           />
         </div>
         {isAltPhoneDuplicate && (
@@ -593,7 +590,7 @@ try {
           placeholder="Primary Email"
           onChange={handleChange}
           required
-          style={shouldHighlight('email') ? highlightStyle : undefined}
+          className={highlightClass('email')}
         />
 
         <label>Alternative Email (optional)</label>
@@ -601,7 +598,7 @@ try {
           name="altEmail"
           placeholder="Alternative Email"
           onChange={handleChange}
-          style={isAltEmailDuplicate ? highlightStyle : undefined}
+          className={isAltEmailDuplicate ? 'missing-required' : ''}
         />
         {isAltEmailDuplicate && (
           <p style={{ color: 'red', marginTop: 6, marginBottom: 8, fontSize: '0.9rem' }}>
@@ -620,10 +617,8 @@ try {
             onChange={handleChange}
             value={form.password}
             required
-            style={{
-              flex: 1,
-              ...(shouldHighlight('password') ? highlightStyle : null),
-            }}
+            style={{ flex: 1 }}
+            className={highlightClass('password')}
           />
           {form.password && isPasswordValid(form.password) && (
             <span style={{ color: 'green', fontSize: '1.2rem' }}>✔️</span>
@@ -645,10 +640,8 @@ try {
             onChange={handleChange}
             value={form.confirmPassword}
             required
-            style={{
-              flex: 1,
-              ...(shouldHighlight('confirmPassword') ? highlightStyle : null),
-            }}
+            style={{ flex: 1 }}
+            className={highlightClass('confirmPassword')}
           />
           {form.confirmPassword &&
             form.confirmPassword === form.password && (
@@ -695,7 +688,7 @@ try {
             id="terms"
             checked={acceptedTerms}
             onChange={(e) => setAcceptedTerms(e.target.checked)}
-            style={shouldHighlight('acceptedTerms') ? { outline: '2px solid #e55353', outlineOffset: 2 } : undefined}
+            className={highlightClass('acceptedTerms')}
             required
           />
           <label
