@@ -105,7 +105,7 @@ const AdminChatButton = () => {
     setLoading(false);
   };
 
-  if (isAdmin || hideInChat) return null;
+  if (isAdmin || (hideInChat && !chatOpen)) return null;
 
   return (
     <>
