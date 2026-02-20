@@ -59,51 +59,6 @@ const REGION_OPTIONS =
     'South America',
   ];
 
-function DatePair({ editing, setEditing, reqLabel }) {
-  return (
-    <>
-      <div>
-        <label className="cp-label">{reqLabel ? reqLabel('Start date') : 'Start date *'}</label>
-        <input
-          className="cp-input"
-          placeholder="YYYY-MM"
-          inputMode="numeric"
-          maxLength={7}
-          value={editing.start_month || ''}
-          onChange={(e) => {
-            const v = ymFormatOnChange(e.target.value);
-            setEditing({ ...editing, start_month: v });
-          }}
-          onBlur={(e) => {
-            const v = ymNormalize(e.target.value);
-            setEditing({ ...editing, start_month: v });
-          }}
-        />
-      </div>
-      <div>
-        <label className="cp-label">{reqLabel ? reqLabel('End date') : 'End date *'}</label>
-        <input
-          className="cp-input"
-          placeholder="YYYY-MM"
-          inputMode="numeric"
-          maxLength={7}
-          value={editing.is_current ? '' : editing.end_month || ''}
-          disabled={!!editing.is_current}
-          onChange={(e) => {
-            const v = ymFormatOnChange(e.target.value);
-            setEditing({ ...editing, end_month: v });
-          }}
-          onBlur={(e) => {
-            if (editing.is_current) return;
-            const v = ymNormalize(e.target.value);
-            setEditing({ ...editing, end_month: v });
-          }}
-        />
-      </div>
-    </>
-  );
-}
-
 export default function MerchantFields({ editing, setEditing, mode = 'professional', showAllFields = false }) {
   const isLite = mode === 'lite';
   const isProfessional = mode === 'professional';

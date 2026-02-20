@@ -104,7 +104,6 @@ export default function ProfileAnalyticsPage() {
   const {
     loading,
     error,
-    range,
     overview,
     trends,
     referrers,

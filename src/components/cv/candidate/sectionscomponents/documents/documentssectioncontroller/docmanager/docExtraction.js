@@ -1,4 +1,4 @@
-﻿// src/components/cv/candidate/sectionscomponents/documents/documentssectioncontroller/docmanager/docExtraction.js
+// src/components/cv/candidate/sectionscomponents/documents/documentssectioncontroller/docmanager/docExtraction.js
 const BIRTH_RX =
   /\b(dob|date\s*of\s*birth|born|birth|fecha\s*de\s*nacimiento|nacido|nacimiento)\b/i;
 export function extractMetadataFromText(text, opts = {}) {
@@ -327,12 +327,6 @@ function firstDateLike(s) {
     /(\d{1,2}\s*[-\/\.]\s*\d{1,2}\s*[-\/\.]\s*\d{2,4}|\d{4}\s*[-\/\.]\s*\d{1,2}\s*[-\/\.]\s*\d{1,2}|\b\d{1,2}\s+\w+\s+\d{2,4}|\b\w+\s+\d{1,2},\s*\d{4}|\b\d{1,2}\s*[-\/\.]\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s*[-\/\.]\s*\d{2,4})/i;
   const m = String(s).match(rx);
   return m ? m[0] : "";
-}
-// Mantengo la API antigua por compatibilidad
-function allDateLikes(text) {
-  const rx =
-    /(\d{1,2}\s*[-\/\.]\s*\d{1,2}\s*[-\/\.]\s*\d{2,4}|\d{4}\s*[-\/\.]\s*\d{1,2}\s*[-\/\.]\s*\d{1,2}|\b\d{1,2}\s+\w+\s+\d{2,4}|\b\w+\s+\d{1,2},\s*\d{4}|\b\d{1,2}\s*[-\/\.]\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s*[-\/\.]\s*\d{2,4})/gi;
-  return [...String(text).matchAll(rx)].map((m) => m[0]);
 }
 // Nueva variante con índice para filtrar contexto (DOB, etc.)
 function allDateLikesWithIndex(text) {

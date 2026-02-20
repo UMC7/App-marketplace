@@ -28,7 +28,7 @@ function RegisterPage() {
   const [avatarFile, setAvatarFile] = useState(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isCandidate, setIsCandidate] = useState(true);
-  const [showMissing, setShowMissing] = useState(false);
+  const [, setShowMissing] = useState(false);
   const [error, setError] = useState('');
   const [nicknameError, setNicknameError] = useState('');
   const [nicknameStatus, setNicknameStatus] = useState('idle'); // idle | checking | available | taken | invalid

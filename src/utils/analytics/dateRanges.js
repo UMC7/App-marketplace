@@ -39,12 +39,6 @@ function startOfMonth(d = new Date()) {
   return dt;
 }
 
-function endOfMonth(d = new Date()) {
-  const dt = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-  dt.setHours(23, 59, 59, 999);
-  return dt;
-}
-
 function startOfYear(d = new Date()) {
   const dt = new Date(d.getFullYear(), 0, 1);
   dt.setHours(0, 0, 0, 0);

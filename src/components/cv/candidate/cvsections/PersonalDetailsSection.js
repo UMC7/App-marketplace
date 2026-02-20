@@ -12,7 +12,6 @@ import {
   normalizePhone,
   normalizeUrl,
   calcAgeYears,
-  rowTwoCols,
   MONTHS,
   COMM_PREFS,
   COUNTRIES,
@@ -56,9 +55,9 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
   const [waNum, setWaNum]         = useState('');
 
   // Visibilidad (forzados SIEMPRE a true)
-  const [showEmail, setShowEmail] = useState(true);
-  const [showPhone, setShowPhone] = useState(true);
-  const [showAge,   setShowAge]   = useState(true);
+  const [, setShowEmail] = useState(true);
+  const [, setShowPhone] = useState(true);
+  const [, setShowAge]   = useState(true);
 
   // Sociales
   const [linkedin, setLinkedin]   = useState('');
@@ -239,34 +238,6 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
     () => String(phoneNum || '').trim().length > 0,
     [phoneNum]
   );
-  const isSectionComplete = useMemo(() => {
-    if (!showRequired) return true;
-    return Boolean(
-      (firstName || '').trim() &&
-      (lastName || '').trim() &&
-      isEmailValid &&
-      hasPhoneCC &&
-      hasPhoneNum &&
-      country &&
-      (cityPort || '').trim() &&
-      birthMonth &&
-      birthYear &&
-      Array.isArray(nationalities) &&
-      nationalities.length > 0
-    );
-  }, [
-    showRequired,
-    firstName,
-    lastName,
-    isEmailValid,
-    hasPhoneCC,
-    hasPhoneNum,
-    country,
-    cityPort,
-    birthMonth,
-    birthYear,
-    nationalities,
-  ]);
 
   const miss = {
     firstName: showRequired && !(firstName || '').trim(),

@@ -286,16 +286,6 @@ const rightIconsStyle = {
   gap: 6,
 };
 
-const iconBtnStyle = {
-  border: "none",
-  background: "transparent",
-  cursor: "pointer",
-  fontSize: 18,
-  lineHeight: 1,
-  padding: "0 4px",
-  color: "inherit",
-};
-
 const chevStyle = { fontSize: 12, opacity: 0.7 };
 
 const dropdownStyle = {

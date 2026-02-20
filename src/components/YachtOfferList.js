@@ -638,15 +638,6 @@ useEffect(() => {
 
   const supportsWebShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   const showNativeShare = supportsWebShare || isInNativeApp();
-  const iconBarStyle = { display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 };
-  const roundBtn = {
-    width: 44, height: 44, borderRadius: '9999px', border: '1px solid rgba(0,0,0,0.1)',
-    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    background: '#fff', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,.06)'
-  };
-  const waBtn = { ...roundBtn, background: '#25D366', border: 'none' };
-  const iconImg = { width: 22, height: 22, display: 'block' };
-  const shareIcon = { fontSize: 22, color: '#111' };
 
 const handleStartChat = (offerId, employerId) => {
   if (offerId) {

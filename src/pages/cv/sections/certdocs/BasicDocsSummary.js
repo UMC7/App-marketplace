@@ -32,26 +32,6 @@ function canonicalType(doc) {
 }
 const norm = (v = '') => v.toString().toLowerCase();
 
-function addMonths(date, months) {
-  const d = new Date(date);
-  if (isNaN(+d)) return null;
-  const n = new Date(d);
-  n.setMonth(d.getMonth() + months);
-  return n;
-}
-
-function isFuture(date) {
-  const d = new Date(date);
-  if (isNaN(+d)) return false;
-  const today = new Date();
-  // Compare at day precision
-  const dY = d.getFullYear(), dM = d.getMonth(), dD = d.getDate();
-  const tY = today.getFullYear(), tM = today.getMonth(), tD = today.getDate();
-  if (dY !== tY) return dY > tY;
-  if (dM !== tM) return dM > tM;
-  return dD >= tD;
-}
-
 // === UI bits ===
 const OK_COLOR = '#16c5c1';   // mismo turquesa que las barras
 const BAD_COLOR = '#ef4444';

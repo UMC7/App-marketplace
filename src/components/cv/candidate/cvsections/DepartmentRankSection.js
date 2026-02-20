@@ -1,7 +1,7 @@
 // src/components/cv/candidate/cvsections/DepartmentRankSection.js
 import React, { useState, useEffect } from "react";
 // Datos compartidos centralizados
-import { DEPARTMENTS, getRanksForDept } from "../shared/rankData";
+import { getRanksForDept } from "../shared/rankData";
 // Subcomponentes de la sección (UI reutilizable)
 import {
   DepartmentSelect,

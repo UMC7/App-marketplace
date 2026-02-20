@@ -29,8 +29,6 @@ async function loadPdfJs() {
     const { GlobalWorkerOptions } = pdfjs;
     // pdfjs.version viene en todas las versiones modernas (v3+)
     const ver = (pdfjs.version || "").trim();
-    // Si importamos del path "legacy/build/...", usa worker del mismo subdirectorio.
-    const usedLegacyBuild = !!mod && /legacy\/build\/pdf$/i.test(mod?.__esModule ? "" : "");
     // No tenemos forma fiable de ver el path del import en runtime; asumimos legacy
     // porque arriba intentamos primero "legacy".
     const subdir = "legacy/build";

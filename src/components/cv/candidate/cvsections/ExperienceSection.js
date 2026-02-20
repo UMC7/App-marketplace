@@ -3,16 +3,12 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import supabase from '../../../../supabase';
 import { toast } from 'react-toastify';
 
-import { getRanksForDept } from '../shared/rankData';
-
 import {
   YachtFields,
   ShoreFields,
   MerchantFields,
   ItemRow,
   EmploymentStatus,
-  buildNoteTags,
-  buildShoreTags,
   hideTechForRole,
   computeLongevityAvg
 } from '../sectionscomponents/experience';
@@ -388,16 +384,6 @@ export default function ExperienceSection({
     setEditing(null);
   }
 
-  const rankOptions = useMemo(() => {
-    if (!editing || !editing.department) return [];
-    const list = getRanksForDept(editing.department) || [];
-    const out = [...list];
-    if (String(editing.department).toLowerCase() === 'others' && !out.includes('Other')) {
-      out.push('Other');
-    }
-    return out;
-  }, [editing?.department]);
-
   function validateYacht(y) {
     if (!y.department) return 'Department is required.';
     if (!y.role || (y.role === 'Other' && !y.role_other?.trim())) return 'Rank is required.';
@@ -422,16 +408,6 @@ export default function ExperienceSection({
       if (err) return toast.error(err);
 
       const hideTech = hideTechForRole(editing.department);
-
-      const noteTags = buildNoteTags({
-        use: editing.use,
-        propulsion: editing.propulsion,
-        powerValue: editing.powerValue,
-        powerUnit: editing.powerUnit,
-        crossings: editing.crossings,
-        yardPeriod: editing.yardPeriod,
-        crewBucket: editing.crew_bucket,
-      });
 
       const roleToSave =
         editing.role === 'Other' && editing.role_other?.trim()
@@ -594,10 +570,6 @@ export default function ExperienceSection({
       const { year: eYear, month: eMonth } = parseYearMonth(editing.end_month);
       const location = editing.location_country || '';
       const regionsArray = location ? [location] : null;
-
-      const noteTags = buildShoreTags({
-        supervised: editing.supervisedBucket || '',
-      });
 
       const extras = compactOrEmpty({
         contract: editing.contract || null,

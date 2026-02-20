@@ -33,7 +33,7 @@ function ResetPasswordPage() {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.updateUser({ password });
+      const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
         setMessage(`Error: ${error.message}`);

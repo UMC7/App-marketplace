@@ -19,7 +19,6 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   const [mainPhoto, setMainPhoto] = useState(initialValues.mainphoto || initialValues.mainPhoto || '');
 
   const [ownerId, setOwnerId] = useState(null);
-  const [ownerEmail, setOwnerEmail] = useState('');
 
   const [contactEmail, setContactEmail] = useState(initialValues.contact_email || '');
   const [phone, setPhone] = useState(initialValues.contact_phone || '');
@@ -55,7 +54,6 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
         return;
       }
       setOwnerId(authData.user.id);
-      setOwnerEmail(authData.user.email);
     };
 
     const fetchCategories = async () => {

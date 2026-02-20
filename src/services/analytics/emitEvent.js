@@ -228,7 +228,7 @@ async function _fetchShareReady({ handle, ownerUserId }) {
       return !!data?.share_ready;
     }
     if (ownerUserId) {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('public_profiles')
         .select('share_ready')
         .eq('user_id', ownerUserId)

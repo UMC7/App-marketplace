@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
-import supabase from '../../supabase';
 import { submitUserReview } from '../../lib/reviewUtils';
 import {
   cancelPurchase,

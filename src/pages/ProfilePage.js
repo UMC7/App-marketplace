@@ -171,11 +171,11 @@ const clearJobDashboardParam = () => {
     
         const [
           { data: userData, error: userError },
-          { data: productData, error: productError },
-          { data: deletedData, error: deletedError },
-          { data: soldItems, error: soldError },
-          { data: myPurchases, error: purchaseError },
-          { data: serviceData, error: serviceError },
+          { data: productData, error: _productError },
+          { data: deletedData, error: _deletedError },
+          { data: soldItems, error: _soldError },
+          { data: myPurchases, error: _purchaseError },
+          { data: serviceData, error: _serviceError },
           { data: offersData, error: offersError },
           { data: deletedJobData, error: deletedJobsError },
           { data: eventData, error: eventError },

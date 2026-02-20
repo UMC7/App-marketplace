@@ -10,7 +10,6 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   const [country, setCountry] = useState(initialValues.country || '');
   const [mainPhoto, setMainPhoto] = useState(initialValues.mainphoto || '');
   const [ownerId, setOwnerId] = useState(null);
-  const [ownerEmail, setOwnerEmail] = useState('');
   const [contactEmail, setContactEmail] = useState(initialValues.contact_email || '');
   const [phone, setPhone] = useState(initialValues.contact_phone || '');
   const [altPhone, setAltPhone] = useState(initialValues.alt_phone || '');
@@ -52,7 +51,6 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
         return;
       }
       setOwnerId(authData.user.id);
-      setOwnerEmail(authData.user.email);
     };
     fetchUser();
   }, []);
@@ -123,7 +121,7 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
       return;
     }
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('events')
         .insert([eventData])
         .select('*');

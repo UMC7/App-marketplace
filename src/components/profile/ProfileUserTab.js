@@ -1,16 +1,6 @@
 import React from 'react';
 import Avatar from '../Avatar';
 
-const isPasswordValid = (value) => {
-  if (!value) return false;
-  if (value.length < 8) return false;
-  if (!/[A-Z]/.test(value)) return false;
-  if (!/[a-z]/.test(value)) return false;
-  if (!/[0-9]/.test(value)) return false;
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) return false;
-  return true;
-};
-
 const ProfileUserTab = ({
   nickname,
   localAvatarUrl,

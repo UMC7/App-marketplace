@@ -26,10 +26,6 @@ export default function DocumentsSection({
     { key: "covidVaccine",   label: "COVID Vaccine" },
   ];
 
-  const allFlagsSelected = quickItems.every(
-    (it) => typeof (docFlags?.[it.key]) === "boolean"
-  );
-
   const valOf = (v) => (v === true ? "yes" : "no");
   const parseVal = (s) => (s === "yes" ? true : s === "no" ? false : null);
 
@@ -205,15 +201,6 @@ export default function DocumentsSection({
       </div>
     </>
   );
-}
-
-function formatDateRange(issuedOn, expiresOn) {
-  const issued = issuedOn ? safeDate(issuedOn) : null;
-  const expires = expiresOn ? safeDate(expiresOn) : null;
-  if (!issued && !expires) return "No dates";
-  if (issued && !expires) return `Issued: ${issued}`;
-  if (!issued && expires) return `Expires: ${expires}`;
-  return `Issued: ${issued} • Expires: ${expires}`;
 }
 
 function safeDate(v) {
