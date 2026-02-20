@@ -11,6 +11,7 @@ const AdminChatButton = () => {
   const { currentUser } = useAuth();
   const [hideInChat, setHideInChat] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [adminUserId, setAdminUserId] = useState(null);
   const [adminThreadId, setAdminThreadId] = useState(null);
@@ -54,7 +55,7 @@ const AdminChatButton = () => {
 
   const openAdminChat = async () => {
     if (!currentUser?.id) {
-      toast.info('Inicia sesion para abrir el chat con el admin.');
+      setShowLoginRequiredModal(true);
       return;
     }
     if (isAdmin) return;
@@ -108,6 +109,19 @@ const AdminChatButton = () => {
 
   return (
     <>
+      {showLoginRequiredModal && (
+        <Modal onClose={() => setShowLoginRequiredModal(false)}>
+          <div style={{ padding: '16px 0', textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: '16px', lineHeight: 1.5 }}>
+              To chat with the admin, you need to be logged in.
+            </p>
+            <p style={{ margin: '12px 0 0', fontSize: '14px', opacity: 0.85 }}>
+              Please sign in or create an account to use this feature.
+            </p>
+          </div>
+        </Modal>
+      )}
+
       {!chatOpen && (
         <button
           type="button"

@@ -30,9 +30,14 @@ const ScrollToTopButton = () => {
 
   if (hideInChat) return null;
 
+  const scrollToTop = () => {
+    setIsVisible(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <button
-      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      onClick={scrollToTop}
       className={`scroll-to-top-button ${isVisible ? 'visible' : ''}`}
       title="Back to top"
     >
