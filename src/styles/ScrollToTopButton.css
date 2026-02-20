@@ -50,7 +50,7 @@
 @media (max-width: 900px), (hover: none) and (pointer: coarse) {
   .scroll-to-top-button {
     right: 14px;
-    bottom: calc(var(--mobile-fab-offset, 72px) + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--mobile-fab-offset, 72px) + min(env(safe-area-inset-bottom, 0px), 16px));
   }
 }
 
