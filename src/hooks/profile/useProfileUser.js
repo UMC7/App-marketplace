@@ -5,7 +5,7 @@ import supabase from '../../supabase';
 
 const useProfileUser = ({ currentUser, activeTab, setActiveTab }) => {
   const [userDetails, setUserDetails] = useState({});
-  const [candidateEnabled, setCandidateEnabled] = useState(false);
+  const [candidateEnabled, setCandidateEnabled] = useState(null);
   const [localAvatarUrl, setLocalAvatarUrl] = useState(
     currentUser?.app_metadata?.avatar_url || null
   );

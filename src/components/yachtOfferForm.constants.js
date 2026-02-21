@@ -1,5 +1,7 @@
 // src/components/yachtOfferForm.constants.js
 
+import { RANKS_BY_DEPT } from './cv/candidate/shared/rankData';
+
 export const MONTHS = [
   { value: '1', label: 'January' },
   { value: '2', label: 'February' },
@@ -30,8 +32,8 @@ export const titles = [
   'Housekeeper','Head of Housekeeping',
   'Chef/Stew/Deck','Cook/Stew/Deck','Cook/Steward(ess)','Stew/Deck','Laundry/Steward(ess)',
   'Stew/Masseur','Stew/Yoga Instructor','Masseur','Hairdresser/Barber','Steward(ess)/Nanny','Nanny',
-  'Videographer','Yoga/Pilates Instructor','Personal Trainer','Dive Instrutor',
-  'Water Sport Instrutor','Nurse','Other'
+  'Videographer','Yoga/Pilates Instructor','Personal Trainer','Dive Instructor',
+  'Water Sport Instructor','Nurse','Other'
 ];
 
 export const types = [
@@ -728,96 +730,18 @@ export const OTHERS_REQUIRED_DOCUMENT_GROUPS = [
   MEDIA_PRODUCTION_DOCUMENT_GROUP,
 ];
 
-export const DEPARTMENT_RANK_GROUPS = [
-  {
-    label: 'Deck Department',
-    ranks: [
-      'Captain',
-      'Captain/Engineer',
-      'Skipper',
-      'Relief Captain',
-      'Chase Boat Captain',
-      'Chief Officer',
-      '2nd Officer',
-      '3rd Officer',
-      'Mate',
-      'Mate/Engineer',
-      'Mate/Steward(ess)',
-      'Bosun',
-      'Deck/Engineer',
-      'Lead Deckhand',
-      'Deckhand',
-      'Deck/Steward(ess)',
-      'Deck/Carpenter',
-      'Deck/Divemaster',
-      'Deck/Personal Trainer',
-      'Deck/Cook',
-      'Dayworker',
-    ],
-  },
-  {
-    label: 'Engine Department',
-    ranks: [
-      'Chief Engineer',
-      '2nd Engineer',
-      '3rd Engineer',
-      'Engineer',
-      'Solo Engineer',
-      'Electrician',
-    ],
-  },
-  {
-    label: 'Galley Department',
-    ranks: [
-      'Head Chef',
-      'Sous Chef',
-      'Chef',
-      'Solo Chef',
-      'Cook',
-      'Cook/Crew Chef',
-      'Crew Chef/Stew',
-      'Chef/Steward(ess)',
-    ],
-  },
-  {
-    label: 'Interior Department',
-    ranks: [
-      'Chief Steward(ess)',
-      '2nd Steward(ess)',
-      '3rd Steward(ess)',
-      '4th Steward(ess)',
-      'Junior Steward(ess)',
-      'Steward(ess)',
-      'Solo Steward(ess)',
-      'Stew/Deck',
-      'Laundry/Steward(ess)',
-      'Stew/Masseur',
-      'Stew/Yoga Instructor',
-      'Steward(ess)/Nanny',
-      'Butler',
-      'Head of Housekeeping',
-      'Housekeeper',
-      'Chef/Stew/Deck',
-      'Cook/Stew/Deck',
-      'Cook/Steward(ess)',
-    ],
-  },
-  {
-    label: 'Others Department',
-    ranks: [
-      'Masseur',
-      'Nanny',
-      'Hairdresser/Barber',
-      'Videographer',
-      'Yoga/Pilates Instructor',
-      'Personal Trainer',
-      'Dive Instrutor',
-      'Water Sport Instrutor',
-      'Nurse',
-      'Other',
-    ],
-  },
+const DEPARTMENT_LABELS = [
+  { dept: 'Deck', label: 'Deck Department' },
+  { dept: 'Engine', label: 'Engine Department' },
+  { dept: 'Galley', label: 'Galley Department' },
+  { dept: 'Interior', label: 'Interior Department' },
+  { dept: 'Other', label: 'Others Department' },
 ];
+
+export const DEPARTMENT_RANK_GROUPS = DEPARTMENT_LABELS.map(({ dept, label }) => ({
+  label,
+  ranks: RANKS_BY_DEPT[dept] || [],
+}));
 
 export const OTHERS_DEPARTMENT_RANKS = DEPARTMENT_RANK_GROUPS.find((group) => group.label === 'Others Department').ranks;
 

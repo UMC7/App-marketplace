@@ -79,7 +79,7 @@ function ProfilePage() {
     refetchEvents,
   } = useProfileEvents({ currentUser });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('productos');
+  const [activeTab, setActiveTab] = useState('');
   const [editingProductId, setEditingProductId] = useState(null);
   const [editingServiceId, setEditingServiceId] = useState(null);
   const [editingJobId, setEditingJobId] = useState(null);
@@ -105,6 +105,7 @@ const navigate = useNavigate();
 const location = useLocation();
 
 const menuRef = useRef(null);
+const defaultTabSetRef = useRef(false);
 const isTab = (key) => (activeTab === key ? 'is-active' : '');
 
 useEffect(() => {
@@ -155,6 +156,15 @@ useEffect(() => {
     navigate(qs ? `/profile?${qs}` : '/profile', { replace: true });
   }
 }, [location.search]);
+
+useEffect(() => {
+  if (candidateEnabled === null) return;
+  const params = new URLSearchParams(location.search);
+  if (params.get('tab') || params.get('jobDashboard')) return;
+  if (defaultTabSetRef.current) return;
+  setActiveTab(candidateEnabled ? 'cv' : 'productos');
+  defaultTabSetRef.current = true;
+}, [candidateEnabled, location.search]);
 
 const clearJobDashboardParam = () => {
   const params = new URLSearchParams(location.search);
