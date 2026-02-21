@@ -645,6 +645,21 @@ function buildLitePrefsPayload() {
   };
 
   async function loadDocsForProfile(profileId) {
+    if (isAdminView) {
+      const { data: rows, error: docsErr } = await supabase
+        .rpc('rpc_public_docs_with_exp', { profile_uuid: profileId });
+      if (docsErr) throw docsErr;
+      return (rows || []).map((r) => ({
+        id: String(r.id || ''),
+        title: r.title || 'Untitled document',
+        issuedOn: r.issued_on || undefined,
+        expiresOn: r.expires_on || undefined,
+        visibility: mapDbVisibilityToUi(r.visibility),
+        mimeType: undefined,
+        sizeBytes: undefined,
+      }));
+    }
+
     const { data: docsRows, error: docsErr } = await supabase
       .from('public_documents')
       .select('id, file_url, title, visibility, created_at')
@@ -1961,15 +1976,16 @@ const meetsPrefsMin =
           ) : null}
 
           {showRequired ? (
-            <div className="cp-card">
-              <h3 className="cp-h3">Education (Studies)</h3>
-              <EducationSection
-                showRequiredMark={!isLite}
-                mode={profileMode}
-                readOnly={!canEdit}
-                userId={isAdminView ? undefined : undefined}
-                handleForAdminLoad={isAdminView ? profile?.handle : undefined}
-              />
+              <div className="cp-card">
+                <h3 className="cp-h3">Education (Studies)</h3>
+                <EducationSection
+                  showRequiredMark={!isLite}
+                  mode={profileMode}
+                  readOnly={!canEdit}
+                  userId={isAdminView ? undefined : undefined}
+                  handleForAdminLoad={isAdminView ? profile?.handle : undefined}
+                  onCountChange={(n) => setEducationCount(Number(n) || 0)}
+                />
             </div>
           ) : null}
 

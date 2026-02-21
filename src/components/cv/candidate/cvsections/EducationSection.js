@@ -12,6 +12,7 @@ export default function EducationSection({
   showRequiredMark = true,
   mode = 'professional',
   readOnly = false,
+  onCountChange,
 }) {
   const [userId, setUserId] = useState(userIdProp || null);
   const [items, setItems] = useState([]);
@@ -91,6 +92,12 @@ export default function EducationSection({
     load();
     return () => { cancelled = true; };
   }, [userId, handleForAdminLoad]);
+
+  useEffect(() => {
+    if (typeof onCountChange === 'function') {
+      onCountChange(items.length);
+    }
+  }, [items, onCountChange]);
 
   async function createItem(payload) {
     if (readOnly) return;
