@@ -448,7 +448,13 @@ const licenseOptions = needsEngineeringLicense
     : [];
 const engineeringLicenseFieldOptions = ENGINEERING_LICENSE_FIELD_OPTIONS;
 const isCaptainTierDeckRank = CAPTAIN_TIER_DECK_RANKS.includes(formData.title);
-const deckDocumentOptions = needsDeckLicense && !isCaptainTierDeckRank ? getDeckDocumentOptionsForRank(formData.title) : [];
+const DISABLE_DECK_DOC_INSERT_RANKS = new Set(['Mate/Engineer']);
+const deckDocumentOptions =
+  needsDeckLicense &&
+  !isCaptainTierDeckRank &&
+  !DISABLE_DECK_DOC_INSERT_RANKS.has(formData.title)
+    ? getDeckDocumentOptionsForRank(formData.title)
+    : [];
 const isOnboard = formData.work_environment === 'Onboard';
 const isShoreBased = formData.work_environment === 'Shore-based';
 const INTERIOR_RANKS_WITH_GALLEY_SUBGROUP = new Set([
@@ -493,9 +499,12 @@ const teammateLicenseOptions = needsTeammateEngineeringLicense
     ? getDeckLicenseOptionsForRank(teammateRank)
     : [];
 const isTeammateCaptainTierDeck = teammateRank && CAPTAIN_TIER_DECK_RANKS.includes(teammateRank);
-const teammateDeckDocumentOptions = needsTeammateDeckLicense && !isTeammateCaptainTierDeck
-  ? getDeckDocumentOptionsForRank(teammateRank)
-  : [];
+const teammateDeckDocumentOptions =
+  needsTeammateDeckLicense &&
+  !isTeammateCaptainTierDeck &&
+  !DISABLE_DECK_DOC_INSERT_RANKS.has(teammateRank)
+    ? getDeckDocumentOptionsForRank(teammateRank)
+    : [];
 
 const renderRequiredDocsSummary = () => null;
 

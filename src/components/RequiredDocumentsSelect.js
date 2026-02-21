@@ -15,6 +15,24 @@ const RequiredDocumentsSelect = ({
     if (!deckDocumentOptions || deckDocumentOptions.length === 0) {
       return requiredDocumentGroups;
     }
+    const hasRadioGroup = requiredDocumentGroups.some(
+      (group) => group?.label === 'Radio Certificates'
+    );
+    if (hasRadioGroup) {
+      return requiredDocumentGroups;
+    }
+    if (
+      deckDocumentOptions.length === 1 &&
+      deckDocumentOptions[0] === 'VHF SRC' &&
+      requiredDocumentGroups.some(
+        (group) =>
+          group?.label === 'Radio Certificates' &&
+          Array.isArray(group.options) &&
+          group.options.some((opt) => opt === 'GMDSS GOC' || opt === 'GMDSS ROC')
+      )
+    ) {
+      return requiredDocumentGroups;
+    }
     const updated = [...requiredDocumentGroups];
     updated.splice(1, 0, {
       label: 'Radio Certificates',
