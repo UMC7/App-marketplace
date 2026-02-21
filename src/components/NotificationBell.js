@@ -158,10 +158,16 @@ const handleItemClick = async (e, n) => {
       )
       .subscribe();
 
-    const poll = setInterval(recount, 30000);
+    const poll = setInterval(recount, 15000);
+
+    const onFocus = () => recount();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
 
     return () => {
       clearInterval(poll);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
       supabase.removeChannel(channel);
     };
   }, [userId, recount]);
