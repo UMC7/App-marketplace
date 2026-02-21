@@ -117,6 +117,8 @@
 
 .admin-panel .analytics-block {
   overflow-x: auto;
+  padding-right: 20px;
+  box-sizing: content-box;
 }
 
 .analytics-chart {
@@ -290,6 +292,9 @@ body.dark-mode .admin-panel tr:nth-child(even),
   overflow-x: auto;
   white-space: nowrap;
   max-width: 100%;
+  /* Padding derecho amplía el área de scroll: al llegar al tope, la última columna queda visible a la izquierda de la barra vertical */
+  padding-right: 20px;
+  box-sizing: content-box;
 }
 
 /* Oculta el scrollbar horizontal nativo de la tabla (mantiene scroll) */
