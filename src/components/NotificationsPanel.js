@@ -52,7 +52,7 @@ const handleItemClick = async (n) => {
         (i) =>
           i.id !== n.id &&
           !i.is_read &&
-          notificationDataMatchesChat(parseData(i.data), chatParams.offerId, chatParams.receiverId)
+          notificationDataMatchesChat(parseData(i.data), chatParams.offerId, chatParams.receiverId, chatParams.adminThreadId)
       )
       .map((i) => i.id);
     if (sameChatIds.length > 0) {
@@ -69,7 +69,7 @@ const handleItemClick = async (n) => {
 
   // Chat: abrir modal Chats con la conversación específica (misma UX que Chats → seleccionar)
   if (chatUrl && chatParams) {
-    openChatFromNotification(chatParams.offerId, chatParams.receiverId);
+    openChatFromNotification(chatParams.offerId, chatParams.receiverId, chatParams.adminThreadId);
     return;
   }
 

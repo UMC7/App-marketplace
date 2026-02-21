@@ -21,6 +21,12 @@ En **Supabase Dashboard** → **Edge Functions** → **chat_push** → **Secrets
 
 - **WEB_API_URL**: URL base de tu app **actual** (ej. `https://www.yachtdaywork.com` o `https://tu-app.vercel.app`). Sin barra final.
 - **WEB_API_INTERNAL_KEY**: Mismo valor que la variable de entorno **WEB_API_INTERNAL_KEY** en tu hosting (Vercel, etc.).
+- **SUPABASE_URL** y **SUPABASE_SERVICE_ROLE_KEY**: Para obtener el nickname del remitente en las notificaciones ("New message from John"). Si no están, las notificaciones dirán "New message" sin nombre.
+
+  **Problema: "No llega con usuario" / notificaciones muestran solo "New message"**
+  - Verifica que ambos secrets existan en **chat_push** y **admin_chat_push**.
+  - En Supabase Dashboard → Edge Functions → cada función → Secrets.
+  - Tras añadirlos, no hace falta redeploy; las funciones los leen al ejecutarse.
 
 Si cambiaste de dominio o de URL de deploy, actualiza **WEB_API_URL** aquí.
 
@@ -43,6 +49,16 @@ En **Supabase Dashboard** → **Database** → **Webhooks**:
 No hace falta configurar headers extra: la Edge Function acepta el payload estándar de Supabase (type, table, record) y construye ella misma el título y el cuerpo.
 
 Si el webhook no existe o apunta a otra función/URL, los push de chat no se disparan.
+
+### 4. Chat con admin (botón "chat with admin")
+
+Para que al hacer clic en Alerts en una notificación de chat admin se abra la conversación:
+
+1. Despliega la Edge Function **admin_chat_push**.
+2. En **Database** → **Webhooks**, crea un webhook sobre **`admin_messages`**, evento INSERT, URL:  
+   `https://<PROJECT_REF>.supabase.co/functions/v1/admin_chat_push`
+
+La notificación incluirá `offer_id: '__admin__'`, `sender_id` y `thread_id` para que el clic redirija correctamente. Si las notificaciones admin se crean por otro medio, deben incluir al menos `sender_id` (y opcionalmente `thread_id`) para que la redirección funcione.
 
 ---
 

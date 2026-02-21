@@ -3,6 +3,7 @@
 // 1) Payload directo: { receiver_id, title, body, data? }
 // 2) Webhook de Supabase (INSERT): { type, table, record } → si table === 'yacht_work_messages' se construye title/body y data (target: "chat", offer_id, sender_id).
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 type DirectPayload = {
   receiver_id: string;
@@ -53,6 +54,18 @@ function buildFromWebhook(body: WebhookPayload): DirectPayload | null {
   };
 }
 
+async function fetchSenderNickname(supabaseUrl: string, serviceRoleKey: string, senderId: string): Promise<string> {
+  if (!supabaseUrl || !serviceRoleKey || !senderId) return "User";
+  try {
+    const sb = createClient(supabaseUrl, serviceRoleKey);
+    const { data } = await sb.from("users").select("nickname").eq("id", senderId).maybeSingle();
+    const n = (data as { nickname?: string } | null)?.nickname?.trim();
+    return n || "User";
+  } catch {
+    return "User";
+  }
+}
+
 serve(async (req) => {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "method_not_allowed" }), {
@@ -63,6 +76,8 @@ serve(async (req) => {
 
   const apiUrl = Deno.env.get("WEB_API_URL") || "";
   const internalKey = Deno.env.get("WEB_API_INTERNAL_KEY") || "";
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
   if (!apiUrl || !internalKey) {
     return new Response(
@@ -97,7 +112,11 @@ serve(async (req) => {
     }
   }
 
-  const built = buildFromWebhook(body as WebhookPayload);
+  let built = buildFromWebhook(body as WebhookPayload);
+  if (built && supabaseUrl && serviceRoleKey && built.data?.sender_id) {
+    const nickname = await fetchSenderNickname(supabaseUrl, serviceRoleKey, String(built.data.sender_id));
+    built = { ...built, title: `New message from ${nickname}` };
+  }
   const payload: DirectPayload = built
     ? built
     : (body as DirectPayload);

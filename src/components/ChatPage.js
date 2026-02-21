@@ -189,9 +189,15 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
   // Marcar como leídas las notificaciones de este chat al abrir la conversación
   useEffect(() => {
-    if (isExternal || isAdminThread || !currentUser?.id || !offerId || !receiverId) return;
+    if (!currentUser?.id) return;
+    if (isExternal) return;
+    if (isAdminThread && adminThreadId && otherUserId) {
+      markNotificationsForChatAsRead(supabase, currentUser.id, '__admin__', otherUserId, adminThreadId);
+      return;
+    }
+    if (!offerId || !receiverId) return;
     markNotificationsForChatAsRead(supabase, currentUser.id, offerId, receiverId);
-  }, [isExternal, isAdminThread, currentUser?.id, offerId, receiverId]);
+  }, [isExternal, isAdminThread, currentUser?.id, offerId, receiverId, adminThreadId, otherUserId]);
 
   // Load messages (internal vs external)
   useEffect(() => {

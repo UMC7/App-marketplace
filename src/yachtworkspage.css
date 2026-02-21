@@ -891,8 +891,10 @@ body:not(.dark-mode) .filters-panel h3 {
     text-align: justify;
   }
 
+  .scroll-to-top-button.visible {
+    transform: scale(0.75) translateY(0);
+  }
   .scroll-to-top-button {
-    transform: scale(0.75);
     bottom: calc(var(--mobile-fab-offset, 72px) + min(env(safe-area-inset-bottom, 0px), 16px)) !important;
     right: var(--spacing-xl) !important;
     border-radius: var(--border-radius-round) !important;

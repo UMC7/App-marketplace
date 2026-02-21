@@ -58,9 +58,18 @@ function LoginPage() {
     return email.trim() !== '' && password !== '';
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (showRecovery) {
+      handlePasswordRecovery();
+    } else if (isLoginFormComplete()) {
+      handleLogin();
+    }
+  };
+
   return (
     <div className="login-page-wrapper">
-      <div className="login-form">
+      <form className="login-form" onSubmit={handleSubmit}>
         <h2>Welcome Back</h2>
         <input
           type="email"
@@ -76,13 +85,14 @@ function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button onClick={handleLogin} disabled={!isLoginFormComplete()}>
+        <button type="submit" disabled={!isLoginFormComplete()}>
           Sign In
         </button>
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
         <div style={{ marginTop: '12px' }}>
           <button
+            type="button"
             onClick={() => setShowRecovery(!showRecovery)}
             className="forgot-password-btn"
           >
@@ -92,11 +102,11 @@ function LoginPage() {
 
         {showRecovery && (
           <div style={{ marginTop: '12px' }}>
-            <button onClick={handlePasswordRecovery}>Send recovery link</button>
+            <button type="submit">Send recovery link</button>
             {recoveryMessage && <p style={{ color: 'green' }}>{recoveryMessage}</p>}
           </div>
         )}
-      </div>
+      </form>
     </div>
   );
 }

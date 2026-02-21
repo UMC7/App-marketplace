@@ -85,17 +85,34 @@ function Navbar() {
 
   // Al hacer clic en notificación de chat desde Alerts: abrir Chats con esa conversación
   useEffect(() => {
-    const handler = (e) => {
-      const { offerId, receiverId } = e?.detail || {};
-      if (offerId && receiverId) {
-        setShowNotifications(false);
-        setShowChatList(true);
+    const handler = async (e) => {
+      const { offerId, receiverId, adminThreadId } = e?.detail || {};
+      if (!offerId || !receiverId) return;
+      setShowNotifications(false);
+      setShowChatList(true);
+
+      if (offerId === '__admin__') {
+        let threadId = adminThreadId;
+        if (!threadId && currentUser?.id) {
+          const { data } = await supabase
+            .from('admin_threads')
+            .select('id')
+            .or(`and(user_id.eq.${currentUser.id},admin_id.eq.${receiverId}),and(admin_id.eq.${currentUser.id},user_id.eq.${receiverId})`)
+            .maybeSingle();
+          threadId = data?.id;
+        }
+        if (threadId) {
+          setActiveChat({ admin: true, threadId, adminUserId: receiverId });
+        } else {
+          setActiveChat(null);
+        }
+      } else {
         setActiveChat({ offerId, receiverId });
       }
     };
     window.addEventListener('ydw:openChatFromNotification', handler);
     return () => window.removeEventListener('ydw:openChatFromNotification', handler);
-  }, []);
+  }, [currentUser?.id]);
 
 
   useEffect(() => {

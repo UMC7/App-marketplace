@@ -1,5 +1,5 @@
 // src/components/NotificationBell.js
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import supabase from "../supabase";
 import { useAuth } from "../context/AuthContext";
@@ -59,7 +59,7 @@ const handleItemClick = async (e, n) => {
         (i) =>
           i.id !== n.id &&
           !i.is_read &&
-          notificationDataMatchesChat(parseData(i.data), chatParams.offerId, chatParams.receiverId)
+          notificationDataMatchesChat(parseData(i.data), chatParams.offerId, chatParams.receiverId, chatParams.adminThreadId)
       )
       .map((i) => i.id);
     if (sameChatIds.length > 0) {
@@ -75,7 +75,7 @@ const handleItemClick = async (e, n) => {
 
   // Chat: abrir modal Chats con la conversación específica (misma UX que Chats → seleccionar)
   if (chatUrl && chatParams) {
-    openChatFromNotification(chatParams.offerId, chatParams.receiverId);
+    openChatFromNotification(chatParams.offerId, chatParams.receiverId, chatParams.adminThreadId);
     return;
   }
 
@@ -108,29 +108,29 @@ const handleItemClick = async (e, n) => {
   }
 };
 
-  useEffect(() => {
+  const recount = useCallback(async () => {
     if (!userId) return;
-
-    (async () => {
-      const { count } = await supabase
-        .from("notifications")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("is_read", false);
-
-      const { data: listRows } = await supabase
-        .from("notifications")
-        .select("id, title, body, data, is_read, created_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(15);
-
-      setUnread(count ?? 0);
-      setItems(listRows ?? []);
-    })();
+    const { count } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("is_read", false);
+    const { data: listRows } = await supabase
+      .from("notifications")
+      .select("id, title, body, data, is_read, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(15);
+    setUnread(count ?? 0);
+    setItems(listRows ?? []);
   }, [userId]);
 
-  // Realtime
+  useEffect(() => {
+    if (!userId) return;
+    recount();
+  }, [userId, recount]);
+
+  // Realtime + polling de respaldo (por si Realtime falla en desktop)
   useEffect(() => {
     if (!userId) return;
 
@@ -142,6 +142,7 @@ const handleItemClick = async (e, n) => {
         (payload) => {
           setItems((prev) => [payload.new, ...prev].slice(0, 15));
           setUnread((c) => c + 1);
+          setTimeout(recount, 400);
         }
       )
       .on(
@@ -152,14 +153,18 @@ const handleItemClick = async (e, n) => {
           if (payload?.old?.is_read === false && payload?.new?.is_read === true) {
             setUnread((c) => Math.max(0, c - 1));
           }
+          setTimeout(recount, 400);
         }
       )
       .subscribe();
 
+    const poll = setInterval(recount, 30000);
+
     return () => {
+      clearInterval(poll);
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, recount]);
 
   const hasUnread = unread > 0;
   const badge = useMemo(() => (hasUnread ? (unread > 99 ? "99+" : unread) : null), [unread, hasUnread]);

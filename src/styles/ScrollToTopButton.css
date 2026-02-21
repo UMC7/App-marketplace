@@ -18,15 +18,24 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
   z-index: 1200;
   opacity: 0;
+  visibility: hidden;
   transform: translateY(20px);
   pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.3s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s, background 0.15s ease, box-shadow 0.15s ease;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
 
+/* Evitar residuos visibles en Android WebView en modo oscuro */
+.scroll-to-top-button:not(.visible) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
 .scroll-to-top-button.visible {
   opacity: 1;
+  visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
 }
