@@ -527,11 +527,11 @@ export default function PublicProfileView() {
         const hydrated = await Promise.all(rawGallery.map(hydrateMediaItem));
 
         let nat = baseRow.nationalities ?? null;
-        if (nat == null && baseRow.id) {
+        if (nat == null && baseRow.handle) {
           const { data: natRow } = await supabase
             .from('public_profiles')
             .select('nationalities')
-            .eq('id', baseRow.id)
+            .eq('handle', baseRow.handle)
             .single();
           nat = natRow?.nationalities ?? null;
         }
@@ -544,7 +544,7 @@ export default function PublicProfileView() {
         const { data: freshPR } = await supabase
           .from('public_profiles')
           .select('prefs_skills, prefs_skills_lite, prefs_skills_pro, languages, skills, share_ready')
-          .eq('id', baseRow.id)
+          .eq('handle', baseRow.handle)
           .single();
 
         // Merge prefs: los datos reales están en prefs_skills_lite (Lite) y prefs_skills_pro (Professional)
