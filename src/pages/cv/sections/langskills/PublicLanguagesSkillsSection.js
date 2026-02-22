@@ -1,7 +1,10 @@
 // src/pages/cv/sections/langskills/PublicLanguagesSkillsSection.js
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './langskills.css';
-import { DEPT_SPECIALTIES_SUGGESTIONS } from '../../../../components/cv/candidate/sectionscomponents/preferencesskills/catalogs';
+import {
+  DEPT_SPECIALTIES_SUGGESTIONS,
+  normalizeSkillForDisplay,
+} from '../../../../components/cv/candidate/sectionscomponents/preferencesskills/catalogs';
 
 /* ============================
    Helpers de normalización
@@ -182,7 +185,8 @@ function normalizeSkillsByDept(input, profile) {
 
   const map = new Map();
   const push = (dept, skill) => {
-    const d = cap(dept || 'Other');
+    const raw = (dept || '').trim();
+    const d = raw === 'Other' || !raw ? 'Others' : cap(raw);
     const s = String(skill || '').trim();
     if (!s) return;
     if (!map.has(d)) map.set(d, []);
@@ -205,30 +209,33 @@ function normalizeSkillsByDept(input, profile) {
       if (!it) continue;
 
       if (typeof it === 'object') {
-        const dept = it.department || it.dept || it.group || it.category || '';
+        const dept = (it.department || it.dept || it.group || it.category || '').trim() || 'Others';
         const skill = it.skill || it.name || it.label || it.title || '';
-        if (dept && skill) push(dept, skill);
+        if (dept && skill) push(dept, normalizeSkillForDisplay(skill));
         if (dept && Array.isArray(it.items)) {
-          for (const s of it.items)
-            push(dept, typeof s === 'string' ? s : s?.name || s?.label);
+          for (const s of it.items) {
+            const val = typeof s === 'string' ? s : s?.name || s?.label;
+            if (val) push(dept, normalizeSkillForDisplay(val));
+          }
         }
         continue;
       }
 
       const s = String(it).trim();
-      const deptFromCatalog = SKILL_TO_DEPT.get(s.toLowerCase()) || null;
+      const normalized = normalizeSkillForDisplay(s);
+      const deptFromCatalog = normalized ? SKILL_TO_DEPT.get(normalized.toLowerCase()) || null : null;
       if (deptFromCatalog) {
-        push(deptFromCatalog, s);
+        push(deptFromCatalog, normalized);
       } else if (s.includes(':')) {
         const [dept, skill] = s.split(':');
-        push(dept, skill);
-      } else {
-        push('Other', s);
+        push(dept, normalizeSkillForDisplay(skill || s));
+      } else if (normalized) {
+        push('Others', normalized);
       }
     }
   }
 
-  const order = ['Deck', 'Engine', 'Interior', 'Galley'];
+  const order = ['Deck', 'Engine', 'Interior', 'Galley', 'Others'];
   const result = {};
   for (const key of order) {
     const arr = map.get(key);

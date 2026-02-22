@@ -9,6 +9,7 @@ import {
 } from './candidate';
 import { useAuth } from '../../context/AuthContext';
 import PreferencesSkills, { buildPrefsSkillsPayload } from './candidate/cvsections/PreferencesSkills';
+import { normalizeDeptSpecialties } from './candidate/sectionscomponents/preferencesskills/catalogs';
 import PersonalDetailsSection from './candidate/cvsections/PersonalDetailsSection';
 import ExperienceSection from './candidate/cvsections/ExperienceSection';
 import EducationSection from './candidate/cvsections/EducationSection';
@@ -240,7 +241,7 @@ function buildLitePrefsPayload() {
     setStatus(ps?.status || '');
     setAvailability(ps?.availability || '');
     setLanguageLevels(Array.isArray(ps?.languageLevels) ? normalizeLanguageLevels(ps.languageLevels) : []);
-    setDeptSpecialties(Array.isArray(ps?.deptSpecialties) ? ps.deptSpecialties : []);
+    setDeptSpecialties(normalizeDeptSpecialties(ps?.deptSpecialties || []));
     const lh = ps && typeof ps.lifestyleHabits === 'object' ? ps.lifestyleHabits : {};
     setLifestyleHabits({
       tattoosVisible: lh.tattoosVisible || '',
@@ -483,7 +484,7 @@ function buildLitePrefsPayload() {
               : { currency: 'USD', dayRateMin: '', salaryMin: '' }
           );
           setLanguageLevels(normalizeLanguageLevels(data?.languages));
-          setDeptSpecialties(Array.isArray(data?.skills) ? data.skills : []);
+          setDeptSpecialties(normalizeDeptSpecialties(data?.skills || []));
 
           const psLite = (data && data.prefs_skills_lite && typeof data.prefs_skills_lite === 'object')
             ? data.prefs_skills_lite
@@ -513,9 +514,11 @@ function buildLitePrefsPayload() {
             languageLevels: Array.isArray((useLite ? seedLite : seedPro)?.languageLevels)
               ? (useLite ? seedLite : seedPro).languageLevels
               : normalizeLanguageLevels(data?.languages),
-            deptSpecialties: Array.isArray((useLite ? seedLite : seedPro)?.deptSpecialties)
-              ? (useLite ? seedLite : seedPro).deptSpecialties
-              : (Array.isArray(data?.skills) ? data.skills : []),
+            deptSpecialties: normalizeDeptSpecialties(
+              Array.isArray((useLite ? seedLite : seedPro)?.deptSpecialties)
+                ? (useLite ? seedLite : seedPro).deptSpecialties
+                : (Array.isArray(data?.skills) ? data.skills : [])
+            ),
             rateSalary: (useLite ? seedLite : seedPro)?.rateSalary && typeof (useLite ? seedLite : seedPro).rateSalary === 'object'
               ? (useLite ? seedLite : seedPro).rateSalary
               : (data?.compensation && typeof data.compensation === 'object'

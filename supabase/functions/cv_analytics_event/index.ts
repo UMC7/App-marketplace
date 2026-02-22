@@ -91,7 +91,6 @@ serve(async (req: Request) => {
       handle,
       owner_user_id: user_id || null,
       referrer: (referrer && String(referrer).trim()) || "Direct",
-      ip,
       country,
       city,
       user_agent: user_agent || null,

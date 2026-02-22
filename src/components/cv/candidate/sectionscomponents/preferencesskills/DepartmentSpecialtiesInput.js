@@ -142,6 +142,7 @@ export default function DepartmentSpecialtiesInput({
           <option value="Engine">Engine</option>
           <option value="Interior">Interior</option>
           <option value="Galley">Galley</option>
+          <option value="Others">Others</option>
         </select>
 
         {/* Specialty: select para desktop y modal en móvil */}
