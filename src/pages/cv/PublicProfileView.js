@@ -226,6 +226,79 @@ function formatYachtingExperienceLabel(totalMonths) {
   return `${(Math.round(years * 10) / 10).toFixed(1)} years`;
 }
 
+function hasLanguagesWithLevel(list) {
+  if (!Array.isArray(list)) return false;
+  return list.some((item) => {
+    if (!item) return false;
+    if (typeof item === 'object') {
+      const lang = item.lang || item.language || item.name || '';
+      const level = item.level || item.proficiency || '';
+      return String(lang || '').trim() && String(level || '').trim();
+    }
+    const s = String(item).trim();
+    if (!s) return false;
+    if (s.includes(':')) {
+      const [lang, level] = s.split(':');
+      return String(lang || '').trim() && String(level || '').trim();
+    }
+    return false;
+  });
+}
+
+function hasDeptSkills(list) {
+  if (!Array.isArray(list)) return false;
+  return list.some((it) => {
+    if (!it) return false;
+    if (typeof it === 'string') return String(it).trim().length > 0;
+    const deptOk = !!(it.department || it.dept || it.name);
+    const skillsArr = it.skills || it.items || it.list || [];
+    const skillsOk = Array.isArray(skillsArr) ? skillsArr.length > 0 : false;
+    return deptOk && skillsOk;
+  });
+}
+
+function allDocFlagsSelected(docFlags) {
+  if (!docFlags || typeof docFlags !== 'object') return false;
+  const keys = [
+    'passport6m','schengenVisa','stcwBasic','seamansBook','eng1',
+    'usVisa','drivingLicense','pdsd','covidVaccine'
+  ];
+  return keys.every((k) => typeof docFlags[k] === 'boolean');
+}
+
+function docsMeetMin(docs) {
+  if (!Array.isArray(docs) || docs.length < 3) return false;
+  let valid = 0;
+  for (const d of docs) {
+    const titleOk = !!String(d?.title || '').trim();
+    const issued = d?.issuedOn ?? d?.issued_on ?? d?.issued_at ?? null;
+    const issuedOk = !!String(issued || '').trim();
+    const visOk = !!String(d?.visibility || 'unlisted').trim();
+    if (titleOk && issuedOk && visOk) valid += 1;
+    if (valid >= 3) return true;
+  }
+  return false;
+}
+
+function personalMeetsMin(p) {
+  if (!p) return false;
+  const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(p.email_public || '').trim());
+  const phoneCcOk = String(p.phone_cc || '').replace(/\D/g, '').length > 0;
+  const phoneNumOk = String(p.phone_number || '').trim().length > 0;
+  const natsOk = Array.isArray(p.nationalities) && p.nationalities.length > 0;
+  return Boolean(
+    String(p.first_name || '').trim() &&
+    String(p.last_name || '').trim() &&
+    emailOk &&
+    phoneCcOk && phoneNumOk &&
+    p.country &&
+    String(p.city_port || '').trim() &&
+    p.birth_month &&
+    p.birth_year &&
+    natsOk
+  );
+}
+
 export default function PublicProfileView() {
   const navigate = useNavigate();
   const { handle } = useParams();
@@ -836,9 +909,56 @@ function computeScrollTargetTop(el, extra = 12) {
     return (ps && typeof ps.docFlags === 'object') ? ps.docFlags : {};
   }, [profile?.prefs_skills]);
 
+  const isShareReadyByData = useMemo(() => {
+    if (!profile) return false;
+    const ps = profile?.prefs_skills && typeof profile.prefs_skills === 'object' ? profile.prefs_skills : {};
+    const languageLevels = Array.isArray(ps.languageLevels) ? ps.languageLevels : (profile?.languages || []);
+    const deptSpecialties = Array.isArray(ps.deptSpecialties) ? ps.deptSpecialties : (profile?.skills || []);
+    const lifestyleHabits = ps?.lifestyleHabits && typeof ps.lifestyleHabits === 'object' ? ps.lifestyleHabits : {};
+
+    const meetsPersonalMin = personalMeetsMin(profile);
+    const meetsDeptRanks = !!(profile?.primary_department && profile?.primary_role);
+    const meetsExperienceMin = Array.isArray(experiences) && experiences.length > 0;
+    const meetsAboutMin =
+      !!(profile?.about_me && String(profile.about_me).trim()) ||
+      !!(profile?.professional_statement && String(profile.professional_statement).trim());
+    const meetsPrefsSkillsMin =
+      !!(ps?.status && String(ps.status).trim()) &&
+      !!(ps?.availability && String(ps.availability).trim()) &&
+      hasLanguagesWithLevel(languageLevels) &&
+      hasDeptSkills(deptSpecialties);
+    const meetsLifestyleMin =
+      !!(lifestyleHabits?.tattoosVisible && String(lifestyleHabits.tattoosVisible).trim()) &&
+      !!(lifestyleHabits?.smoking && String(lifestyleHabits.smoking).trim()) &&
+      !!(lifestyleHabits?.vaping && String(lifestyleHabits.vaping).trim()) &&
+      !!(lifestyleHabits?.alcohol && String(lifestyleHabits.alcohol).trim()) &&
+      Array.isArray(lifestyleHabits?.dietaryAllergies) && lifestyleHabits.dietaryAllergies.length > 0 &&
+      !!(lifestyleHabits?.fitness && String(lifestyleHabits.fitness).trim());
+    const meetsEducationMin = Array.isArray(education) && education.length > 0;
+    const meetsDocumentsMin = docsMeetMin(documents) && allDocFlagsSelected(docFlags);
+    const meetsReferencesMin = Array.isArray(references) && references.length > 0;
+    const galleryImagesCount = Array.isArray(gallery)
+      ? gallery.filter((it) => (it?.type || inferTypeByName(it?.name || it?.path || it?.url || '')) === 'image').length
+      : 0;
+    const meetsMediaMin = galleryImagesCount >= 3;
+
+    return Boolean(
+      meetsPersonalMin &&
+      meetsDeptRanks &&
+      meetsExperienceMin &&
+      meetsAboutMin &&
+      meetsPrefsSkillsMin &&
+      meetsLifestyleMin &&
+      meetsEducationMin &&
+      meetsDocumentsMin &&
+      meetsReferencesMin &&
+      meetsMediaMin
+    );
+  }, [profile, experiences, documents, references, education, gallery, docFlags]);
+
   const allowPublicView = useMemo(
-    () => isPreview || (profile?.share_ready === true),
-    [isPreview, profile?.share_ready]
+    () => isPreview || (profile?.share_ready === true) || isShareReadyByData,
+    [isPreview, profile?.share_ready, isShareReadyByData]
   );
   useEmitProfileView(allowPublicView ? profile : null);
 
@@ -866,7 +986,7 @@ function computeScrollTargetTop(el, extra = 12) {
     );
   }
 
-if (!isPreview && profile && profile.share_ready === false) {
+if (!allowPublicView && !isPreview) {
   return (
     <div className={`ppv-wrap ${isPreview ? 'ppv--preview' : 'ppv--public'}`} style={{ paddingTop: isPreview ? 50 : 12 }}>
       <div className="ppv-card">
