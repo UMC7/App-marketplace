@@ -1,0 +1,96 @@
+/* Job form: Specific skills — mismo estilo que Rank / Country & Region */
+.job-specific-skills {
+  margin-bottom: 16px;
+}
+
+.job-specific-skills label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 12px 0 4px;
+  color: var(--primary-color);
+}
+
+.job-specific-skills-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .job-specific-skills-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Department select: mismo estilo que rank-mobile-trigger, con chevron */
+.job-specific-skills-dept-wrapper {
+  position: relative;
+  width: 100%;
+  height: 38px;
+}
+
+.job-specific-skills-dept-wrapper::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin-top: -2px;
+  border-right: 2px solid #000;
+  border-bottom: 2px solid #000;
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+body.dark-mode .job-specific-skills-dept-wrapper::after {
+  border-right-color: var(--text-color);
+  border-bottom-color: var(--text-color);
+}
+
+.job-specific-skills-dept {
+  width: 100%;
+  height: 38px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--neutral-color, #ccc);
+  border-radius: 6px;
+  padding: 8px 36px 8px 12px;
+  font-size: 1rem;
+  line-height: 1.2;
+  min-height: 38px;
+  background: #fff;
+  color: #000;
+  box-shadow: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+body.dark-mode .job-specific-skills-dept {
+  background: #262626;
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+/* Trigger: mismo estilo que rank-mobile-trigger (modal usa rank-modal-* en float.css) */
+.job-specific-skills-trigger-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Mismo padding que Department y chevron centrado */
+.job-specific-skills-trigger {
+  width: 100%;
+  min-height: 38px;
+  height: 38px;
+  padding: 8px 36px 8px 12px;
+}
+
+/* !important para que no sea sobrescrito por float.css (carga después) */
+.job-specific-skills .job-specific-skills-trigger::after {
+  top: 50%;
+  margin-top: -2px;
+  transform: rotate(45deg) !important;
+}

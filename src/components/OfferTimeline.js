@@ -821,6 +821,19 @@ const OfferTimeline = ({
   </div>
 )}
 
+    {(Array.isArray(offer.required_skills) && offer.required_skills.length > 0) && (
+  <div className="expanded-block block6 required-docs-block">
+    <div className="field-label">Specific skills</div>
+    <div className="field-value">
+      <div className="required-docs-grid">
+        {offer.required_skills.map((skill, index) => (
+          <span key={`skill-${skill}-${index}`} className="required-doc-chip">{skill}</span>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
     <div className="expanded-block block6">
       <div className="field-label">Remarks</div>
       <div className="field-value remarks-content">

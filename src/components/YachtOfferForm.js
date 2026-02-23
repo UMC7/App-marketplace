@@ -50,6 +50,7 @@ const initialState = {
   required_license: '',
   engineering_license: '',
   required_documents: [],
+  required_skills: [],
   salary: '',
   is_doe: false,
   is_tips: false,
@@ -208,6 +209,14 @@ useEffect(() => {
   setFormData(prev => ({
     ...prev,
     required_documents: initialValues.required_documents || [],
+  }));
+}, [initialValues]);
+
+useEffect(() => {
+  if (!Array.isArray(initialValues?.required_skills)) return;
+  setFormData(prev => ({
+    ...prev,
+    required_skills: initialValues.required_skills || [],
   }));
 }, [initialValues]);
 
@@ -734,6 +743,7 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     required_licenses: Array.isArray(sanitizedData.required_licenses) ? sanitizedData.required_licenses : [],
     required_engineering_licenses: Array.isArray(sanitizedData.required_engineering_licenses) ? sanitizedData.required_engineering_licenses : [],
     required_documents: Array.isArray(sanitizedData.required_documents) ? sanitizedData.required_documents : [],
+    required_skills: Array.isArray(sanitizedData.required_skills) ? sanitizedData.required_skills : [],
     teammate_required_licenses: Array.isArray(sanitizedData.teammate_required_licenses) ? sanitizedData.teammate_required_licenses : [],
     teammate_required_engineering_licenses: Array.isArray(sanitizedData.teammate_required_engineering_licenses) ? sanitizedData.teammate_required_engineering_licenses : [],
     teammate_required_documents: Array.isArray(sanitizedData.teammate_required_documents) ? sanitizedData.teammate_required_documents : [],
@@ -811,6 +821,7 @@ const {
   required_license,
   engineering_license,
   required_documents,
+  required_skills,
   ...restForm
 } = formData;
 const startDateMonthOnly = !!start_month && !start_day;
@@ -843,6 +854,7 @@ const derivedEndDate = (() => {
     required_licenses: requiredLicenses,
     required_engineering_licenses: engineeringLicensesArray,
     required_documents: Array.isArray(required_documents) ? required_documents : [],
+    required_skills: Array.isArray(required_skills) ? required_skills : [],
     years_in_rank:
       formData.years_in_rank === 'Green'
         ? 0
@@ -1023,6 +1035,7 @@ const derivedEndDate = (() => {
         undoRemarks={undoRemarks}
         improveRemarks={improveRemarks}
         renderRequiredDocsSummary={renderRequiredDocsSummary}
+        onRequiredSkillsChange={(arr) => setFormData((prev) => ({ ...prev, required_skills: arr }))}
       />
     )}
 

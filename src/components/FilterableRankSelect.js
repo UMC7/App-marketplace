@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Select from 'react-select';
 import Modal from './Modal';
-import { DEPARTMENT_RANK_GROUPS } from './yachtOfferForm.constants';
+import { DEPARTMENT_RANK_GROUPS } from './cv/candidate/shared/rankData';
 
 const MOBILE_BREAKPOINT = 768;
 

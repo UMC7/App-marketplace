@@ -2,6 +2,7 @@ import React from 'react';
 import FilterableRankSelect from './FilterableRankSelect';
 import CustomMultiSelect from './CustomMultiSelect';
 import RequiredDocumentsSelect from './RequiredDocumentsSelect';
+import JobSpecificSkillsSelect from './JobSpecificSkillsSelect'; // Reemplaza DepartmentSpecialtiesInput para el form de empleos
 import RemarksField from './RemarksField';
 import {
   MONTHS,
@@ -57,6 +58,7 @@ function YachtOfferFormOnboardFields({
   undoRemarks,
   improveRemarks,
   renderRequiredDocsSummary,
+  onRequiredSkillsChange = () => {},
 }) {
   const yrs = yearsOpts || yearsOptions;
 
@@ -94,6 +96,14 @@ function YachtOfferFormOnboardFields({
 
       <div className="form-group form-group-stack">
         <RequiredDocumentsSelect open={showRequiredDocs} onToggle={() => setShowRequiredDocs((v) => !v)} selectedDocuments={formData.required_documents || []} onChange={onChange} requiredDocumentGroups={requiredDocumentGroups} deckDocumentOptions={deckDocumentOptions} containerRef={requiredDocsRef} />
+      </div>
+
+      <div className="form-group form-group-stack">
+        <JobSpecificSkillsSelect
+          label="Specific skills:"
+          value={formData.required_skills || []}
+          onChange={onRequiredSkillsChange}
+        />
       </div>
 
       <label>Time in Rank:</label>

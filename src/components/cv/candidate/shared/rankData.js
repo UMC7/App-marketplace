@@ -80,3 +80,18 @@ export const RANKS_BY_DEPT = {
 export function getRanksForDept(dept) {
   return RANKS_BY_DEPT[dept] || [];
 }
+
+const DEPARTMENT_LABELS = [
+  { dept: 'Deck', label: 'Deck Department' },
+  { dept: 'Engine', label: 'Engine Department' },
+  { dept: 'Galley', label: 'Galley Department' },
+  { dept: 'Interior', label: 'Interior Department' },
+  { dept: 'Other', label: 'Others Department' },
+];
+
+export const DEPARTMENT_RANK_GROUPS = DEPARTMENT_LABELS.map(({ dept, label }) => ({
+  label,
+  ranks: RANKS_BY_DEPT[dept] || [],
+}));
+
+export const OTHERS_DEPARTMENT_RANKS = DEPARTMENT_RANK_GROUPS.find((group) => group.label === 'Others Department').ranks;

@@ -102,3 +102,9 @@
   }
 }
 
+/* Specialty modal: ancho compacto (evita espacio muerto en desktop) */
+.modal-content-wrapper.skill-select-modal {
+  max-width: min(420px, 96vw);
+  width: fit-content;
+}
+

@@ -310,7 +310,6 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
         'Watersports assist',
         'Snorkel / dive support',
         'Tow sports',
-        'Fishing assist',
         'Toy supervision',
       ],
     },
@@ -553,6 +552,10 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
         'Jet ski instruction',
         'Water sports instruction',
       ],
+    },
+    {
+      group: 'Fishing Experience',
+      items: ['Recreational Fishing Experience', 'Advanced / Sport Fishing'],
     },
     {
       group: 'Childcare & Personal Care',
