@@ -13,7 +13,7 @@ const countriesByRegion = {
   'South America': ['Argentina', 'Brazil', 'Chile', 'Colombia', 'Ecuador', 'Paraguay', 'Peru', 'Uruguay', 'Venezuela'],
   'Caribbean': [
     'Anguilla', 'Antigua and Barbuda', 'Aruba', 'Bahamas', 'Barbados', 'Bonaire', 'BVI (UK)',
-    'Cayman Islands (UK)', 'Cuba', 'Curacao', 'Dominica', 'Dominican Republic', 'Grenada', 'Jamaica',
+    'Cayman Islands (UK)', 'Cuba', 'Curacao', 'Dominica', 'Dominican Republic', 'Grenada', 'Jamaica', 'Puerto Rico',
     'Saint Barthélemy', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Maarten', 'Saint Vincent and the Grenadines',
     'Trinidad and Tobago'
   ],

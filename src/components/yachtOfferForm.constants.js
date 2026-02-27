@@ -724,7 +724,7 @@ export const COUNTRIES = [
   'Italy','Jamaica','Japan','Jersey (UK)','Kiribati','Kuwait','Latvia','Libya','Lithuania','Madagascar',
   'Malaysia','Maldives','Malta','Marshall Islands','Mauritius','Mexico','Micronesia',
   'Monaco','Montenegro','Morocco','Myanmar','Netherlands','New Zealand','Nicaragua',
-  'Norway','Panama','Peru','Philippines','Poland','Portugal','Qatar','Romania','Saint Barthélemy','Saint Kitts and Nevis',
+  'Norway','Panama','Peru','Philippines','Poland','Portugal','Puerto Rico','Qatar','Romania','Saint Barthélemy','Saint Kitts and Nevis',
   'Saint Lucia','Saint Maarten','Saint Vincent and the Grenadines','Samoa','Saudi Arabia','Seychelles',
   'Singapore','Slovenia','Solomon Islands','South Africa','South Korea','Spain','Sweden','Taiwan',
   'Thailand','Trinidad and Tobago','Tunisia','Turkey','United Arab Emirates','United Kingdom',

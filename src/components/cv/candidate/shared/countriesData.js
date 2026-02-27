@@ -144,6 +144,7 @@ export const COUNTRY_TO_NATIONALITY = {
   Philippines: "Filipino",
   Poland: "Polish",
   Portugal: "Portuguese",
+  "Puerto Rico": "Puerto Rican",
   Qatar: "Qatari",
   Romania: "Romanian",
   Russia: "Russian",
