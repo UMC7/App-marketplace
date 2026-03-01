@@ -1102,7 +1102,11 @@ body:not(.dark-mode) .filters-panel h3 {
 
   /* CASE 5: team = false && years_in_rank = null */
   .block1.case5 .position {
-    grid-column: 1 / -1;
+    grid-column: 1 / 2;
+    order: 1;
+  }
+  .block1.case5 .license {
+    grid-column: 2 / 3;
     order: 1;
   }
   .block1.case5 .salary {

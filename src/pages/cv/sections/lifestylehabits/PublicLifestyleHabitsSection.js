@@ -197,8 +197,12 @@ export default function PublicLifestyleHabitsSection({ profile }) {
   // Estado OK/NO OK para badges:
   // - Visible tattoos => "No" es NEGATIVO (ok=false), "Yes" es POSITIVO (ok=true)
   const tattoosOk = String(lh.tattoosVisible).trim().toLowerCase() === 'yes';
-  // - Dietary allergies => positivo si hay respuestas (chips)
-  const allergiesOk = lh.dietaryAllergies.length > 0;
+  // - Dietary allergies => OK solo si hay alergias reales (no "none"/"no")
+  const allergiesHasReal = lh.dietaryAllergies.some((a) => {
+    const v = String(a || '').trim().toLowerCase();
+    return v !== '' && v !== 'none' && v !== 'no' && v !== 'n/a' && v !== 'na' && v !== 'not applicable';
+  });
+  const allergiesOk = allergiesHasReal;
 
   const hasTattoosAnswer = String(lh.tattoosVisible || '').trim().length > 0;
 

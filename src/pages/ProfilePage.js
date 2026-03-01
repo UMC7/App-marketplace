@@ -169,6 +169,7 @@ useEffect(() => {
 const clearJobDashboardParam = () => {
   const params = new URLSearchParams(location.search);
   if (!params.has('jobDashboard')) return;
+  setOpenDashboardOfferId(null);
   params.delete('jobDashboard');
   const qs = params.toString();
   navigate(qs ? `/profile?${qs}` : '/profile', { replace: true });

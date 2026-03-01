@@ -4,7 +4,7 @@ import Modal from './Modal';
 import { DEPT_SPECIALTIES_SUGGESTIONS } from './cv/candidate/sectionscomponents/preferencesskills/catalogs';
 import './JobSpecificSkillsSelect.css';
 
-const DEPARTMENTS = ['Deck', 'Engine', 'Interior', 'Galley', 'Others'];
+const DEPARTMENTS = ['Profile / General', 'Deck', 'Engine', 'Interior', 'Galley', 'Others'];
 
 export default function JobSpecificSkillsSelect({
   label = 'Specific skills:',

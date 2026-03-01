@@ -419,7 +419,9 @@ const OfferTimeline = ({
       : offer.years_in_rank !== null && offer.years_in_rank !== undefined
         ? 'case1'
         : 'case2'
-    : ''
+    : (offer.years_in_rank !== null && offer.years_in_rank !== undefined)
+      ? ''
+      : 'case5'
 } ${offer.teammate_rank && (offer.teammate_experience === null || offer.teammate_experience === undefined) ? 'no-rank2' : ''} ${Array.isArray(offer.required_licenses) && offer.required_licenses.length > 0 ? 'has-license' : ''} ${Array.isArray(offer.required_engineering_licenses) && offer.required_engineering_licenses.length > 0 ? 'has-engineering-license' : ''} ${(offer.years_in_rank !== null && offer.years_in_rank !== undefined) ? 'has-time-in-rank' : ''}`}>
   <div className="field-pair">
     {offer.title && (

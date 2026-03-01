@@ -56,9 +56,8 @@ function UsersTab({ currentUser }) {
       }
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
       const withCv = rows.map((u) => {
-        const cvMode = String(u.cv_mode || '').toLowerCase();
         const handle = handleMap.get(String(u.id)) || '';
-        const hasCv = (cvMode === 'lite' || cvMode === 'professional') && handle;
+        const hasCv = Boolean(handle);
         return {
           ...u,
           cv_link: hasCv ? `${origin}/cv/${handle}` : '',

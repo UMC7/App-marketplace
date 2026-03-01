@@ -124,6 +124,8 @@ export const SKILL_MIGRATION_MAP = {
   // Deck — Guest Support & Media
   'drone photography / media': 'Drone ops (basic)',
   'guest logistics & concierge': 'Guest media assist',
+  // Others — Water Activities
+  'water sports instruction': 'Water Sports Instruction & Supervision',
   // Engine — Powertrain
   'diesel engines – diagnostics & service': 'Diesel diagnostics & repair',
   'generators – service & load management': 'Generator control systems',
@@ -257,10 +259,40 @@ export function normalizeDeptSpecialties(raw) {
  * }
  */
 export const DEPT_SPECIALTIES_SUGGESTIONS = {
+  'Profile / General': [
+    {
+      group: 'Profile & Professional',
+      items: [
+        'Crew teamwork',
+        'Team coordination',
+        'Task prioritization',
+        'Time management',
+        'Multitasking under pressure',
+        'Attention to detail',
+        'Professional conduct',
+        'Discretion & confidentiality',
+        'Strong work ethic',
+        'Positive attitude',
+        'Adaptability (private & charter)',
+        'Guest interaction skills',
+        'Service mindset',
+        'Communication skills',
+        'Problem-solving / troubleshooting mindset',
+        'Ability to work independently',
+        'Hands-on approach',
+        'Flexibility / can-do attitude',
+        'Reliability & punctuality',
+        'Willingness to assist cross-department',
+        'Drama-free mindset',
+      ],
+    },
+  ],
+
   Deck: [
     {
       group: 'Operations & Seamanship',
       items: [
+        'Vessel Handling & Watchkeeping',
         'Line handling / mooring',
         'Docking prep (fenders / lines)',
         'Anchoring ops',
@@ -280,6 +312,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Exterior Care & Maintenance',
       items: [
+        'Exterior Upkeep & Preservation',
         'Exterior washdown / detailing',
         'Teak care',
         'Paint & varnish',
@@ -292,6 +325,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Safety, Compliance & Environment',
       items: [
+        'Safety & Regulatory Operations',
         'MOB / fire / abandon drills',
         'First aid support',
         'Firefighting equipment',
@@ -307,6 +341,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Watersports & Activities',
       items: [
+        'Guest Water Operations',
         'Watersports assist',
         'Snorkel / dive support',
         'Tow sports',
@@ -316,6 +351,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Technical / Hybrid Deck',
       items: [
+        'Mechanical & Technical Support',
         'Engine room assist (basic)',
         'Bunkering assist',
         'Hydraulics basics',
@@ -326,20 +362,11 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     },
     {
       group: 'Projects & Warranty',
-      items: ['Warranty claims', 'New build / refit deck commissioning'],
+      items: ['Refit & Project Support', 'Warranty claims', 'New build / refit deck commissioning'],
     },
     {
       group: 'Media / Guest Experience',
-      items: ['Drone ops (basic)', 'Guest media assist', 'Beach setups / events'],
-    },
-    {
-      group: 'Team & Professional',
-      items: [
-        'Crew teamwork',
-        'Task prioritization',
-        'Time management',
-        'Professional conduct',
-      ],
+      items: ['Guest Media & Enhancements', 'Drone ops (basic)', 'Guest media assist', 'Beach setups / events'],
     },
   ],
 
@@ -347,6 +374,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Mechanical & Propulsion',
       items: [
+        'Propulsion & Machinery Problem-Solving',
         'Diesel diagnostics & repair',
         'Gearbox / shaft alignment',
         'Stabilizers & thrusters service',
@@ -356,6 +384,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Electrical, Control & IT',
       items: [
+        'Electrical & Control Problem-Solving',
         'Electrical fault finding (AC/DC)',
         'Generator control systems',
         'PLC fault diagnostics',
@@ -368,6 +397,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Fluid & Auxiliary Systems',
       items: [
+        'Fluid & Auxiliary Systems Troubleshooting',
         'Hydraulic fault diagnostics',
         'Fuel system troubleshooting',
         'Cooling loop diagnostics',
@@ -377,11 +407,16 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     },
     {
       group: 'Hotel & Comfort Systems',
-      items: ['HVAC fault diagnostics', 'Refrigeration service'],
+      items: [
+        'HVAC & Refrigeration Troubleshooting',
+        'HVAC fault diagnostics',
+        'Refrigeration service',
+      ],
     },
     {
       group: 'Compliance & Modern Tech',
       items: [
+        'Environmental & Compliance Systems Management',
         'BWTS service',
         'Regulatory compliance (ISM / MLC / ISPS)',
         'MARPOL procedures',
@@ -390,6 +425,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Maintenance & Management',
       items: [
+        'Technical Maintenance Planning',
         'New build project support',
         'Warranty testing & claims management',
         'PMS platforms (AMOS / IDEA / Voly)',
@@ -401,7 +437,11 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     },
     {
       group: 'Hybrid Operations',
-      items: ['Deck machinery systems', 'Bunkering supervision'],
+      items: [
+        'Cross-Department Technical Operations',
+        'Deck machinery systems',
+        'Bunkering supervision',
+      ],
     },
   ],
 
@@ -409,6 +449,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Service & Hospitality',
       items: [
+        'High-End Service Execution',
         'Silver service',
         'Butler-style service',
         'Mixology',
@@ -423,6 +464,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Housekeeping & Care',
       items: [
+        'Luxury Housekeeping Standards',
         'Elite cabin detailing',
         'Turn-down standards',
         'Wardrobe management',
@@ -434,6 +476,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Guest Experience',
       items: [
+        'Guest Experience Management',
         'Guest relations',
         'Concierge support',
         'Luxury sourcing',
@@ -446,6 +489,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Administration & Systems',
       items: [
+        'Interior Operations Management',
         'Interior inventory systems',
         'IDEA / Voly / Pinpoint',
         'APA tracking',
@@ -454,20 +498,11 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     },
     {
       group: 'Compliance & Safety',
-      items: ['Risk assessment (RA)'],
+      items: ['Interior Safety Awareness', 'Risk assessment (RA)'],
     },
     {
       group: 'Projects & Warranty',
-      items: ['New build / refit commissioning'],
-    },
-    {
-      group: 'Professional Core',
-      items: [
-        'Multitasking under pressure',
-        'Attention to detail',
-        'Team coordination',
-        'Discretion & confidentiality',
-      ],
+      items: ['Interior Refit & Commissioning Support', 'New build / refit commissioning'],
     },
   ],
 
@@ -475,6 +510,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Cuisine Execution',
       items: [
+        'International Cuisine Execution',
         'Prepare Mediterranean cuisine',
         'Prepare Italian cuisine',
         'Prepare French cuisine',
@@ -490,11 +526,14 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
         'Prepare kosher-style meals',
         'Prepare plant-based menus',
         'Execute allergen-safe dishes',
+        'Ottolenghi-Style Cuisine',
       ],
     },
     {
       group: 'Culinary Production',
       items: [
+        'Advanced Culinary Techniques',
+        'Casual & Crew Meal Preparation',
         'Design guest menus',
         'Plate fine dining dishes',
         'Produce pastries & desserts',
@@ -506,6 +545,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Charter Operations',
       items: [
+        'Charter Catering Execution',
         'Customize guest menus',
         'Execute charter turnaround',
         'Deliver themed catering',
@@ -515,6 +555,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Galley Management',
       items: [
+        'Professional Galley Management',
         'Cost menus',
         'Manage inventory',
         'Source provisions',
@@ -527,7 +568,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     },
     {
       group: 'Food Safety Practice',
-      items: ['Apply HACCP workflows', 'Maintain safe food storage'],
+      items: ['Food Safety & HACCP Compliance', 'Apply HACCP workflows', 'Maintain safe food storage'],
     },
   ],
 
@@ -535,6 +576,8 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Medical & Wellness',
       items: [
+        'Guest Medical & Mobility Care',
+        'Guest Wellness & Spa Services',
         'IV administration',
         'AED / emergency care',
         'Medical log management',
@@ -548,9 +591,9 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Water Activities',
       items: [
+        'Water Sports Instruction & Supervision',
         'Guest dive supervision',
         'Jet ski instruction',
-        'Water sports instruction',
       ],
     },
     {
@@ -559,11 +602,17 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     },
     {
       group: 'Childcare & Personal Care',
-      items: ['Childcare routines', 'Educational activities'],
+      items: ['Structured Childcare Supervision', 'Childcare routines', 'Educational activities'],
     },
     {
       group: 'Media & Digital',
-      items: ['Video shooting', 'Drone operation', 'Content editing', 'Digital privacy handling'],
+      items: [
+        'Digital Content & Media Handling',
+        'Video shooting',
+        'Drone operation',
+        'Content editing',
+        'Digital privacy handling',
+      ],
     },
     {
       group: 'Fitness & Physical Training',
