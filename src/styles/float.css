@@ -162,10 +162,21 @@ body.dark-mode .custom-multiselect input[type="checkbox"] {
 }
 
 /* Modal multiselect (solo móvil): contenido con scroll y título */
+.modal-content-wrapper.multiselect-modal {
+  max-width: min(420px, 96vw);
+  width: min(420px, 96vw);
+}
 .multiselect-modal-content {
-  padding-right: 8px;
-  max-height: min(70vh, 400px);
+  max-height: min(70vh, 450px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.multiselect-modal-list {
   overflow-y: auto;
+  padding-right: 8px;
+  flex: 1;
+  min-height: 0;
 }
 .multiselect-modal-title {
   margin: 0 0 12px 0;
@@ -173,8 +184,35 @@ body.dark-mode .custom-multiselect input[type="checkbox"] {
   font-weight: 600;
   color: var(--primary-color, #081a3b);
 }
+.multiselect-modal-search {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--neutral-color, #ccc);
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  background: #fff;
+  color: #000;
+}
 body.dark-mode .multiselect-modal-title {
   color: var(--text-color);
+}
+body.dark-mode .multiselect-modal-search {
+  background-color: #262626;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+body.dark-mode .multiselect-modal-search::placeholder {
+  color: var(--text-muted, #9ca3af);
+}
+.multiselect-modal-empty {
+  padding: 16px;
+  color: #666;
+  font-style: italic;
+}
+body.dark-mode .multiselect-modal-empty {
+  color: var(--text-muted, #9ca3af);
 }
 .multiselect-modal-content .form-checkbox-label {
   display: flex;
@@ -336,6 +374,10 @@ body.dark-mode .private-chat-field .private-chat-label {
 }
 
 /* Modal Rank (móvil): título, buscador, lista */
+.modal-content-wrapper.rank-select-modal {
+  max-width: min(420px, 96vw);
+  width: min(420px, 96vw);
+}
 .rank-modal-content {
   max-width: 400px;
   padding-right: 8px;
@@ -532,4 +574,6 @@ body.dark-mode .filterable-rank-select-container .filterable-rank-select__option
 body.dark-mode .filterable-rank-select-container .filterable-rank-select__group-heading {
   color: #9ca3af !important;
 }
+
+
 

@@ -81,10 +81,7 @@ export const REGIONS = [
   "Southeast Asia",
   "US East Coast",
   "US West Coast",
-  "Bahamas",
   "South Pacific",
-  "Australia",
-  "New Zealand",
   "Central America",
   "South America",
 ];

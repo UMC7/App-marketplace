@@ -20,7 +20,22 @@ export const MONTHS = [
 ];
 
 export const YACHT_EXPERIENCE_PREFERRED = 'Yacht Experience Preferred';
-export const yearsOptions = ['Green', YACHT_EXPERIENCE_PREFERRED, 'New in rank welcome', 1, 2, 2.5, 3, 5];
+export const OPEN_TO_GREEN_CREW = 'Open to Green Crew';
+export const NEW_IN_RANK_WELCOME = 'New in Rank Welcome';
+export const PROVEN_EXPERIENCE_REQUIRED = 'Proven Experience Required';
+export const SIMILAR_SIZE_RANK_REQUIRED = 'Similar Size & Rank Required';
+export const yearsOptions = [
+  OPEN_TO_GREEN_CREW,
+  YACHT_EXPERIENCE_PREFERRED,
+  NEW_IN_RANK_WELCOME,
+  PROVEN_EXPERIENCE_REQUIRED,
+  SIMILAR_SIZE_RANK_REQUIRED,
+  1,
+  2,
+  2.5,
+  3,
+  5,
+];
 
 export const titles = [
   'Captain','Captain/Engineer','Skipper','Chase Boat Captain','Relief Captain',

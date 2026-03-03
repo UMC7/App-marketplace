@@ -11,6 +11,7 @@ import {
   shouldShowEnginePower,
 } from '../../shared/merchantCatalogs';
 import { ymFormatOnChange, ymNormalize } from './utils';
+import { COUNTRIES as JOB_COUNTRIES } from '../../../../yachtOfferForm.constants';
 
 const TERMS = TERMS_SRC ?? [
   'Permanent',
@@ -34,30 +35,31 @@ const VESSEL_TYPES = VESSEL_TYPES_SRC ?? [
   'Other',
 ];
 
-const REGION_OPTIONS =
-  REGIONS_SRC ?? [
-    'Worldwide',
-    'Mediterranean',
-    'Caribbean',
-    'Atlantic',
-    'Pacific',
-    'Indian Ocean',
-    'Red Sea',
-    'Baltic',
-    'North Sea',
-    'Arctic',
-    'Antarctic',
-    'Middle East',
-    'Southeast Asia',
-    'US East Coast',
-    'US West Coast',
-    'Bahamas',
-    'South Pacific',
-    'Australia',
-    'New Zealand',
-    'Central America',
-    'South America',
-  ];
+const REGION_OPTIONS = Array.from(
+  new Set(
+    REGIONS_SRC ?? [
+      'Worldwide',
+      'Mediterranean',
+      'Caribbean',
+      'Atlantic',
+      'Pacific',
+      'Indian Ocean',
+      'Red Sea',
+      'Baltic',
+      'North Sea',
+      'Arctic',
+      'Antarctic',
+      'Middle East',
+      'Southeast Asia',
+      'US East Coast',
+      'US West Coast',
+      'South Pacific',
+      'Central America',
+      'South America',
+    ]
+  )
+);
+const COUNTRY_OPTIONS = Array.from(new Set(JOB_COUNTRIES));
 
 export default function MerchantFields({ editing, setEditing, mode = 'professional', showAllFields = false }) {
   const isLite = mode === 'lite';
@@ -311,19 +313,28 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
           </div>
 
           <div className={missRegions ? 'cp-missing' : ''}>
-            <label className="cp-label">{reqLabel('Regions')}</label>
+            <label className="cp-label">{reqLabel('Country / Region')}</label>
             <div className="cp-row-exp-c__regions">
               <select
                 className="cp-input"
                 value={regionPick}
                 onChange={(e) => setRegionPick(e.target.value)}
               >
-                <option value="">Select region...</option>
-                {REGION_OPTIONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
+                <option value="">Select region or country...</option>
+                <optgroup label="Regions">
+                  {REGION_OPTIONS.map((r) => (
+                    <option key={`region-${r}`} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Countries">
+                  {COUNTRY_OPTIONS.map((c) => (
+                    <option key={`country-${c}`} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
               <button type="button" className="cp-btn-add" onClick={addRegion}>
                 Add
@@ -612,19 +623,28 @@ export default function MerchantFields({ editing, setEditing, mode = 'profession
         </div>
 
         <div className={missRegions ? 'cp-missing' : ''}>
-          <label className="cp-label">{reqLabel('Regions')}</label>
+          <label className="cp-label">{reqLabel('Country / Region')}</label>
           <div className="cp-row-exp-c__regions">
             <select
               className="cp-input"
               value={regionPick}
               onChange={(e) => setRegionPick(e.target.value)}
             >
-              <option value="">Select region...</option>
-              {REGION_OPTIONS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
+              <option value="">Select region or country...</option>
+              <optgroup label="Regions">
+                {REGION_OPTIONS.map((r) => (
+                  <option key={`region-${r}`} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Countries">
+                {COUNTRY_OPTIONS.map((c) => (
+                  <option key={`country-${c}`} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </optgroup>
             </select>
             <button type="button" className="cp-btn-add" onClick={addRegion}>
               Add

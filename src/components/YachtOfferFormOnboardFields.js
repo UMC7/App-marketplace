@@ -109,7 +109,11 @@ function YachtOfferFormOnboardFields({
       <label>Time in Rank:</label>
       <select name="years_in_rank" value={formData.years_in_rank} onChange={onChange}>
         <option value="">Select...</option>
-        {yrs.map((y) => <option key={y} value={y}>{typeof y === 'string' ? y : `>${y}`}</option>)}
+        {yrs.map((y) => (
+          <option key={y} value={y}>
+            {typeof y === 'string' ? y : `>${y} ${y === 1 ? 'Year' : 'Years'}`}
+          </option>
+        ))}
       </select>
 
       {formData.team === 'No' && (
@@ -179,7 +183,11 @@ function YachtOfferFormOnboardFields({
           <label>Teammate Experience:</label>
           <select name="teammate_experience" value={formData.teammate_experience} onChange={onChange}>
             <option value="">Select...</option>
-            {yrs.map((y) => <option key={y} value={y}>{typeof y === 'string' ? y : `>${y}`}</option>)}
+            {yrs.map((y) => (
+              <option key={y} value={y}>
+                {typeof y === 'string' ? y : `>${y} ${y === 1 ? 'Year' : 'Years'}`}
+              </option>
+            ))}
           </select>
           {!formData.is_doe && (
             <>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Modal from './Modal';
 
 const MOBILE_BREAKPOINT = 768;
@@ -14,9 +14,11 @@ const CustomMultiSelect = ({
   name,
   onChange,
   containerRef,
-  caretSymbol = '▾',
+  caretSymbol = '?',
+  searchPlaceholder = 'Search...',
 }) => {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= MOBILE_BREAKPOINT);
+  const [searchFilter, setSearchFilter] = useState('');
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
@@ -25,14 +27,31 @@ const CustomMultiSelect = ({
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  useEffect(() => {
+    if (!open) {
+      setSearchFilter('');
+    }
+  }, [open]);
+
   const summary = renderSummary
     ? renderSummary(selected)
     : selected.length > 0
       ? selected.join(', ')
       : 'Select...';
 
-  const renderOptions = () =>
-    groups.map((group) => (
+  const filteredGroups = useMemo(() => {
+    if (!searchFilter || !searchFilter.trim()) return groups;
+    const q = searchFilter.trim().toLowerCase();
+    return groups
+      .map((group) => ({
+        ...group,
+        options: (group.options || []).filter((opt) => String(opt).toLowerCase().includes(q)),
+      }))
+      .filter((group) => Array.isArray(group.options) && group.options.length > 0);
+  }, [groups, searchFilter]);
+
+  const renderOptions = (groupsToRender) =>
+    groupsToRender.map((group) => (
       <React.Fragment key={group.label || group.options.join()}>
         <div style={{ marginBottom: 8 }}>
           {group.label && (
@@ -73,16 +92,29 @@ const CustomMultiSelect = ({
 
         {showDropdown && (
           <div className="multiselect-options">
-            {renderOptions()}
+            {renderOptions(groups)}
           </div>
         )}
       </div>
 
       {showAsModal && (
-        <Modal onClose={onToggle}>
+        <Modal onClose={onToggle} contentClassName="multiselect-modal">
           <div className="multiselect-modal-content">
             <h3 className="multiselect-modal-title">{label || 'Select...'}</h3>
-            {renderOptions()}
+            <input
+              type="text"
+              className="multiselect-modal-search"
+              placeholder={searchPlaceholder}
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              autoFocus
+            />
+            <div className="multiselect-modal-list">
+              {renderOptions(filteredGroups)}
+              {filteredGroups.length === 0 && (
+                <div className="multiselect-modal-empty">No matches</div>
+              )}
+            </div>
           </div>
         </Modal>
       )}

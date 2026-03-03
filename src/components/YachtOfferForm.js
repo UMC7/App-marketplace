@@ -4,6 +4,10 @@ import { toast } from 'react-toastify';
 import '../styles/float.css';
 import {
   YACHT_EXPERIENCE_PREFERRED,
+  OPEN_TO_GREEN_CREW,
+  NEW_IN_RANK_WELCOME,
+  PROVEN_EXPERIENCE_REQUIRED,
+  SIMILAR_SIZE_RANK_REQUIRED,
   yearsOptions,
   titles,
   ENGINEERING_RANKS,
@@ -168,15 +172,19 @@ useEffect(() => {
   const te = initialValues.teammate_experience;
   const next = {};
   if (yr !== undefined && yr !== null) {
-    next.years_in_rank = yr === 0 ? 'Green'
-      : yr === -1 ? 'New in rank welcome'
+    next.years_in_rank = yr === 0 ? OPEN_TO_GREEN_CREW
+      : yr === -1 ? NEW_IN_RANK_WELCOME
       : yr === -2 ? YACHT_EXPERIENCE_PREFERRED
+      : yr === -3 ? PROVEN_EXPERIENCE_REQUIRED
+      : yr === -4 ? SIMILAR_SIZE_RANK_REQUIRED
       : yr;
   }
   if (te !== undefined && te !== null) {
-    next.teammate_experience = te === 0 ? 'Green'
-      : te === -1 ? 'New in rank welcome'
+    next.teammate_experience = te === 0 ? OPEN_TO_GREEN_CREW
+      : te === -1 ? NEW_IN_RANK_WELCOME
       : te === -2 ? YACHT_EXPERIENCE_PREFERRED
+      : te === -3 ? PROVEN_EXPERIENCE_REQUIRED
+      : te === -4 ? SIMILAR_SIZE_RANK_REQUIRED
       : te;
   }
   if (Object.keys(next).length === 0) return;
@@ -856,22 +864,30 @@ const derivedEndDate = (() => {
     required_documents: Array.isArray(required_documents) ? required_documents : [],
     required_skills: Array.isArray(required_skills) ? required_skills : [],
     years_in_rank:
-      formData.years_in_rank === 'Green'
+      formData.years_in_rank === OPEN_TO_GREEN_CREW
         ? 0
-      : formData.years_in_rank === 'New in rank welcome'
+      : formData.years_in_rank === NEW_IN_RANK_WELCOME
         ? -1
       : formData.years_in_rank === YACHT_EXPERIENCE_PREFERRED
         ? -2
+      : formData.years_in_rank === PROVEN_EXPERIENCE_REQUIRED
+        ? -3
+      : formData.years_in_rank === SIMILAR_SIZE_RANK_REQUIRED
+        ? -4
       : formData.years_in_rank
       ? Number(formData.years_in_rank)
       : null,
     teammate_experience:
-      formData.teammate_experience === 'Green'
+      formData.teammate_experience === OPEN_TO_GREEN_CREW
         ? 0
-      : formData.teammate_experience === 'New in rank welcome'
+      : formData.teammate_experience === NEW_IN_RANK_WELCOME
         ? -1
       : formData.teammate_experience === YACHT_EXPERIENCE_PREFERRED
         ? -2
+      : formData.teammate_experience === PROVEN_EXPERIENCE_REQUIRED
+        ? -3
+      : formData.teammate_experience === SIMILAR_SIZE_RANK_REQUIRED
+        ? -4
       : formData.teammate_experience
       ? Number(formData.teammate_experience)
       : null,

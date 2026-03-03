@@ -81,7 +81,7 @@ function FilterableRankSelect({
           </button>
         </div>
         {modalOpen && (
-          <Modal onClose={() => { setModalOpen(false); setSearchFilter(''); }}>
+          <Modal onClose={() => { setModalOpen(false); setSearchFilter(''); }} contentClassName="rank-select-modal">
             <div className="rank-modal-content">
               <h3 className="rank-modal-title">{modalTitle}</h3>
               <input
