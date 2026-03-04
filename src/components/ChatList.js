@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import Avatar from './Avatar';
+import './chat.css';
 
 const LockClosedIcon = ({ size = 16 }) => (
   <svg
@@ -60,11 +61,33 @@ const TrashIcon = ({ size = 16 }) => (
 
 const getChatKey = (offerId, userId) => `${offerId}_${userId}`;
 
+const CHAT_SORT_PREF_KEY = 'chatSortPreference';
+const SORT_OPTIONS = [
+  { value: 'unread', label: 'Unread first' },
+  { value: 'by_job', label: 'By job' },
+  { value: 'admin_first', label: 'Admin first' },
+];
+
 function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
   const [chatSummaries, setChatSummaries] = useState([]);
   const [actionBusy, setActionBusy] = useState({});
   const [loading, setLoading] = useState(true);
+  const [sortPreference, setSortPreference] = useState(() => {
+    try {
+      return localStorage.getItem(CHAT_SORT_PREF_KEY) || 'unread';
+    } catch {
+      return 'unread';
+    }
+  });
   const navigate = useNavigate();
+
+  const handleSortChange = (e) => {
+    const value = e.target.value;
+    setSortPreference(value);
+    try {
+      localStorage.setItem(CHAT_SORT_PREF_KEY, value);
+    } catch {}
+  };
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -155,6 +178,22 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
         }
       }
 
+      let adminStateMap = {};
+      const adminThreadIds = (adminThreads || []).map((t) => t.id);
+      if (adminThreadIds.length) {
+        const { data: adminStates, error: adminStateErr } = await supabase
+          .from('admin_chat_state')
+          .select('thread_id, locked, deleted_at')
+          .eq('user_id', currentUser.id)
+          .in('thread_id', adminThreadIds);
+
+        if (!adminStateErr) {
+          adminStateMap = Object.fromEntries(
+            (adminStates || []).map((s) => [s.thread_id, s])
+          );
+        }
+      }
+
       const usersMap = Object.fromEntries(
         (users || []).map((u) => [u.id, { nickname: u.nickname, avatar_url: u.avatar_url }])
       );
@@ -171,22 +210,26 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
         return acc;
       }, {});
 
-      const internalRows = chatArray.map((chat) => {
-        const state = stateMap[getChatKey(chat.offer_id, chat.user_id)];
-        return {
-          ...chat,
-          nickname: usersMap[chat.user_id]?.nickname || 'User',
-          avatar_url: usersMap[chat.user_id]?.avatar_url || null,
-          offerTitle: offersMap[chat.offer_id] || 'Deleted offer',
-          locked: !!state?.locked,
-          deleted_at: state?.deleted_at || null,
-          unreadCount: unreadMap[getChatKey(chat.offer_id, chat.user_id)] || 0,
-        };
-      });
+      const internalRows = chatArray
+        .map((chat) => {
+          const state = stateMap[getChatKey(chat.offer_id, chat.user_id)];
+          return {
+            ...chat,
+            nickname: usersMap[chat.user_id]?.nickname || 'User',
+            avatar_url: usersMap[chat.user_id]?.avatar_url || null,
+            offerTitle: offersMap[chat.offer_id] || 'Deleted offer',
+            locked: !!state?.locked,
+            deleted_at: state?.deleted_at || null,
+            unreadCount: unreadMap[getChatKey(chat.offer_id, chat.user_id)] || 0,
+          };
+        })
+        .filter((r) => !r.deleted_at);
 
       const adminRows = [];
       for (const thread of adminThreads || []) {
         const otherUserId = thread.admin_id === currentUser.id ? thread.user_id : thread.admin_id;
+        const state = adminStateMap[thread.id];
+        if (state?.deleted_at) continue;
         const { data: last } = await supabase
           .from('admin_messages')
           .select('sent_at')
@@ -203,8 +246,8 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
           nickname: usersMap[otherUserId]?.nickname || 'User',
           avatar_url: usersMap[otherUserId]?.avatar_url || null,
           offerTitle: 'Admin chats',
-          locked: false,
-          deleted_at: null,
+          locked: !!state?.locked,
+          deleted_at: state?.deleted_at || null,
           unreadCount: adminUnreadMap[thread.id] || 0,
         });
       }
@@ -243,7 +286,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
       }
 
       const merged = [...internalRows, ...adminRows, ...externalRows]
-        .filter((row) => row.offer_id === '__external__' || row.offer_id === '__admin__' || !row.deleted_at)
+        .filter((row) => row.offer_id === '__external__' || !row.deleted_at)
         .sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at));
 
       setChatSummaries(merged);
@@ -260,91 +303,138 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
   };
 
   const handleToggleLock = async (chat) => {
-    if (!currentUser || chat.offer_id === '__external__' || chat.offer_id === '__admin__') return;
-    const key = getChatKey(chat.offer_id, chat.user_id);
+    if (!currentUser || chat.offer_id === '__external__') return;
+    const key = chat.offer_id === '__admin__' ? `__admin__${chat.thread_id}` : getChatKey(chat.offer_id, chat.user_id);
     if (actionBusy[key]) return;
 
     const nextLocked = !chat.locked;
     setActionBusy((prev) => ({ ...prev, [key]: true }));
 
-    const { error } = await supabase
-      .from('yacht_work_chat_state')
-      .upsert(
+    if (chat.offer_id === '__admin__') {
+      const { error } = await supabase.from('admin_chat_state').upsert(
         {
-          offer_id: chat.offer_id,
+          thread_id: chat.thread_id,
           user_id: currentUser.id,
-          other_user_id: chat.user_id,
           locked: nextLocked,
           deleted_at: chat.deleted_at || null,
         },
-        { onConflict: 'offer_id,user_id,other_user_id' }
+        { onConflict: 'thread_id,user_id' }
       );
-
-    if (error) {
-      console.error('Error updating lock state:', error);
+      if (error) {
+        console.error('Error updating admin lock state:', error);
+      } else {
+        setChatSummaries((prev) =>
+          prev.map((item) =>
+            item.offer_id === '__admin__' && item.thread_id === chat.thread_id ? { ...item, locked: nextLocked } : item
+          )
+        );
+      }
     } else {
-      setChatSummaries((prev) =>
-        prev.map((item) =>
-          item.offer_id === chat.offer_id && item.user_id === chat.user_id
-            ? { ...item, locked: nextLocked }
-            : item
-        )
-      );
+      const { error } = await supabase
+        .from('yacht_work_chat_state')
+        .upsert(
+          {
+            offer_id: chat.offer_id,
+            user_id: currentUser.id,
+            other_user_id: chat.user_id,
+            locked: nextLocked,
+            deleted_at: chat.deleted_at || null,
+          },
+          { onConflict: 'offer_id,user_id,other_user_id' }
+        );
+      if (error) {
+        console.error('Error updating lock state:', error);
+      } else {
+        setChatSummaries((prev) =>
+          prev.map((item) =>
+            item.offer_id === chat.offer_id && item.user_id === chat.user_id ? { ...item, locked: nextLocked } : item
+          )
+        );
+      }
     }
 
     setActionBusy((prev) => ({ ...prev, [key]: false }));
   };
 
   const handleDelete = async (chat) => {
-    if (!currentUser || chat.offer_id === '__external__' || chat.offer_id === '__admin__') return;
+    if (!currentUser || chat.offer_id === '__external__') return;
     if (chat.locked) return;
 
     const confirmed = window.confirm('Delete this conversation?');
     if (!confirmed) return;
 
-    const key = getChatKey(chat.offer_id, chat.user_id);
+    const key = chat.offer_id === '__admin__' ? `__admin__${chat.thread_id}` : getChatKey(chat.offer_id, chat.user_id);
     if (actionBusy[key]) return;
     setActionBusy((prev) => ({ ...prev, [key]: true }));
 
     const nowIso = new Date().toISOString();
 
-    const { error: stateError } = await supabase
-      .from('yacht_work_chat_state')
-      .upsert(
+    if (chat.offer_id === '__admin__') {
+      const { error: stateError } = await supabase.from('admin_chat_state').upsert(
         {
-          offer_id: chat.offer_id,
+          thread_id: chat.thread_id,
           user_id: currentUser.id,
-          other_user_id: chat.user_id,
           locked: false,
           deleted_at: nowIso,
         },
-        { onConflict: 'offer_id,user_id,other_user_id' }
+        { onConflict: 'thread_id,user_id' }
       );
+      if (stateError) {
+        console.error('Error deleting admin chat (state):', stateError);
+        setActionBusy((prev) => ({ ...prev, [key]: false }));
+        return;
+      }
+      const { data: otherState } = await supabase
+        .from('admin_chat_state')
+        .select('deleted_at')
+        .eq('thread_id', chat.thread_id)
+        .eq('user_id', chat.user_id)
+        .maybeSingle();
+      if (!otherState?.deleted_at) {
+        await supabase.from('admin_messages').insert([
+          {
+            thread_id: chat.thread_id,
+            sender_id: currentUser.id,
+            receiver_id: chat.user_id,
+            message: '[system] The other user has deleted this conversation.',
+            sent_at: nowIso,
+            read: false,
+          },
+        ]);
+      } else {
+        await supabase.from('admin_messages').delete().eq('thread_id', chat.thread_id);
+      }
+      setChatSummaries((prev) => prev.filter((item) => !(item.offer_id === '__admin__' && item.thread_id === chat.thread_id)));
+    } else {
+      const { error: stateError } = await supabase
+        .from('yacht_work_chat_state')
+        .upsert(
+          {
+            offer_id: chat.offer_id,
+            user_id: currentUser.id,
+            other_user_id: chat.user_id,
+            locked: false,
+            deleted_at: nowIso,
+          },
+          { onConflict: 'offer_id,user_id,other_user_id' }
+        );
 
-    if (stateError) {
-      console.error('Error deleting chat (state):', stateError);
-      setActionBusy((prev) => ({ ...prev, [key]: false }));
-      return;
-    }
+      if (stateError) {
+        console.error('Error deleting chat (state):', stateError);
+        setActionBusy((prev) => ({ ...prev, [key]: false }));
+        return;
+      }
 
-    const { data: otherState, error: otherStateError } = await supabase
-      .from('yacht_work_chat_state')
-      .select('deleted_at')
-      .eq('offer_id', chat.offer_id)
-      .eq('user_id', chat.user_id)
-      .eq('other_user_id', currentUser.id)
-      .maybeSingle();
+      const { data: otherState, error: otherStateError } = await supabase
+        .from('yacht_work_chat_state')
+        .select('deleted_at')
+        .eq('offer_id', chat.offer_id)
+        .eq('user_id', chat.user_id)
+        .eq('other_user_id', currentUser.id)
+        .maybeSingle();
 
-    if (otherStateError) {
-      console.error('Error checking other chat state:', otherStateError);
-    }
-
-    const otherDeletedAt = otherState?.deleted_at;
-
-    if (!otherDeletedAt) {
-      const { error: notifyError } = await supabase
-        .from('yacht_work_messages')
-        .insert({
+      if (!otherStateError && !otherState?.deleted_at) {
+        await supabase.from('yacht_work_messages').insert({
           offer_id: chat.offer_id,
           sender_id: currentUser.id,
           receiver_id: chat.user_id,
@@ -352,30 +442,24 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
           sent_at: nowIso,
           read: false,
         });
-
-      if (notifyError) {
-        console.error('Error sending delete notice:', notifyError);
+      } else if (otherState?.deleted_at) {
+        await supabase
+          .from('yacht_work_messages')
+          .delete()
+          .eq('offer_id', chat.offer_id)
+          .or(
+            `and(sender_id.eq.${currentUser.id},receiver_id.eq.${chat.user_id}),` +
+              `and(sender_id.eq.${chat.user_id},receiver_id.eq.${currentUser.id})`
+          );
       }
-    } else {
-      const { error: deleteError } = await supabase
-        .from('yacht_work_messages')
-        .delete()
-        .eq('offer_id', chat.offer_id)
-        .or(
-          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${chat.user_id}),` +
-            `and(sender_id.eq.${chat.user_id},receiver_id.eq.${currentUser.id})`
-        );
 
-      if (deleteError) {
-        console.error('Error deleting chat messages:', deleteError);
-      }
+      setChatSummaries((prev) =>
+        prev.filter(
+          (item) => !(item.offer_id === chat.offer_id && item.user_id === chat.user_id)
+        )
+      );
     }
 
-    setChatSummaries((prev) =>
-      prev.filter(
-        (item) => !(item.offer_id === chat.offer_id && item.user_id === chat.user_id)
-      )
-    );
     setActionBusy((prev) => ({ ...prev, [key]: false }));
   };
 
@@ -385,16 +469,81 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
     const key = String(chat.offer_id);
     let group = groupIndex.get(key);
     if (!group) {
-      group = { key, title: chat.offerTitle, items: [] };
+      group = { key, title: chat.offerTitle, items: [], hasUnread: false, latestSent: null };
       groupIndex.set(key, group);
       groups.push(group);
     }
     group.items.push(chat);
+    if ((chat.unreadCount || 0) > 0) group.hasUnread = true;
+    const sent = chat.sent_at ? new Date(chat.sent_at).getTime() : 0;
+    if (sent > (group.latestSent || 0)) group.latestSent = sent;
   }
+
+  for (const g of groups) {
+    if (sortPreference === 'unread') {
+      g.items.sort((a, b) => {
+        const aUnread = (a.unreadCount || 0) > 0 ? 1 : 0;
+        const bUnread = (b.unreadCount || 0) > 0 ? 1 : 0;
+        if (bUnread !== aUnread) return bUnread - aUnread;
+        return new Date(b.sent_at || 0) - new Date(a.sent_at || 0);
+      });
+    } else {
+      g.items.sort((a, b) => new Date(b.sent_at || 0) - new Date(a.sent_at || 0));
+    }
+  }
+
+  groups.sort((a, b) => {
+    if (sortPreference === 'unread') {
+      if (a.hasUnread !== b.hasUnread) return b.hasUnread ? 1 : -1;
+      return (b.latestSent || 0) - (a.latestSent || 0);
+    }
+    if (sortPreference === 'admin_first') {
+      const aAdmin = a.key === '__admin__' ? 1 : 0;
+      const bAdmin = b.key === '__admin__' ? 1 : 0;
+      if (bAdmin !== aAdmin) return bAdmin - aAdmin;
+      if (a.key === '__external__') return 1;
+      if (b.key === '__external__') return -1;
+      return (b.latestSent || 0) - (a.latestSent || 0);
+    }
+    if (sortPreference === 'by_job') {
+      if (a.key === '__admin__' && b.key !== '__admin__') return 1;
+      if (b.key === '__admin__' && a.key !== '__admin__') return -1;
+      if (a.key === '__external__') return 1;
+      if (b.key === '__external__') return -1;
+      return (b.latestSent || 0) - (a.latestSent || 0);
+    }
+    return (b.latestSent || 0) - (a.latestSent || 0);
+  });
 
   return (
     <div>
-      <h3>Active Chats</h3>
+      <div style={{ marginBottom: '12px', paddingRight: '40px' }}>
+        <h3 style={{ margin: 0, marginBottom: '8px' }}>Active Chats</h3>
+        {!loading && chatSummaries.length > 0 && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
+            <span style={{ color: 'var(--text-secondary, #64748b)' }}>Sort:</span>
+            <select
+              value={sortPreference}
+              onChange={handleSortChange}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '6px',
+                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'var(--bg-elevated, #1b2430)',
+                color: 'var(--text-primary, #e2e8f0)',
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+              }}
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
       {loading ? (
         <p>Loading chats...</p>
       ) : chatSummaries.length === 0 ? (
@@ -429,7 +578,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
               </button>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {group.items.map((chat) => {
-                  const chatKey = getChatKey(chat.offer_id, chat.user_id);
+                  const chatKey = chat.offer_id === '__admin__' ? `__admin__${chat.thread_id}` : getChatKey(chat.offer_id, chat.user_id);
                   const isExternal = chat.offer_id === '__external__';
                   const isAdmin = chat.offer_id === '__admin__';
                   const isBusy = !!actionBusy[chatKey];
@@ -438,7 +587,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                   return (
                     <li key={chatKey} style={{ marginBottom: '10px' }}>
                       <div
-                        className="chat-card"
+                        className={`chat-card${unreadCount > 0 ? ' chat-card-has-unread' : ''}`}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -481,7 +630,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                             <strong style={{ flex: '0 0 auto' }}>{chat.nickname}</strong>
                           </span>
                         </button>
-                        {!isExternal && !isAdmin && (
+                        {!isExternal && (
                           <div
                             style={{
                               display: 'flex',

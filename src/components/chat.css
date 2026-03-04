@@ -123,6 +123,17 @@ body.dark-mode .chat-back-btn {
   border: 1px solid #ccc;
   border-radius: 5px;
 }
+
+/* Highlight unread chats (magenta = complementary to teal, max contrast) */
+.chat-card.chat-card-has-unread {
+  border: 2px solid #e91e63;
+  box-shadow: 0 0 0 2px rgba(233, 30, 99, 0.3);
+}
+[data-theme="dark"] .chat-card.chat-card-has-unread,
+body.dark-mode .chat-card.chat-card-has-unread {
+  border-color: #ec4899;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.4);
+}
 .chat-card-button {
   background: transparent;
   border: none;
@@ -388,6 +399,10 @@ body.dark-mode .chat-back-btn {
 .dark-mode .chat-message.other .chat-file-link { color: #FFD700 !important; }
 .dark-mode .chat-date-separator span { background: #1f2937; color: #e5e7eb; }
 .dark-mode .chat-card { background: var(--primary-color); border-color: transparent; }
+.dark-mode .chat-card.chat-card-has-unread {
+  border: 2px solid #ec4899;
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.4);
+}
 .dark-mode .chat-input { background-color: #1e1e1e; border-top: 1px solid #333; }
 .dark-mode .chat-input-meta { color: #cbd5e1; }
 .dark-mode .chat-file-pill { background: #1f2937; }
