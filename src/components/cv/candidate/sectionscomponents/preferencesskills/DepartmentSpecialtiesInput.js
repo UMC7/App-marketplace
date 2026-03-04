@@ -1,6 +1,6 @@
 // src/components/cv/candidate/sectionscomponents/preferencesskills/DepartmentSpecialtiesInput.js
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { DEPT_SPECIALTIES_SUGGESTIONS } from './catalogs';
+import { DEPT_SPECIALTIES_SUGGESTIONS, SPECIFIC_SKILLS_DEPARTMENTS } from './catalogs';
 import Modal from '../../../../Modal';
 
 export default function DepartmentSpecialtiesInput({
@@ -10,6 +10,7 @@ export default function DepartmentSpecialtiesInput({
   onChange,
   showRequiredMark = true,
   isMobile = false,
+  isMissing = false,
 }) {
   const isDeptControlled = typeof onChangeDepartment === 'function';
   const [localDept, setLocalDept] = useState(department || '');
@@ -133,24 +134,22 @@ export default function DepartmentSpecialtiesInput({
       >
         {/* Department */}
         <select
-          className="cp-input"
+          className={`cp-input${isMissing ? ' cp-missing-input' : ''}`}
           value={dept}
           onChange={(e) => handleDeptChange(e.target.value)}
         >
           <option value="">Select department…</option>
-          <option value="Deck">Deck</option>
-          <option value="Engine">Engine</option>
-          <option value="Interior">Interior</option>
-          <option value="Galley">Galley</option>
-          <option value="Others">Others</option>
+          {SPECIFIC_SKILLS_DEPARTMENTS.map((d) => (
+            <option key={d} value={d}>{d}</option>
+          ))}
         </select>
 
         {/* Specialty: select para desktop y modal en móvil */}
-        <div style={{ position: 'relative' }}>
+        <div className="cp-specialty-field-wrap" style={{ position: 'relative' }}>
           {!isMobile && (
             <>
               <select
-                className="cp-input"
+                className={`cp-input${isMissing ? ' cp-missing-input' : ''}`}
                 value="__placeholder"
                 disabled={!dept}
                 onChange={() => {}}
@@ -191,22 +190,30 @@ export default function DepartmentSpecialtiesInput({
 
           {isMobile && (
             <>
-              <button
-                type="button"
-                className="cp-input"
-                disabled={!dept}
-                onClick={openSpecialtySelector}
+              <div
+                role="button"
+                tabIndex={dept ? 0 : -1}
+                aria-disabled={!dept}
+                className={`cp-input cp-specialty-select-trigger${isMissing ? ' cp-missing-input' : ''}`}
+                onClick={dept ? openSpecialtySelector : undefined}
+                onKeyDown={(e) => {
+                  if (dept && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    openSpecialtySelector();
+                  }
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: 8,
                   minHeight: 40,
+                  cursor: dept ? 'pointer' : 'not-allowed',
                 }}
               >
                 <span>{specialtyPlaceholder}</span>
                 <span aria-hidden>v</span>
-              </button>
+              </div>
 
               {showMobileModal && (
                 <Modal onClose={closeMobileModal}>

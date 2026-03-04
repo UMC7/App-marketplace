@@ -155,6 +155,7 @@ export default function PreferencesSkills({
               onChange={onChangeDeptSpecialties}
               showRequiredMark={false}
               isMobile={isMobile}
+              isMissing={missSkills}
             />
           </div>
         </div>

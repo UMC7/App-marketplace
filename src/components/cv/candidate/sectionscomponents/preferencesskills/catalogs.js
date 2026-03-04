@@ -250,6 +250,16 @@ export function normalizeDeptSpecialties(raw) {
   return out;
 }
 
+/** Departamentos para Specific skills — mismo orden en job form y candidate profile */
+export const SPECIFIC_SKILLS_DEPARTMENTS = [
+  'Profile / General',
+  'Deck',
+  'Engine',
+  'Interior',
+  'Galley',
+  'Others',
+];
+
 /**
  * Especialidades por departamento — AGRUPADAS con títulos.
  * Formato esperado por el componente:

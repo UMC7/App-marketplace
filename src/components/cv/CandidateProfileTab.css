@@ -251,7 +251,24 @@ body.dark-mode .candidate-profile-tab.cp-mode-lite{
 .cp-missing .dropzone,
 .dropzone.is-missing {
   border-color: #e05252 !important;
-  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
+  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.28) !important;
+}
+
+/* Missing: contraste mejorado en modo oscuro */
+body.dark-mode .candidate-profile-tab .cp-missing .cp-input,
+body.dark-mode .candidate-profile-tab .cp-missing .cp-select,
+body.dark-mode .candidate-profile-tab .cp-missing .cp-textarea,
+body.dark-mode .candidate-profile-tab .cp-missing .input,
+body.dark-mode .candidate-profile-tab .cp-missing-input,
+body.dark-mode .candidate-profile-tab .cp-missing .dropzone,
+[data-theme='dark'] .candidate-profile-tab .cp-missing .cp-input,
+[data-theme='dark'] .candidate-profile-tab .cp-missing .cp-select,
+[data-theme='dark'] .candidate-profile-tab .cp-missing .cp-textarea,
+[data-theme='dark'] .candidate-profile-tab .cp-missing .input,
+[data-theme='dark'] .candidate-profile-tab .cp-missing-input,
+[data-theme='dark'] .candidate-profile-tab .cp-missing .dropzone {
+  border-color: #f87171 !important;
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.35) !important;
 }
 
 /* Missing empty blocks (docs/references/dropzone) */
@@ -259,7 +276,14 @@ body.dark-mode .candidate-profile-tab.cp-mode-lite{
 .dropzone.is-missing {
   border: 1px dashed #e05252 !important;
   border-radius: 12px;
-  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
+  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.28) !important;
+}
+body.dark-mode .candidate-profile-tab .cp-missing-block,
+body.dark-mode .candidate-profile-tab .dropzone.is-missing,
+[data-theme='dark'] .candidate-profile-tab .cp-missing-block,
+[data-theme='dark'] .candidate-profile-tab .dropzone.is-missing {
+  border-color: #f87171 !important;
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.35) !important;
 }
 
 .cp-label--disabled{
@@ -291,6 +315,16 @@ body.dark-mode .candidate-profile-tab.cp-mode-lite{
   padding: 8px 12px;
   cursor: pointer;
   transition: transform .05s ease, box-shadow .15s ease, border-color .15s ease, background-color .15s ease;
+}
+/* Trigger móvil "Select specialty…": div con cp-input para que herede las mismas reglas que select */
+.candidate-profile-tab .cp-specialty-select-trigger {
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+.candidate-profile-tab .cp-specialty-select-trigger:hover:not([aria-disabled="true"]) {
+  border-color: var(--accent-2);
+  box-shadow: var(--focus);
 }
 .candidate-profile-tab button:hover { border-color: var(--accent-2); box-shadow: var(--focus); }
 .candidate-profile-tab button:active { transform: translateY(1px); }

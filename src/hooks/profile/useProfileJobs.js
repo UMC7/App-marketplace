@@ -13,9 +13,18 @@ const useProfileJobs = ({ currentUser }) => {
 
   const handlePauseToggleJob = useCallback(async (offerId, currentStatus) => {
     try {
+      const isReactivating = currentStatus === 'paused';
+      const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+      const now = new Date().toISOString();
+
+      const updatePayload = { status: newStatus };
+      if (isReactivating) {
+        updatePayload.created_at = now;
+      }
+
       const { error } = await supabase
         .from('yacht_work_offers')
-        .update({ status: currentStatus === 'active' ? 'paused' : 'active' })
+        .update(updatePayload)
         .eq('id', offerId);
 
       if (error) throw error;
@@ -23,7 +32,11 @@ const useProfileJobs = ({ currentUser }) => {
       setJobOffers((prev) =>
         prev.map((o) =>
           o.id === offerId
-            ? { ...o, status: currentStatus === 'active' ? 'paused' : 'active' }
+            ? {
+                ...o,
+                status: newStatus,
+                ...(isReactivating && { created_at: now }),
+              }
             : o
         )
       );

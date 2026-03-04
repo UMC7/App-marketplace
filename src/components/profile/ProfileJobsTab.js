@@ -113,6 +113,20 @@ const ProfileJobsTab = ({
     }));
   };
 
+  const formatStartDate = (offer) => {
+    if (offer?.is_asap) return 'ASAP';
+    if (!offer?.start_date) return null;
+    const date = new Date(offer.start_date);
+    if (Number.isNaN(date.getTime())) return null;
+    return offer.start_date_month_only
+      ? date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+      : date.toLocaleDateString('en-GB');
+  };
+
+  const formatLocation = (offer) => {
+    return [offer?.city, offer?.country].filter(Boolean).join(', ') || '—';
+  };
+
   return (
     <>
       <h2>My Posted Jobs</h2>
@@ -157,19 +171,29 @@ const ProfileJobsTab = ({
                           </div>
                         )}
                         <p style={{ margin: '4px 0' }}>
-                          {offer.city}, {offer.country}
+                          {formatLocation(offer)}
                         </p>
-                        <p
+                        <div
+                          className="job-card-dates"
                           style={{
                             margin: '4px 0',
                             fontWeight: '500',
                             fontSize: '0.95rem',
-                            color: '#333',
                           }}
                         >
-                          <strong>Posted:</strong>{' '}
-                          {offer.created_at ? new Date(offer.created_at).toLocaleDateString('en-GB') : '—'}
-                        </p>
+                          <div className="job-date-item">
+                            <span className="job-date-label">Posted:</span>
+                            <span className="job-date-value">
+                              {offer.created_at ? new Date(offer.created_at).toLocaleDateString('en-GB') : '—'}
+                            </span>
+                          </div>
+                          {formatStartDate(offer) && (
+                            <div className="job-date-item">
+                              <span className="job-date-label">Start:</span>
+                              <span className="job-date-value">{formatStartDate(offer)}</span>
+                            </div>
+                          )}
+                        </div>
                         <div className="profile-action-buttons">
                           <button
                             className="dashboard-btn"
@@ -213,6 +237,24 @@ const ProfileJobsTab = ({
         }
         .jobs-date-caret { font-size:1rem; }
         .jobs-date-count { font-weight:600; opacity:.7; }
+        .job-card-dates {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px 24px;
+        }
+        .job-date-item {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+        .job-date-label {
+          font-weight: 600;
+          font-size: 0.85rem;
+          opacity: 0.9;
+        }
+        .job-date-value {
+          font-weight: 500;
+        }
       `}</style>
       {dashboardOffer && (
         <JobDashboard

@@ -1,10 +1,8 @@
 // Job form: Specific skills — mismo catálogo que candidate profile, modal como Rank/Country
 import React, { useState } from 'react';
 import Modal from './Modal';
-import { DEPT_SPECIALTIES_SUGGESTIONS } from './cv/candidate/sectionscomponents/preferencesskills/catalogs';
+import { DEPT_SPECIALTIES_SUGGESTIONS, SPECIFIC_SKILLS_DEPARTMENTS } from './cv/candidate/sectionscomponents/preferencesskills/catalogs';
 import './JobSpecificSkillsSelect.css';
-
-const DEPARTMENTS = ['Profile / General', 'Deck', 'Engine', 'Interior', 'Galley', 'Others'];
 
 export default function JobSpecificSkillsSelect({
   label = 'Specific skills:',
@@ -66,7 +64,7 @@ export default function JobSpecificSkillsSelect({
           }}
         >
           <option value="">Select department…</option>
-          {DEPARTMENTS.map((d) => (
+          {SPECIFIC_SKILLS_DEPARTMENTS.map((d) => (
             <option key={d} value={d}>{d}</option>
           ))}
         </select>
