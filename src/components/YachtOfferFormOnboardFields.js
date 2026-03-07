@@ -340,7 +340,7 @@ function YachtOfferFormOnboardFields({
         {FLAG_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
       </select>
 
-      <div className="form-group asap-flex-row">
+      <div className="form-group checkbox-grid">
         <label className="form-checkbox-label">
           <input type="checkbox" name="is_smoke_free_yacht" checked={formData.is_smoke_free_yacht} onChange={onChange} />
           <span>Smoke-free yacht</span>
@@ -352,6 +352,10 @@ function YachtOfferFormOnboardFields({
         <label className="form-checkbox-label">
           <input type="checkbox" name="is_no_visible_tattoos" checked={formData.is_no_visible_tattoos} onChange={onChange} />
           <span>No visible tattoos</span>
+        </label>
+        <label className="form-checkbox-label">
+          <input type="checkbox" name="is_random_drug_testing" checked={formData.is_random_drug_testing} onChange={onChange} />
+          <span>Random drug testing</span>
         </label>
       </div>
 

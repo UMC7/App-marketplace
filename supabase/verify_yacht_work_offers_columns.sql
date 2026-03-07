@@ -9,5 +9,5 @@ SELECT
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name = 'yacht_work_offers'
-  AND column_name IN ('is_smoke_free_yacht', 'is_dry_boat', 'is_no_visible_tattoos')
+  AND column_name IN ('is_smoke_free_yacht', 'is_dry_boat', 'is_no_visible_tattoos', 'is_random_drug_testing')
 ORDER BY ordinal_position;

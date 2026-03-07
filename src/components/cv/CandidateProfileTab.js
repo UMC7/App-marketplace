@@ -134,6 +134,7 @@ export default function CandidateProfileTab({ adminUserId = null }) {
 
   const [lifestyleHabits, setLifestyleHabits] = useState({
     tattoosVisible: '',
+    drugTestWilling: '',
     smoking: '',
     vaping: '',
     alcohol: '',
@@ -142,6 +143,7 @@ export default function CandidateProfileTab({ adminUserId = null }) {
   });
   const [lifestyleBaseline, setLifestyleBaseline] = useState({
     tattoosVisible: '',
+    drugTestWilling: '',
     smoking: '',
     vaping: '',
     alcohol: '',
@@ -245,6 +247,7 @@ function buildLitePrefsPayload() {
     const lh = ps && typeof ps.lifestyleHabits === 'object' ? ps.lifestyleHabits : {};
     setLifestyleHabits({
       tattoosVisible: lh.tattoosVisible || '',
+      drugTestWilling: (lh.drugTestWilling || '').trim() || 'Yes',
       smoking: (lh.smoking || '').trim() || 'Non-smoker',
       vaping: (lh.vaping || '').trim() || 'None',
       alcohol: (lh.alcohol || '').trim() || 'None',
@@ -554,6 +557,7 @@ function buildLitePrefsPayload() {
 
           const lh = docSrc && typeof docSrc.lifestyleHabits === 'object' ? docSrc.lifestyleHabits : {};
           const lhDefaults = {
+            drugTestWilling: (lh.drugTestWilling || '').trim() || 'Yes',
             smoking: (lh.smoking || '').trim() || 'Non-smoker',
             vaping: (lh.vaping || '').trim() || 'None',
             alcohol: (lh.alcohol || '').trim() || 'None',
@@ -561,12 +565,14 @@ function buildLitePrefsPayload() {
           };
           const lhMerged = {
             tattoosVisible: lh.tattoosVisible || '',
+            drugTestWilling: lhDefaults.drugTestWilling,
             ...lhDefaults,
             dietaryAllergies: Array.isArray(lh.dietaryAllergies) ? lh.dietaryAllergies : [],
           };
           setLifestyleHabits(lhMerged);
           setLifestyleBaseline({
             tattoosVisible: lh.tattoosVisible || '',
+            drugTestWilling: lhDefaults.drugTestWilling,
             ...lhDefaults,
             dietaryAllergies: Array.isArray(lh.dietaryAllergies) ? lh.dietaryAllergies : [],
           });
@@ -1027,6 +1033,7 @@ const generateShortHandle = () => {
       });
       setLifestyleBaseline({
         tattoosVisible: lifestyleHabits?.tattoosVisible || '',
+        drugTestWilling: lifestyleHabits?.drugTestWilling || '',
         smoking: lifestyleHabits?.smoking || '',
         vaping: lifestyleHabits?.vaping || '',
         alcohol: lifestyleHabits?.alcohol || '',
@@ -1351,6 +1358,7 @@ const generateShortHandle = () => {
   const lifestyleDirty = useMemo(() => {
     const normalizeLifestyle = (src) => JSON.stringify(normalizePrefsValue({
       tattoosVisible: src?.tattoosVisible || '',
+      drugTestWilling: src?.drugTestWilling || '',
       smoking: src?.smoking || '',
       vaping: src?.vaping || '',
       alcohol: src?.alcohol || '',
@@ -1485,6 +1493,7 @@ const experienceProgress = { count: expCount > 0 ? 1 : 0, total: 1 };
     ? {
         count:
           (lifestyleHabits?.tattoosVisible ? 1 : 0) +
+          (lifestyleHabits?.drugTestWilling ? 1 : 0) +
           (lifestyleHabits?.smoking ? 1 : 0) +
           (lifestyleHabits?.vaping ? 1 : 0) +
           (lifestyleHabits?.alcohol ? 1 : 0) +
@@ -1493,11 +1502,12 @@ const experienceProgress = { count: expCount > 0 ? 1 : 0, total: 1 };
             ? 1
             : 0) +
           (lifestyleHabits?.fitness ? 1 : 0),
-        total: 6,
+        total: 7,
       }
     : {
         count:
           (lifestyleHabits?.tattoosVisible ? 1 : 0) +
+          (lifestyleHabits?.drugTestWilling ? 1 : 0) +
           (lifestyleHabits?.smoking ? 1 : 0) +
           (lifestyleHabits?.vaping ? 1 : 0) +
           (lifestyleHabits?.alcohol ? 1 : 0) +
@@ -1506,7 +1516,7 @@ const experienceProgress = { count: expCount > 0 ? 1 : 0, total: 1 };
             ? 1
             : 0) +
           (lifestyleHabits?.fitness ? 1 : 0),
-        total: 6,
+        total: 7,
       };
 
   const prefsSkillsDetail = isLite
@@ -1602,6 +1612,7 @@ const meetsPrefsMin =
 
   const meetsLifestyleMin =
   !!(liteSnapshot?.lifestyleHabits?.tattoosVisible && String(liteSnapshot.lifestyleHabits.tattoosVisible).trim()) &&
+  !!(liteSnapshot?.lifestyleHabits?.drugTestWilling && String(liteSnapshot.lifestyleHabits.drugTestWilling).trim()) &&
   !!(liteSnapshot?.lifestyleHabits?.smoking && String(liteSnapshot.lifestyleHabits.smoking).trim()) &&
   !!(liteSnapshot?.lifestyleHabits?.vaping && String(liteSnapshot.lifestyleHabits.vaping).trim()) &&
   !!(liteSnapshot?.lifestyleHabits?.alcohol && String(liteSnapshot.lifestyleHabits.alcohol).trim()) &&

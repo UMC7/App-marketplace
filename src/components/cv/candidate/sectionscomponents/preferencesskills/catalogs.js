@@ -273,6 +273,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     {
       group: 'Profile & Professional',
       items: [
+        'Leadership',
         'Crew teamwork',
         'Team coordination',
         'Task prioritization',
@@ -294,6 +295,8 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
         'Reliability & punctuality',
         'Willingness to assist cross-department',
         'Drama-free mindset',
+        'Outgoing personality',
+        'Sociable & engaging',
       ],
     },
   ],
@@ -389,6 +392,18 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
         'Gearbox / shaft alignment',
         'Stabilizers & thrusters service',
         'Vibration / noise troubleshooting',
+      ],
+    },
+    {
+      group: 'Tenders & Water Toys Systems',
+      items: [
+        'Tender mechanical service',
+        'Outboard engine service',
+        'Jet ski maintenance',
+        'Water toy fleet maintenance',
+        'Tender electrical systems',
+        'Small craft troubleshooting',
+        'Toy launch & recovery systems',
       ],
     },
     {
@@ -537,6 +552,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
         'Prepare plant-based menus',
         'Execute allergen-safe dishes',
         'Ottolenghi-Style Cuisine',
+        'Healthy Cuisine',
       ],
     },
     {
@@ -550,6 +566,8 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
         'Bake breads & viennoiserie',
         'Prepare sauces & stocks',
         'Perform butchery & fish prep',
+        'Special Diet Cuisine',
+        'Custom Dietary Menus',
       ],
     },
     {
@@ -622,6 +640,7 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
         'Drone operation',
         'Content editing',
         'Digital privacy handling',
+        'DJ performance',
       ],
     },
     {

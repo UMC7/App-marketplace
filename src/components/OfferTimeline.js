@@ -633,6 +633,13 @@ const OfferTimeline = ({
       </div>
     )}
 
+    {offer.is_random_drug_testing && (
+      <div className="field-group">
+        <div className="field-label">Random drug testing</div>
+        <div className="field-value">Yes</div>
+      </div>
+    )}
+
     {(offer.is_asap || offer.start_date) && (
       <div className="field-group">
         <div className="field-label">Start Date</div>

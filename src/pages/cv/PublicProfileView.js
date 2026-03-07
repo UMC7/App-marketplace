@@ -929,6 +929,7 @@ function computeScrollTargetTop(el, extra = 12) {
       hasDeptSkills(deptSpecialties);
     const meetsLifestyleMin =
       !!(lifestyleHabits?.tattoosVisible && String(lifestyleHabits.tattoosVisible).trim()) &&
+      !!(lifestyleHabits?.drugTestWilling && String(lifestyleHabits.drugTestWilling).trim()) &&
       !!(lifestyleHabits?.smoking && String(lifestyleHabits.smoking).trim()) &&
       !!(lifestyleHabits?.vaping && String(lifestyleHabits.vaping).trim()) &&
       !!(lifestyleHabits?.alcohol && String(lifestyleHabits.alcohol).trim()) &&

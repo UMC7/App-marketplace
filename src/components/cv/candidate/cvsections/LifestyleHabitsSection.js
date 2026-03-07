@@ -3,33 +3,34 @@ import React, { useMemo, useState, useEffect } from 'react';
 
 // Opciones actualizadas (escala objetiva con 4 niveles)
 const TATTOOS = ['Yes', 'No'];
+const DRUG_TEST = ['Yes', 'No'];
 
 const SMOKING = [
   'Non-smoker',
   '< 3 cigarettes per day',
-  '3–10 cigarettes per day',
+  '3-10 cigarettes per day',
   '> 10 cigarettes per day',
 ];
 
 const VAPING = [
   'None',
   '< 1 puff per hour',
-  '1–3 puffs per hour',
+  '1-3 puffs per hour',
   '> 3 puffs per hour',
 ];
 
 const ALCOHOL = [
   'None',
-  '≤ 1 unit per day',
-  '≤ 3 units per day',
+  '<= 1 unit per day',
+  '<= 3 units per day',
   '> 3 units per day',
 ];
 
 const FITNESS = [
   'None',
   '< 2 days per week',
-  '2–4 days per week',
-  '≥ 5 days per week',
+  '2-4 days per week',
+  '>= 5 days per week',
 ];
 
 const ALLERGIES = [
@@ -73,6 +74,7 @@ export default function LifestyleHabitsSection({ value, onChange, mode = 'profes
   const reqLabel = (text) => (showLiteLabels ? text : `${text} *`);
   const v = value || {
     tattoosVisible: '',
+    drugTestWilling: '',
     smoking: '',
     vaping: '',
     alcohol: '',
@@ -82,15 +84,17 @@ export default function LifestyleHabitsSection({ value, onChange, mode = 'profes
 
   const setField = (k) => (next) => onChange({ ...v, [k]: next });
   const missTattoos = showRequired && !(v.tattoosVisible || '').trim();
+  const missDrugTest = showRequired && !(v.drugTestWilling || '').trim();
   const missSmoking = showRequired && !(v.smoking || '').trim();
   const missVaping = showRequired && !(v.vaping || '').trim();
   const missAlcohol = showRequired && !(v.alcohol || '').trim();
   const missAllergies = showRequired && (!Array.isArray(v.dietaryAllergies) || v.dietaryAllergies.length === 0);
   const missFitness = showRequired && !(v.fitness || '').trim();
 
-  // Asignar valores por defecto si los campos están vacíos
+  // Asignar valores por defecto si los campos estan vacios
   useEffect(() => {
     const defaults = {
+      drugTestWilling: 'Yes',
       smoking: 'Non-smoker',
       vaping: 'None',
       alcohol: 'None',
@@ -110,7 +114,7 @@ export default function LifestyleHabitsSection({ value, onChange, mode = 'profes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Solo para Dietary allergies (multi con botón Add)
+  // Solo para Dietary allergies (multi con boton Add)
   const [selAllergy, setSelAllergy] = useState('');
   const addAllergy = () => {
     if (!selAllergy) return;
@@ -164,7 +168,27 @@ export default function LifestyleHabitsSection({ value, onChange, mode = 'profes
               onChange={setField('alcohol')}
               className={missAlcohol ? 'cp-missing' : ''}
             />
+
+            {showRequired ? (
+              <SelectField
+                label={reqLabel('Willing to undergo a drug test')}
+                options={DRUG_TEST}
+                value={v.drugTestWilling}
+                onChange={setField('drugTestWilling')}
+                className={missDrugTest ? 'cp-missing' : ''}
+              />
+            ) : null}
           </>
+        ) : null}
+
+        {showRequired ? (
+          <SelectField
+            label={reqLabel('Fitness / sport activity')}
+            options={FITNESS}
+            value={v.fitness}
+            onChange={setField('fitness')}
+            className={missFitness ? 'cp-missing' : ''}
+          />
         ) : null}
 
         {showRequired ? (
@@ -198,25 +222,14 @@ export default function LifestyleHabitsSection({ value, onChange, mode = 'profes
                     onClick={() => removeAllergy(item)}
                     aria-label={`Remove ${item}`}
                   >
-                    ×
+                    x
                   </button>
                 </span>
               ))}
             </div>
           </div>
         ) : null}
-
-        {showRequired ? (
-          <SelectField
-            label={reqLabel('Fitness / sport activity')}
-            options={FITNESS}
-            value={v.fitness}
-            onChange={setField('fitness')}
-            className={missFitness ? 'cp-missing' : ''}
-          />
-        ) : null}
       </div>
     </div>
   );
 }
-
