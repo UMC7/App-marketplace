@@ -215,14 +215,14 @@ export default function PublicLifestyleHabitsSection({ profile }) {
         <Meter
           label="Smoking habits"
           value={lh.smoking}
-          options={['Non-smoker', '< 3 cigarettes per day', '3–10 cigarettes per day', '> 10 cigarettes per day']}
+          options={['Non-smoker', '< 3 cigarettes per day', '3-10 cigarettes per day', '> 10 cigarettes per day']}
           icon={<IconSmokingPack />}
           iconColor={ICON_COLOR}
         />
         <Meter
           label="Vaping"
           value={lh.vaping}
-          options={['None', '< 1 puff per hour', '1–3 puffs per hour', '> 3 puffs per hour']}
+          options={['None', '< 1 puff per hour', '1-3 puffs per hour', '> 3 puffs per hour']}
           icon={<IconVapeECig />}
           iconColor={ICON_COLOR}
         />
@@ -236,7 +236,7 @@ export default function PublicLifestyleHabitsSection({ profile }) {
         <Meter
           label="Fitness / sport activity"
           value={lh.fitness}
-          options={['None', '< 2 days per week', '2–4 days per week', '≥ 5 days per week']}
+          options={['None', '< 2 days per week', '2-4 days per week', '≥ 5 days per week']}
           icon={<IconFitnessPose />}
           iconColor={ICON_COLOR}
         />
