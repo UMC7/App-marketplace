@@ -2014,6 +2014,7 @@ const meetsPrefsMin =
                 onSaveDocFlags={handleSaveDocFlags}
                 savingDocFlags={savingDocFlags}
                 docFlagsDirty={docFlagsDirty}
+                nationalities={profile?.nationalities}
                 readOnly={!canEdit}
               />
             </div>

@@ -12,15 +12,18 @@ export default function DocumentsSection({
   onSaveDocFlags,
   savingDocFlags,
   docFlagsDirty = true,
+  nationalities = [],
   readOnly = false,
 }) {
+  const isEu = isEuNationality(nationalities);
+  const isUs = isUsNationality(nationalities);
   const quickItems = [
     { key: "passport6m",     label: "Passport >6 months" },
-    { key: "schengenVisa",   label: "SCHENGEN Visa" },
+    { key: "schengenVisa",   label: isEu ? "EU Passport" : "SCHENGEN Visa" },
     { key: "stcwBasic",      label: "STCW Basic Safety" },
     { key: "seamansBook",    label: "Seaman’s Book" },
     { key: "eng1",           label: "ENG1" },
-    { key: "usVisa",         label: "US VISA" },
+    { key: "usVisa",         label: isUs ? "US Passport" : "US VISA" },
     { key: "drivingLicense", label: "Driving License" },
     { key: "pdsd",           label: "PDSD Course" },
     { key: "covidVaccine",   label: "COVID Vaccine" },
@@ -53,46 +56,56 @@ export default function DocumentsSection({
 
       {/* 🔹 Bloque de 9 selectores: 3 columnas en desktop (CSS), 1 en móvil */}
       <div className="cv-docs-quickflags">
-        {quickItems.map((it) => (
-          <label
-            key={it.key}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 10,
-              padding: "8px 10px",
-              background: "var(--card, #fff)",
-              border: "1px solid var(--line, #e2e8f0)",
-              borderRadius: 10,
-            }}
-          >
-            <span style={{ fontSize: 14 }}>
-              {it.label}
-            </span>
-            <select
-              value={valOf(docFlags?.[it.key])}
-              onChange={(e) =>
-                typeof onChangeDocFlag === "function"
-                  ? onChangeDocFlag(it.key, parseVal(e.target.value))
-                  : undefined
-              }
-              disabled={readOnly}
+        {quickItems.map((it) => {
+          const isSchengen = it.key === "schengenVisa";
+          const isUsVisa = it.key === "usVisa";
+          const isEuSchengen = isSchengen && isEu;
+          const isUsPassport = isUsVisa && isUs;
+          const displayValue = (isEuSchengen || isUsPassport)
+            ? valOf(docFlags?.passport6m)
+            : valOf(docFlags?.[it.key]);
+
+          return (
+            <label
+              key={it.key}
               style={{
-                minWidth: 120,
-                padding: "6px 8px",
-                borderRadius: 8,
-                border: "1px solid rgba(0,0,0,.18)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10,
+                padding: "8px 10px",
                 background: "var(--card, #fff)",
+                border: "1px solid var(--line, #e2e8f0)",
+                borderRadius: 10,
               }}
-              aria-label={it.label}
-              aria-required="true"
             >
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-            </select>
-          </label>
-        ))}
+              <span style={{ fontSize: 14 }}>
+                {it.label}
+              </span>
+              <select
+                value={displayValue}
+                onChange={(e) =>
+                  !(isEuSchengen || isUsPassport) && typeof onChangeDocFlag === "function"
+                    ? onChangeDocFlag(it.key, parseVal(e.target.value))
+                    : undefined
+                }
+                disabled={readOnly || isEuSchengen || isUsPassport}
+                style={{
+                  minWidth: 120,
+                  padding: "6px 8px",
+                  borderRadius: 8,
+                  border: "1px solid rgba(0,0,0,.18)",
+                  background: "var(--card, #fff)",
+                }}
+                aria-label={it.label}
+                aria-required="true"
+              >
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </label>
+          );
+        })}
       </div>
 
       {/* Botón Save independiente para los 9 selectores */}
@@ -201,6 +214,49 @@ export default function DocumentsSection({
       </div>
     </>
   );
+}
+
+const EU_NATIONALITIES = new Set([
+  "austrian","austria",
+  "belgian","belgium",
+  "bulgarian","bulgaria",
+  "croatian","croatia",
+  "cypriot","cyprus",
+  "czech","czech republic","czechia",
+  "danish","denmark",
+  "dutch","netherlands",
+  "estonian","estonia",
+  "finnish","finland",
+  "french","france",
+  "german","germany",
+  "greek","greece",
+  "hungarian","hungary",
+  "irish","ireland",
+  "italian","italy",
+  "latvian","latvia",
+  "lithuanian","lithuania",
+  "luxembourgish","luxembourg",
+  "maltese","malta",
+  "polish","poland",
+  "portuguese","portugal",
+  "romanian","romania",
+  "slovak","slovakia",
+  "slovene","slovenian","slovenia",
+  "spanish","spain",
+  "swedish","sweden",
+]);
+
+function isEuNationality(nationalities) {
+  if (!Array.isArray(nationalities)) return false;
+  return nationalities.some((n) => EU_NATIONALITIES.has(String(n || "").trim().toLowerCase()));
+}
+
+function isUsNationality(nationalities) {
+  if (!Array.isArray(nationalities)) return false;
+  return nationalities.some((n) => {
+    const v = String(n || "").trim().toLowerCase();
+    return v === "american" || v === "usa" || v === "united states" || v === "united states of america" || v === "u.s." || v === "u.s.a.";
+  });
 }
 
 function safeDate(v) {

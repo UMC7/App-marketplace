@@ -67,6 +67,14 @@ function isEuNationality(nationalities) {
   return nationalities.some((n) => EU_NATIONALITIES.has(norm(n)));
 }
 
+function isUsNationality(nationalities) {
+  if (!Array.isArray(nationalities)) return false;
+  return nationalities.some((n) => {
+    const v = norm(n);
+    return v === 'american' || v === 'usa' || v === 'united states' || v === 'united states of america' || v === 'u.s.' || v === 'u.s.a.';
+  });
+}
+
 // === UI bits ===
 const OK_COLOR = '#16c5c1';   // mismo turquesa que las barras
 const BAD_COLOR = '#ef4444';
@@ -150,6 +158,7 @@ export default function BasicDocsSummary({ documents = [], docFlags = {}, nation
     const eng1Ok = ((!!eng1) || flagTrue(docFlags?.eng1));
 
     const isEu = isEuNationality(nationalities);
+    const isUs = isUsNationality(nationalities);
 
     // Schengen Visa — ok si doc o flag (pero si es EU, mostramos "EU Passport")
     const schengen = byType('visa').find(d => /schengen/i.test(norm(d.title || d.type)));
@@ -180,7 +189,7 @@ export default function BasicDocsSummary({ documents = [], docFlags = {}, nation
       { label: 'STCW Basic Safety',  ok: stcwOk },
       { label: "Seaman’s Book",      ok: sbOk },
       { label: 'ENG1',               ok: eng1Ok },
-      { label: 'US VISA',            ok: usOk },
+      { label: isUs ? 'US Passport' : 'US VISA', ok: isUs ? passportOk : usOk },
       // ⬇️ Fila adicional
       { label: 'Driving License',    ok: drivingOk },
       { label: 'PDSD Course',        ok: pdsdOk },

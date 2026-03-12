@@ -26,6 +26,7 @@ export default function DocumentsSectionController({
   onSaveDocFlags,
   savingDocFlags,
   docFlagsDirty,
+  nationalities = [],
   readOnly = false,
 }) {
   const [open, setOpen] = useState(false);
@@ -199,6 +200,7 @@ export default function DocumentsSectionController({
         onSaveDocFlags={readOnly ? undefined : handleSaveDocFlagsClick}
         savingDocFlags={!!savingDocFlags}
         docFlagsDirty={docFlagsDirty}
+        nationalities={nationalities}
         readOnly={readOnly}
       />
       {!readOnly && (
