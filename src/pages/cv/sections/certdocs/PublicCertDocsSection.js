@@ -80,6 +80,7 @@ export default function PublicCertDocsSection({
   title = 'CERTIFICATION & DOCUMENTS',
   /** 🔹 NUEVO: flags provenientes del perfil (prefs_skills.docFlags) */
   docFlags = {},
+  nationalities = [],
 }) {
   const [isAdminViewer, setIsAdminViewer] = useState(false);
 
@@ -224,7 +225,7 @@ export default function PublicCertDocsSection({
         </div>
 
         {/* Resumen (Passport >6 months, etc.) — usa la lista ya filtrada (sin Unlisted) */}
-        <BasicDocsSummary documents={documents} docFlags={docFlags} />
+        <BasicDocsSummary documents={documents} docFlags={docFlags} nationalities={nationalities} />
         
         {/* Lista con scroll interno: solo 5 visibles a la vez */}
         {sorted.length > 0 ? (

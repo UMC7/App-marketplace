@@ -1270,7 +1270,11 @@ if (!allowPublicView && !isPreview) {
               <div className="ppv-pageInner">
                 {/* ⬇️ ANCLA CERTIFICATES & DOCS */}
                 <div id="ppv-certdocs">
-                  <PublicCertDocsSection documents={documents} docFlags={docFlags} />
+                  <PublicCertDocsSection
+                    documents={documents}
+                    docFlags={docFlags}
+                    nationalities={profile?.nationalities}
+                  />
                 </div>
 
                 {/* ⬇️ ANCLA LANGUAGES & SKILLS */}

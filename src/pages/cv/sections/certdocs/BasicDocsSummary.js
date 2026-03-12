@@ -32,6 +32,41 @@ function canonicalType(doc) {
 }
 const norm = (v = '') => v.toString().toLowerCase();
 
+const EU_NATIONALITIES = new Set([
+  'austrian','austria',
+  'belgian','belgium',
+  'bulgarian','bulgaria',
+  'croatian','croatia',
+  'cypriot','cyprus',
+  'czech','czech republic','czechia',
+  'danish','denmark',
+  'dutch','netherlands',
+  'estonian','estonia',
+  'finnish','finland',
+  'french','france',
+  'german','germany',
+  'greek','greece',
+  'hungarian','hungary',
+  'irish','ireland',
+  'italian','italy',
+  'latvian','latvia',
+  'lithuanian','lithuania',
+  'luxembourgish','luxembourg',
+  'maltese','malta',
+  'polish','poland',
+  'portuguese','portugal',
+  'romanian','romania',
+  'slovak','slovakia',
+  'slovene','slovenian','slovenia',
+  'spanish','spain',
+  'swedish','sweden',
+]);
+
+function isEuNationality(nationalities) {
+  if (!Array.isArray(nationalities)) return false;
+  return nationalities.some((n) => EU_NATIONALITIES.has(norm(n)));
+}
+
 // === UI bits ===
 const OK_COLOR = '#16c5c1';   // mismo turquesa que las barras
 const BAD_COLOR = '#ef4444';
@@ -85,7 +120,7 @@ function ItemRow({ label, ok }) {
   );
 }
 
-export default function BasicDocsSummary({ documents = [], docFlags = {} }) {
+export default function BasicDocsSummary({ documents = [], docFlags = {}, nationalities = [] }) {
   const items = useMemo(() => {
     // REGLA DE VISIBILIDAD para indicadores:
     // - Unlisted/Private/Public: todos cuentan como "tiene documento".
@@ -114,7 +149,9 @@ export default function BasicDocsSummary({ documents = [], docFlags = {} }) {
     const eng1 = byType('eng1')[0];
     const eng1Ok = ((!!eng1) || flagTrue(docFlags?.eng1));
 
-    // Schengen Visa — ok si doc o flag
+    const isEu = isEuNationality(nationalities);
+
+    // Schengen Visa — ok si doc o flag (pero si es EU, mostramos "EU Passport")
     const schengen = byType('visa').find(d => /schengen/i.test(norm(d.title || d.type)));
     const schengenOk = ((!!schengen) || flagTrue(docFlags?.schengenVisa));
 
@@ -139,7 +176,7 @@ export default function BasicDocsSummary({ documents = [], docFlags = {} }) {
 
     return [
       { label: 'Passport >6 months', ok: passportOk },
-      { label: 'SCHENGEN Visa',      ok: schengenOk },
+      { label: isEu ? 'EU Passport' : 'SCHENGEN Visa', ok: isEu ? passportOk : schengenOk },
       { label: 'STCW Basic Safety',  ok: stcwOk },
       { label: "Seaman’s Book",      ok: sbOk },
       { label: 'ENG1',               ok: eng1Ok },
