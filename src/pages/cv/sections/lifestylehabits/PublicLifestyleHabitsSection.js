@@ -78,9 +78,18 @@ const IconFitnessPose = () => (
    Meter (barras + icono)
 ========================= */
 function Meter({ label, value, options = [], icon, iconColor }) {
+  const normalizeMeterText = (input) =>
+    String(input || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[–—]/g, '-')
+      .replace(/≤/g, '<=')
+      .replace(/≥/g, '>=')
+      .replace(/\s+/g, ' ');
+
   const idx = useMemo(() => {
-    const v = (value || '').toString().trim();
-    const i = options.findIndex((o) => o.toLowerCase() === v.toLowerCase());
+    const v = normalizeMeterText(value);
+    const i = options.findIndex((o) => normalizeMeterText(o) === v);
     return i >= 0 ? i : -1;
   }, [value, options]);
 
