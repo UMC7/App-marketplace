@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import '../../styles/JobDashboard.css';
 import JobDashboard from '../jobs/JobDashboard';
 import supabase from '../../supabase';
+import { formatOfferDate } from '../yachtOfferForm.utils';
 
 const ProfileJobsTab = ({
   jobOffers,
+  isAdmin = false,
   onTogglePause,
   onEdit,
   onDelete,
@@ -14,10 +16,84 @@ const ProfileJobsTab = ({
   const [dashboardOffer, setDashboardOffer] = useState(null);
   const [expandedDates, setExpandedDates] = useState({});
   const [offersWithNewApps, setOffersWithNewApps] = useState(new Set());
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState({ startDate: '', rank: '', country: '' });
+
+  const formatStartDate = (offer) => {
+    if (offer?.is_asap) return 'ASAP';
+    if (!offer?.start_date) return null;
+    return formatOfferDate(offer.start_date, {
+      monthOnly: offer.start_date_month_only,
+      dayRange: offer.start_day_range,
+    });
+  };
+
+  const getStartDateFilterValue = (offer) => {
+    if (offer?.is_asap) return 'asap';
+    if (!offer?.start_date) return '';
+    const date = new Date(offer.start_date);
+    if (Number.isNaN(date.getTime())) return '';
+    return `month:${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+  };
+
+  const getRankValues = (offer) =>
+    [offer?.title, offer?.teammate_rank]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+
+  const filterOptions = useMemo(() => {
+    const startDates = new Map();
+    const ranks = new Set();
+    const countries = new Set();
+
+    (jobOffers || []).forEach((offer) => {
+      const startValue = getStartDateFilterValue(offer);
+      const startLabel = offer?.is_asap
+        ? 'ASAP'
+        : offer?.start_date
+        ? new Date(offer.start_date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+        : null;
+
+      if (startValue && startLabel && !startDates.has(startValue)) {
+        startDates.set(startValue, startLabel);
+      }
+
+      getRankValues(offer).forEach((rank) => ranks.add(rank));
+
+      const country = String(offer?.country || '').trim();
+      if (country) countries.add(country);
+    });
+
+    return {
+      startDates: Array.from(startDates.entries()).map(([value, label]) => ({ value, label })),
+      ranks: Array.from(ranks).sort((a, b) => a.localeCompare(b)),
+      countries: Array.from(countries).sort((a, b) => a.localeCompare(b)),
+    };
+  }, [jobOffers]);
+
+  const filteredOffers = useMemo(() => {
+    return (jobOffers || []).filter((offer) => {
+      if (filters.startDate && getStartDateFilterValue(offer) !== filters.startDate) return false;
+
+      if (filters.rank) {
+        const query = filters.rank.trim().toLowerCase();
+        const matchesRank = getRankValues(offer).some((rank) => rank.toLowerCase().includes(query));
+        if (!matchesRank) return false;
+      }
+
+      if (filters.country) {
+        const query = filters.country.trim().toLowerCase();
+        const countryValue = String(offer?.country || '').trim().toLowerCase();
+        if (!countryValue.includes(query)) return false;
+      }
+
+      return true;
+    });
+  }, [jobOffers, filters]);
 
   const groupedByDate = useMemo(() => {
     const groups = new Map();
-    (jobOffers || []).forEach((offer) => {
+    filteredOffers.forEach((offer) => {
       const d = offer?.created_at ? new Date(offer.created_at) : null;
       const key = d ? d.toISOString().slice(0, 10) : 'unknown';
       if (!groups.has(key)) groups.set(key, []);
@@ -25,7 +101,7 @@ const ProfileJobsTab = ({
     });
     const dates = Array.from(groups.keys()).sort((a, b) => b.localeCompare(a));
     return { groups, dates };
-  }, [jobOffers]);
+  }, [filteredOffers]);
 
   useEffect(() => {
     const next = {};
@@ -113,25 +189,97 @@ const ProfileJobsTab = ({
     }));
   };
 
-  const formatStartDate = (offer) => {
-    if (offer?.is_asap) return 'ASAP';
-    if (!offer?.start_date) return null;
-    const date = new Date(offer.start_date);
-    if (Number.isNaN(date.getTime())) return null;
-    return offer.start_date_month_only
-      ? date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
-      : date.toLocaleDateString('en-GB');
-  };
-
   const formatLocation = (offer) => {
-    return [offer?.city, offer?.country].filter(Boolean).join(', ') || '—';
+    return [offer?.city, offer?.country].filter(Boolean).join(', ') || '-';
   };
 
   return (
     <>
       <h2>My Posted Jobs</h2>
+      {isAdmin && jobOffers.length > 0 && (
+        <div className="jobs-filters-panel">
+          <h3
+            className="jobs-filters-toggle"
+            onClick={() => setFiltersOpen((prev) => !prev)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setFiltersOpen((prev) => !prev);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-expanded={filtersOpen}
+          >
+            {filtersOpen ? '▼ Filters' : '► Filters'}
+          </h3>
+
+          {filtersOpen && (
+            <div className="jobs-admin-filters">
+              <label className="jobs-filter-field">
+                <span>Start date</span>
+                <select
+                  value={filters.startDate}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))}
+                >
+                  <option value="">All start dates</option>
+                  {filterOptions.startDates.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="jobs-filter-field">
+                <span>Rank</span>
+                <input
+                  type="text"
+                  value={filters.rank}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, rank: e.target.value }))}
+                  placeholder="Type a rank..."
+                  list="jobs-admin-ranks"
+                />
+                <datalist id="jobs-admin-ranks">
+                  {filterOptions.ranks.map((rank) => (
+                    <option key={rank} value={rank} />
+                  ))}
+                </datalist>
+              </label>
+
+              <label className="jobs-filter-field">
+                <span>Country</span>
+                <input
+                  type="text"
+                  value={filters.country}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, country: e.target.value }))}
+                  placeholder="Type a country..."
+                  list="jobs-admin-countries"
+                />
+                <datalist id="jobs-admin-countries">
+                  {filterOptions.countries.map((country) => (
+                    <option key={country} value={country} />
+                  ))}
+                </datalist>
+              </label>
+
+              <button
+                type="button"
+                className="jobs-filter-clear"
+                onClick={() => setFilters({ startDate: '', rank: '', country: '' })}
+                disabled={!filters.startDate && !filters.rank && !filters.country}
+              >
+                Clear
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {jobOffers.length === 0 ? (
         <p>You have not posted any job offers yet.</p>
+      ) : filteredOffers.length === 0 ? (
+        <p>No jobs match the selected filters.</p>
       ) : (
         <div>
           {groupedByDate.dates.map((dateKey) => {
@@ -184,7 +332,7 @@ const ProfileJobsTab = ({
                           <div className="job-date-item">
                             <span className="job-date-label">Posted:</span>
                             <span className="job-date-value">
-                              {offer.created_at ? new Date(offer.created_at).toLocaleDateString('en-GB') : '—'}
+                              {offer.created_at ? new Date(offer.created_at).toLocaleDateString('en-GB') : '-'}
                             </span>
                           </div>
                           {formatStartDate(offer) && (
@@ -223,20 +371,79 @@ const ProfileJobsTab = ({
           })}
         </div>
       )}
+
       <style>{`
-        .jobs-date-toggle {
-          display:inline-flex;
-          align-items:center;
-          gap:8px;
-          color:inherit;
-          cursor:pointer;
-          font-weight:700;
-          font-size:1.05rem;
-          margin-bottom:10px;
-          user-select:none;
+        .jobs-filters-panel {
+          margin: 12px 0 18px;
         }
-        .jobs-date-caret { font-size:1rem; }
-        .jobs-date-count { font-weight:600; opacity:.7; }
+        .jobs-filters-toggle {
+          cursor: pointer;
+          margin: 0;
+          display: inline-block;
+          user-select: none;
+        }
+        .jobs-admin-filters {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(180px, 1fr)) auto;
+          gap: 12px;
+          align-items: end;
+          margin-top: 12px;
+        }
+        .jobs-filter-field {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .jobs-filter-field span {
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
+        .jobs-filter-field select {
+          min-height: 38px;
+          border-radius: 10px;
+          border: 1px solid rgba(0,0,0,0.16);
+          padding: 8px 10px;
+          background: var(--card-bg, #fff);
+          color: inherit;
+        }
+        .jobs-filter-field input {
+          min-height: 38px;
+          height: 38px;
+          box-sizing: border-box;
+          line-height: 1.2;
+          border-radius: 10px;
+          border: 1px solid rgba(0,0,0,0.16);
+          padding: 8px 10px;
+          background: var(--card-bg, #fff);
+          color: inherit;
+        }
+        .jobs-filter-clear {
+          min-height: 38px;
+          border-radius: 10px;
+          border: 1px solid rgba(0,0,0,0.16);
+          padding: 8px 14px;
+          background: transparent;
+          color: inherit;
+          cursor: pointer;
+          font-weight: 600;
+        }
+        .jobs-filter-clear:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+        }
+        .jobs-date-toggle {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: inherit;
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 1.05rem;
+          margin-bottom: 10px;
+          user-select: none;
+        }
+        .jobs-date-caret { font-size: 1rem; }
+        .jobs-date-count { font-weight: 600; opacity: .7; }
         .job-card-dates {
           display: flex;
           flex-wrap: wrap;
@@ -255,7 +462,13 @@ const ProfileJobsTab = ({
         .job-date-value {
           font-weight: 500;
         }
+        @media (max-width: 900px) {
+          .jobs-admin-filters {
+            grid-template-columns: 1fr;
+          }
+        }
       `}</style>
+
       {dashboardOffer && (
         <JobDashboard
           offer={dashboardOffer}

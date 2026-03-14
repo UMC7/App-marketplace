@@ -1,7 +1,7 @@
 import React from 'react';
 import RemarksField from './RemarksField';
 import { MONTHS, yearsOptions, types, COUNTRIES } from './yachtOfferForm.constants';
-import { getDaysInMonth } from './yachtOfferForm.utils';
+import { getDaySelectOptions } from './yachtOfferForm.utils';
 
 function YachtOfferFormShoreBasedFields({
   formData,
@@ -140,11 +140,11 @@ function YachtOfferFormShoreBasedFields({
           {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
         <select name="start_day" value={formData.start_day} onChange={onChange} disabled={!formData.start_month || formData.is_asap || formData.is_flexible}>
-          <option value="">Day (optional)</option>
-          {Array.from({ length: getDaysInMonth(formData.start_month || '0') }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}</option>)}
+          <option value="">Day or range (optional)</option>
+          {getDaySelectOptions(formData.start_month).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </div>
-      <p style={{ marginTop: -4, marginBottom: 16, fontSize: 12, color: '#666' }}>Leave day empty to indicate flexible within the month.</p>
+      <p style={{ marginTop: -4, marginBottom: 16, fontSize: 12, color: '#666' }}>Leave it empty for flexible within the month, or choose Beginning, Middle, End, or a specific day.</p>
 
       {/* ASAP */}
       <div className="form-group asap-flex-row">
@@ -166,10 +166,10 @@ function YachtOfferFormShoreBasedFields({
           {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
         <select name="end_day" value={formData.end_day} onChange={onChange} disabled={!formData.end_month}>
-          <option value="">Day (optional)</option>
-          {Array.from({ length: getDaysInMonth(formData.end_month || '0') }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}</option>)}
+          <option value="">Day or range (optional)</option>
+          {getDaySelectOptions(formData.end_month).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
-        <p style={{ marginTop: -10, marginBottom: 16, fontSize: 12, color: '#666', width: '100%' }}>Leave day empty to indicate flexible within the month.</p>
+        <p style={{ marginTop: -10, marginBottom: 16, fontSize: 12, color: '#666', width: '100%' }}>Leave it empty for flexible within the month, or choose Beginning, Middle, End, or a specific day.</p>
       </div>
 
       {/* Work Location */}

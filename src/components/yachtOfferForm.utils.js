@@ -22,6 +22,58 @@ export const getDaysInMonth = (monthValue) => {
   return new Date(year, month, 0).getDate();
 };
 
+export const DAY_RANGE_OPTIONS = [
+  { value: 'beginning', label: 'Beginning' },
+  { value: 'middle', label: 'Middle' },
+  { value: 'end', label: 'End' },
+];
+
+const DAY_RANGE_LABELS = Object.fromEntries(
+  DAY_RANGE_OPTIONS.map((option) => [option.value, option.label])
+);
+
+export const isDayRangeValue = (value) =>
+  Object.prototype.hasOwnProperty.call(DAY_RANGE_LABELS, String(value || '').toLowerCase());
+
+export const getDayRangeLabel = (value) =>
+  DAY_RANGE_LABELS[String(value || '').toLowerCase()] || '';
+
+export const getDaySelectOptions = (monthValue) => [
+  ...DAY_RANGE_OPTIONS,
+  ...Array.from({ length: getDaysInMonth(monthValue || '0') }, (_, i) => {
+    const day = String(i + 1);
+    return { value: day, label: day };
+  }),
+];
+
+export const resolveDayValueForDate = (dayValue, monthValue) => {
+  if (!dayValue) return '01';
+  if (!isDayRangeValue(dayValue)) return String(dayValue).padStart(2, '0');
+
+  const maxDay = getDaysInMonth(monthValue || '0');
+  const normalized = String(dayValue).toLowerCase();
+  if (normalized === 'beginning') return '01';
+  if (normalized === 'middle') return String(Math.ceil(maxDay / 2)).padStart(2, '0');
+  return String(maxDay).padStart(2, '0');
+};
+
+export const formatOfferDate = (dateStr, { monthOnly = false, dayRange = '' } = {}) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return String(dateStr);
+
+  if (dayRange && !monthOnly) {
+    const label = getDayRangeLabel(dayRange);
+    const monthYear = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    return label ? `${label} of ${monthYear}` : monthYear;
+  }
+
+  const options = monthOnly
+    ? { month: 'short', year: 'numeric' }
+    : { day: '2-digit', month: 'short', year: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
+};
+
 export const readJsonResponse = async (res) => {
   const contentType = res.headers.get('content-type') || '';
   const text = await res.text();

@@ -3,6 +3,7 @@ import MatchBorder from './MatchBorder';
 import ThemeLogo from './ThemeLogo';
 import Avatar from './Avatar';
 import LoadingSpinner from './LoadingSpinner';
+import { formatOfferDate } from './yachtOfferForm.utils';
 
 const REMARKS_DISCLAIMER = 'Disclaimer:\nYacht Daywork Ltd. connects employers and crew directly and is not involved in hiring decisions or private agreements. Please communicate responsibly and remain cautious when applying.';
 
@@ -17,16 +18,6 @@ const formatSalary = (offer) => {
     ? 'DOE'
     : formatSalaryValue(offer.salary_currency, offer.salary, false);
   return offer.is_tips ? `${base} + Tips` : base;
-};
-
-const formatDate = (dateStr, monthOnly = false) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  if (Number.isNaN(date.getTime())) return String(dateStr);
-  const options = monthOnly
-    ? { month: 'short', year: 'numeric' }
-    : { day: '2-digit', month: 'short', year: 'numeric' };
-  return date.toLocaleDateString('en-US', options);
 };
 
 const formatTime = (timestamp) => {
@@ -243,11 +234,14 @@ const OfferTimeline = ({
                               <div className="field-group">
                                 <div className="field-label">Start Date</div>
                                 <div className="field-value">
-                                  {offer.is_asap
+                                      {offer.is_asap
                                     ? 'ASAP'
                                     : offer.is_flexible
                                       ? 'Flexible'
-                                      : formatDate(offer.start_date, offer.start_date_month_only)}
+                                      : formatOfferDate(offer.start_date, {
+                                          monthOnly: offer.start_date_month_only,
+                                          dayRange: offer.start_day_range,
+                                        })}
                                 </div>
                               </div>
                             )}
@@ -255,7 +249,12 @@ const OfferTimeline = ({
                             {offer.end_date && (
                               <div className="field-group">
                                 <div className="field-label">End Date</div>
-                                <div className="field-value">{formatDate(offer.end_date, offer.end_date_month_only)}</div>
+                                <div className="field-value">
+                                  {formatOfferDate(offer.end_date, {
+                                    monthOnly: offer.end_date_month_only,
+                                    dayRange: offer.end_day_range,
+                                  })}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -648,7 +647,10 @@ const OfferTimeline = ({
             ? 'ASAP'
             : offer.is_flexible
               ? 'Flexible'
-              : formatDate(offer.start_date, offer.start_date_month_only)}
+              : formatOfferDate(offer.start_date, {
+                  monthOnly: offer.start_date_month_only,
+                  dayRange: offer.start_day_range,
+                })}
         </div>
       </div>
     )}
@@ -656,7 +658,12 @@ const OfferTimeline = ({
     {offer.end_date && (
       <div className="field-group">
         <div className="field-label">End Date</div>
-        <div className="field-value">{formatDate(offer.end_date, offer.end_date_month_only)}</div>
+        <div className="field-value">
+          {formatOfferDate(offer.end_date, {
+            monthOnly: offer.end_date_month_only,
+            dayRange: offer.end_day_range,
+          })}
+        </div>
       </div>
     )}
 

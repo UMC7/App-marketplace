@@ -32,7 +32,9 @@ import YachtOfferFormShoreBasedFields from './YachtOfferFormShoreBasedFields';
 import {
   getInferredYear,
   getDaysInMonth,
+  isDayRangeValue,
   readJsonResponse,
+  resolveDayValueForDate,
   adjustRemarksTextareaHeight,
   getEngineeringLicenseOptionsForRank,
   getDeckLicenseOptionsForRank,
@@ -150,21 +152,21 @@ useEffect(() => {
   setFormData(prev => ({
     ...prev,
     start_month: month,
-    start_day: initialValues.start_date_month_only ? '' : day,
+    start_day: initialValues.start_date_month_only ? '' : (initialValues.start_day_range || day),
   }));
 }, [initialValues]);
 
   useEffect(() => {
-    if (!initialValues?.end_date) return;
-    const parsed = new Date(initialValues.end_date);
-    if (Number.isNaN(parsed.getTime())) return;
-    const month = String(parsed.getMonth() + 1);
-    const day = String(parsed.getDate());
-    setFormData(prev => ({
-      ...prev,
-      end_month: month,
-      end_day: initialValues.end_date_month_only ? '' : day,
-    }));
+  if (!initialValues?.end_date) return;
+  const parsed = new Date(initialValues.end_date);
+  if (Number.isNaN(parsed.getTime())) return;
+  const month = String(parsed.getMonth() + 1);
+  const day = String(parsed.getDate());
+  setFormData(prev => ({
+    ...prev,
+    end_month: month,
+    end_day: initialValues.end_date_month_only ? '' : (initialValues.end_day_range || day),
+  }));
   }, [initialValues]);
 
 useEffect(() => {
@@ -585,7 +587,7 @@ const formReady = (() => {
           next.start_day = '';
         } else {
           const maxDay = getDaysInMonth(value);
-          if (next.start_day && Number(next.start_day) > maxDay) {
+          if (next.start_day && !isDayRangeValue(next.start_day) && Number(next.start_day) > maxDay) {
             next.start_day = '';
           }
         }
@@ -607,7 +609,7 @@ const formReady = (() => {
           next.end_day = '';
         } else {
           const maxDay = getDaysInMonth(value);
-          if (next.end_day && Number(next.end_day) > maxDay) {
+          if (next.end_day && !isDayRangeValue(next.end_day) && Number(next.end_day) > maxDay) {
             next.end_day = '';
           }
         }
@@ -726,8 +728,10 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     start_date: sanitizedData.is_asap || (sanitizedData.is_flexible && !sanitizedData.start_date)
       ? new Date().toISOString().split('T')[0]
       : sanitizedData.start_date || null,
+    start_day_range: sanitizedData.start_day_range || null,
     start_date_month_only: !!sanitizedData.start_date_month_only,
     end_date_month_only: !!sanitizedData.end_date_month_only,
+    end_day_range: sanitizedData.end_day_range || null,
     end_date:
       sanitizedData.type === 'Permanent'
         ? null
@@ -836,6 +840,8 @@ const {
 } = formData;
 const startDateMonthOnly = !!start_month && !start_day;
 const endDateMonthOnly = !!end_month && !end_day;
+const startDayRange = isDayRangeValue(start_day) ? String(start_day).toLowerCase() : null;
+const endDayRange = isDayRangeValue(end_day) ? String(end_day).toLowerCase() : null;
 const requiredLicenses = required_license ? [required_license] : [];
 const engineeringLicensesArray = engineering_license ? [engineering_license] : [];
 const derivedStartDate = (() => {
@@ -843,7 +849,7 @@ const derivedStartDate = (() => {
   const year = getInferredYear(start_month);
   if (!year) return null;
   const month = String(start_month).padStart(2, '0');
-  const day = start_day ? String(start_day).padStart(2, '0') : '01';
+  const day = resolveDayValueForDate(start_day, start_month);
   return `${year}-${month}-${day}`;
 })();
 const derivedEndDate = (() => {
@@ -851,7 +857,7 @@ const derivedEndDate = (() => {
   const year = getInferredYear(end_month);
   if (!year) return null;
   const month = String(end_month).padStart(2, '0');
-  const day = end_day ? String(end_day).padStart(2, '0') : '01';
+  const day = resolveDayValueForDate(end_day, end_month);
   return `${year}-${month}-${day}`;
 })();
 
@@ -859,6 +865,8 @@ const derivedEndDate = (() => {
     ...restForm,
     start_date: derivedStartDate,
     end_date: derivedEndDate,
+    start_day_range: startDateMonthOnly ? null : startDayRange,
+    end_day_range: endDateMonthOnly ? null : endDayRange,
     start_date_month_only: startDateMonthOnly,
     end_date_month_only: endDateMonthOnly,
     required_licenses: requiredLicenses,

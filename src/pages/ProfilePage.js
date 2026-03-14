@@ -33,6 +33,7 @@ const ALLOWED_TABS = new Set([
 
 function ProfilePage() {
   const { currentUser } = useAuth();
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.app_metadata?.role === 'admin';
   const {
     products,
     deletedProducts,
@@ -417,6 +418,7 @@ useEffect(() => {
         return (
           <ProfileJobsTab
             jobOffers={jobOffers}
+            isAdmin={isAdmin}
             onTogglePause={handlePauseToggleJob}
             onEdit={setEditingJobId}
             onDelete={handleDeleteJob}
