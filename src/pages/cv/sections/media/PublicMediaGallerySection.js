@@ -16,7 +16,7 @@ function isHeicUrl(u = '') {
 function getThumbUrl(u = '') { return u; }
 function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
 
-function Lightbox({ open, item, onClose }) {
+function Lightbox({ open, item, onClose, onPrev, onNext, hasMultiple = false }) {
   const isVideo = item?.type === 'video';
 
   useEffect(() => {
@@ -24,7 +24,14 @@ function Lightbox({ open, item, onClose }) {
 
     function onKey(e) {
       if (e.key === 'Escape') onClose?.();
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        onPrev?.();
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        onNext?.();
+      }
     }
 
     document.addEventListener('keydown', onKey);
@@ -35,7 +42,7 @@ function Lightbox({ open, item, onClose }) {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [open, onClose]);
+  }, [open, onClose, onPrev, onNext]);
 
   if (!open) return null;
 
@@ -44,6 +51,26 @@ function Lightbox({ open, item, onClose }) {
       <div className="pmg-lightbox" role="dialog" aria-modal="true" onClick={onClose}>
         <div className="pmg-lightbox-inner" onClick={(e)=>e.stopPropagation()}>
           <button className="pmg-lightbox-close" onClick={onClose} aria-label="Close">✕</button>
+          {hasMultiple && (
+            <>
+              <button
+                className="pmg-lightbox-nav pmg-lightbox-prev"
+                onClick={onPrev}
+                aria-label="Previous media"
+                type="button"
+              >
+                ‹
+              </button>
+              <button
+                className="pmg-lightbox-nav pmg-lightbox-next"
+                onClick={onNext}
+                aria-label="Next media"
+                type="button"
+              >
+                ›
+              </button>
+            </>
+          )}
           {isVideo ? (
             <video
               className="pmg-lightbox-media"
@@ -150,9 +177,18 @@ export default function PublicMediaGallerySection({
   }, [items]);
 
   const [lbOpen, setLbOpen] = useState(false);
-  const [lbItem, setLbItem] = useState(null);
-  const openLb = useCallback((it)=>{ setLbItem(it); setLbOpen(true); },[]);
-  const closeLb = useCallback(()=>{ setLbOpen(false); setLbItem(null); },[]);
+  const openLb = useCallback((index)=>{
+    setActive(index);
+    setLbOpen(true);
+  },[]);
+  const closeLb = useCallback(()=>{ setLbOpen(false); },[]);
+  const prevLb = useCallback(() => {
+    setActive((i) => clamp(i - 1, 0, items.length - 1));
+  }, [items.length]);
+  const nextLb = useCallback(() => {
+    setActive((i) => clamp(i + 1, 0, items.length - 1));
+  }, [items.length]);
+  const lbItem = items[active] || null;
 
   const titleStyle = {
     color: '#0b1220',
@@ -207,7 +243,7 @@ export default function PublicMediaGallerySection({
                 key={i}
                 className={`pmg-card ${abs===0 ? 'is-active' : ''}`}
                 style={style}
-                onClick={() => openLb(it)}
+                onClick={() => openLb(i)}
                 role="option"
                 aria-selected={abs===0}
                 title={isVideo ? 'Play video' : 'View photo'}
@@ -248,7 +284,14 @@ export default function PublicMediaGallerySection({
         ))}
       </div>
 
-      <Lightbox open={lbOpen} item={lbItem} onClose={closeLb} />
+      <Lightbox
+        open={lbOpen}
+        item={lbItem}
+        onClose={closeLb}
+        onPrev={prevLb}
+        onNext={nextLb}
+        hasMultiple={items.length > 1}
+      />
     </section>
   );
 }

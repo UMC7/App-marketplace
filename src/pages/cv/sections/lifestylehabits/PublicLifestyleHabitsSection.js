@@ -217,7 +217,9 @@ export default function PublicLifestyleHabitsSection({ profile }) {
 
   return (
     <section className="ppv-section">
-      <div className="ppv-sectionTitle">LIFESTYLE &amp; HABITS</div>
+      <div className="ppv-sectionTitleWrap">
+        <h2 className="ppv-sectionTitle">LIFESTYLE &amp; HABITS</h2>
+      </div>
 
       {/* ====== 4 medidores ====== */}
       <div className="ppv-lh-grid">

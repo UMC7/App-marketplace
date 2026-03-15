@@ -349,13 +349,15 @@ body.dark-mode .ppv-previewRibbon {
 }
 .xp-bar{
   display: grid;
-  grid-template-columns: 88px 1fr max-content;
+  grid-template-columns: minmax(110px, 140px) minmax(0,1fr) max-content;
   align-items: center;
   column-gap: 10px;
 }
 .xp-barLabel{
   font-size: 12px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: rgba(11,18,32,.85);
 }
 .xp-barTrack{
@@ -391,7 +393,7 @@ body.dark-mode .ppv-previewRibbon {
   .xp-chartsRow{ grid-template-columns: 1fr; }
 }
 
-.xp-chartsRow .xp-bar { grid-template-columns: 88px minmax(0,1fr) max-content !important; }
+.xp-chartsRow .xp-bar { grid-template-columns: minmax(110px, 140px) minmax(0,1fr) max-content !important; }
 .xp-chartsRow .xp-barTrack { overflow: visible !important; }
 .xp-chartsRow .xp-barVal {
   position: static !important;
@@ -400,6 +402,13 @@ body.dark-mode .ppv-previewRibbon {
   transform: none !important;
   justify-self: end;
   font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 520px){
+  .xp-bar,
+  .xp-chartsRow .xp-bar {
+    grid-template-columns: minmax(96px, 120px) minmax(0,1fr) max-content !important;
+  }
 }
 
 .ppv-kvRow[data-cols="1"] { grid-template-columns: repeat(1, minmax(0,1fr)) !important; }

@@ -149,6 +149,36 @@
   }
 }
 
+.pmg-lightbox-nav{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:44px;
+  height:44px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.55);
+  color:#fff;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  font-size:28px;
+  line-height:1;
+  z-index:10001;
+}
+.pmg-lightbox-prev{ left:12px; }
+.pmg-lightbox-next{ right:12px; }
+
+@media (max-width: 720px){
+  .pmg-lightbox-nav{
+    width:40px;
+    height:40px;
+    font-size:24px;
+  }
+  .pmg-lightbox-prev{ left: max(8px, env(safe-area-inset-left)); }
+  .pmg-lightbox-next{ right: max(8px, env(safe-area-inset-right)); }
+}
+
 .pmg-lightbox-media{
   width: auto !important;
   height: auto !important;
