@@ -3,7 +3,51 @@ import Modal from '../Modal';
 import '../../styles/JobDashboard.css';
 import supabase from '../../supabase';
 
-function JobDashboard({ offer, onClose }) {
+function calcAgeFromProfile(profile) {
+  const month = Number(profile?.birth_month);
+  const year = Number(profile?.birth_year);
+  if (!Number.isInteger(month) || !Number.isInteger(year) || month < 1 || month > 12 || year < 1900) return null;
+  const now = new Date();
+  let age = now.getFullYear() - year;
+  if ((now.getMonth() + 1) < month) age -= 1;
+  return age >= 18 && age <= 100 ? age : null;
+}
+
+function parsePositiveNumber(value) {
+  if (value == null || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function getExpectedSalary(profile) {
+  const compensation = (
+    (profile?.prefs_skills_pro && typeof profile.prefs_skills_pro === 'object' && profile.prefs_skills_pro.rateSalary && typeof profile.prefs_skills_pro.rateSalary === 'object'
+      ? profile.prefs_skills_pro.rateSalary
+      : null) ??
+    (profile?.prefs_skills_lite && typeof profile.prefs_skills_lite === 'object' && profile.prefs_skills_lite.rateSalary && typeof profile.prefs_skills_lite.rateSalary === 'object'
+      ? profile.prefs_skills_lite.rateSalary
+      : null) ??
+    (profile?.compensation && typeof profile.compensation === 'object'
+      ? profile.compensation
+      : null)
+  );
+  if (!compensation) return null;
+
+  const amount =
+    parsePositiveNumber(compensation.monthlySalary) ??
+    parsePositiveNumber(compensation.salaryMonthly) ??
+    parsePositiveNumber(compensation.salaryMin);
+  const currency = String(compensation.currency || '').trim().toUpperCase() || null;
+
+  if (!amount || !currency) return null;
+  return { amount, currency };
+}
+
+function hasComparableValues(candidateValue, avgValue) {
+  return Number.isFinite(Number(candidateValue)) && Number.isFinite(Number(avgValue));
+}
+
+function JobDashboard({ offer, onClose, onStartPrivateChat }) {
   const CandidateMarker = ({ className = '' }) => (
     <svg className={className} viewBox="0 0 20 20" aria-hidden="true">
       <circle cx="10" cy="6" r="3.2" />
@@ -140,7 +184,7 @@ function JobDashboard({ offer, onClose }) {
       if (profileIds.length) {
         const { data: profiles, error: pErr } = await supabase
           .from('public_profiles')
-          .select('id, handle, first_name, last_name, primary_role, primary_department, city_port, country, availability, headline, hero_image_url')
+          .select('id, handle, first_name, last_name, primary_role, primary_department, city_port, country, availability, headline, hero_image_url, birth_month, birth_year, compensation, prefs_skills_pro, prefs_skills_lite')
           .in('id', profileIds);
         if (!pErr && profiles) {
           profileMap = profiles.reduce((acc, p) => {
@@ -213,7 +257,46 @@ function JobDashboard({ offer, onClose }) {
       setBenchmarkByAppId((prev) => ({ ...prev, [app.id]: { error: true } }));
     } else {
       const row = Array.isArray(data) ? data[0] : data;
-      setBenchmarkByAppId((prev) => ({ ...prev, [app.id]: row || null }));
+      const candidateProfile = app?.profile || null;
+      const candidateAge = calcAgeFromProfile(candidateProfile);
+      const agePool = applications
+        .map((item) => calcAgeFromProfile(item?.profile))
+        .filter((value) => Number.isFinite(value));
+      const avgAge = agePool.length
+        ? agePool.reduce((sum, value) => sum + value, 0) / agePool.length
+        : null;
+
+      const candidateSalary = getExpectedSalary(candidateProfile);
+      const salaryPool = applications
+        .map((item) => getExpectedSalary(item?.profile))
+        .filter((entry) => entry && entry.currency && Number.isFinite(entry.amount));
+      const comparableSalaryPool = candidateSalary
+        ? salaryPool.filter((entry) => entry.currency === candidateSalary.currency)
+        : [];
+      const avgExpectedSalary = comparableSalaryPool.length
+        ? comparableSalaryPool.reduce((sum, entry) => sum + entry.amount, 0) / comparableSalaryPool.length
+        : null;
+
+      setBenchmarkByAppId((prev) => ({
+        ...prev,
+        [app.id]: row
+          ? {
+              ...row,
+              candidate_age: candidateAge,
+              avg_age: avgAge == null ? null : Number(avgAge.toFixed(2)),
+              age_diff: candidateAge == null || avgAge == null ? null : Number((candidateAge - avgAge).toFixed(2)),
+              age_sample_count: agePool.length,
+              candidate_expected_salary: candidateSalary?.amount ?? null,
+              avg_expected_salary: avgExpectedSalary == null ? null : Number(avgExpectedSalary.toFixed(2)),
+              expected_salary_diff:
+                candidateSalary?.amount == null || avgExpectedSalary == null
+                  ? null
+                  : Number((candidateSalary.amount - avgExpectedSalary).toFixed(2)),
+              expected_salary_currency: candidateSalary?.currency ?? null,
+              expected_salary_sample_count: comparableSalaryPool.length,
+            }
+          : null,
+      }));
     }
     setBenchmarkLoadingByAppId((prev) => ({ ...prev, [app.id]: false }));
   };
@@ -268,6 +351,49 @@ function JobDashboard({ offer, onClose }) {
     });
   };
 
+  const benchmarkModalApp = benchmarkModalAppId
+    ? applications.find((app) => app.id === benchmarkModalAppId) || null
+    : null;
+  const benchmarkSupplement = useMemo(() => {
+    if (!benchmarkModalApp) {
+      return {
+        candidateAge: null,
+        avgAge: null,
+        candidateExpectedSalary: null,
+        avgExpectedSalary: null,
+        expectedSalaryCurrency: null,
+      };
+    }
+
+    const candidateProfile = benchmarkModalApp.profile || null;
+    const candidateAge = calcAgeFromProfile(candidateProfile);
+    const agePool = applications
+      .map((item) => calcAgeFromProfile(item?.profile))
+      .filter((value) => Number.isFinite(value));
+    const avgAge = agePool.length
+      ? Number((agePool.reduce((sum, value) => sum + value, 0) / agePool.length).toFixed(2))
+      : null;
+
+    const candidateSalary = getExpectedSalary(candidateProfile);
+    const salaryPool = applications
+      .map((item) => getExpectedSalary(item?.profile))
+      .filter((entry) => entry && entry.currency && Number.isFinite(entry.amount));
+    const comparableSalaryPool = candidateSalary
+      ? salaryPool.filter((entry) => entry.currency === candidateSalary.currency)
+      : [];
+    const avgExpectedSalary = comparableSalaryPool.length
+      ? Number((comparableSalaryPool.reduce((sum, entry) => sum + entry.amount, 0) / comparableSalaryPool.length).toFixed(2))
+      : null;
+
+    return {
+      candidateAge,
+      avgAge,
+      candidateExpectedSalary: candidateSalary?.amount ?? null,
+      avgExpectedSalary,
+      expectedSalaryCurrency: candidateSalary?.currency ?? null,
+    };
+  }, [applications, benchmarkModalApp]);
+
   if (!offer) return null;
 
   const postedDate = offer?.created_at
@@ -275,9 +401,6 @@ function JobDashboard({ offer, onClose }) {
     : '-';
   const location = [offer?.city, offer?.country].filter(Boolean).join(', ') || '-';
   const statusLabel = offer?.status === 'paused' ? 'Paused' : 'Active';
-  const benchmarkModalApp = benchmarkModalAppId
-    ? applications.find((app) => app.id === benchmarkModalAppId) || null
-    : null;
   const describeAgainstAverage = (candidateValue, avgValue, { decimals = 1, unit = '', lowIsGood = false } = {}) => {
     if (!Number.isFinite(Number(candidateValue)) || !Number.isFinite(Number(avgValue))) return 'Not enough data';
     const c = Number(candidateValue);
@@ -500,6 +623,31 @@ function JobDashboard({ offer, onClose }) {
                                     >
                                       Digital CV
                                     </button>
+                                    <button
+                                      type="button"
+                                      className="jd-app-tab"
+                                      disabled={offer?.is_private_chat_enabled === false || !app?.candidate_user_id}
+                                      title={
+                                        offer?.is_private_chat_enabled === false
+                                          ? 'Private chat is disabled for this offer.'
+                                          : !app?.candidate_user_id
+                                            ? 'Candidate chat is not available.'
+                                            : undefined
+                                      }
+                                      onClick={async () => {
+                                        if (offer?.is_private_chat_enabled === false || !app?.candidate_user_id) return;
+                                        if (typeof onStartPrivateChat === 'function') {
+                                          await onStartPrivateChat({
+                                            offerId: offer.id,
+                                            candidateUserId: app.candidate_user_id,
+                                            applicationId: app.id,
+                                            status,
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      Private Chat
+                                    </button>
                                   </div>
                                 </div>
                               )}
@@ -670,9 +818,6 @@ function JobDashboard({ offer, onClose }) {
                           {benchmarkDelta(benchmarkByAppId[benchmarkModalApp.id].candidate_experience, benchmarkByAppId[benchmarkModalApp.id].avg_experience, 1, 'y')}
                         </span>
                       </div>
-                      <div className="jd-bench-sub jd-bench-sub-top">
-                        {benchmarkByAppId[benchmarkModalApp.id].candidate_experience}y vs avg {benchmarkByAppId[benchmarkModalApp.id].avg_experience}y
-                      </div>
                       <div className="jd-bench-scale">
                         <div className="jd-bench-scale-track" />
                         <div
@@ -686,6 +831,9 @@ function JobDashboard({ offer, onClose }) {
                           style={{ left: `${benchmarkScalePos(benchmarkByAppId[benchmarkModalApp.id].candidate_experience, benchmarkScaleMax(benchmarkByAppId[benchmarkModalApp.id].candidate_experience, benchmarkByAppId[benchmarkModalApp.id].avg_experience))}%` }}
                         >
                           <CandidateMarker className="jd-bench-scale-icon is-candidate" />
+                        </div>
+                        <div className="jd-bench-sub jd-bench-sub-bottom">
+                          {benchmarkByAppId[benchmarkModalApp.id].candidate_experience}y vs avg {benchmarkByAppId[benchmarkModalApp.id].avg_experience}y
                         </div>
                         <div className="jd-bench-scale-legend">
                           <span><CandidateMarker className="jd-bench-icon is-candidate" /> Candidate</span>
@@ -703,9 +851,6 @@ function JobDashboard({ offer, onClose }) {
                           {benchmarkDelta(benchmarkByAppId[benchmarkModalApp.id].candidate_languages, benchmarkByAppId[benchmarkModalApp.id].avg_languages, 2)}
                         </span>
                       </div>
-                      <div className="jd-bench-sub jd-bench-sub-top">
-                        {benchmarkByAppId[benchmarkModalApp.id].candidate_languages} vs avg {benchmarkByAppId[benchmarkModalApp.id].avg_languages}
-                      </div>
                       <div className="jd-bench-scale">
                         <div className="jd-bench-scale-track" />
                         <div
@@ -719,6 +864,9 @@ function JobDashboard({ offer, onClose }) {
                           style={{ left: `${benchmarkScalePos(benchmarkByAppId[benchmarkModalApp.id].candidate_languages, benchmarkScaleMax(benchmarkByAppId[benchmarkModalApp.id].candidate_languages, benchmarkByAppId[benchmarkModalApp.id].avg_languages))}%` }}
                         >
                           <CandidateMarker className="jd-bench-scale-icon is-candidate" />
+                        </div>
+                        <div className="jd-bench-sub jd-bench-sub-bottom">
+                          {benchmarkByAppId[benchmarkModalApp.id].candidate_languages} vs avg {benchmarkByAppId[benchmarkModalApp.id].avg_languages}
                         </div>
                         <div className="jd-bench-scale-legend">
                           <span><CandidateMarker className="jd-bench-icon is-candidate" /> Candidate</span>
@@ -736,9 +884,6 @@ function JobDashboard({ offer, onClose }) {
                           {benchmarkDelta(benchmarkByAppId[benchmarkModalApp.id].candidate_certifications, benchmarkByAppId[benchmarkModalApp.id].avg_certifications, 2)}
                         </span>
                       </div>
-                      <div className="jd-bench-sub jd-bench-sub-top">
-                        {benchmarkByAppId[benchmarkModalApp.id].candidate_certifications} vs avg {benchmarkByAppId[benchmarkModalApp.id].avg_certifications}
-                      </div>
                       <div className="jd-bench-scale">
                         <div className="jd-bench-scale-track" />
                         <div
@@ -752,6 +897,99 @@ function JobDashboard({ offer, onClose }) {
                           style={{ left: `${benchmarkScalePos(benchmarkByAppId[benchmarkModalApp.id].candidate_certifications, benchmarkScaleMax(benchmarkByAppId[benchmarkModalApp.id].candidate_certifications, benchmarkByAppId[benchmarkModalApp.id].avg_certifications))}%` }}
                         >
                           <CandidateMarker className="jd-bench-scale-icon is-candidate" />
+                        </div>
+                        <div className="jd-bench-sub jd-bench-sub-bottom">
+                          {benchmarkByAppId[benchmarkModalApp.id].candidate_certifications} vs avg {benchmarkByAppId[benchmarkModalApp.id].avg_certifications}
+                        </div>
+                        <div className="jd-bench-scale-legend">
+                          <span><CandidateMarker className="jd-bench-icon is-candidate" /> Candidate</span>
+                          <span><PoolMarker className="jd-bench-icon is-average" /> Pool avg</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={`jd-bench-item is-${benchmarkTone(benchmarkSupplement.candidateAge, benchmarkSupplement.avgAge)}`}>
+                      <div className="jd-bench-label">Age</div>
+                      <div className="jd-bench-value jd-bench-value-lg jd-bench-value-inline">
+                        <span>
+                          {hasComparableValues(benchmarkSupplement.candidateAge, benchmarkSupplement.avgAge)
+                            ? describeAgainstAverage(benchmarkSupplement.candidateAge, benchmarkSupplement.avgAge, { decimals: 1 }).replace(` (${benchmarkDelta(benchmarkSupplement.candidateAge, benchmarkSupplement.avgAge, 1)})`, '')
+                            : 'Not enough data'}
+                        </span>
+                        {hasComparableValues(benchmarkSupplement.candidateAge, benchmarkSupplement.avgAge) && (
+                          <span className="jd-bench-chip">
+                            {benchmarkDelta(benchmarkSupplement.candidateAge, benchmarkSupplement.avgAge, 1)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="jd-bench-scale">
+                        <div className="jd-bench-scale-track" />
+                        {hasComparableValues(benchmarkSupplement.candidateAge, benchmarkSupplement.avgAge) && (
+                          <>
+                            <div
+                              className="jd-bench-scale-marker is-average"
+                              style={{ left: `${benchmarkScalePos(benchmarkSupplement.avgAge, benchmarkScaleMax(benchmarkSupplement.candidateAge, benchmarkSupplement.avgAge))}%` }}
+                            >
+                              <PoolMarker className="jd-bench-scale-icon is-average" />
+                            </div>
+                            <div
+                              className="jd-bench-scale-marker is-candidate"
+                              style={{ left: `${benchmarkScalePos(benchmarkSupplement.candidateAge, benchmarkScaleMax(benchmarkSupplement.candidateAge, benchmarkSupplement.avgAge))}%` }}
+                            >
+                              <CandidateMarker className="jd-bench-scale-icon is-candidate" />
+                            </div>
+                          </>
+                        )}
+                        <div className="jd-bench-sub jd-bench-sub-bottom">
+                          {hasComparableValues(benchmarkSupplement.candidateAge, benchmarkSupplement.avgAge)
+                            ? `${benchmarkSupplement.candidateAge} vs avg ${benchmarkSupplement.avgAge}`
+                            : 'Age benchmark unavailable'}
+                        </div>
+                        <div className="jd-bench-scale-legend">
+                          <span><CandidateMarker className="jd-bench-icon is-candidate" /> Candidate</span>
+                          <span><PoolMarker className="jd-bench-icon is-average" /> Pool avg</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={`jd-bench-item is-${benchmarkTone(benchmarkSupplement.candidateExpectedSalary, benchmarkSupplement.avgExpectedSalary)}`}>
+                      <div className="jd-bench-label">Expected Salary</div>
+                      <div className="jd-bench-value jd-bench-value-lg jd-bench-value-inline">
+                        <span>
+                          {hasComparableValues(benchmarkSupplement.candidateExpectedSalary, benchmarkSupplement.avgExpectedSalary)
+                            ? describeAgainstAverage(
+                                benchmarkSupplement.candidateExpectedSalary,
+                                benchmarkSupplement.avgExpectedSalary,
+                                { decimals: 0, unit: ` ${benchmarkSupplement.expectedSalaryCurrency || ''}` }
+                              ).replace(` (${benchmarkDelta(benchmarkSupplement.candidateExpectedSalary, benchmarkSupplement.avgExpectedSalary, 0, ` ${benchmarkSupplement.expectedSalaryCurrency || ''}`)})`, '')
+                            : 'Not enough data'}
+                        </span>
+                        {hasComparableValues(benchmarkSupplement.candidateExpectedSalary, benchmarkSupplement.avgExpectedSalary) && (
+                          <span className="jd-bench-chip">
+                            {benchmarkDelta(benchmarkSupplement.candidateExpectedSalary, benchmarkSupplement.avgExpectedSalary, 0, ` ${benchmarkSupplement.expectedSalaryCurrency || ''}`)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="jd-bench-scale">
+                        <div className="jd-bench-scale-track" />
+                        {hasComparableValues(benchmarkSupplement.candidateExpectedSalary, benchmarkSupplement.avgExpectedSalary) && (
+                          <>
+                            <div
+                              className="jd-bench-scale-marker is-average"
+                              style={{ left: `${benchmarkScalePos(benchmarkSupplement.avgExpectedSalary, benchmarkScaleMax(benchmarkSupplement.candidateExpectedSalary, benchmarkSupplement.avgExpectedSalary))}%` }}
+                            >
+                              <PoolMarker className="jd-bench-scale-icon is-average" />
+                            </div>
+                            <div
+                              className="jd-bench-scale-marker is-candidate"
+                              style={{ left: `${benchmarkScalePos(benchmarkSupplement.candidateExpectedSalary, benchmarkScaleMax(benchmarkSupplement.candidateExpectedSalary, benchmarkSupplement.avgExpectedSalary))}%` }}
+                            >
+                              <CandidateMarker className="jd-bench-scale-icon is-candidate" />
+                            </div>
+                          </>
+                        )}
+                        <div className="jd-bench-sub jd-bench-sub-bottom">
+                          {hasComparableValues(benchmarkSupplement.candidateExpectedSalary, benchmarkSupplement.avgExpectedSalary)
+                            ? `${Math.round(Number(benchmarkSupplement.candidateExpectedSalary))} ${benchmarkSupplement.expectedSalaryCurrency || ''} vs avg ${Math.round(Number(benchmarkSupplement.avgExpectedSalary))} ${benchmarkSupplement.expectedSalaryCurrency || ''}`.trim()
+                            : 'Expected salary benchmark unavailable'}
                         </div>
                         <div className="jd-bench-scale-legend">
                           <span><CandidateMarker className="jd-bench-icon is-candidate" /> Candidate</span>
@@ -769,9 +1007,6 @@ function JobDashboard({ offer, onClose }) {
                           {benchmarkDelta(benchmarkByAppId[benchmarkModalApp.id].candidate_match_score, benchmarkByAppId[benchmarkModalApp.id].avg_match_score, 2, '%')}
                         </span>
                       </div>
-                      <div className="jd-bench-sub jd-bench-sub-top">
-                        {benchmarkByAppId[benchmarkModalApp.id].candidate_match_score}% vs avg {benchmarkByAppId[benchmarkModalApp.id].avg_match_score}%
-                      </div>
                       <div className="jd-bench-scale">
                         <div className="jd-bench-scale-track" />
                         <div
@@ -785,6 +1020,9 @@ function JobDashboard({ offer, onClose }) {
                           style={{ left: `${benchmarkScalePos(benchmarkByAppId[benchmarkModalApp.id].candidate_match_score, benchmarkScaleMax(benchmarkByAppId[benchmarkModalApp.id].candidate_match_score, benchmarkByAppId[benchmarkModalApp.id].avg_match_score))}%` }}
                         >
                           <CandidateMarker className="jd-bench-scale-icon is-candidate" />
+                        </div>
+                        <div className="jd-bench-sub jd-bench-sub-bottom">
+                          {benchmarkByAppId[benchmarkModalApp.id].candidate_match_score}% vs avg {benchmarkByAppId[benchmarkModalApp.id].avg_match_score}%
                         </div>
                         <div className="jd-bench-scale-legend">
                           <span><CandidateMarker className="jd-bench-icon is-candidate" /> Candidate</span>
@@ -869,7 +1107,8 @@ function JobDashboard({ offer, onClose }) {
           .jd-bench-item.is-negative .jd-bench-chip { background:rgba(239,68,68,0.12); color:#b91c1c; }
           .jd-bench-item.is-neutral .jd-bench-chip { background:rgba(148,163,184,0.14); color:#475569; }
           .jd-bench-sub-top { margin-top:6px; margin-bottom:12px; }
-          .jd-bench-scale { margin-top:2px; }
+          .jd-bench-sub-bottom { margin-top:8px; text-align:center; }
+          .jd-bench-scale { margin-top:12px; }
           .jd-bench-scale-track { position:relative; height:8px; border-radius:999px; background:linear-gradient(90deg, rgba(148,163,184,0.22), rgba(118,212,210,0.32)); }
           .jd-bench-scale-marker { position:relative; top:-14px; margin-top:-22px; width:24px; height:24px; transform:translateX(-50%); color:inherit; }
           .jd-bench-scale-icon { width:24px; height:24px; display:block; overflow:visible; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 3px 6px rgba(0,0,0,0.15)); }

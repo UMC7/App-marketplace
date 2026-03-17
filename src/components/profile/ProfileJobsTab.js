@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import '../../styles/JobDashboard.css';
 import JobDashboard from '../jobs/JobDashboard';
+import Modal from '../Modal';
+import ChatPage from '../ChatPage';
 import supabase from '../../supabase';
 import { formatOfferDate } from '../yachtOfferForm.utils';
+import { useAuth } from '../../context/AuthContext';
 
 const ProfileJobsTab = ({
   jobOffers,
@@ -13,11 +16,28 @@ const ProfileJobsTab = ({
   openDashboardOfferId,
   onDashboardClosed,
 }) => {
+  const { currentUser } = useAuth();
   const [dashboardOffer, setDashboardOffer] = useState(null);
+  const [activeChat, setActiveChat] = useState(null);
   const [expandedDates, setExpandedDates] = useState({});
   const [offersWithNewApps, setOffersWithNewApps] = useState(new Set());
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({ startDate: '', rank: '', country: '' });
+
+  const handleStartPrivateChat = async ({ offerId, candidateUserId }) => {
+    if (!offerId || !candidateUserId) return;
+
+    const actorId = currentUser?.id || null;
+    const { error } = await supabase
+      .from('job_offer_events')
+      .insert([{ offer_id: offerId, event_type: 'private_chat', actor_id: actorId }]);
+
+    if (error) {
+      console.warn('private_chat log error', error);
+    }
+
+    setActiveChat({ offerId, receiverId: candidateUserId });
+  };
 
   const formatStartDate = (offer) => {
     if (offer?.is_asap) return 'ASAP';
@@ -472,12 +492,24 @@ const ProfileJobsTab = ({
       {dashboardOffer && (
         <JobDashboard
           offer={dashboardOffer}
+          onStartPrivateChat={handleStartPrivateChat}
           onClose={() => {
             setDashboardOffer(null);
             refreshNewApplications();
             if (typeof onDashboardClosed === 'function') onDashboardClosed();
           }}
         />
+      )}
+
+      {activeChat && (
+        <Modal onClose={() => setActiveChat(null)}>
+          <ChatPage
+            offerId={activeChat.offerId}
+            receiverId={activeChat.receiverId}
+            onBack={() => setActiveChat(null)}
+            onClose={() => setActiveChat(null)}
+          />
+        </Modal>
       )}
     </>
   );
