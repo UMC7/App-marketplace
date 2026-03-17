@@ -41,6 +41,7 @@ export const RANKS_BY_DEPT = {
     "Cook/Crew Chef",
     "Crew Chef/Stew",
     "Chef/Steward(ess)",
+    "Chef/Deck",
     "Cook/Steward(ess)",
   ],
   Interior: [

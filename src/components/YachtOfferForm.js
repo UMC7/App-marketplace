@@ -20,6 +20,7 @@ import {
   RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS,
   GALLEY_REQUIRED_DOCUMENT_GROUPS,
   GALLEY_CULINARY_DOCUMENT_GROUP,
+  DECK_MCA_MODULES_DOCUMENT_GROUP,
   INTERIOR_DEPARTMENT_RANKS,
   INTERIOR_REQUIRED_DOCUMENT_GROUPS,
   OTHERS_DEPARTMENT_RANKS,
@@ -481,6 +482,7 @@ const INTERIOR_RANKS_WITH_GALLEY_SUBGROUP = new Set([
   'Chef/Stew/Deck',
   'Cook/Stew/Deck',
   'Cook/Steward(ess)',
+  'Deck/Cook',
 ]);
 
 const getRequiredDocumentGroupsForRank = (rank) => {
@@ -499,14 +501,28 @@ const appendGalleyCulinarySubgroup = (groups, rank) => {
   return [...groups, GALLEY_CULINARY_DOCUMENT_GROUP];
 };
 
-const requiredDocumentGroups = appendGalleyCulinarySubgroup(
-  getRequiredDocumentGroupsForRank(formData.title),
+const RANKS_WITH_DECK_MCA_SUBGROUP = new Set(['Chef/Deck']);
+
+const appendDeckMcaSubgroup = (groups, rank) => {
+  if (!RANKS_WITH_DECK_MCA_SUBGROUP.has(rank)) return groups;
+  if (groups.some((group) => group.label === DECK_MCA_MODULES_DOCUMENT_GROUP.label)) return groups;
+  return [...groups, DECK_MCA_MODULES_DOCUMENT_GROUP];
+};
+
+const requiredDocumentGroups = appendDeckMcaSubgroup(
+  appendGalleyCulinarySubgroup(
+    getRequiredDocumentGroupsForRank(formData.title),
+    formData.title
+  ),
   formData.title
 );
 
 const teammateRank = formData.teammate_rank || '';
-const teammateRequiredDocumentGroups = appendGalleyCulinarySubgroup(
-  getRequiredDocumentGroupsForRank(teammateRank),
+const teammateRequiredDocumentGroups = appendDeckMcaSubgroup(
+  appendGalleyCulinarySubgroup(
+    getRequiredDocumentGroupsForRank(teammateRank),
+    teammateRank
+  ),
   teammateRank
 );
 const needsTeammateDeckLicense = teammateRank && DECK_LICENSE_RANKS.includes(teammateRank);

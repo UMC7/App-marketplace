@@ -707,6 +707,23 @@ export default function PublicProfileView() {
     return full || profile?.headline || 'Yacht Candidate';
   }, [profile?.first_name, profile?.last_name, profile?.headline]);
 
+  const introNameClassName = useMemo(() => {
+    const normalized = String(displayName || '').trim();
+    if (!normalized) return 'ppv-introName';
+    const compactLength = normalized.replace(/\s+/g, '').length;
+    const longestWord = normalized
+      .split(/\s+/)
+      .reduce((max, word) => Math.max(max, word.length), 0);
+
+    if (compactLength >= 24 || longestWord >= 12) {
+      return 'ppv-introName ppv-introName--veryLong';
+    }
+    if (compactLength >= 18 || longestWord >= 9) {
+      return 'ppv-introName ppv-introName--long';
+    }
+    return 'ppv-introName';
+  }, [displayName]);
+
   const langsText = useMemo(() => {
     const list = normalizeLanguages(profile?.languages || []);
     return list.length ? list.join(' · ') : '';
@@ -1129,7 +1146,7 @@ if (!allowPublicView && !isPreview) {
                   style={{ zIndex: 2 }}
                 >
                   <div className="ppv-introInner">
-                    <div className="ppv-introName">{displayName}</div>
+                    <div className={introNameClassName}>{displayName}</div>
                     {rankText && <div className="ppv-introRank">{rankText}</div>}
                   </div>
                 </section>

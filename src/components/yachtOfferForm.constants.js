@@ -43,7 +43,7 @@ export const titles = [
   'Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster','Deck/Personal Trainer',
   'Deck/Cook','Dayworker',
   'Chief Engineer','2nd Engineer','3rd Engineer','Solo Engineer','Engineer','Electrician',
-  'Chef','Head Chef','Sous Chef','Solo Chef','Cook','Cook/Crew Chef','Crew Chef/Stew','Chef/Steward(ess)',
+  'Chef','Head Chef','Sous Chef','Solo Chef','Cook','Cook/Crew Chef','Crew Chef/Stew','Chef/Steward(ess)','Chef/Deck',
   'Butler','Steward(ess)','Chief Steward(ess)','2nd Steward(ess)','3rd Steward(ess)',
   '4th Steward(ess)','Solo Steward(ess)','Junior Steward(ess)',
   'Housekeeper','Head of Housekeeping',
@@ -64,11 +64,11 @@ export const ENGINEERING_RANKS = [
 export const DECK_LICENSE_RANKS = [
   'Captain','Captain/Engineer','Skipper','Chase Boat Captain','Relief Captain',
   'Chief Officer','2nd Officer','3rd Officer','Bosun','Deck/Engineer','Mate','Mate/Engineer',
-  'Mate/Steward(ess)','Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster','Deck/Personal Trainer','Deck/Cook'
+  'Mate/Steward(ess)','Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster','Deck/Personal Trainer','Deck/Cook','Chef/Deck'
 ];
 
 export const GALLEY_DEPARTMENT_RANKS = [
-  'Chef','Head Chef','Sous Chef','Solo Chef','Cook','Cook/Crew Chef','Crew Chef/Stew','Chef/Steward(ess)'
+  'Chef','Head Chef','Sous Chef','Solo Chef','Cook','Cook/Crew Chef','Crew Chef/Stew','Chef/Steward(ess)','Chef/Deck'
 ];
 
 export const ENGINEERING_LICENSE_OPTIONS = [
@@ -122,6 +122,7 @@ export const DECK_LICENSE_MAP = {
   'Deck/Carpenter': ['Yachtmaster','Master 100 GRT / OUPV'],
   'Deck/Divemaster': ['Yachtmaster','Master 100 GRT / OUPV'],
   'Deck/Cook': ['Yachtmaster','Master 100 GRT / OUPV'],
+  'Chef/Deck': ['Yachtmaster','Master 100 GRT / OUPV'],
   'Deck/Personal Trainer': ['Yachtmaster','Master 100 GRT / OUPV'],
 };
 
@@ -543,6 +544,16 @@ export const GALLEY_CULINARY_DOCUMENT_GROUP = {
     'Menu Portfolio',
     'Wine List / Beverage Program',
     'Culinary Photo Portfolio',
+  ],
+};
+
+export const DECK_MCA_MODULES_DOCUMENT_GROUP = {
+  label: 'MCA Modules (Deck)',
+  options: [
+    'Efficient Deck Hand (EDH)',
+    'General Ship Knowledge (GSK)',
+    'HELM â€” Operational Level',
+    'MCA Yacht Rating Certificate',
   ],
 };
 
