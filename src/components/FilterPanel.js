@@ -1,4 +1,5 @@
 import React from 'react';
+import { USES, VESSEL_TYPES } from './cv/candidate/shared/experienceCatalogs';
 
 const FilterPanel = React.forwardRef(({
   filters,
@@ -60,13 +61,9 @@ const FilterPanel = React.forwardRef(({
           onChange={(e) => setFilters({ ...safeFilters, yachtType: e.target.value })}
         >
           <option value="">Yacht Type</option>
-          <option value="Motor Yacht">Motor Yacht</option>
-          <option value="Sailing Yacht">Sailing Yacht</option>
-          <option value="Chase Boat">Chase Boat</option>
-          <option value="Sailing Catamaran">Sailing Catamaran</option>
-          <option value="Motor Catamaran">Motor Catamaran</option>
-          <option value="Support Yacht">Support Yacht</option>
-          <option value="Expedition Yacht">Expedition Yacht</option>
+          {VESSEL_TYPES.map((type) => (
+            <option key={type} value={type}>{type}</option>
+          ))}
         </select>
 
         {/* Size */}
@@ -91,9 +88,9 @@ const FilterPanel = React.forwardRef(({
           onChange={(e) => setFilters({ ...safeFilters, use: e.target.value })}
         >
           <option value="">Use</option>
-          <option value="Private">Private</option>
-          <option value="Charter (only)">Charter (only)</option>
-          <option value="Private/Charter">Private/Charter</option>
+          {USES.map((use) => (
+            <option key={use} value={use}>{use}</option>
+          ))}
         </select>
 
         {/* Flag */}

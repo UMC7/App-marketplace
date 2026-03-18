@@ -11,16 +11,51 @@ export const TERMS_OPTIONS = [
   "DayWork",
 ];
 
-export const VESSEL_USE = ["Private", "Charter", "Private/Charter"];
+export const VESSEL_USE = ["Private", "Charter (only)", "Private/Charter"];
+
+export function normalizeYachtUse(value) {
+  const raw = String(value || "").trim();
+  const s = raw.toLowerCase();
+
+  if (!s) return "";
+
+  if (VESSEL_USE.includes(raw)) return raw;
+  if (s === "private") return "Private";
+  if (s === "mixed") return "Private/Charter";
+  if (s.includes("private") && s.includes("charter")) return "Private/Charter";
+  if (s.includes("charter")) return "Charter (only)";
+
+  return raw;
+}
 
 export const VESSEL_TYPES = [
   "Motor Yacht",
   "Sailing Yacht",
-  "Catamaran",
-  "Support / Shadow",
-  "Expedition",
   "Chase Boat",
+  "Sailing Catamaran",
+  "Motor Catamaran",
+  "Support Yacht",
+  "Expedition Yacht",
 ];
+
+export function normalizeYachtVesselType(value) {
+  const raw = String(value || "").trim();
+  const s = raw.toLowerCase();
+
+  if (!s) return "";
+
+  if (VESSEL_TYPES.includes(raw)) return raw;
+  if (s.includes("chase")) return "Chase Boat";
+  if (s.includes("support") || s.includes("shadow")) return "Support Yacht";
+  if (s.includes("exped")) return "Expedition Yacht";
+  if (s.includes("motor") && s.includes("cat")) return "Motor Catamaran";
+  if (s.includes("sail") && s.includes("cat")) return "Sailing Catamaran";
+  if (s === "catamaran") return "Sailing Catamaran";
+  if (s.includes("motor")) return "Motor Yacht";
+  if (s.includes("sail")) return "Sailing Yacht";
+
+  return raw;
+}
 
 export const PROPULSION_TYPES = [
   "Shaft Drive",

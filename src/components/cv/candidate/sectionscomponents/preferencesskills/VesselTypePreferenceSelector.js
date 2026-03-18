@@ -1,14 +1,6 @@
 // src/components/cv/candidate/sectionscomponents/preferencesskills/VesselTypePreferenceSelector.js
 import React, { useMemo, useState } from 'react';
-
-const VESSEL_TYPES = [
-  'Motor Yacht',
-  'Sailing Yacht',
-  'Catamaran',
-  'Support / Shadow',
-  'Expedition',
-  'Chase Boat',
-];
+import { VESSEL_TYPES } from './catalogs';
 
 const MAX = 3;
 

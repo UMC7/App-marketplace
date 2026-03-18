@@ -13,9 +13,10 @@ import {
   COUNTRIES,
 } from './yachtOfferForm.constants';
 import { getDaySelectOptions } from './yachtOfferForm.utils';
+import { REGIONS, USES, VESSEL_TYPES } from './cv/candidate/shared/experienceCatalogs';
 
 const COUNTRY_REGION_GROUPS = [
-  { label: 'Regions', ranks: ['Asia', 'Baltic', 'Caribbean', 'Indian Ocean', 'Mediterranean', 'Red Sea', 'North Sea', 'Pacific'] },
+  { label: 'Regions', ranks: REGIONS.filter((region) => region !== 'Worldwide') },
   { label: 'Countries', ranks: COUNTRIES },
 ];
 
@@ -280,9 +281,7 @@ function YachtOfferFormOnboardFields({
       <label>Use:</label>
       <select name="uses" value={formData.uses} onChange={onChange} disabled={isDayworker}>
         <option value="">Select...</option>
-        <option value="Private">Private</option>
-        <option value="Charter (only)">Charter (only)</option>
-        <option value="Private/Charter">Private/Charter</option>
+        {USES.map((use) => <option key={use} value={use}>{use}</option>)}
       </select>
 
       <div style={{ marginBottom: '10px' }}>
@@ -303,13 +302,7 @@ function YachtOfferFormOnboardFields({
       <label>Yacht Type: <span style={{ color: 'red' }}>*</span></label>
       <select name="yacht_type" value={formData.yacht_type} onChange={onChange} className={highlightClass(!formData.yacht_type)}>
         <option value="">Select...</option>
-        <option value="Motor Yacht">Motor Yacht</option>
-        <option value="Sailing Yacht">Sailing Yacht</option>
-        <option value="Chase Boat">Chase Boat</option>
-        <option value="Sailing Catamaran">Sailing Catamaran</option>
-        <option value="Motor Catamaran">Motor Catamaran</option>
-        <option value="Support Yacht">Support Yacht</option>
-        <option value="Expedition Yacht">Expedition Yacht</option>
+        {VESSEL_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
       </select>
 
       <label>Yacht Size: <span style={{ color: 'red' }}>*</span></label>

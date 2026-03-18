@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import supabase from '../../../../supabase';
 import { toast } from 'react-toastify';
+import { normalizeYachtUse, normalizeYachtVesselType } from '../shared/experienceCatalogs';
 
 import {
   YachtFields,
@@ -10,7 +11,8 @@ import {
   ItemRow,
   EmploymentStatus,
   hideTechForRole,
-  computeLongevityAvg
+  computeLongevityAvg,
+  tenureMonthsForItem,
 } from '../sectionscomponents/experience';
 
 const emptyYacht = {
@@ -93,29 +95,41 @@ function parseYearMonth(ym) {
 }
 
 function normalizeVesselType(v) {
-  const s = String(v || '').toLowerCase();
-  if (!s) return 'Other';
-  if (s.includes('motor')) return 'Motor';
-  if (s.includes('sail')) return 'Sail';
-  if (s.includes('cat')) return 'Catamaran';
-  if (s.includes('exped')) return 'Expedition';
-  if (s === 'other' || s === 'others') return 'Other';
-  return 'Other';
+  return normalizeYachtVesselType(v) || 'Other';
 }
 
 function normalizeMode(type, use, contract) {
   if (type === 'yacht') {
-    const u = String(use || '').toLowerCase().trim();
+    const normalizedUse = normalizeYachtUse(use);
+    const u = String(normalizedUse || '').toLowerCase().trim();
     if (!u) return 'Other';
     if (u === 'private') return 'Private';
-    if (u === 'charter') return 'Charter';
-    if (u === 'private & charter' || u === 'private&charter' || u === 'dual') return 'Dual';
+    if (u === 'charter' || u === 'charter (only)') return 'Charter';
+    if (u === 'private/charter' || u === 'private & charter' || u === 'private&charter' || u === 'dual' || u === 'mixed') return 'Mixed';
     if (u.includes('delivery')) return 'Delivery';
     if (u.includes('shipyard') || u === 'yard') return 'Shipyard';
     return 'Other';
   }
 
   return 'Other';
+}
+
+function getModeCandidatesForYachtUse(use) {
+  const normalizedUse = normalizeYachtUse(use);
+
+  if (normalizedUse === 'Private') {
+    return ['Private'];
+  }
+
+  if (normalizedUse === 'Charter (only)') {
+    return ['Charter', 'Charter (only)', 'Charter only'];
+  }
+
+  if (normalizedUse === 'Private/Charter') {
+    return ['Mixed', 'Private/Charter', 'Private & Charter', 'Private and Charter', 'Dual'];
+  }
+
+  return [normalizeMode('yacht', use, null), normalizedUse, 'Other'].filter(Boolean);
 }
 
 function compactOrEmpty(obj) {
@@ -144,12 +158,7 @@ function ymFrom(y, m) {
 }
 
 function mapDbVesselTypeToUi(v) {
-  const s = String(v || '').toLowerCase();
-  if (s === 'motor') return 'Motor Yacht';
-  if (s === 'sail') return 'Sailing Yacht';
-  if (s === 'catamaran') return 'Catamaran';
-  if (s === 'expedition') return 'Expedition';
-  return '';
+  return normalizeYachtVesselType(v);
 }
 
 function mapDbDepartmentToUi(d) {
@@ -178,8 +187,8 @@ function dbRowToEditing(row) {
       contract: extras.contract || '',
       use:
         row.mode === 'Private' ? 'Private' :
-        row.mode === 'Charter' ? 'Charter' :
-        row.mode === 'Dual' ? 'Private/Charter' : '',
+        row.mode === 'Charter' ? 'Charter (only)' :
+        row.mode === 'Mixed' || row.mode === 'Dual' ? 'Private/Charter' : normalizeYachtUse(row.mode),
       regionsArr: Array.isArray(row.regions) ? row.regions : [],
 
       yacht_brand: row.yacht_brand || '',
@@ -464,11 +473,29 @@ export default function ExperienceSection({
 
       try {
         const isUpdate = !!editing.id;
-        const q = supabase.from('profile_experiences');
-        const { data, error } = isUpdate
-          ? await q.update(payload).eq('id', editing.id).select().single()
-          : await q.insert(payload).select().single();
-        if (error) throw error;
+        const modeCandidates = Array.from(new Set(getModeCandidatesForYachtUse(editing.use)));
+
+        let data = null;
+        let lastError = null;
+
+        for (const modeValue of modeCandidates) {
+          const attemptPayload = { ...payload, mode: modeValue };
+          const q = supabase.from('profile_experiences');
+          const result = isUpdate
+            ? await q.update(attemptPayload).eq('id', editing.id).select().single()
+            : await q.insert(attemptPayload).select().single();
+
+          if (!result.error) {
+            data = result.data;
+            lastError = null;
+            break;
+          }
+
+          lastError = result.error;
+          if (result.error?.code !== '23514') break;
+        }
+
+        if (lastError) throw lastError;
 
         setItems((prev) =>
           isUpdate ? prev.map((r) => (r.id === data.id ? data : r)) : [data, ...prev]
@@ -651,6 +678,36 @@ export default function ExperienceSection({
     [items]
   );
 
+  const privateMonths = useMemo(
+    () =>
+      (Array.isArray(items) ? items : []).reduce((sum, row) => {
+        if (String(row?.kind || row?.type || '').toLowerCase() !== 'yacht') return sum;
+        if (normalizeYachtUse(row?.mode) !== 'Private') return sum;
+        return sum + tenureMonthsForItem(row);
+      }, 0),
+    [items]
+  );
+
+  const charterMonths = useMemo(
+    () =>
+      (Array.isArray(items) ? items : []).reduce((sum, row) => {
+        if (String(row?.kind || row?.type || '').toLowerCase() !== 'yacht') return sum;
+        if (normalizeYachtUse(row?.mode) !== 'Charter (only)') return sum;
+        return sum + tenureMonthsForItem(row);
+      }, 0),
+    [items]
+  );
+
+  const mixedProgramMonths = useMemo(
+    () =>
+      (Array.isArray(items) ? items : []).reduce((sum, row) => {
+        if (String(row?.kind || row?.type || '').toLowerCase() !== 'yacht') return sum;
+        if (normalizeYachtUse(row?.mode) !== 'Private/Charter') return sum;
+        return sum + tenureMonthsForItem(row);
+      }, 0),
+    [items]
+  );
+
   const summaryBoxStyle = {
     margin: '8px 0 12px',
     padding: '8px 12px',
@@ -788,6 +845,33 @@ export default function ExperienceSection({
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
               <strong>Longevity:</strong>
               <span>{longevity?.avgLabel || '0 months'} avg</span>
+            </div>
+          </div>
+        )}
+
+        {!loading && (
+          <div className="cp-summary" style={summaryBoxStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <strong>Private Experience:</strong>
+              <span>{formatYachtingExperienceLabel(privateMonths)}</span>
+            </div>
+          </div>
+        )}
+
+        {!loading && (
+          <div className="cp-summary" style={summaryBoxStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <strong>Charter Experience:</strong>
+              <span>{formatYachtingExperienceLabel(charterMonths)}</span>
+            </div>
+          </div>
+        )}
+
+        {!loading && (
+          <div className="cp-summary" style={summaryBoxStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <strong>Mixed Program Experience:</strong>
+              <span>{formatYachtingExperienceLabel(mixedProgramMonths)}</span>
             </div>
           </div>
         )}

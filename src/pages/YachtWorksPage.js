@@ -6,6 +6,7 @@ import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import '../yachtworkspage.css';
 import { getOfferDepartment } from '../utils/offerDepartment';
+import { normalizeYachtUse } from '../components/cv/candidate/shared/experienceCatalogs';
 
 const countriesByRegion = {
   'North America': ['Bermuda (UK)', 'Canada', 'United States', 'Mexico'],
@@ -243,7 +244,7 @@ function YachtWorksPage() {
 
       if (filters.yachtSize && offer.yacht_size !== filters.yachtSize) return false;
 
-      if (filters.use && offer.uses !== filters.use) return false;
+      if (filters.use && normalizeYachtUse(offer.uses) !== normalizeYachtUse(filters.use)) return false;
 
       if (filters.flag) {
         const offerFlag = String(offer.flag || '');

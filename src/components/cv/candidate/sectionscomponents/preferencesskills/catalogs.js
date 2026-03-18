@@ -1,5 +1,7 @@
 // src/components/cv/candidate/sectionscomponents/preferencesskills/catalogs.js
 
+import { VESSEL_TYPES as YACHT_VESSEL_TYPES } from '../../shared/experienceCatalogs';
+
 // Tipos de contrato aceptados
 // (incluye "Any" para candidatos sin preferencia estricta)
 export const CONTRACT_TYPES = [
@@ -25,14 +27,7 @@ export const ROTATION_CYCLES = [
 ];
 
 // Tipos de embarcación
-export const VESSEL_TYPES = [
-  'Motor Yacht',
-  'Sailing Yacht',
-  'Catamaran',
-  'Support / Shadow',
-  'Expedition',
-  'Chase Boat',
-];
+export const VESSEL_TYPES = YACHT_VESSEL_TYPES;
 
 // Rangos de eslora (m) — alineados con el selector de LOA
 export const VESSEL_SIZE_RANGES = [

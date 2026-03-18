@@ -26,15 +26,16 @@ const TERMS = TERMS_SRC ?? [
   'DayWork',
 ];
 
-const USES = USES_SRC ?? ['Private', 'Charter', 'Private/Charter'];
+const USES = USES_SRC ?? ['Private', 'Charter (only)', 'Private/Charter'];
 
 const VESSEL_TYPES = VESSEL_TYPES_SRC ?? [
   'Motor Yacht',
   'Sailing Yacht',
-  'Catamaran',
-  'Support / Shadow',
-  'Expedition',
   'Chase Boat',
+  'Sailing Catamaran',
+  'Motor Catamaran',
+  'Support Yacht',
+  'Expedition Yacht',
 ];
 
 const PROPULSION_TYPES = PROPULSION_TYPES_SRC ?? [
