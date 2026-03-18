@@ -294,7 +294,10 @@ function CollapsibleSkillsGroup({ title, items }) {
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
           >
-            {expanded ? 'Hide details' : 'Show All'}
+            <span>{expanded ? 'Hide details' : 'Show All'}</span>
+            <span className="pls-toggleIcon" aria-hidden="true">
+              {expanded ? '▴' : '▾'}
+            </span>
           </button>
         )}
       </div>

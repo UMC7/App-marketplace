@@ -17,11 +17,12 @@
 .pcd-title{
   margin: 0 0 8px;
   text-align: center;
-  font-size: 16px;
-  letter-spacing: .12em;
-  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: .1em;
+  font-weight: 700;
   text-transform: uppercase;
   opacity: 1;
+  font-family: var(--font-header, 'Playfair Display', serif);
 }
 
 /* ===== ÚNICA grilla: 3 columnas por fila, centradas y contenidas ===== */

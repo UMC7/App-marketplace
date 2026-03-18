@@ -26,13 +26,14 @@
 }
 .pls-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .1em;
   text-transform: uppercase;
   color: #0b1220;
   text-align: center;
   width: 100%;
+  font-family: var(--font-header, 'Playfair Display', serif);
 }
 
 /* Bandera junto al idioma */
@@ -108,6 +109,26 @@
   height: auto !important;
   border-radius: 10px;
   white-space: nowrap;
+  border: 1px solid rgba(148, 163, 184, .34) !important;
+  background: linear-gradient(180deg, rgba(245, 242, 235, .99), rgba(232, 226, 215, .97)) !important;
+  color: #334155 !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.pls .ppv-btn.sm:hover {
+  border-color: rgba(120, 138, 160, .44) !important;
+  background: linear-gradient(180deg, rgba(239, 233, 223, .99), rgba(224, 216, 202, .98)) !important;
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, .12) !important;
+}
+
+.pls-toggleIcon {
+  font-size: 11px;
+  line-height: 1;
+  color: #5b6b7c;
 }
 
 /* ===================

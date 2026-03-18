@@ -405,7 +405,8 @@ function ExperienceCard({ item }){
           aria-expanded={open}
           aria-controls={`xp-body-${item.id}`}
         >
-          {open ? 'Hide details' : 'Show details'}
+          <span>{open ? 'Hide details' : 'View details'}</span>
+          <span className="ppv-xpToggleIcon" aria-hidden="true">{open ? '▴' : '▾'}</span>
         </button>
       </header>
 
