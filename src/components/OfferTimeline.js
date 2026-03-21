@@ -444,7 +444,7 @@ const OfferTimeline = ({
     )}
     {(offer.years_in_rank !== null && offer.years_in_rank !== undefined) && (
       <div className="field-group time-in-rank">
-        <div className="field-label">Time in Rank</div>
+        <div className="field-label">Experience</div>
         <div className="field-value">
           {offer.years_in_rank === 0
             ? 'Open to Green Crew'
@@ -456,7 +456,7 @@ const OfferTimeline = ({
                   ? 'Proven Experience Required'
                   : offer.years_in_rank === -4
                     ? 'Similar Size & Rank Required'
-                    : `> ${offer.years_in_rank} ${offer.years_in_rank === 1 ? 'Year' : 'Years'}`}
+                    : `> ${offer.years_in_rank} ${offer.years_in_rank === 1 ? 'Year' : 'Years'} in Rank`}
         </div>
       </div>
     )}
@@ -493,7 +493,7 @@ const OfferTimeline = ({
 
 {(offer.teammate_experience !== null && offer.teammate_experience !== undefined) && (
   <div className="field-group time-in-rank2">
-    <div className="field-label">Time in Rank</div>
+    <div className="field-label">Experience</div>
     <div className="field-value">
       {offer.teammate_experience === 0
         ? 'Open to Green Crew'
@@ -505,7 +505,7 @@ const OfferTimeline = ({
               ? 'Proven Experience Required'
               : offer.teammate_experience === -4
                 ? 'Similar Size & Rank Required'
-                : `> ${offer.teammate_experience} ${offer.teammate_experience === 1 ? 'Year' : 'Years'}`}
+                : `> ${offer.teammate_experience} ${offer.teammate_experience === 1 ? 'Year' : 'Years'} in Rank`}
     </div>
   </div>
 )}

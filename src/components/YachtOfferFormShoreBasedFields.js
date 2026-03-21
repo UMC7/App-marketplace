@@ -1,6 +1,6 @@
 import React from 'react';
 import RemarksField from './RemarksField';
-import { MONTHS, yearsOptions, types, COUNTRIES } from './yachtOfferForm.constants';
+import { MONTHS, yearsOptions, formatExperienceRequirementLabel, types, COUNTRIES } from './yachtOfferForm.constants';
 import { getDaySelectOptions } from './yachtOfferForm.utils';
 
 function YachtOfferFormShoreBasedFields({
@@ -27,12 +27,12 @@ function YachtOfferFormShoreBasedFields({
       <label>Position: <span style={{ color: 'red' }}>*</span></label>
       <input name="title" value={formData.title} onChange={onChange} className={highlightClass(!formData.title)} required />
 
-      <label>Time in Rank:</label>
+      <label>Experience:</label>
       <select name="years_in_rank" value={formData.years_in_rank} onChange={onChange}>
         <option value="">Select...</option>
         {yrs.map((y) => (
           <option key={y} value={y}>
-            {typeof y === 'string' ? y : `>${y} ${y === 1 ? 'Year' : 'Years'}`}
+            {formatExperienceRequirementLabel(y)}
           </option>
         ))}
       </select>

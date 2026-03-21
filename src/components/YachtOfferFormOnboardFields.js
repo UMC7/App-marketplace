@@ -7,6 +7,7 @@ import RemarksField from './RemarksField';
 import {
   MONTHS,
   yearsOptions,
+  formatExperienceRequirementLabel,
   types,
   VISA_OPTIONS,
   ENGINEERING_LICENSE_FIELD_OPTIONS,
@@ -107,12 +108,12 @@ function YachtOfferFormOnboardFields({
         />
       </div>
 
-      <label>Time in Rank:</label>
+      <label>Experience:</label>
       <select name="years_in_rank" value={formData.years_in_rank} onChange={onChange}>
         <option value="">Select...</option>
         {yrs.map((y) => (
           <option key={y} value={y}>
-            {typeof y === 'string' ? y : `>${y} ${y === 1 ? 'Year' : 'Years'}`}
+            {formatExperienceRequirementLabel(y)}
           </option>
         ))}
       </select>
@@ -186,7 +187,7 @@ function YachtOfferFormOnboardFields({
             <option value="">Select...</option>
             {yrs.map((y) => (
               <option key={y} value={y}>
-                {typeof y === 'string' ? y : `>${y} ${y === 1 ? 'Year' : 'Years'}`}
+                {formatExperienceRequirementLabel(y)}
               </option>
             ))}
           </select>

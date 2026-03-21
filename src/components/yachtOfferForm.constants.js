@@ -37,6 +37,21 @@ export const yearsOptions = [
   5,
 ];
 
+export function formatExperienceRequirementLabel(value) {
+  if (value === OPEN_TO_GREEN_CREW) return OPEN_TO_GREEN_CREW;
+  if (value === YACHT_EXPERIENCE_PREFERRED) return YACHT_EXPERIENCE_PREFERRED;
+  if (value === NEW_IN_RANK_WELCOME) return NEW_IN_RANK_WELCOME;
+  if (value === PROVEN_EXPERIENCE_REQUIRED) return PROVEN_EXPERIENCE_REQUIRED;
+  if (value === SIMILAR_SIZE_RANK_REQUIRED) return SIMILAR_SIZE_RANK_REQUIRED;
+
+  const num = Number(value);
+  if (Number.isFinite(num)) {
+    return `>${num} ${num === 1 ? 'Year' : 'Years'} in Rank`;
+  }
+
+  return String(value || '');
+}
+
 export const titles = [
   'Captain','Captain/Engineer','Skipper','Chase Boat Captain','Relief Captain',
   'Chief Officer','2nd Officer','3rd Officer','Bosun','Deck/Engineer','Mate','Mate/Engineer','Mate/Steward(ess)',
