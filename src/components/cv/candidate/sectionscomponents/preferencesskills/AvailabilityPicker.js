@@ -1,5 +1,6 @@
 // src/components/cv/candidate/sectionscomponents/preferencesskills/AvailabilityPicker.js
 import React from 'react';
+import { parseAvailability } from '../../../../../utils/availability';
 
 const DEFAULT_OPTIONS = [
   'Available now',
@@ -16,12 +17,6 @@ export default function AvailabilityPicker({
   options = DEFAULT_OPTIONS,
   showRequiredMark = true,
 }) {
-  const isDateSpecific = (val) => String(val || '').startsWith('Date specific');
-  const dateFromValue = (val) => {
-    const m = /^Date specific:\s*(\d{4}-\d{2}-\d{2})$/.exec(String(val || ''));
-    return m ? m[1] : '';
-  };
-
   const handleSelect = (e) => {
     const next = e.target.value;
     if (onChange) onChange(next);
@@ -33,13 +28,14 @@ export default function AvailabilityPicker({
   };
 
   const today = new Date().toISOString().slice(0, 10);
-  const selectedIsDate = isDateSpecific(value);
-  const dateValue = dateFromValue(value);
+  const parsed = parseAvailability(value);
+  const selectedIsDate = parsed.isDateSpecific;
+  const dateValue = parsed.date;
 
   return (
     <div>
       <label className="cp-label">Availability {showRequiredMark ? '*' : ''}</label>
-      <select className="cp-input" value={value || ''} onChange={handleSelect}>
+      <select className="cp-input" value={selectedIsDate ? 'Date specific' : (value || '')} onChange={handleSelect}>
         <option value="">—</option>
         {options.map((opt) => (
           <option key={opt} value={opt}>

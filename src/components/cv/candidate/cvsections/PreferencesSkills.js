@@ -1,5 +1,6 @@
 // src/components/cv/candidate/cvsections/PreferencesSkills.js
 import React from 'react';
+import { hasValidAvailability } from '../../../../utils/availability';
 
 import {
   AvailabilityPicker,
@@ -119,7 +120,7 @@ export default function PreferencesSkills({
 
   if (isLite) {
     const missStatus = !(status && String(status).trim());
-    const missAvailability = !(availability && String(availability).trim());
+    const missAvailability = !hasValidAvailability(availability);
     const missLang = !hasLanguagesWithLevel(languageLevels);
     const missSkills = !hasDeptSkills(deptSpecialties);
     return (

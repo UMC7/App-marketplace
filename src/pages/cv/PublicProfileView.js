@@ -12,6 +12,7 @@ import PublicMediaGallerySection from './sections/media';
 import PublicEducationSection from './sections/education';
 import PublicContactDetailsSection from './sections/contact';
 import useEmitProfileView from '../../hooks/useEmitProfileView';
+import { formatAvailability, hasValidAvailability } from '../../utils/availability';
 
 const qs = (search) => new URLSearchParams(search || '');
 const BUCKET = 'cv-docs';
@@ -752,6 +753,11 @@ export default function PublicProfileView() {
     return '';
   }, [profile?.primary_role, profile?.target_ranks]);
 
+  const availabilityText = useMemo(
+    () => formatAvailability(profile?.availability),
+    [profile?.availability]
+  );
+
   const nationalityText = useMemo(() => {
     const val = profile?.nationalities;
     let list = [];
@@ -941,7 +947,7 @@ function computeScrollTargetTop(el, extra = 12) {
       !!(profile?.professional_statement && String(profile.professional_statement).trim());
     const meetsPrefsSkillsMin =
       !!(ps?.status && String(ps.status).trim()) &&
-      !!(ps?.availability && String(ps.availability).trim()) &&
+      hasValidAvailability(ps?.availability) &&
       hasLanguagesWithLevel(languageLevels) &&
       hasDeptSkills(deptSpecialties);
     const meetsLifestyleMin =
@@ -1054,7 +1060,7 @@ if (!allowPublicView && !isPreview) {
             </div>
 
             <div className="ppv-badges">
-              {profile?.availability && <span className="ppv-badge">Availability: {profile.availability}</span>}
+              {availabilityText && <span className="ppv-badge">Availability: {availabilityText}</span>}
               {(profile?.city_port || profile?.country) && (
                 <span className="ppv-badge">{[profile.city_port, profile.country].filter(Boolean).join(', ')}</span>
               )}
@@ -1206,7 +1212,7 @@ if (!allowPublicView && !isPreview) {
                     <div className="ppv-metaItem" style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
                       <div className="ppv-metaLabel" style={metaLabelStyle}>AVAILABILITY</div>
                       <div className="ppv-metaValue" style={metaValueStyle}>
-                        {profile?.availability || '—'}
+                        {availabilityText || '—'}
                       </div>
                     </div>
 

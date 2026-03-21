@@ -23,6 +23,7 @@ import {
 import AboutMeSection from './candidate/cvsections/aboutmesection';
 import LifestyleHabitsSection from './candidate/cvsections/LifestyleHabitsSection';
 import Modal from '../Modal';
+import { hasValidAvailability } from '../../utils/availability';
 
 function hasLanguagesWithLevel(languageLevels) {
   if (!Array.isArray(languageLevels)) return false;
@@ -989,6 +990,10 @@ const generateShortHandle = () => {
     if (!canEdit) return;
     e.preventDefault();
     if (!profile?.id) return;
+    if (isLite && !hasValidAvailability(availability)) {
+      toast.error('Please choose an availability date.');
+      return;
+    }
   const payload = isLite
     ? buildLitePrefsPayload()
     : buildPrefsSkillsPayload({
@@ -1592,7 +1597,7 @@ const progressSections = {
 
 const meetsPrefsMin =
   !!(status && String(status).trim()) &&
-  !!(availability && String(availability).trim()) &&
+  hasValidAvailability(availability) &&
   (Array.isArray(languageLevels) &&
     languageLevels.some((ll) => ll && ll.lang && ll.level)) &&
   (Array.isArray(deptSpecialties) && deptSpecialties.length > 0);
@@ -1628,7 +1633,7 @@ const meetsPrefsMin =
 
   const meetsPrefsSkillsMin =
     !!(liteSnapshot?.status && String(liteSnapshot.status).trim()) &&
-    !!(liteSnapshot?.availability && String(liteSnapshot.availability).trim()) &&
+    hasValidAvailability(liteSnapshot?.availability) &&
     hasLanguagesWithLevel(liteSnapshot?.languageLevels) &&
     hasDeptSkills(liteSnapshot?.deptSpecialties);
 
