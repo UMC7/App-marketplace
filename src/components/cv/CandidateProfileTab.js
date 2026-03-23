@@ -1846,7 +1846,7 @@ const meetsPrefsMin =
             <h3 className="cp-h3">Department & ranks</h3>
             <p className="cp-help">
               {showRequired
-                ? 'Select your department and main rank. Target ranks are optional.'
+                ? 'Select your department and main rank.'
                 : 'Add optional target ranks (up to 3).'}
             </p>
             <form onSubmit={handleSaveDeptRanks} className="cp-form">
