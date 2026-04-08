@@ -503,8 +503,12 @@ function buildLitePrefsPayload() {
           const seedPro = (psPro && Object.keys(psPro).length) ? psPro : {};
 
           const useLite = profileMode === 'lite' || !seedPro;
-          if (useLite) applyLitePrefs(seedLite);
-          else applyProPrefs(seedPro);
+          if (useLite) {
+            applyLitePrefs(seedLite);
+          } else {
+            applyLitePrefs({ ...seedLite, ...seedPro });
+            applyProPrefs(seedPro);
+          }
 
           setPrefsSkillsBaseline({
             status: (useLite ? seedLite : seedPro)?.status || '',
@@ -997,8 +1001,12 @@ const generateShortHandle = () => {
   const payload = isLite
     ? buildLitePrefsPayload()
     : buildPrefsSkillsPayload({
+        status,
+        availability,
         regionsSeasons,
         contracts,
+        languageLevels,
+        deptSpecialties,
         rotation,
         vesselTypes,
         vesselSizeRange,
