@@ -590,7 +590,7 @@ const formReady = (() => {
 })();
 
   const yachtSizeOptions =
-  formData.title === 'Chase Boat Captain' ? CHASE_BOAT_SIZES : DEFAULT_YACHT_SIZES;
+  formData.yacht_type === 'Chase Boat' ? CHASE_BOAT_SIZES : DEFAULT_YACHT_SIZES;
 
   const handleChange = (e) => {
   const { name, value, type, checked } = e.target;
@@ -679,6 +679,13 @@ const formReady = (() => {
       // 🔹 Si cambia salary_currency y hay team
       if (name === 'salary_currency' && prev.team === 'Yes') {
         newState.teammate_salary_currency = value;
+      }
+
+      if (name === 'yacht_type') {
+        const nextYachtSizeOptions = value === 'Chase Boat' ? CHASE_BOAT_SIZES : DEFAULT_YACHT_SIZES;
+        if (prev.yacht_size && !nextYachtSizeOptions.includes(prev.yacht_size)) {
+          newState.yacht_size = '';
+        }
       }
 
       // 🔹 Si selecciona Dayworker → autoasigna DayWork
