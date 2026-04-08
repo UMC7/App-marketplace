@@ -561,7 +561,7 @@ export default function PublicProfileView() {
           : (baseRow?.prefs_skills ?? {});
         const mergedPrefs =
           Object.keys(liteData).length || Object.keys(proData).length
-            ? { ...legacyPrefs, ...liteData, ...proData }
+            ? { ...legacyPrefs, ...proData, ...liteData }
             : (legacyPrefs && Object.keys(legacyPrefs).length ? legacyPrefs : (baseRow?.prefs_skills ?? null));
         const mergedLanguages =
           (freshPR && freshPR.languages != null) ? freshPR.languages

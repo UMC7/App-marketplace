@@ -625,6 +625,7 @@ function buildLitePrefsPayload() {
     if (profileMode === 'lite') {
       applyLitePrefs(prefsLiteCache || {});
     } else {
+      applyLitePrefs({ ...(prefsLiteCache || {}), ...(prefsProCache || {}) });
       applyProPrefs(prefsProCache || {});
     }
   }, [profileMode, prefsLiteCache, prefsProCache, profile]);
@@ -1023,7 +1024,15 @@ const generateShortHandle = () => {
         { payload }
       );
       if (error) throw error;
-      const updated = Array.isArray(data) ? data[0] : null;
+      let updated = Array.isArray(data) ? data[0] : null;
+      if (!isLite) {
+        const { data: liteData, error: liteError } = await supabase.rpc(
+          'rpc_save_prefs_skills_lite',
+          { payload: buildLitePrefsPayload() }
+        );
+        if (liteError) throw liteError;
+        updated = Array.isArray(liteData) ? (liteData[0] || updated) : updated;
+      }
       if (updated) {
         setProfile(updated);
         if (updated.prefs_skills_lite) setPrefsLiteCache(updated.prefs_skills_lite);
@@ -1582,10 +1591,10 @@ const mediaProgress = {
 
 const galleryDirty = useMemo(() => {
   const current = Array.isArray(gallery)
-    ? gallery.map((g) => String(g?.path || '').trim()).filter(Boolean).sort()
+    ? gallery.map((g) => String(g?.path || '').trim()).filter(Boolean)
     : [];
   const base = Array.isArray(persistedPaths)
-    ? persistedPaths.map((p) => String(p || '').trim()).filter(Boolean).sort()
+    ? persistedPaths.map((p) => String(p || '').trim()).filter(Boolean)
     : [];
   return JSON.stringify(current) !== JSON.stringify(base);
 }, [gallery, persistedPaths]);
