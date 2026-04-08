@@ -15,6 +15,8 @@ function normalizeLongText(text) {
   return text.replace(/(\n)(?!\n)\s*(?=[a-záéíóúñü])/g, " ");
 }
 
+const MAX_SHORT_SUMMARY = 550;
+
 export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = 'professional', readOnly = false }) {
   const isLite = mode === 'lite';
   const isProfessional = mode === 'professional';
@@ -58,7 +60,7 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = '
     if (!canSave || saving) return;
 
     const payload = {
-      about_me: normalizeLongText((about || "").trim()),
+      about_me: normalizeLongText((about || "").trim()).slice(0, MAX_SHORT_SUMMARY),
       professional_statement: normalizeLongText((statement || "").trim()),
     };
 

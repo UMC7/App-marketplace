@@ -2,7 +2,7 @@
 import React, { useMemo } from "react";
 
 export default function AboutMeEditor({ value = "", onChange, showRequiredMark = true, readOnly = false, isMissing = false }) {
-  const MAX = 800;
+  const MAX = 550;
   const length = useMemo(() => (value || "").length, [value]);
 
   return (

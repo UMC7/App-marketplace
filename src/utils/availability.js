@@ -22,8 +22,8 @@ export function formatAvailability(value, locale = undefined) {
   if (!parsed.date) return '';
 
   const dt = new Date(`${parsed.date}T00:00:00`);
-  if (Number.isNaN(dt.getTime())) return `Date specific: ${parsed.date}`;
-  return `Date specific: ${dt.toLocaleDateString(locale || undefined, {
+  if (Number.isNaN(dt.getTime())) return `Available from ${parsed.date}`;
+  return `Available from ${dt.toLocaleDateString(locale || undefined, {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
