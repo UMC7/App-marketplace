@@ -53,6 +53,37 @@ const DOCUMENT_MATCHERS = [
   { pattern: /\bdesignated\s+security\s+duties\b|\bdsd\b/i, value: "Designated Security Duties (DSD) - A-VI/6-2" },
   { pattern: /\bpassenger\s+ship\s+safety\s+training\b/i, value: "Passenger Ship Safety Training" },
 ];
+const ALLOWED_REQUIRED_DOCUMENTS = new Set([
+  "Ship's Cook Certificate",
+  "Food Hygiene / HACCP Level 2",
+  "Food Hygiene / HACCP Level 3",
+  "STCW Basic Training (A-VI/1)",
+  "ENG1 Seafarer Medical Certificate",
+  "Driver's License",
+  "Seaman's Book",
+  "Background Check - DBS / Police Clearance",
+  "Vaccination - Yellow Fever",
+  "Vaccination - COVID",
+  "Powerboat Level 2 / Tender Operator",
+  "PWC (Personal Watercraft)",
+  "PWC Instructor",
+  "VHF SRC",
+  "GMDSS GOC",
+  "GMDSS ROC",
+  "Flag State Endorsement",
+  "Medical First Aid - A-VI/4-1",
+  "Medical Care - A-VI/4-2",
+  "Security Awareness - A-VI/6-1",
+  "Designated Security Duties (DSD) - A-VI/6-2",
+  "Passenger Ship Safety Training",
+]);
+const VISA_VALUES = new Set([
+  "B1/B2",
+  "C1/D",
+  "Schengen",
+  "European Passport",
+  "Green card or US Citizen",
+]);
 
 // --- ayudas locales (solo si falta info del modelo) ---
 
@@ -653,6 +684,27 @@ function inferRequiredDocuments(text) {
   return docs;
 }
 
+function normalizeRequiredDocuments(values) {
+  if (!Array.isArray(values)) return [];
+
+  const seen = new Set();
+  const normalized = [];
+
+  for (const raw of values) {
+    const value = String(raw || "").trim();
+    if (!value) continue;
+    if (VISA_VALUES.has(value)) continue;
+    if (!ALLOWED_REQUIRED_DOCUMENTS.has(value)) continue;
+
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    normalized.push(value);
+  }
+
+  return normalized;
+}
+
 // === VISAS helper (B1/B2, Schengen, EU passport, US citizen/Green card) ===
 function inferVisas(text) {
   const t = text.toLowerCase();
@@ -1050,8 +1102,8 @@ ${finalText}
       season_type: coerceStr(data.season_type),
       holidays: coerceStr(data.holidays),
       is_asap: coerceBool(data.is_asap),
-      required_documents: Array.isArray(data.required_documents) ? data.required_documents.map(coerceStr).filter(Boolean) : [],
-      teammate_required_documents: Array.isArray(data.teammate_required_documents) ? data.teammate_required_documents.map(coerceStr).filter(Boolean) : [],
+      required_documents: normalizeRequiredDocuments(Array.isArray(data.required_documents) ? data.required_documents.map(coerceStr).filter(Boolean) : []),
+      teammate_required_documents: normalizeRequiredDocuments(Array.isArray(data.teammate_required_documents) ? data.teammate_required_documents.map(coerceStr).filter(Boolean) : []),
       language_1: coerceStr(data.language_1),
       language_1_fluency: coerceStr(data.language_1_fluency),
       language_2: coerceStr(data.language_2),
@@ -1284,7 +1336,7 @@ if (!out.flag) {
 {
   const explicitDocs = inferRequiredDocuments(finalText);
   if (explicitDocs.length > 0) {
-    out.required_documents = Array.from(new Set([...(out.required_documents || []), ...explicitDocs]));
+    out.required_documents = normalizeRequiredDocuments([...(out.required_documents || []), ...explicitDocs]);
   }
 }
 
