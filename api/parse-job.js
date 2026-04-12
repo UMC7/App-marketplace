@@ -692,6 +692,17 @@ function inferRequiredDocuments(text) {
   return docs;
 }
 
+function inferRequiredLicense(text, rank) {
+  const source = String(text || "");
+  const normalizedRank = String(rank || "");
+
+  if (normalizedRank === "Chief Engineer" && /\bstcw\s*iii\s*\/?\s*2\b/i.test(source)) {
+    return "Chief Engineer Unlimited - STCW III/2";
+  }
+
+  return "";
+}
+
 function normalizeRequiredDocuments(values) {
   if (!Array.isArray(values)) return [];
 
@@ -936,6 +947,7 @@ Do not include comments, markdown, or extra text.
       type: TERMS.join("|"),
       start_date: "YYYY-MM-DD or empty",
       end_date: "",
+      required_license: "",
       salary: "",
       is_doe: "true|false",
       years_in_rank: "",
@@ -1086,6 +1098,7 @@ ${finalText}
       type: coerceStr(data.type),
       start_date: coerceStr(data.start_date),
       end_date: coerceStr(data.end_date),
+      required_license: coerceStr(data.required_license),
       salary: coerceStr(data.salary),
       is_doe: coerceBool(data.is_doe),
       years_in_rank: coerceStr(data.years_in_rank),
@@ -1250,12 +1263,7 @@ if (out.homeport) {
   const hp = out.homeport.trim();
   const hpLC = hp.toLowerCase();
   const countryLC = (out.country || "").trim().toLowerCase();
-  const hpIsCountry =
-    hpLC === countryLC ||
-    hpLC === `the ${countryLC}` ||
-    (COUNTRY_SYNONYMS[hpLC] && COUNTRY_SYNONYMS[hpLC].toLowerCase() === countryLC);
-
-  if (hpIsCountry || !appearsInText(hp, finalText)) {
+  if (!appearsInText(hp, finalText)) {
     out.homeport = "";
   }
 }
@@ -1346,6 +1354,11 @@ if (!out.flag) {
   if (explicitDocs.length > 0) {
     out.required_documents = normalizeRequiredDocuments([...(out.required_documents || []), ...explicitDocs]);
   }
+}
+
+if (!out.required_license) {
+  const inferredLicense = inferRequiredLicense(finalText, out.rank);
+  if (inferredLicense) out.required_license = inferredLicense;
 }
 
 {

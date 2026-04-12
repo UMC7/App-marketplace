@@ -56,7 +56,7 @@ const initialState = {
   end_day: '',
   required_license: '',
   engineering_license: '',
-  required_documents: [],
+  required_documents: ['ENG1 Seafarer Medical Certificate', 'STCW Basic Training (A-VI/1)'],
   required_skills: [],
   salary: '',
   is_doe: false,
@@ -341,6 +341,12 @@ const autoFillFromText = async () => {
           if (!Array.isArray(merged.visas) || merged.visas.length === 0) {
             merged.visas = arr;
           }
+          continue;
+        }
+
+        if (k === "required_documents") {
+          const arr = Array.isArray(v) ? v : [];
+          merged.required_documents = Array.from(new Set([...(Array.isArray(merged.required_documents) ? merged.required_documents : []), ...arr]));
           continue;
         }
 
