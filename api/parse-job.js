@@ -426,6 +426,10 @@ function detectExplicitType(text) {
   // DayWork / Dayworker
   if (/\bday\s*work(?:ers?)?\b/.test(t) || /\bday-?worker(?:s)?\b/.test(t)) return "DayWork";
 
+  // Permanent
+  if (/\bpermanent\b/.test(t)) return "Permanent";
+  if (/\blong[-\s]*term\b/.test(t)) return "Permanent";
+
   // Relief
   if (/\b(relief|maternity\s+cover|temp(?:orary)?\s+cover)\b/.test(t)) return "Relief";
 
@@ -620,6 +624,10 @@ function inferHomeport(text, out) {
   if (!m) return;
 
   let place = m[1].trim().replace(/\s+/g, " ");
+  place = place
+    .replace(/\b(during|for|through|throughout|while|whilst)\b[\s\S]*$/i, "")
+    .replace(/\b(?:the\s+)?(?:winter|summer|season)\b[\s\S]*$/i, "")
+    .trim();
   place = place.replace(/^(the)\s+/i, "");
 
   const lower = place.toLowerCase();
