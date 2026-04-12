@@ -139,6 +139,7 @@ function YachtOfferForm({ user, onOfferPosted, initialValues, mode }) {
   const [formData, setFormData] = useState(
     initialValues ? { ...initialState, ...normalizeInitialValues(initialValues) } : initialState
   );
+  const onboardBaseDocsSeededRef = useRef(false);
   // Normaliza team para edición: boolean -> 'Yes'/'No'
 useEffect(() => {
   if (initialValues && typeof initialValues.team !== 'undefined') {
@@ -228,6 +229,23 @@ useEffect(() => {
     required_documents: Array.from(new Set([...(initialValues.required_documents || []), ...BASE_REQUIRED_DOCUMENTS])),
   }));
 }, [initialValues]);
+
+useEffect(() => {
+  if (formData.work_environment !== 'Onboard') {
+    onboardBaseDocsSeededRef.current = false;
+    return;
+  }
+
+  if (onboardBaseDocsSeededRef.current) return;
+
+  onboardBaseDocsSeededRef.current = true;
+  setFormData(prev => ({
+    ...prev,
+    required_documents: Array.from(
+      new Set([...(Array.isArray(prev.required_documents) ? prev.required_documents : []), ...BASE_REQUIRED_DOCUMENTS])
+    ),
+  }));
+}, [formData.work_environment]);
 
 useEffect(() => {
   if (!Array.isArray(initialValues?.required_skills)) return;
@@ -397,6 +415,14 @@ const autoFillFromText = async () => {
 
       if (!merged.required_license && typeof data.required_license === 'string' && data.required_license.trim()) {
         merged.required_license = data.required_license.trim();
+      }
+
+      if (
+        !merged.required_license &&
+        merged.title === 'Chief Engineer' &&
+        /\bstcw\s*iii\s*\/?\s*2\b/i.test(jobText)
+      ) {
+        merged.required_license = 'Chief Engineer Unlimited - STCW III/2';
       }
 
       return merged;

@@ -1,6 +1,13 @@
 import React from 'react';
 import CustomMultiSelect from './CustomMultiSelect';
 
+const summarizeSelectedDocuments = (selected) => {
+  if (!selected.length) return 'Select...';
+  if (selected.length === 1) return selected[0];
+  if (selected.length === 2) return `${selected[0]}, ${selected[1]}`;
+  return `${selected[0]}, ${selected[1]} +${selected.length - 2}`;
+};
+
 const RequiredDocumentsSelect = ({
   open,
   onToggle,
@@ -48,9 +55,7 @@ const RequiredDocumentsSelect = ({
       open={open}
       onToggle={onToggle}
       selected={selectedDocuments}
-      renderSummary={(selected) =>
-        selected.length > 0 ? selected.join(', ') : 'Select...'
-      }
+      renderSummary={summarizeSelectedDocuments}
       groups={groups}
       name={name}
       onChange={onChange}

@@ -391,7 +391,7 @@ function YachtOfferFormOnboardFields({
       </div>
 
       <label>Holidays (Days per year):</label>
-      <input type="number" step="0.1" name="holidays" value={formData.holidays || ''} onChange={onChange} disabled={isDayworker} />
+      <input type="number" step="1" name="holidays" value={formData.holidays || ''} onChange={onChange} disabled={isDayworker} />
 
       <label>City:</label>
       <input name="city" value={formData.city} onChange={onChange} />
