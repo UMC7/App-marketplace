@@ -30,6 +30,29 @@ const FLU = ["Native", "Fluent", "Conversational"];
 const PROPULSION = ["Shaft Drive", "Pod Drive", "Waterjet", "Sail Drive", "Outboard", "Stern Drive"];
 const YEARS_BUCKETS = ['Green','1','2','2.5','3','5'];
 const CAPTAIN_FAMILY_RANKS = new Set(["Captain", "Captain/Engineer", "Relief Captain", "Skipper"]);
+const DOCUMENT_MATCHERS = [
+  { pattern: /\bship'?s?\s+cook\s+certificate\b/i, value: "Ship's Cook Certificate" },
+  { pattern: /\bfood\s+hygiene\b|\bfood\s+safety\b|\bhaccp\b/i, value: "Food Hygiene / HACCP Level 2" },
+  { pattern: /\bstcw\b/i, value: "STCW Basic Training (A-VI/1)" },
+  { pattern: /\beng\s*1\b/i, value: "ENG1 Seafarer Medical Certificate" },
+  { pattern: /\bdriver'?s\s+licen[cs]e\b/i, value: "Driver's License" },
+  { pattern: /\bseaman'?s\s+book\b/i, value: "Seaman's Book" },
+  { pattern: /\bbackground\s+check\b|\bpolice\s+clearance\b|\bdbs\b/i, value: "Background Check - DBS / Police Clearance" },
+  { pattern: /\byellow\s+fever\b/i, value: "Vaccination - Yellow Fever" },
+  { pattern: /\bcovid\b/i, value: "Vaccination - COVID" },
+  { pattern: /\bpowerboat\s+level\s*2\b|\btender\s+operator\b/i, value: "Powerboat Level 2 / Tender Operator" },
+  { pattern: /\bpwc\s+instructor\b/i, value: "PWC Instructor" },
+  { pattern: /\bpwc\b|\bpersonal\s+watercraft\b/i, value: "PWC (Personal Watercraft)" },
+  { pattern: /\bvhf\s+src\b/i, value: "VHF SRC" },
+  { pattern: /\bgmdss\s+goc\b/i, value: "GMDSS GOC" },
+  { pattern: /\bgmdss\s+roc\b/i, value: "GMDSS ROC" },
+  { pattern: /\bflag\s+state\s+endorsement\b/i, value: "Flag State Endorsement" },
+  { pattern: /\bmedical\s+first\s+aid\b/i, value: "Medical First Aid - A-VI/4-1" },
+  { pattern: /\bmedical\s+care\b/i, value: "Medical Care - A-VI/4-2" },
+  { pattern: /\bsecurity\s+awareness\b/i, value: "Security Awareness - A-VI/6-1" },
+  { pattern: /\bdesignated\s+security\s+duties\b|\bdsd\b/i, value: "Designated Security Duties (DSD) - A-VI/6-2" },
+  { pattern: /\bpassenger\s+ship\s+safety\s+training\b/i, value: "Passenger Ship Safety Training" },
+];
 
 // --- ayudas locales (solo si falta info del modelo) ---
 
@@ -618,6 +641,18 @@ function inferGender(text) {
   return "";
 }
 
+function inferRequiredDocuments(text) {
+  const source = String(text || "");
+  const docs = [];
+
+  for (const { pattern, value } of DOCUMENT_MATCHERS) {
+    if (!pattern.test(source)) continue;
+    if (!docs.includes(value)) docs.push(value);
+  }
+
+  return docs;
+}
+
 // === VISAS helper (B1/B2, Schengen, EU passport, US citizen/Green card) ===
 function inferVisas(text) {
   const t = text.toLowerCase();
@@ -864,6 +899,8 @@ Do not include comments, markdown, or extra text.
       season_type: "",
       holidays: "",
       is_asap: "true|false",
+      required_documents: [],
+      teammate_required_documents: [],
       language_1: "",
       language_1_fluency: FLU.join("|") + "|",
       language_2: "",
@@ -909,6 +946,8 @@ Do not include comments, markdown, or extra text.
         if (!(key in obj)) return false;
       }
       if (obj.visas && !Array.isArray(obj.visas)) return false;
+      if (obj.required_documents && !Array.isArray(obj.required_documents)) return false;
+      if (obj.teammate_required_documents && !Array.isArray(obj.teammate_required_documents)) return false;
       const booleanLike = ["is_doe", "is_asap"];
       for (const key of booleanLike) {
         if (key in obj) {
@@ -1011,6 +1050,8 @@ ${finalText}
       season_type: coerceStr(data.season_type),
       holidays: coerceStr(data.holidays),
       is_asap: coerceBool(data.is_asap),
+      required_documents: Array.isArray(data.required_documents) ? data.required_documents.map(coerceStr).filter(Boolean) : [],
+      teammate_required_documents: Array.isArray(data.teammate_required_documents) ? data.teammate_required_documents.map(coerceStr).filter(Boolean) : [],
       language_1: coerceStr(data.language_1),
       language_1_fluency: coerceStr(data.language_1_fluency),
       language_2: coerceStr(data.language_2),
@@ -1238,6 +1279,13 @@ if (!out.flag) {
 {
   const h = inferHolidays(finalText);
   if (h) out.holidays = h;
+}
+
+{
+  const explicitDocs = inferRequiredDocuments(finalText);
+  if (explicitDocs.length > 0) {
+    out.required_documents = Array.from(new Set([...(out.required_documents || []), ...explicitDocs]));
+  }
 }
 
 {
