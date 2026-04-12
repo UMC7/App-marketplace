@@ -162,6 +162,10 @@ const COUNTRY_SYNONYMS = {
   "bahamas": "Bahamas"
 };
 
+const LOCATION_REGION_SYNONYMS = {
+  "french polynesia": "South Pacific",
+};
+
 function normalizeFlagValue(v) {
   const m = {
     "usa": "USA",
@@ -207,7 +211,7 @@ function normalizeYearsBucket(v) {
 function normalizeCountryName(raw) {
   if (!raw) return "";
   const key = String(raw).trim().toLowerCase().replace(/\./g, "");
-  return COUNTRY_SYNONYMS[key] || raw;
+  return LOCATION_REGION_SYNONYMS[key] || COUNTRY_SYNONYMS[key] || raw;
 }
 
 function appearsInText(phrase, text) {
@@ -579,19 +583,32 @@ function inferHolidays(text) {
   if (!text) return '';
 
   const t = String(text).replace(/\s+/g, ' ').toLowerCase();
+  const annualUnits = /(?:p\/?a|per\s*annum|pa|per\s*year|a\s*year|annual(?:ly)?)/i;
+  const monthlyUnits = /(?:per\s*month|a\s*month|monthly|p\/?m)\b/i;
 
-  let m = t.match(/(\d{1,3})\s*\+?\s*days?\s*(?:of\s+)?(?:leave|holiday|holidays|off)\b/i);
+  const patterns = [
+    /(\d{1,3}(?:\.\d+)?)\s*\+?\s*days?\s*(?:of\s+)?(?:leave|holiday|holidays|off)\b([^.]*)/i,
+    /\b(?:leave|holidays?|days\s*off)\b[^0-9]{0,30}(\d{1,3}(?:\.\d+)?)\s*\+?\s*days?\b([^.]*)/i,
+  ];
 
-  if (!m) {
-    m = t.match(/\b(?:leave|holidays?|days\s*off)\b[^0-9]{0,30}(\d{1,3})\s*\+?\s*days?\b/i);
+  for (const pattern of patterns) {
+    const match = t.match(pattern);
+    if (!match) continue;
+
+    const amount = parseFloat(match[1]);
+    if (!Number.isFinite(amount)) continue;
+
+    const context = `${match[0]} ${match[2] || ''}`;
+    const annualValue = monthlyUnits.test(context)
+      ? amount * 12
+      : amount;
+
+    if (annualUnits.test(context) || monthlyUnits.test(context) || /leave|holiday|off/i.test(context)) {
+      return String(Number.isInteger(annualValue) ? annualValue : Number(annualValue.toFixed(1)));
+    }
   }
 
-  if (!m) return '';
-
-  const n = m[1];
-  const pa = /(p\/?a|per\s*annum|pa|per\s*year|a\s*year)/i.test(m[0]) ? ' PA' : ''; // Revisa si hay "per annum"
-
-  return `${n} days${pa}`;
+  return '';
 }
 
 function inferGender(text) {
