@@ -1,5 +1,6 @@
 // pages/api/parse-job.js
 import OpenAI from "openai";
+import { generateRemarks as buildRemarks } from "./job-parser/remarks.js";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -7,13 +8,16 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const RANKS = [
   "Captain", "Captain/Engineer", "Skipper", "Chase Boat Captain", "Relief Captain",
   "Chief Officer", "2nd Officer", "3rd Officer", "Bosun", "Deck/Engineer", "Mate",
-  "Mate/Steward(ess)",
-  "Lead Deckhand", "Deckhand", "Deck/Steward(ess)", "Deck/Carpenter", "Deck/Divemaster",
-  "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Electrician", "Chef",
-  "Head Chef", "Sous Chef", "Solo Chef", "Cook/Crew Chef", "Crew Chef/Stew", "Chef/Steward(ess)", "Butler", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
-  "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Housekeeper", "Head of Housekeeping", "Cook/Stew/Deck", "Cook/Steward(ess)", "Stew/Deck",
-  "Laundry/Steward(ess)", "Stew/Masseur", "Masseur", "Hairdresser/Barber", "Nanny", "Videographer",
-  "Yoga/Pilates Instructor", "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
+  "Mate/Engineer", "Mate/Steward(ess)", "Lead Deckhand", "Deckhand", "Deck/Steward(ess)",
+  "Deck/Carpenter", "Deck/Divemaster", "Deck/Personal Trainer", "Deck/Cook", "Dayworker",
+  "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Engineer", "Electrician",
+  "Chef", "Head Chef", "Sous Chef", "Solo Chef", "Cook", "Cook/Crew Chef", "Crew Chef/Stew",
+  "Chef/Steward(ess)", "Chef/Deck", "Butler", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
+  "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Housekeeper",
+  "Head of Housekeeping", "Chef/Stew/Deck", "Cook/Stew/Deck", "Cook/Steward(ess)", "Stew/Deck",
+  "Laundry/Steward(ess)", "Stew/Masseur", "Stew/Yoga Instructor", "Masseur", "Hairdresser/Barber",
+  "Steward(ess)/Nanny", "Nanny", "Videographer", "Yoga/Pilates Instructor", "Personal Trainer",
+  "Dive Instructor", "Water Sport Instructor", "Nurse", "Other"
 ];
 
 const YACHT_TYPES = ["Motor Yacht", "Sailing Yacht", "Chase Boat", "Catamaran"];
@@ -25,6 +29,7 @@ const LANGS = ["Arabic", "Dutch", "English", "French", "German", "Greek", "Itali
 const FLU = ["Native", "Fluent", "Conversational"];
 const PROPULSION = ["Shaft Drive", "Pod Drive", "Waterjet", "Sail Drive", "Outboard", "Stern Drive"];
 const YEARS_BUCKETS = ['Green','1','2','2.5','3','5'];
+const CAPTAIN_FAMILY_RANKS = new Set(["Captain", "Captain/Engineer", "Relief Captain", "Skipper"]);
 
 // --- ayudas locales (solo si falta info del modelo) ---
 
@@ -62,26 +67,32 @@ const RANK_SYNONYMS = {
   "cook/stew": "Cook/Steward(ess)",
   "stew/cook": "Cook/Steward(ess)",
   "deckhand/stew": "Deck/Steward(ess)",
+  "deck stew": "Deck/Steward(ess)",
   "Sole Chef": "Solo Chef",
   "Crew Chef/Steward": "Crew Chef/Stew",
   "Crew Chef/Stewardess": "Crew Chef/Stew",
+  "crew chef": "Cook/Crew Chef",
   "steward/deck": "Stew/Deck",
   "stewardess/deck": "Stew/Deck",
   "stew/deckhand": "Stew/Deck",
   "steward/deckhand": "Stew/Deck",
+  "stew deck": "Stew/Deck",
   "stew/chef": "Cook/Steward(ess)",
   "chef/stew": "Chef/Steward(ess)",
   "chef/steward": "Chef/Steward(ess)",
   "chef/stewardess": "Chef/Steward(ess)",
   "chef/steward(ess)": "Chef/Steward(ess)",
+  "chef/deck": "Chef/Deck",
   "cook/stew/deck": "Cook/Stew/Deck",
   "cook/stew/deckhand": "Cook/Stew/Deck",
   "cook/stew/ deck": "Cook/Stew/Deck",
+  "chef/stew/deck": "Chef/Stew/Deck",
   "buttler": "Butler",
   "valet": "Butler",
   "mate/stew": "Mate/Steward(ess)",
   "mate/steward": "Mate/Steward(ess)",
   "mate/stewardess": "Mate/Steward(ess)",
+  "mate/engineer": "Mate/Engineer",
   "house keeper": "Housekeeper",
   "hk": "Housekeeper",
   "head housekeeper": "Head of Housekeeping",
@@ -92,6 +103,10 @@ const RANK_SYNONYMS = {
   "4th steward": "4th Steward(ess)",
   "4th stewardess": "4th Steward(ess)",
   "4th stew": "4th Steward(ess)",
+  "stew/yoga": "Stew/Yoga Instructor",
+  "stewardess/nanny": "Steward(ess)/Nanny",
+  "dive instrutor": "Dive Instructor",
+  "water sport instrutor": "Water Sport Instructor",
 };
 
 // Mapa básico ciudad -> país (se usa SOLO si el país viene vacío)
@@ -683,16 +698,27 @@ function detectTeamAndTeammate(text, out) {
   }
 
   const coupleCue = /\b(team\s*of\s*2|pair|duo|husband\s+and\s+wife|couple\s+(?:role|position|positions?|required|wanted|preferred))\b/i;
+  const explicitTeamCue = /\b(team\s+with|team\s+role|looking\s+for\s+a\s+team|captain\s*\/\s*stew\s*deck\s*team)\b/i;
 
   const join = String.raw`\s*(?:\+|\/|&|and)\s*`;
   const capChef = new RegExp(`\\b(captain)${join}(chef|cook)\\b`, "i");
   const chefCap = new RegExp(`\\b(chef|cook)${join}(captain)\\b`, "i");
+  const captainStewDeck = /\bcaptain\s*(?:\/|&|\+)\s*(stew(?:ard(?:ess)?)?\s*deck|deck\s*stew(?:ard(?:ess)?)?)\b/i;
+  const teammatePatterns = [
+    { re: /\bcook\s*(?:\/|&|\+)\s*stew\s*(?:\/|&|\+)\s*deck\b/i, rank: "Cook/Stew/Deck" },
+    { re: /\bchef\s*(?:\/|&|\+)\s*stew\s*(?:\/|&|\+)\s*deck\b/i, rank: "Chef/Stew/Deck" },
+    { re: /\bstew(?:ard(?:ess)?)?\s*deck\b/i, rank: "Stew/Deck" },
+    { re: /\bdeck\s*stew(?:ard(?:ess)?)?\b/i, rank: "Deck/Steward(ess)" },
+    { re: /\bchef\s*(?:\/|&|\+)\s*deck\b/i, rank: "Chef/Deck" },
+  ];
 
-  if (coupleCue.test(text) || capChef.test(text) || chefCap.test(text)) {
+  if (coupleCue.test(text) || explicitTeamCue.test(text) || capChef.test(text) || chefCap.test(text) || captainStewDeck.test(text)) {
     out.team = "Yes";
 
     if (!out.teammate_rank) {
-      if (/captain/i.test(out.rank)) out.teammate_rank = "Chef";
+      const teammateMatch = teammatePatterns.find(({ re }) => re.test(text));
+      if (teammateMatch) out.teammate_rank = teammateMatch.rank;
+      else if (/captain/i.test(out.rank)) out.teammate_rank = "Chef";
       else if (/(chef|cook)/i.test(out.rank)) out.teammate_rank = "Captain";
       else if (capChef.test(text)) out.teammate_rank = "Chef";
     }
@@ -747,207 +773,6 @@ export const config = {
   },
 };
 
-function escapeReg(s){ return String(s||"").replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-const WB = { before: '(?:^|[^A-Za-z0-9_])', after: '(?=$|[^A-Za-z0-9_])' };
-
-function buildRankRegex(rank){
-  if(!rank) return null;
-  const rankLc = String(rank).toLowerCase();
-  const alts = [rank];
-  for (const [syn, norm] of Object.entries(RANK_SYNONYMS)) {
-    if (String(norm).toLowerCase() === rankLc) alts.push(syn);
-  }
-  const alt = alts
-    .map(a => escapeReg(a).replace(/Steward\\\(ess\\\)/i, 'Steward\\(ess\\)'))
-    .join('|');
-  return new RegExp(`${WB.before}(?:${alt})${WB.after}`, 'ig');
-}
-
-function stripContactsAndCTAs(s) {
-  let t = String(s || '');
-  t = t.replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '');
-  t = t.replace(/\+?\d[\d ()\-\.]{6,}\d/g, '');
-  t = t.replace(/(?:please\s+)?(?:email|contact|reach)\s+(?:me\s+)?(?:at|via|on)?\s*/ig, '');
-  t = t.replace(/(please[, ]*)?(send|drop|shoot)\s+(me\s+)?(a\s+)?(message|dm|email)\b/ig, '');
-  return t;
-}
-
-function buildFieldPatterns(out) {
-  const pats = [];
-
-  const rxRank = buildRankRegex(out.rank);
-  if (rxRank) pats.push(new RegExp(rxRank.source, 'i'));
-
-  pats.push(/\b(motor\s*yacht|sailing\s*yacht|catamaran|chase\s*boat|m\/y|s\/y|s\/v|m\/v)\b/i);
-
-  pats.push(/\b\d{1,3}(?:\.\d+)?\s*(?:m(?:etres?|eters?)?|ft|feet|['’′])\+?\b/i);
-
-  if (out.uses) {
-    if (/private/i.test(out.uses)) pats.push(/\bprivate\b/i);
-    if (/charter/i.test(out.uses)) pats.push(/\bcharter\b/i);
-  }
-
-  if (out.type) pats.push(new RegExp(`\\b${escapeReg(out.type)}\\b`, 'i'));
-  pats.push(/\btemp(?:orary)?\b/i, /\bseasonal\b/i, /\brotation(?:al)?\b/i, /\brelief\b/i, /\bdelivery\b/i, /\bcrossing\b/i, /\bday\s*work\b/i);
-
-  if (out.season_type) pats.push(new RegExp(`\\b${escapeReg(out.season_type)}\\b`, 'i'));
-  pats.push(/\bdual[-\s]*season\b/i, /\bsingle[-\s]*season\b/i, /\byear[-\s]*round\b/i);
-
-  pats.push(/\b(asap|immediate(?:ly)?|start(?:ing)?|join(?:ing)?\s+on)\b/i);
-
-  pats.push(/\b(?:€|eur|usd|\$|£|gbp|aud)\s*\d/i, /(?:per|\/)\s*(?:day|week|month|hour|hr|wk|mo)\b/i, /\bDOE\b/i);
-
-  pats.push(/\b(own|private|single|separate|share(?:d)?|sharing)\s+cabin\b/i, /\blive\s*(?:a)?board|live\s+ashore|shore[-\s]?based\b/i);
-
-  pats.push(/\b(couple|team\s*of\s*2|pair|duo|captain\s*(?:\/|&|\+)\s*(?:chef|cook)|(?:chef|cook)\s*(?:\/|&|\+)\s*captain)\b/i);
-
-  pats.push(/\b(b1\s*\/\s*b2|b1b2|schengen|green\s*card|eu\s*passport|us\s*citizen)\b/i);
-
-  pats.push(/\b(english|spanish|french|italian|german|greek|portuguese|russian|dutch|turkish|arabic)\b/i);
-
-  pats.push(/\b(flag(?:ged)?|registry|registered|under\s+.*\s+flag)\b/i);
-
-  pats.push(/\b(based\s+in|home\s*port|homeport|docked\s+in|located\s+in)\b/i);
-  if (out.city)    pats.push(new RegExp(`\\b${escapeReg(out.city)}\\b`, 'i'));
-  if (out.country) pats.push(new RegExp(`\\b${escapeReg(out.country)}\\b`, 'i'));
-
-  pats.push(/\b(Shaft\s*Drive|Pod\s*Drive|Waterjet|Sail\s*Drive|Outboard|Stern\s*Drive|IPS|Azipod|Zeus)\b/i);
-
-  if (out.salary_currency) pats.push(new RegExp(`\\b${escapeReg(out.salary_currency)}\\b`, 'i'));
-
-  return pats;
-}
-
-function extractLOAExact(text) {
-  const src = String(text || "");
-  const items = [];
-
-const re = /(?:\b(\d{1,3}(?:\.\d+)?)\s*(ft|feet)\+?\b|\b(\d{1,3}(?:\.\d+)?)\s*m(?:etres?|eters?)?\+?\b|\b(\d{1,3}(?:\.\d+)?)\s*['’′]\+?\b)/gi;
-  let m;
-  while ((m = re.exec(src)) !== null) {
-    const fullTxt = m[0].trim();
-    let meters = null;
-    if (m[2]) { // ft/feet
-      meters = parseInt(m[1], 10) * 0.3048;
-    } else if (m[3]) { // m
-      meters = parseInt(m[3], 10);
-    } else if (m[4]) { // '
-      meters = parseInt(m[4], 10) * 0.3048;
-    }
-    if (!meters || isNaN(meters)) continue;
-
-    const i = m.index;
-    const window = src.slice(Math.max(0, i - 60), Math.min(src.length, i + fullTxt.length + 60)).toLowerCase();
-
-    const isTender = /\b(tender|chase\s*boat|chase\b|rib\b|dinghy\b|jet\s*tender|support\s*vessel|rescue\s*boat)\b/.test(window);
-    const isMain = /\b(yacht|s\/y|m\/y|s\/v|m\/v|catamaran|sail\s*boat|sailboat|motor\s*yacht|sailing\s*yacht|loa|length\b)\b/.test(window)
-                 || (!isTender && /\bcharter\b/.test(window));
-
-    if (meters <= 0 || meters > 200) continue;
-    items.push({ text: fullTxt, meters, isTender, isMain });
-  }
-
-  const seen = new Set();
-  const main = [];
-  const tenders = [];
-  for (const it of items) {
-    const key = `${it.text.toLowerCase()}|${it.isTender ? "t" : "m"}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    if (it.isTender) tenders.push(it);
-    else if (it.isMain) main.push(it);
-    else {
-      (it.meters >= 12 ? main : tenders).push(it);
-    }
-  }
-
-  let mainText = "";
-  if (main.length) {
-    const best = main.reduce((a, b) => (a.meters >= b.meters ? a : b));
-    mainText = best.text;
-  }
-
-  const tenderTexts = Array.from(
-    new Set(tenders.sort((a, b) => b.meters - a.meters).map(x => x.text))
-  );
-
-  const lines = [];
-  if (mainText) lines.push(`Main vessel LOA: ${mainText}.`);
-  if (tenderTexts.length) lines.push(`Tender: ${tenderTexts.join(" / ")}.`);
-  return lines;
-}
-
-function generateRemarks(originalText, out) {
-  const full = String(originalText || '').replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim();
-  const loaLines = extractLOAExact(originalText);
-
-  if (!full) return loaLines.join('\n');
-
-  const segs = full
-    .split(/\n+/)
-    .flatMap(p => p.split(/(?<=[.!?])\s+(?=[A-Z0-9])/))
-    .map(s => s.trim())
-    .filter(Boolean);
-
-  const pats = buildFieldPatterns(out);
-
-  const patsGlobal = pats.map(rx => new RegExp(rx.source, rx.flags.includes('i') ? 'ig' : (rx.flags + 'g')));
-
-  const kept = [];
-  for (const s0 of segs) {
-
-    const s1 = stripContactsAndCTAs(s0).trim();
-    if (!s1) continue;
-
-    let matchCount = 0;
-    for (const rx of pats) {
-      if (rx.test(s1)) matchCount++;
-    }
-
-    let cleaned = s1;
-    for (const rx of patsGlobal) {
-      cleaned = cleaned.replace(rx, '');
-    }
-
-    cleaned = cleaned
-      .replace(/\s{2,}/g, ' ')
-      .replace(/ ?([,;:]) ?/g, '$1 ')
-      .replace(/\s*\.\s*\.\s*\.+/g, '…')
-      .replace(/[(){}\[\]]/g, '')
-      .replace(/\s+([.!?])/g, '$1')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
-
-    const origLen = s1.replace(/\s+/g, '').length;
-    const leftLen = cleaned.replace(/\s+/g, '').length;
-    const words = cleaned.split(/\s+/).filter(Boolean).length;
-
-    if (matchCount >= 3 && leftLen / Math.max(1, origLen) < 0.5) continue;
-
-    if (words < 5 || cleaned.length < 25) continue;
-
-    kept.push(cleaned);
-  }
-
-  if (kept.length === 0) {
-    for (const s of segs) {
-      if (/\b(require(?:s|ments?)?|responsibilit(?:y|ies)|duties|ideal\s+candidate|skills?|profile|competenc(?:e|es)|background|experience)\b/i.test(s)) {
-        let c = s;
-        for (const rx of patsGlobal) c = c.replace(rx, '');
-        c = stripContactsAndCTAs(c).replace(/\s{2,}/g, ' ').trim();
-        if (c.split(/\s+/).length >= 5 && c.length >= 25) kept.push(c);
-      }
-    }
-  }
-
-  const uniq = Array.from(new Set(kept.map(x => x.toLowerCase()))).map(lc => kept.find(x => x.toLowerCase() === lc));
-  for (const line of loaLines) {
-    if (!uniq.some(b => b.toLowerCase() === line.toLowerCase())) uniq.push(line);
-  }
-
-  return uniq.join('\n');
-}
-
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Only POST allowed" });
 
@@ -967,6 +792,9 @@ const COMBOS = [
   [/\bchef\s*[/&+]\s*stew\b/i, 'Cook/Steward(ess)'],
   [/\bdeck\s*[/&+]\s*stew(?:ard(?:ess)?)?\b/i, 'Deck/Steward(ess)'],
   [/\bstew(?:ard(?:ess)?)?\s*[/&+]\s*deck(?:hand)?\b/i, 'Stew/Deck'],
+  [/\bcook\s*[/&+]\s*stew\s*[/&+]\s*deck\b/i, 'Cook/Stew/Deck'],
+  [/\bchef\s*[/&+]\s*stew\s*[/&+]\s*deck\b/i, 'Chef/Stew/Deck'],
+  [/\bchef\s*[/&+]\s*deck\b/i, 'Chef/Deck'],
 ];
 for (const [rx, norm] of COMBOS) processedText = processedText.replace(rx, norm);
 
@@ -1043,16 +871,15 @@ Do not include comments, markdown, or extra text.
 - yacht_type: one of ${YACHT_TYPES.join("|")}.
 - uses: map "Private", "Charter" or "Private/Charter" if present.
 - propulsion_type: normalize to one of [Shaft Drive, Pod Drive, Waterjet, Sail Drive, Outboard, Stern Drive] when explicitly mentioned (e.g., "IPS/Azipod/Zeus pods" => "Pod Drive"; "waterjet/jet" => "Waterjet"; "stern drive/sterndrive/z-drive" => "Stern Drive"; "twin screw/straight shaft" => "Shaft Drive"). Otherwise "".
-- team: "Yes" ONLY if it explicitly mentions a COUPLE/PAIR role; otherwise "No".
-- liveaboard: "Share Cabin" if the text says share/sharing cabin; "Own Cabin" if said; "No" for shore-based.
+- team: "Yes" if it explicitly mentions a couple, pair, team role, or a second crew role paired with the main rank; otherwise "No".
+- liveaboard: "Share Cabin" if the text says share/sharing cabin; "Own Cabin" if said; "No" for shore-based. If team="Yes", prefer "Own Cabin".
 - languages: fill language_1/_2 and *_fluency when explicit (e.g. "English / Fluent").
 - years_in_rank: Find the numeric value for "years in rank" or "experience" and convert it to a single number (e.g., "5+ years" -> "5", "2-3 years" -> "2", "proven experience" -> "2.5"). If the term "green" is used, return "Green".
 - city and country: infer both if possible. If only a city is stated, include the corresponding country in 'country'.
 - homeport: extract the city/port if explicitly stated, for example "homeport: Palma". If not stated, infer it from phrases like "based in".
 - gender: ONLY if the text explicitly requires it (e.g., "female only", "male required"). Otherwise, "".
 - visas: return an array with any of ["B1/B2","Schengen"] explicitly mentioned (e.g., "B1/B2 required", "valid Schengen"). If none, [].
-- description: put ALL extra, non-mapped information here (itinerary, visas, qualifications like AEC/ENG1/STCW, training, career progression, etc.).
-  Do not leave essential context out of description.
+- description: only include short non-mapped extras that still matter operationally. Do not repeat salary, location, dates, yacht size/type, rank, visas, or contact details already captured elsewhere.
 - contact_email, contact_phone: extract if present; else "".
 - Never invent data: leave as "" when not present. Keep booleans strictly true/false (no quotes in JSON).
     `.trim();
@@ -1281,6 +1108,7 @@ if (out.city) {
 
   const notLiveaboardRegExp =
   /\b(?:non[-\s]*live\s*aboard|no\s+live\s*aboard|not\s+live\s*aboard|live\s+ashore|living\s+ashore)\b/i;
+  const isCaptainFamily = CAPTAIN_FAMILY_RANKS.has(out.rank);
 
   if (out.work_environment === "Shore-based") {
   out.liveaboard = "No";
@@ -1292,7 +1120,6 @@ if (out.city) {
   out.liveaboard = "Share Cabin";
 } else {
   const mentionsCouple = /\b(?:couple(?:'s)?|couples?|team\s+of\s+2|pair|couple\s+(?:role|position))\b/i.test(t);
-  const isCaptainFamily = ["Captain","Captain/Engineer","Relief Captain","Skipper"].includes(out.rank);
   out.liveaboard = (mentionsCouple || isCaptainFamily) ? "Own Cabin" : "Share Cabin";
 }
 }
@@ -1317,12 +1144,15 @@ if (out.homeport) {
 
     if (!out.propulsion_type) {
       out.propulsion_type = inferPropulsionType(finalText);
-      if (!out.propulsion_type) out.propulsion_type = "Shaft Drive";
     }
 
 if (!out.visas || out.visas.length === 0) out.visas = inferVisas(finalText);
 
 detectTeamAndTeammate(finalText, out);
+
+if (out.team === "Yes" && out.work_environment !== "Shore-based") {
+  out.liveaboard = "Own Cabin";
+}
 
 if (!out.gender) {
   const femRanks = new Set([
@@ -1410,7 +1240,7 @@ if (out.start_date && out.start_date.trim()) {
   out.start_date = "";
 }
 
-out.description = generateRemarks(finalText, out);
+out.description = buildRemarks(finalText, out);
 
 return res.status(200).json(out);
 
@@ -1419,3 +1249,4 @@ return res.status(200).json(out);
     return res.status(500).json({ error: err.message || "Parse error" });
   }
 }
+
