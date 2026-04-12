@@ -666,7 +666,7 @@ function inferHolidays(text) {
       : amount;
 
     if (annualUnits.test(context) || monthlyUnits.test(context) || /leave|holiday|off/i.test(context)) {
-      return String(Number.isInteger(annualValue) ? annualValue : Number(annualValue.toFixed(1)));
+      return String(Math.round(annualValue));
     }
   }
 

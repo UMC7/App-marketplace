@@ -42,6 +42,8 @@ import {
   getDeckDocumentOptionsForRank,
 } from './yachtOfferForm.utils';
 
+const BASE_REQUIRED_DOCUMENTS = ['ENG1 Seafarer Medical Certificate', 'STCW Basic Training (A-VI/1)'];
+
 const initialState = {
   work_environment: '',
   title: '',
@@ -56,7 +58,7 @@ const initialState = {
   end_day: '',
   required_license: '',
   engineering_license: '',
-  required_documents: ['ENG1 Seafarer Medical Certificate', 'STCW Basic Training (A-VI/1)'],
+  required_documents: BASE_REQUIRED_DOCUMENTS,
   required_skills: [],
   salary: '',
   is_doe: false,
@@ -116,7 +118,7 @@ function normalizeInitialValues(row) {
         const v = row[k];
         const def = initialState[k];
         if (v == null) {
-          if (Array.isArray(def)) return [k, []];
+          if (Array.isArray(def)) return [k, [...def]];
           if (typeof def === 'string') {
             if (k === 'posting_duration') return [k, def];
             return [k, ''];
@@ -124,7 +126,10 @@ function normalizeInitialValues(row) {
           if (typeof def === 'number') return [k, ''];
           if (typeof def === 'boolean') return [k, !!def];
         }
-        if (Array.isArray(def) && !Array.isArray(v)) return [k, []];
+        if (Array.isArray(def) && !Array.isArray(v)) return [k, [...def]];
+        if (k === 'required_documents' && Array.isArray(v)) {
+          return [k, Array.from(new Set([...(v || []), ...BASE_REQUIRED_DOCUMENTS]))];
+        }
         return [k, v];
       })
   );
@@ -220,7 +225,7 @@ useEffect(() => {
   if (!Array.isArray(initialValues?.required_documents)) return;
   setFormData(prev => ({
     ...prev,
-    required_documents: initialValues.required_documents || [],
+    required_documents: Array.from(new Set([...(initialValues.required_documents || []), ...BASE_REQUIRED_DOCUMENTS])),
   }));
 }, [initialValues]);
 
@@ -346,7 +351,7 @@ const autoFillFromText = async () => {
 
         if (k === "required_documents") {
           const arr = Array.isArray(v) ? v : [];
-          merged.required_documents = Array.from(new Set([...(Array.isArray(merged.required_documents) ? merged.required_documents : []), ...arr]));
+          merged.required_documents = Array.from(new Set([...(Array.isArray(merged.required_documents) ? merged.required_documents : []), ...BASE_REQUIRED_DOCUMENTS, ...arr]));
           continue;
         }
 
@@ -384,6 +389,14 @@ const autoFillFromText = async () => {
         merged.teammate_salary = "";
         merged.salary_currency = merged.salary_currency || data.salary_currency || "";
         merged.teammate_salary_currency = "";
+      }
+
+      if (merged.work_environment === 'Onboard' || data.work_environment === 'Onboard') {
+        merged.required_documents = Array.from(new Set([...(Array.isArray(merged.required_documents) ? merged.required_documents : []), ...BASE_REQUIRED_DOCUMENTS]));
+      }
+
+      if (!merged.required_license && typeof data.required_license === 'string' && data.required_license.trim()) {
+        merged.required_license = data.required_license.trim();
       }
 
       return merged;
