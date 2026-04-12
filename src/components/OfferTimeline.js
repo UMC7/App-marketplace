@@ -132,7 +132,7 @@ const OfferTimeline = ({
   key={dayGroup}
   style={{
     margin: '0 auto 15px',
-    padding: '0 10px',
+    padding: isMobile ? '0' : '0 10px',
     maxWidth: '100%',
     boxSizing: 'border-box'
   }}

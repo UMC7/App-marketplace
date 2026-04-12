@@ -1391,6 +1391,8 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     box-sizing: border-box;
     padding: 12px !important;
     margin-bottom: 16px !important;
+    width: 100% !important;
+    max-width: none !important;
   }
 
   /* 2) ProductCard-inner pasa a row-reverse para imagen a la derecha */
@@ -1420,7 +1422,7 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     display: flex !important;
     flex-direction: column !important;
     gap: 16px;
-    padding: 0 20px !important;
+    padding: 0 8px !important;
     margin: 0 auto !important;
     box-sizing: border-box;
   }
@@ -1429,6 +1431,8 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
 /* Restaurar altura fija SOLO a tarjetas colapsadas de empleos (offer-card) en móvil portrait */
 @media (max-width: 768px) and (orientation: portrait) {
   .collapsed-offer {
+    width: 100% !important;
+    max-width: 100% !important;
     min-height: 110px !important;
     max-height: 110px !important;
     height: 110px !important;

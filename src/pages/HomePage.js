@@ -127,7 +127,7 @@ function HomePage() {
   }
 
   return (
-    <div className="container">
+    <div className="container seamarket-page">
       <div className="module-header-wrapper">
         <div className="module-header-row">
           <h1>SeaMarket</h1>

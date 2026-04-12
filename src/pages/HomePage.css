@@ -197,7 +197,16 @@
 
 /* Móviles */
 @media (max-width: 640px) {
+  .seamarket-page {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
   .products-grid {
     grid-template-columns: 1fr;
+  }
+
+  .products-grid > * {
+    max-width: none;
   }
 }

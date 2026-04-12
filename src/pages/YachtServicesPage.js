@@ -235,7 +235,7 @@ function YachtServicesPage() {
   const shareIcon = { fontSize: 22, color: '#111' };
 
   return (
-    <div className="container">
+    <div className="container seaservices-page">
       <div className="module-header-wrapper">
         <div className="module-header-row">
           <h1>SeaServices</h1>

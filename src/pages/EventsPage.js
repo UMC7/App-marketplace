@@ -302,7 +302,7 @@ function EventsPage() {
   const hasActiveFilters = Boolean(searchDate || selectedCountry || selectedCity);
 
   return (
-    <div className="container">
+    <div className="container seaevents-page">
       <div className="module-header-wrapper">
         <div className="module-header-row">
           <h1>SeaEvents</h1>

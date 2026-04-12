@@ -99,6 +99,12 @@
   justify-content: center;
 }
 
+@media (max-width: 768px) {
+  .profile-products-container .profile-card {
+    max-width: min(100%, 340px);
+  }
+}
+
 .profile-action-buttons {
   display: flex;
   flex-wrap: wrap;

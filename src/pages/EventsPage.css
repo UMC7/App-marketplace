@@ -102,6 +102,21 @@
   min-height: 450px;
 }
 
+@media (max-width: 767px) {
+  .seaevents-page {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .seaevents-page .responsive-grid {
+    padding: 0 4px !important;
+  }
+
+  .seaevents-page .event-card {
+    max-width: min(100%, 390px);
+  }
+}
+
 .event-image-wrap{
   position: relative;
   width: 100%;
