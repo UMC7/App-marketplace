@@ -681,6 +681,16 @@ const formReady = (() => {
         newState.teammate_salary_currency = value;
       }
 
+      if (name === 'team' && value !== 'Yes') {
+        newState.teammate_rank = '';
+        newState.teammate_required_license = '';
+        newState.teammate_engineering_license = '';
+        newState.teammate_required_documents = [];
+        newState.teammate_salary = '';
+        newState.teammate_salary_currency = '';
+        newState.teammate_experience = '';
+      }
+
       if (name === 'yacht_type') {
         const nextYachtSizeOptions = value === 'Chase Boat' ? CHASE_BOAT_SIZES : DEFAULT_YACHT_SIZES;
         if (prev.yacht_size && !nextYachtSizeOptions.includes(prev.yacht_size)) {
@@ -741,6 +751,7 @@ const coerceOptionalNumber = (value) => {
 
 /** Payload solo con columnas de la tabla (evita 400 por columnas/formato incorrecto) */
 const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
+  const isTeamJob = sanitizedData.team === 'Yes' || sanitizedData.team === true;
   const base = {
     work_environment: sanitizedData.work_environment,
     work_location: sanitizedData.work_location || null,
@@ -767,11 +778,11 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     posting_duration: sanitizedData.posting_duration || '1 month',
     contact_email: sanitizedData.contact_email || null,
     contact_phone: sanitizedData.contact_phone || null,
-    team: sanitizedData.team === 'Yes',
-    teammate_rank: sanitizedData.team === 'Yes' ? (sanitizedData.teammate_rank || null) : null,
-    teammate_salary: sanitizedData.team === 'Yes' ? coerceOptionalNumber(sanitizedData.teammate_salary) : null,
-    teammate_salary_currency: sanitizedData.team === 'Yes' ? (sanitizedData.teammate_salary_currency || null) : null,
-    teammate_experience: sanitizedData.team === 'Yes' ? sanitizedData.teammate_experience : null,
+    team: isTeamJob,
+    teammate_rank: isTeamJob ? (sanitizedData.teammate_rank || null) : null,
+    teammate_salary: isTeamJob ? coerceOptionalNumber(sanitizedData.teammate_salary) : null,
+    teammate_salary_currency: isTeamJob ? (sanitizedData.teammate_salary_currency || null) : null,
+    teammate_experience: isTeamJob ? sanitizedData.teammate_experience : null,
     flag: sanitizedData.flag || null,
     yacht_size: sanitizedData.yacht_size || null,
     yacht_type: sanitizedData.yacht_type || null,
@@ -780,9 +791,9 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     required_engineering_licenses: Array.isArray(sanitizedData.required_engineering_licenses) ? sanitizedData.required_engineering_licenses : [],
     required_documents: Array.isArray(sanitizedData.required_documents) ? sanitizedData.required_documents : [],
     required_skills: Array.isArray(sanitizedData.required_skills) ? sanitizedData.required_skills : [],
-    teammate_required_licenses: Array.isArray(sanitizedData.teammate_required_licenses) ? sanitizedData.teammate_required_licenses : [],
-    teammate_required_engineering_licenses: Array.isArray(sanitizedData.teammate_required_engineering_licenses) ? sanitizedData.teammate_required_engineering_licenses : [],
-    teammate_required_documents: Array.isArray(sanitizedData.teammate_required_documents) ? sanitizedData.teammate_required_documents : [],
+    teammate_required_licenses: isTeamJob && Array.isArray(sanitizedData.teammate_required_licenses) ? sanitizedData.teammate_required_licenses : [],
+    teammate_required_engineering_licenses: isTeamJob && Array.isArray(sanitizedData.teammate_required_engineering_licenses) ? sanitizedData.teammate_required_engineering_licenses : [],
+    teammate_required_documents: isTeamJob && Array.isArray(sanitizedData.teammate_required_documents) ? sanitizedData.teammate_required_documents : [],
     homeport: sanitizedData.homeport || null,
     liveaboard: sanitizedData.liveaboard || null,
     season_type: sanitizedData.season_type || null,
