@@ -29,8 +29,14 @@ export default function DocumentsSection({
     { key: "covidVaccine",   label: "COVID Vaccine" },
   ];
 
-  const valOf = (v) => (v === true ? "yes" : "no");
-  const parseVal = (s) => (s === "yes" ? true : s === "no" ? false : null);
+  const valOf = (key, v) => {
+    if (key === "schengenVisa" && v === "resident") return "resident";
+    return v === true ? "yes" : "no";
+  };
+  const parseVal = (key, s) => {
+    if (key === "schengenVisa" && s === "resident") return "resident";
+    return s === "yes" ? true : s === "no" ? false : null;
+  };
 
   return (
     <>
@@ -62,8 +68,8 @@ export default function DocumentsSection({
           const isEuSchengen = isSchengen && isEu;
           const isUsPassport = isUsVisa && isUs;
           const displayValue = (isEuSchengen || isUsPassport)
-            ? valOf(docFlags?.passport6m)
-            : valOf(docFlags?.[it.key]);
+            ? valOf(it.key, docFlags?.passport6m)
+            : valOf(it.key, docFlags?.[it.key]);
 
           return (
             <label
@@ -86,7 +92,7 @@ export default function DocumentsSection({
                 value={displayValue}
                 onChange={(e) =>
                   !(isEuSchengen || isUsPassport) && typeof onChangeDocFlag === "function"
-                    ? onChangeDocFlag(it.key, parseVal(e.target.value))
+                    ? onChangeDocFlag(it.key, parseVal(it.key, e.target.value))
                     : undefined
                 }
                 disabled={readOnly || isEuSchengen || isUsPassport}
@@ -102,6 +108,7 @@ export default function DocumentsSection({
               >
                 <option value="yes">Yes</option>
                 <option value="no">No</option>
+                {it.key === "schengenVisa" ? <option value="resident">Resident</option> : null}
               </select>
             </label>
           );

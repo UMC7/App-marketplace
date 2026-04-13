@@ -162,7 +162,9 @@ export default function BasicDocsSummary({ documents = [], docFlags = {}, nation
 
     // Schengen Visa — ok si doc o flag (pero si es EU, mostramos "EU Passport")
     const schengen = byType('visa').find(d => /schengen/i.test(norm(d.title || d.type)));
-    const schengenOk = ((!!schengen) || flagTrue(docFlags?.schengenVisa));
+    const residentDoc = docs.find(d => /residen|permit/i.test(norm(d.title || d.type)));
+    const schengenResident = docFlags?.schengenVisa === 'resident' || !!residentDoc;
+    const schengenOk = schengenResident || (!!schengen) || flagTrue(docFlags?.schengenVisa);
 
     // US Visa — ok si doc o flag
     const usVisa = byType('visa').find(d =>
@@ -185,7 +187,7 @@ export default function BasicDocsSummary({ documents = [], docFlags = {}, nation
 
     return [
       { label: 'Passport >6 months', ok: passportOk },
-      { label: isEu ? 'EU Passport' : 'SCHENGEN Visa', ok: isEu ? passportOk : schengenOk },
+      { label: isEu ? 'EU Passport' : (schengenResident ? 'EU Resident' : 'SCHENGEN Visa'), ok: isEu ? passportOk : schengenOk },
       { label: 'STCW Basic Safety',  ok: stcwOk },
       { label: "Seaman’s Book",      ok: sbOk },
       { label: 'ENG1',               ok: eng1Ok },

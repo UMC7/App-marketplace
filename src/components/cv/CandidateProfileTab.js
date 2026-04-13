@@ -48,7 +48,12 @@ function allDocFlagsSelected(docFlags) {
     'passport6m','schengenVisa','stcwBasic','seamansBook','eng1',
     'usVisa','drivingLicense','pdsd','covidVaccine'
   ];
-  return keys.every(k => typeof docFlags[k] === 'boolean');
+  return keys.every((k) => {
+    if (k === 'schengenVisa') {
+      return docFlags[k] === true || docFlags[k] === false || docFlags[k] === 'resident';
+    }
+    return typeof docFlags[k] === 'boolean';
+  });
 }
 
 function docsMeetMin(docs) {
