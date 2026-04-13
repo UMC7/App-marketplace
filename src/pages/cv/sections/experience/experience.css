@@ -190,7 +190,7 @@ body.dark-mode .ppv-previewRibbon {
 .ppv-xpHeaderRow { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
 .ppv-xpTitle { margin: 0; font-size: 18px; letter-spacing: .12em; text-transform: uppercase; color: #0b1220 !important; font-weight: 800; opacity: 1 !important; mix-blend-mode: normal !important; text-align: center; }
 .ppv-xpList { display: grid; gap: 12px; }
-.ppv-xpCard { background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 16px; padding: 12px; box-shadow: 0 6px 18px rgba(2,6,23,.06); }
+.ppv-xpCard { background: #fcfcfb; border: 1px solid rgba(15,23,42,.18); border-radius: 16px; padding: 12px; box-shadow: 0 6px 14px rgba(2,6,23,.08); }
 .ppv-xpCardHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .ppv-xpHeadTitle {
   font-weight: 700;

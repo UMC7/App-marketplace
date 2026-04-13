@@ -6,6 +6,7 @@ export default function MediaUploader({
   onChange,
   onUpload,
   max = 9,
+  maxVideos = 1,
   minPhotos = 3,
   accept = "image/*,video/*",
   showGrid = true,
@@ -28,9 +29,11 @@ export default function MediaUploader({
   const countImages = (arr) => (arr || []).filter((m) => (m?.type || '') !== "video").length;
   const hasVideo = countVideos(items) > 0;
   const missingMinPhotos = countImages(items) < minPhotos;
+  const unlimitedTotal = !Number.isFinite(max);
+  const unlimitedVideos = !Number.isFinite(maxVideos);
 
-  const remaining = Math.max(0, max - items.length);
-  const canAddMore = remaining > 0;
+  const remaining = unlimitedTotal ? null : Math.max(0, max - items.length);
+  const canAddMore = unlimitedTotal ? true : remaining > 0;
 
   const commit = (next) => {
     setItems(next);
@@ -100,14 +103,14 @@ export default function MediaUploader({
       const allowed = [];
       for (let i = 0; i < normalized.length; i++) {
         // Respetar el máximo total
-        if (items.length + allowed.length >= MAX_TOTAL) break;
+        if (Number.isFinite(MAX_TOTAL) && items.length + allowed.length >= MAX_TOTAL) break;
 
         const f = normalized[i];
         const kind = inferType(f);
 
         if (kind === "video") {
-          if (videoTaken >= 1) {
-            nextErr = nextErr || "Only one video is allowed.";
+          if (Number.isFinite(maxVideos) && videoTaken >= maxVideos) {
+            nextErr = nextErr || (maxVideos === 1 ? "Only one video is allowed." : `Only ${maxVideos} videos are allowed.`);
             continue;
           }
           if (Number.isFinite(f.size) && f.size > MAX_VIDEO_BYTES) {
@@ -195,7 +198,7 @@ export default function MediaUploader({
         });
       }
     },
-    [items, onUpload, max]
+    [items, onUpload, max, maxVideos]
   );
 
   const handleFileInput = (ev) => {
@@ -238,7 +241,10 @@ export default function MediaUploader({
     <div className="media-uploader">
       <div className="header">
         <div className="count">
-          {items.length}/{max} • max 1 video - <span className="req">min 3 photos</span>
+          {unlimitedTotal
+            ? `${items.length} items • unlimited uploads - `
+            : `${items.length}/${max} • ${unlimitedVideos ? 'unlimited videos' : `max ${maxVideos} video${maxVideos === 1 ? '' : 's'}`} - `}
+          <span className="req">min 3 photos</span>
         </div>
       </div>
 
@@ -274,7 +280,9 @@ export default function MediaUploader({
           <div className="dz-cta">
             {busy ? "Uploading..." : "Drag & drop files here"}
           </div>
-          <div className="dz-sub">or click to browse • up to {remaining} more</div>
+          <div className="dz-sub">
+            {unlimitedTotal ? 'or click to browse' : `or click to browse • up to ${remaining} more`}
+          </div>
         </div>
       </label>
 

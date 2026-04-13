@@ -27,10 +27,11 @@
 
 /* ---------- Tarjeta (SUPER COMPACTA) ---------- */
 .edu-card{
-  border:1px solid rgba(15,23,42,.10);
+  border:1px solid rgba(15,23,42,.14);
   border-radius:10px;
   padding:6px 10px;                      /* compacto */
   background:#f8fafc;
+  box-shadow: 0 4px 10px rgba(2,6,23,.05);
   /* Asegura que NINGUNA regla anterior fije altos mayores */
   min-height:auto !important;
 }
@@ -112,9 +113,10 @@
 
   .edu-card{
     background:#f8fafc;
-    border-color: rgba(15,23,42,.10);
+    border-color: rgba(15,23,42,.14);
     min-height:auto !important;           /* refuerzo en dark */
     padding:6px 10px !important;
+    box-shadow: 0 4px 10px rgba(2,6,23,.05);
   }
   .edu-card-title{ color:#0b1220; }
   .edu-card-sub{ color:#334155; }

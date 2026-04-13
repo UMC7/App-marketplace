@@ -193,10 +193,11 @@ export default function PublicReferencesSection({
                     alignItems: 'center',
                     gap: 12,
                     padding: '10px 12px',
-                    border: '1px solid rgba(0,0,0,.08)',
+                    border: '1px solid rgba(15,23,42,.14)',
                     borderRadius: 12,
                     background: '#fff',
                     marginBottom: 10,
+                    boxShadow: '0 4px 10px rgba(2,6,23,.05)',
                   }}
                 >
                   <span className="ppv-docBullet" aria-hidden="true" style={{ paddingLeft: 6 }}>•</span>

@@ -90,6 +90,14 @@ const CANDIDATE_PROFILE_MODAL_DELAY_MS = 5000;
 export default function CandidateProfileTab({ adminUserId = null }) {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const UNLIMITED_MEDIA_USER_IDS = useMemo(
+    () =>
+      new Set([
+        'dc3c4ca6-e892-4c25-891f-287f43f9c182',
+        '377caa8a-95ee-4959-adad-c9af2eae2171',
+      ]),
+    []
+  );
   const isAdminView = !!adminUserId;
   const canEdit = !isAdminView;
   const [loading, setLoading] = useState(true);
@@ -1583,10 +1591,12 @@ const educationProgress = { count: (educationCount || 0) > 0 ? 1 : 0, total: 1 }
 const galleryImagesCount = Array.isArray(gallery)
   ? gallery.filter((it) => (it?.type || inferTypeByName(it?.name || it?.path || it?.url || '')) === 'image').length
   : 0;
+const hasUnlimitedMedia = !!(profile?.user_id && UNLIMITED_MEDIA_USER_IDS.has(profile.user_id));
+const mediaTarget = isLite ? 3 : (hasUnlimitedMedia ? Math.max(9, galleryImagesCount || 0) : 9);
 
 const mediaProgress = {
-  count: Math.min(galleryImagesCount, isLite ? 3 : 9),
-  total: isLite ? 3 : 9,
+  count: Math.min(galleryImagesCount, mediaTarget),
+  total: mediaTarget,
 };
 
 const galleryDirty = useMemo(() => {
@@ -2064,6 +2074,8 @@ const meetsPrefsMin =
                 value={gallery}
                 onChange={setGallery}
                 onUpload={handleUploadMedia}
+                max={hasUnlimitedMedia ? Number.POSITIVE_INFINITY : 9}
+                maxVideos={hasUnlimitedMedia ? Number.POSITIVE_INFINITY : 1}
                 readOnly={!canEdit}
               />
               <div className="cp-actions" style={{ marginTop: 12 }}>

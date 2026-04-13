@@ -8,6 +8,7 @@ export default function MediaSection({
   onUpload,
   title = "Photos & Videos",
   max = 9,
+  maxVideos = 1,
   readOnly = false,
   columns = 3,
   showEditor = true,
@@ -57,6 +58,7 @@ export default function MediaSection({
             onChange={handleChange}
             onUpload={onUpload}
             max={max}
+            maxVideos={maxVideos}
             showGrid={false}
           />
         </div>
