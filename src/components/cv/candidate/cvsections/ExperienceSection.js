@@ -95,7 +95,24 @@ function parseYearMonth(ym) {
 }
 
 function normalizeVesselType(v) {
-  return normalizeYachtVesselType(v) || 'Other';
+  const ui = normalizeYachtVesselType(v);
+  const raw = String(v || '').trim().toLowerCase();
+
+  if (ui === 'Motor Yacht') return 'Motor';
+  if (ui === 'Sailing Yacht') return 'Sailing';
+  if (ui === 'Sailing Catamaran' || ui === 'Motor Catamaran') return 'Catamaran';
+  if (ui === 'Chase Boat') return 'Chase Boat';
+  if (ui === 'Support Yacht') return 'Support';
+  if (ui === 'Expedition Yacht') return 'Expedition';
+
+  if (raw.includes('motor')) return 'Motor';
+  if (raw.includes('sail')) return 'Sailing';
+  if (raw.includes('cat')) return 'Catamaran';
+  if (raw.includes('chase')) return 'Chase Boat';
+  if (raw.includes('support') || raw.includes('shadow')) return 'Support';
+  if (raw.includes('exped')) return 'Expedition';
+
+  return null;
 }
 
 function normalizeMode(type, use, contract) {
@@ -444,13 +461,18 @@ export default function ExperienceSection({
         contract: editing.contract || null,
       });
 
+      const normalizedVesselType = normalizeVesselType(editing.vessel_type);
+      if (!normalizedVesselType) {
+        return toast.error('Please choose a valid vessel type.');
+      }
+
       const payload = {
         kind: editing.type || null,
         profile_id: pid,
         department: editing.department || null,
         role: roleToSave || null,
         vessel_name: editing.vessel_or_employer || null,
-        vessel_type: normalizeVesselType(editing.vessel_type),
+        vessel_type: normalizedVesselType,
         loa_m: Number.isFinite(loa) ? loa : null,
         gt: hideTech ? null : editing.gt ? Number(editing.gt) : null,
         mode: normalizeMode('yacht', editing.use, editing.contract),
