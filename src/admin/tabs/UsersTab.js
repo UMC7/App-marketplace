@@ -22,6 +22,38 @@ function UsersTab({ currentUser }) {
   const [page, setPage] = useState(1);
   const rowsPerPage = 50;
 
+  async function resolveCvLink(user) {
+    if (!user?.id) return '';
+    if (user.cv_link) return user.cv_link;
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    try {
+      const { data, error } = await supabase.rpc('rpc_get_profile_for_admin', {
+        target_user_id: user.id,
+      });
+      if (error) throw error;
+      const handle = String(data?.handle || '').trim();
+      if (!handle) return '';
+      const nextLink = `${origin}/cv/${handle}`;
+      setUsers((prev) =>
+        prev.map((row) => (row.id === user.id ? { ...row, cv_link: nextLink } : row))
+      );
+      return nextLink;
+    } catch (_e) {
+      return '';
+    }
+  }
+
+  async function handleOpenCv(user, e) {
+    if (e) e.stopPropagation();
+    const link = await resolveCvLink(user);
+    if (!link) {
+      alert('Digital CV not available for this user.');
+      return;
+    }
+    window.open(link, '_blank', 'noopener,noreferrer');
+  }
+
   useEffect(() => {
     fetchUsers();
     // eslint-disable-next-line
@@ -308,26 +340,23 @@ function UsersTab({ currentUser }) {
                 )}
               </td>
               <td>
-                {user.cv_link ? (
-                  <a
-                    href={user.cv_link}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      display: 'inline-block',
-                      padding: '4px 8px',
-                      borderRadius: 6,
-                      border: '1px solid #6fc4c0',
-                      background: '#6fc4c0',
-                      color: '#111',
-                      textDecoration: 'none',
-                      marginRight: 8,
-                    }}
-                  >
-                    CV
-                  </a>
-                ) : null}
+                <button
+                  type="button"
+                  onClick={(e) => handleOpenCv(user, e)}
+                  style={{
+                    display: 'inline-block',
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid #6fc4c0',
+                    background: '#6fc4c0',
+                    color: '#111',
+                    textDecoration: 'none',
+                    marginRight: 8,
+                    cursor: 'pointer',
+                  }}
+                >
+                  CV
+                </button>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -443,8 +472,8 @@ function UsersTab({ currentUser }) {
         </button>
         <button
           className="admin-action-button"
-          onClick={() => window.open(selectedUser?.cv_link, '_blank', 'noopener,noreferrer')}
-          disabled={!selectedUser?.cv_link}
+          onClick={() => handleOpenCv(selectedUser)}
+          disabled={!selectedUserId}
         >
           Open Digital CV
         </button>
