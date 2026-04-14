@@ -275,6 +275,12 @@ body.dark-mode .admin-panel tr:nth-child(even),
   border-color: #ffcdd2 !important;
 }
 
+.admin-actions .admin-action-cv {
+  background-color: #dff7f5 !important;
+  color: #0f5f5b !important;
+  border-color: #9ad8d3 !important;
+}
+
 .admin-actions .admin-action-block {
   background-color: #fff8e1 !important;
   color: #aa7b00 !important;

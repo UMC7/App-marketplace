@@ -471,7 +471,7 @@ function UsersTab({ currentUser }) {
           View Candidate Profile
         </button>
         <button
-          className="admin-action-button"
+          className="admin-action-button admin-action-cv"
           onClick={() => handleOpenCv(selectedUser)}
           disabled={!selectedUserId}
         >
