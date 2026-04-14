@@ -31,10 +31,12 @@ export default function DocumentsSection({
 
   const valOf = (key, v) => {
     if (key === "schengenVisa" && v === "resident") return "resident";
+    if (key === "usVisa" && v === "green_card") return "green_card";
     return v === true ? "yes" : "no";
   };
   const parseVal = (key, s) => {
     if (key === "schengenVisa" && s === "resident") return "resident";
+    if (key === "usVisa" && s === "green_card") return "green_card";
     return s === "yes" ? true : s === "no" ? false : null;
   };
 
@@ -109,6 +111,7 @@ export default function DocumentsSection({
                 <option value="yes">Yes</option>
                 <option value="no">No</option>
                 {it.key === "schengenVisa" ? <option value="resident">Resident</option> : null}
+                {it.key === "usVisa" ? <option value="green_card">Green Card</option> : null}
               </select>
             </label>
           );

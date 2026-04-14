@@ -170,7 +170,9 @@ export default function BasicDocsSummary({ documents = [], docFlags = {}, nation
     const usVisa = byType('visa').find(d =>
       /\b(us|b1\/?b2|b1|c1\/?d)\b/i.test(norm(d.title || d.type))
     );
-    const usOk = ((!!usVisa) || flagTrue(docFlags?.usVisa));
+    const greenCardDoc = docs.find(d => /green\s*card|permanent\s*resident/i.test(norm(d.title || d.type)));
+    const usGreenCard = docFlags?.usVisa === 'green_card' || !!greenCardDoc;
+    const usOk = usGreenCard || (!!usVisa) || flagTrue(docFlags?.usVisa);
 
     // === NUEVOS 3 ÍTEMS (segunda fila) ===
     // Driving License — ok si doc o flag
@@ -191,7 +193,7 @@ export default function BasicDocsSummary({ documents = [], docFlags = {}, nation
       { label: 'STCW Basic Safety',  ok: stcwOk },
       { label: "Seaman’s Book",      ok: sbOk },
       { label: 'ENG1',               ok: eng1Ok },
-      { label: isUs ? 'US Passport' : 'US VISA', ok: isUs ? passportOk : usOk },
+      { label: isUs ? 'US Passport' : (usGreenCard ? 'Green Card' : 'US VISA'), ok: isUs ? passportOk : usOk },
       // ⬇️ Fila adicional
       { label: 'Driving License',    ok: drivingOk },
       { label: 'PDSD Course',        ok: pdsdOk },

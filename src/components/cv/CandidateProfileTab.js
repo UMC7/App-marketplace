@@ -52,6 +52,9 @@ function allDocFlagsSelected(docFlags) {
     if (k === 'schengenVisa') {
       return docFlags[k] === true || docFlags[k] === false || docFlags[k] === 'resident';
     }
+    if (k === 'usVisa') {
+      return docFlags[k] === true || docFlags[k] === false || docFlags[k] === 'green_card';
+    }
     return typeof docFlags[k] === 'boolean';
   });
 }
