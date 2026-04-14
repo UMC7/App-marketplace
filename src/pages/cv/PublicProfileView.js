@@ -24,6 +24,10 @@ const BASE_A4_HEIGHT = Math.round(BASE_A4_WIDTH * (297 / 210));
 const INTRO_FIXED_PX = Math.round(BASE_A4_HEIGHT * 0.10) + 14;
 const MIN_SCALE = 0.42;
 const MAX_SCALE = 1;
+const UNLIMITED_MEDIA_USER_IDS = new Set([
+  'dc3c4ca6-e892-4c25-891f-287f43f9c182',
+  '377caa8a-95ee-4959-adad-c9af2eae2171',
+]);
 
 function setViewportContent(content) {
   const meta = document.querySelector('meta[name="viewport"]');
@@ -992,6 +996,12 @@ function computeScrollTargetTop(el, extra = 12) {
     () => isPreview || (profile?.share_ready === true) || isShareReadyByData,
     [isPreview, profile?.share_ready, isShareReadyByData]
   );
+  const publicMediaMaxItems = useMemo(() => {
+    if (profile?.user_id && UNLIMITED_MEDIA_USER_IDS.has(String(profile.user_id))) {
+      return Math.max(Array.isArray(gallery) ? gallery.length : 0, 10);
+    }
+    return 10;
+  }, [profile?.user_id, gallery]);
   useEmitProfileView(allowPublicView ? profile : null);
 
   if (loading) {
@@ -1355,7 +1365,7 @@ if (!allowPublicView && !isPreview) {
                     title="MEDIA"
                     subtitle="Photos & Videos"
                     gallery={gallery}
-                    maxItems={14}
+                    maxItems={publicMediaMaxItems}
                   />
                 </div>
 
