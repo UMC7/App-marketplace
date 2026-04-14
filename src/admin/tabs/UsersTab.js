@@ -308,6 +308,26 @@ function UsersTab({ currentUser }) {
                 )}
               </td>
               <td>
+                {user.cv_link ? (
+                  <a
+                    href={user.cv_link}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      display: 'inline-block',
+                      padding: '4px 8px',
+                      borderRadius: 6,
+                      border: '1px solid #6fc4c0',
+                      background: '#6fc4c0',
+                      color: '#111',
+                      textDecoration: 'none',
+                      marginRight: 8,
+                    }}
+                  >
+                    CV
+                  </a>
+                ) : null}
                 <button
                   type="button"
                   onClick={(e) => {
@@ -420,6 +440,13 @@ function UsersTab({ currentUser }) {
           disabled={!selectedUserId}
         >
           View Candidate Profile
+        </button>
+        <button
+          className="admin-action-button"
+          onClick={() => window.open(selectedUser?.cv_link, '_blank', 'noopener,noreferrer')}
+          disabled={!selectedUser?.cv_link}
+        >
+          Open Digital CV
         </button>
         <button
           className="admin-action-button admin-action-delete"
