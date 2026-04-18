@@ -1033,6 +1033,14 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
   .offer-card.expanded .field-pair {
     display: block;
   }
+
+  .offer-card.expanded .expanded-block.block1 .field-pair {
+    display: block !important;
+  }
+
+  .offer-card.expanded .expanded-block.block1 .field-group {
+    margin-bottom: 12px;
+  }
 }
 
 @media (min-width: 821px) {

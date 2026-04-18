@@ -404,7 +404,7 @@ const OfferTimeline = ({
                         id={`offer-${offer.id}`}
                         ref={(el) => { if (el) cardRefs.current[offer.id] = el; }}
                         onClick={() => toggleExpanded(offer.id)}
-                        className={`offer-card ${isExpanded ? 'expanded' : ''} ${markedOffers.includes(offer.id) ? 'marked' : ''}`}
+                        className={`offer-card ${isExpanded ? 'expanded' : ''} ${offer.team ? 'team' : ''} ${markedOffers.includes(offer.id) ? 'marked' : ''}`}
                       >
                         {isExpanded ? (
   <div className="offer-content">
