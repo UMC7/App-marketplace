@@ -59,7 +59,7 @@ const getRoleImage = (title) => {
     'chief steward(ess)', '2nd steward(ess)', '2nd stewardess', '3rd steward(ess)', '3rd stewardess',
     '4th steward(ess)', '4th stewardess', 'steward(ess)', 'stewardess', 'steward', 'solo steward(ess)',
     'junior steward(ess)', 'stew/deck', 'laundry/steward(ess)', 'stew/masseur',
-    'masseur', 'hairdresser', 'barber', 'butler', 'housekeeper', 'cook/stew/deck'
+    'masseur', 'hairdresser', 'barber', 'butler', 'housekeeper', 'head of housekeeping', 'cook/stew/deck'
   ].some(role => lowerTitle.includes(role))) return 'interiordepartment';
 
   if (lowerTitle.includes('shore') || lowerTitle.includes('shore-based') || lowerTitle.includes('shorebased')) return 'shorebased';
