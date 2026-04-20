@@ -365,7 +365,11 @@ body.dark-mode .offer-card.expanded .remarks-disclaimer {
 @media (max-width: 820px) {
   .offer-card.expanded.team .expanded-block.block1 .field-pair {
     display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 12px 0 !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 12px 18px !important;
+  }
+
+  .offer-card.expanded.team .expanded-block.block1 .field-group {
+    min-width: 0 !important;
   }
 }
