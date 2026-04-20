@@ -56,9 +56,12 @@ export default function DocumentsSection({
             <span className="cp-muted">Min 3 documents with file upload</span>
           </div>
         ) : (
-          <small className="cv-section-hint">
-            {readOnly ? "Read-only view" : "Manager coming soon"}
-          </small>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <small className="cv-section-hint">
+              {readOnly ? "Read-only view" : "Manager coming soon"}
+            </small>
+            <span className="cp-muted">Min 3 documents with file upload</span>
+          </div>
         )}
       </header>
 

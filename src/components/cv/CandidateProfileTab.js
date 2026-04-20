@@ -1471,8 +1471,8 @@ const generateShortHandle = () => {
     ? {
         first_name: !!personal.first_name?.trim(),
         last_name: !!personal.last_name?.trim(),
-        email: !!personal.email_public?.trim(),
-        phone_cc: !!personal.phone_cc,
+        email: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(personal.email_public || '').trim()),
+        phone_cc: String(personal.phone_cc || '').replace(/\D/g, '').length > 0,
         phone_number: !!personal.phone_number,
         country: !!personal.country,
         city_port: !!personal.city_port?.trim(),
@@ -1560,9 +1560,9 @@ const experienceProgress = { count: expCount > 0 ? 1 : 0, total: 1 };
   const prefsSkillsDetail = isLite
     ? {
         status: !!(status && String(status).trim()),
-        availability: !!(availability && availability.trim()),
-        languageLevels: Array.isArray(languageLevels) && languageLevels.length > 0,
-        deptSpecialties: Array.isArray(deptSpecialties) && deptSpecialties.length > 0,
+        availability: hasValidAvailability(availability),
+        languageLevels: hasLanguagesWithLevel(languageLevels),
+        deptSpecialties: hasDeptSkills(deptSpecialties),
       }
     : {
         status: !!(status && String(status).trim()),
@@ -1589,8 +1589,17 @@ const prefsSkillsProgress = {
   total: Object.keys(prefsSkillsDetail).length,
 };
 
-const selectedDocFlags = Object.values(docFlags || {}).filter((v) => typeof v === 'boolean').length;
-const documentsProgress = { count: selectedDocFlags, total: 9 };
+const selectedDocFlags = Object.values(docFlags || {}).filter((v) =>
+  typeof v === 'boolean' || v === 'resident' || v === 'green_card'
+).length;
+const documentsProgress = isLite
+  ? {
+      count:
+        (docsMeetMin(docs) ? 1 : 0) +
+        (allDocFlagsSelected(docFlags || {}) ? 1 : 0),
+      total: 2,
+    }
+  : { count: selectedDocFlags, total: 9 };
 
 const referencesProgress = { count: refsCount > 0 ? 1 : 0, total: 1 };
 
