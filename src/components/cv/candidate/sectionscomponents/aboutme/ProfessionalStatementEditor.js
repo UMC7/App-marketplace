@@ -1,6 +1,8 @@
 // src/components/cv/candidate/sectionscomponents/aboutme/ProfessionalStatementEditor.js
 import React, { useMemo } from "react";
 
+const MAX = 2350;
+
 export default function ProfessionalStatementEditor({ value = "", onChange, readOnly = false }) {
   const length = useMemo(() => (value || "").length, [value]);
 
@@ -15,6 +17,7 @@ export default function ProfessionalStatementEditor({ value = "", onChange, read
         onChange={(e) => onChange?.(e.target.value)}
         placeholder="Describe your professional development, strengths, work style, and how you add value on board."
         className="input textarea"
+        maxLength={MAX}
         readOnly={readOnly}
         style={{
           width: "100%",
@@ -25,7 +28,7 @@ export default function ProfessionalStatementEditor({ value = "", onChange, read
         }}
       />
       <div style={{ textAlign: "right", fontSize: 12, color: "var(--muted, #94a3b8)" }}>
-        {length} characters
+        {length} / {MAX} characters
       </div>
     </div>
   );

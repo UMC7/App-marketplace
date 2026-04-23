@@ -16,6 +16,7 @@ function normalizeLongText(text) {
 }
 
 const MAX_SHORT_SUMMARY = 600;
+const MAX_PROFESSIONAL_STATEMENT = 2350;
 
 export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = 'professional', readOnly = false }) {
   const isLite = mode === 'lite';
@@ -61,7 +62,7 @@ export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = '
 
     const payload = {
       about_me: normalizeLongText((about || "").trim()).slice(0, MAX_SHORT_SUMMARY),
-      professional_statement: normalizeLongText((statement || "").trim()),
+      professional_statement: normalizeLongText((statement || "").trim()).slice(0, MAX_PROFESSIONAL_STATEMENT),
     };
 
     // allow partial saves even if minimums not met
