@@ -15,7 +15,7 @@ function normalizeLongText(text) {
   return text.replace(/(\n)(?!\n)\s*(?=[a-záéíóúñü])/g, " ");
 }
 
-const MAX_SHORT_SUMMARY = 550;
+const MAX_SHORT_SUMMARY = 600;
 
 export default function AboutMeSection({ profile = {}, onSave, onSaved, mode = 'professional', readOnly = false }) {
   const isLite = mode === 'lite';
