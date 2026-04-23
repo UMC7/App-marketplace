@@ -4,6 +4,7 @@ import ThemeLogo from './ThemeLogo';
 import Avatar from './Avatar';
 import LoadingSpinner from './LoadingSpinner';
 import { formatOfferDate } from './yachtOfferForm.utils';
+import { isOfferClosed } from '../utils/jobOfferVisibility';
 
 const REMARKS_DISCLAIMER = 'Disclaimer:\nYacht Daywork Ltd. connects employers and crew directly and is not involved in hiring decisions or private agreements. Please communicate responsibly and remain cautious when applying.';
 
@@ -147,7 +148,8 @@ const OfferTimeline = ({
                 {expandedDays[dayGroup] &&
                   offers.map((offer) => {
                     const isOwner = currentUser?.id === offer.user_id;
-                    const isExpanded = expandedOfferId === offer.id;
+                    const isClosed = isOfferClosed(offer);
+                    const isExpanded = !isClosed && expandedOfferId === offer.id;
                     const primaryScore = Number(String(offer.match_primary_score).replace('%','')) || 0;
                     const teammateScore = Number(String(offer.match_teammate_score).replace('%','')) || 0;
                     const rank1DeckLic = Array.isArray(offer.required_licenses) && offer.required_licenses[0] ? offer.required_licenses[0] : null;
@@ -403,9 +405,13 @@ const OfferTimeline = ({
                         key={offer.id}
                         id={`offer-${offer.id}`}
                         ref={(el) => { if (el) cardRefs.current[offer.id] = el; }}
-                        onClick={() => toggleExpanded(offer.id)}
-                        className={`offer-card ${isExpanded ? 'expanded' : ''} ${offer.team ? 'team' : ''} ${markedOffers.includes(offer.id) ? 'marked' : ''}`}
+                        onClick={() => {
+                          if (!isClosed) toggleExpanded(offer.id);
+                        }}
+                        aria-disabled={isClosed ? 'true' : undefined}
+                        className={`offer-card ${isExpanded ? 'expanded' : ''} ${offer.team ? 'team' : ''} ${markedOffers.includes(offer.id) ? 'marked' : ''} ${isClosed ? 'is-closed' : ''}`}
                       >
+                        {isClosed && <div className="job-closed-badge">Closed</div>}
                         {isExpanded ? (
   <div className="offer-content">
     <div className="top-row">
@@ -1267,6 +1273,7 @@ const OfferTimeline = ({
     className="tick-marker"
     onClick={(e) => {
       e.stopPropagation();
+      if (isClosed) return;
       toggleMark(offer.id);
     }}
   >

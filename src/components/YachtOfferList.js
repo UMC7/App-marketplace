@@ -10,6 +10,7 @@ import '../styles/YachtOfferList.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 import { toast } from 'react-toastify';
+import { isOfferClosed, isOfferVisibleOnJobBoard } from '../utils/jobOfferVisibility';
 
 function YachtOfferList({
   offers,
@@ -228,6 +229,10 @@ useEffect(() => {
 
   const target = offers.find((o) => String(o.id) === String(openJobId));
   if (!target) return;
+  if (isOfferClosed(target)) {
+    setOpenHandled(true);
+    return;
+  }
 
   const weekMonday = getMonday(new Date(target.created_at)).toDateString();
   const thisMonday = getMonday(new Date()).toDateString();
@@ -846,7 +851,7 @@ const handleDirectApply = async (offerId) => {
 
   const groupedOffers = useMemo(() => {
     return offers
-      .filter((offer) => offer.status === 'active')
+      .filter((offer) => isOfferVisibleOnJobBoard(offer))
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .reduce((weeks, offer) => {
         const weekMonday = getMonday(new Date(offer.created_at)).toDateString();
@@ -956,6 +961,8 @@ const handleDirectApply = async (offerId) => {
 
 
   const toggleExpanded = (id) => {
+    const offer = offers.find((item) => String(item.id) === String(id));
+    if (isOfferClosed(offer)) return;
     setExpandedOfferId((prev) => {
       if (prev === id) {
         collapseTargetRef.current = id;

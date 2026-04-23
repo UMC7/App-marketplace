@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import '../yachtworkspage.css';
 import { getOfferDepartment } from '../utils/offerDepartment';
 import { normalizeYachtUse } from '../components/cv/candidate/shared/experienceCatalogs';
+import { isOfferVisibleOnJobBoard } from '../utils/jobOfferVisibility';
 
 const countriesByRegion = {
   'North America': ['Bermuda (UK)', 'Canada', 'United States', 'Mexico'],
@@ -204,6 +205,7 @@ function YachtWorksPage() {
 
   const filteredOffers = useMemo(() => {
     return offers.filter((offer) => {
+      if (!isOfferVisibleOnJobBoard(offer)) return false;
 
       if (filters.selectedOnly) {
         const key = `markedOffers_user_${user?.id}`;

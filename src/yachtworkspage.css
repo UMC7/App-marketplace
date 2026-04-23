@@ -82,6 +82,42 @@
   box-shadow: var(--shadow-medium);
 }
 
+.offer-card.is-closed {
+  cursor: not-allowed;
+  opacity: 0.72;
+  filter: grayscale(0.25);
+}
+
+.offer-card.is-closed:hover {
+  box-shadow: var(--shadow-light);
+}
+
+.offer-card.is-closed .collapsed-offer {
+  pointer-events: none;
+}
+
+.offer-card.is-closed .tick-marker {
+  cursor: not-allowed;
+  background-color: #e5e7eb;
+  color: #6b7280;
+}
+
+.job-closed-badge {
+  position: absolute;
+  top: var(--spacing-xxxl);
+  left: var(--spacing-xxxl);
+  z-index: 12;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #991b1b;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+}
+
 .offer-card.marked {
   box-shadow: 0 0 0 6px rgba(104, 173, 168, 0.7), /* Wider, semi-transparent border */
     0 0 0 9px rgba(104, 173, 168, 0.4), /* More external, transparent shadow */

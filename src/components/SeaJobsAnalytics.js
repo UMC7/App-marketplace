@@ -1,6 +1,7 @@
 // src/components/SeaJobsAnalytics.js
 import React, { useMemo, useState, useEffect } from 'react';
 import { getOfferDepartment } from '../utils/offerDepartment';
+import { isOfferCurrentlyAvailable } from '../utils/jobOfferVisibility';
 
 const TIME_ZONE = 'Europe/Madrid';
 const LOCALE = 'en-US';
@@ -78,11 +79,6 @@ function getLocationIcon(name) {
 
 // Department mapping is centralized in utils/offerDepartment.js
 
-function isActiveOffer(offer) {
-  const s = String(offer?.status || '').toLowerCase();
-  return s === 'active';
-}
-
 function parseTimestamp(value) {
   if (!value) return null;
   const raw = String(value);
@@ -120,7 +116,7 @@ function useSeaJobsStats(offers) {
     const last7Start = new Date(todayLocal.getTime() - 6 * 86400000);
     const prev7Start = new Date(todayLocal.getTime() - 13 * 86400000);
 
-    const activeOffers = offers.filter(isActiveOffer);
+    const activeOffers = offers.filter((offer) => isOfferCurrentlyAvailable(offer, now));
     const totalActive = activeOffers.length;
 
     const countryCounts = new Map();
