@@ -9,6 +9,10 @@ function parseDate(value) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+export function getOfferBoardDate(offer) {
+  return parseDate(offer?.created_at);
+}
+
 export function isOfferClosed(offer, now = new Date()) {
   const status = String(offer?.status || '').toLowerCase();
   if (status === 'deleted') return !!parseDate(offer?.deleted_at);

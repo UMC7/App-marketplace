@@ -10,7 +10,7 @@ import '../styles/YachtOfferList.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 import { toast } from 'react-toastify';
-import { isOfferClosed, isOfferVisibleOnJobBoard } from '../utils/jobOfferVisibility';
+import { getOfferBoardDate, isOfferClosed, isOfferVisibleOnJobBoard } from '../utils/jobOfferVisibility';
 
 function YachtOfferList({
   offers,
@@ -852,9 +852,14 @@ const handleDirectApply = async (offerId) => {
   const groupedOffers = useMemo(() => {
     return offers
       .filter((offer) => isOfferVisibleOnJobBoard(offer))
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .sort((a, b) => {
+        const aDate = getOfferBoardDate(a);
+        const bDate = getOfferBoardDate(b);
+        return (bDate?.getTime?.() || 0) - (aDate?.getTime?.() || 0);
+      })
       .reduce((weeks, offer) => {
-        const weekMonday = getMonday(new Date(offer.created_at)).toDateString();
+        const boardDate = getOfferBoardDate(offer) || new Date(offer.created_at);
+        const weekMonday = getMonday(boardDate).toDateString();
         const thisMonday = getMonday(new Date()).toDateString();
         const lastMonday = getMonday(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).toDateString();
 
@@ -867,7 +872,7 @@ const handleDirectApply = async (offerId) => {
               month: 'short',
               year: 'numeric',
             });
-        const dateKey = new Date(offer.created_at).toLocaleDateString('en-US', {
+        const dateKey = boardDate.toLocaleDateString('en-US', {
           weekday: 'long',
           day: '2-digit',
           month: 'short',
