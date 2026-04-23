@@ -1269,16 +1269,17 @@ const OfferTimeline = ({
       <strong>Posted:</strong> {formatTime(offer.created_at)}
     </div>
   )}
-  <div
-    className="tick-marker"
-    onClick={(e) => {
-      e.stopPropagation();
-      if (isClosed) return;
-      toggleMark(offer.id);
-    }}
-  >
-    {markedOffers.includes(offer.id) ? '✔' : ''}
-  </div>
+  {!isClosed && (
+    <div
+      className="tick-marker"
+      onClick={(e) => {
+        e.stopPropagation();
+        toggleMark(offer.id);
+      }}
+    >
+      {markedOffers.includes(offer.id) ? '✔' : ''}
+    </div>
+  )}
 </div>
 </div>
 </div>
