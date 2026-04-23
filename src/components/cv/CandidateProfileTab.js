@@ -24,6 +24,7 @@ import AboutMeSection from './candidate/cvsections/aboutmesection';
 import LifestyleHabitsSection from './candidate/cvsections/LifestyleHabitsSection';
 import Modal from '../Modal';
 import { hasValidAvailability } from '../../utils/availability';
+import { buildProfileProgressSections } from './progress/profileProgress';
 
 function hasLanguagesWithLevel(languageLevels) {
   if (!Array.isArray(languageLevels)) return false;
@@ -115,8 +116,6 @@ export default function CandidateProfileTab({ adminUserId = null }) {
   const [targetUser, setTargetUser] = useState(null);
   const [profileMode, setProfileMode] = useState('lite');
   const [savingMode, setSavingMode] = useState(false);
-  const [headline, setHeadline] = useState('');
-  const [summary, setSummary] = useState('');
   const [primaryDepartment, setPrimaryDepartment] = useState('');
   const [primaryRank, setPrimaryRank] = useState('');
   const [targetRanks, setTargetRanks] = useState([]);
@@ -218,6 +217,7 @@ function buildLitePrefsPayload() {
     facebook: '',
     website: '',
     gender: '',
+    residence_country: '',
   });
 
   const [educationCount, setEducationCount] = useState(0);
@@ -479,9 +479,6 @@ function buildLitePrefsPayload() {
           setGallery(hydratedGallery);
           setPersistedPaths(rawGallery.map((g) => g?.path).filter(Boolean));
 
-          setHeadline(data?.headline || '');
-          setSummary(data?.summary || '');
-
           setPrimaryDepartment(data?.primary_department || '');
           setPrimaryRank(data?.primary_role || '');
           setTargetRanks(Array.isArray(data?.target_ranks) ? data.target_ranks : []);
@@ -622,6 +619,7 @@ function buildLitePrefsPayload() {
             facebook: data?.facebook || '',
             website: data?.website || '',
             gender: data?.gender || '',
+            residence_country: data?.residence_country || '',
           }));
         }
       } catch (e) {
@@ -897,44 +895,34 @@ const generateShortHandle = () => {
   }
 };
 
-  const handleSavePersonal = async (e) => {
-    if (!canEdit) return;
-    e.preventDefault();
-    if (!profile?.id) return;
-
-    if (!personal.first_name?.trim() || !personal.last_name?.trim() || !personal.email_public?.trim()) {
-      toast.error('Please complete first name, last name and email.');
-      return;
-    }
-
-    const payload = {
-      ...personal,
-      ...(personal.whatsapp_same
-        ? {
-            whatsapp_cc: personal.phone_cc || null,
-            whatsapp_number: personal.phone_number || null,
-          }
-        : {}),
-      updated_at: new Date().toISOString(),
-    };
-
-    setSaving(true);
-    try {
-      const { data, error } = await supabase
-        .from('public_profiles')
-        .update(payload)
-        .eq('id', profile.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-      toast.success('Personal details saved');
-    } catch (e) {
-      toast.error(e.message || 'Could not save personal details');
-    } finally {
-      setSaving(false);
-    }
+  const handlePersonalSaved = (data) => {
+    setProfile(data);
+    setPersonal((p) => ({
+      ...p,
+      first_name: data?.first_name || '',
+      last_name: data?.last_name || '',
+      email_public: data?.email_public || '',
+      phone_cc: data?.phone_cc || '',
+      phone_number: data?.phone_number || '',
+      whatsapp_same: data?.whatsapp_same ?? true,
+      whatsapp_cc: data?.whatsapp_cc || '',
+      whatsapp_number: data?.whatsapp_number || '',
+      country: data?.country || '',
+      city_port: data?.city_port || '',
+      nationalities: Array.isArray(data?.nationalities) ? data.nationalities : [],
+      birth_month: data?.birth_month ?? null,
+      birth_year: data?.birth_year ?? null,
+      show_email_public: !!data?.show_email_public,
+      show_phone_public: !!data?.show_phone_public,
+      show_age_public: !!data?.show_age_public,
+      contact_pref: data?.contact_pref || '',
+      linkedin: data?.linkedin || '',
+      instagram: data?.instagram || '',
+      facebook: data?.facebook || '',
+      website: data?.website || '',
+      gender: data?.gender || '',
+      residence_country: data?.residence_country || '',
+    }));
   };
 
   const handleSaveDeptRanks = async (e) => {
@@ -974,34 +962,6 @@ const generateShortHandle = () => {
       toast.success('Department & ranks saved');
     } catch (e) {
       toast.error(e.message || 'Could not save department & ranks');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSaveBasics = async (e) => {
-    if (!canEdit) return;
-    e.preventDefault();
-    if (!profile?.id) return;
-
-    setSaving(true);
-    try {
-      const { data, error } = await supabase
-        .from('public_profiles')
-        .update({
-          headline: headline?.trim() || null,
-          summary: summary?.trim() || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', profile.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-      toast.success('Saved');
-    } catch (e) {
-      toast.error(e.message || 'Could not save');
     } finally {
       setSaving(false);
     }
@@ -1299,9 +1259,6 @@ const generateShortHandle = () => {
     return 'cv';
   };
 
-  const hasPersonal =
-    !!(personal.first_name?.trim() && personal.last_name?.trim() && personal.email_public?.trim());
-
   const normalizeTargets = (arr) => {
     if (!Array.isArray(arr) || arr.length === 0) return '[]';
     const cleaned = arr
@@ -1426,195 +1383,16 @@ const generateShortHandle = () => {
 
   const hasDeptRanks = !!(primaryDepartment && primaryRank);
 
-  const hasExperienceHeuristic =
-    (Array.isArray(profile?.experiences) && profile.experiences.length > 0) ||
-    Number(profile?.experience_count || 0) > 0;
-
-  const hasAbout =
-    !!(profile?.about_me && String(profile.about_me).trim()) ||
-    !!(profile?.professional_statement && String(profile.professional_statement).trim());
-
-  const hasPrefsSkills =
-    !!(availability && availability.trim()) ||
-    (Array.isArray(locations) && locations.length > 0) ||
-    (Array.isArray(languages) && languages.length > 0) ||
-    (Array.isArray(skills) && skills.length > 0) ||
-    (Array.isArray(contracts) && contracts.length > 0) ||
-    (Array.isArray(rotation) && rotation.length > 0) ||
-    (Array.isArray(vesselTypes) && vesselTypes.length > 0) ||
-    (Array.isArray(vesselSizeRange) ? vesselSizeRange.length > 0
-      : (vesselSizeRange && typeof vesselSizeRange === 'object' &&
-         (vesselSizeRange.min || vesselSizeRange.max))) ||
-    (Array.isArray(regionsSeasons) && regionsSeasons.length > 0) ||
-    !!(rateSalary && (String(rateSalary.dayRateMin || '').trim() || String(rateSalary.salaryMin || '').trim())) ||
-    (Array.isArray(languageLevels) && languageLevels.length > 0) ||
-    (Array.isArray(deptSpecialties) && deptSpecialties.length > 0) ||
-    (onboardPrefs && typeof onboardPrefs === 'object' && Object.values(onboardPrefs).some(Boolean)) ||
-    (Array.isArray(programTypes) && programTypes.length > 0) ||
-    (Array.isArray(dietaryRequirements) && dietaryRequirements.length > 0);
-
-  const hasDocuments = Array.isArray(docs) && docs.length > 0;
-
-  const hasReferencesHeuristic =
-    (Array.isArray(profile?.references) && profile.references.length > 0) ||
-    Number(profile?.references_count || 0) > 0;
-
-  const hasMedia = Array.isArray(gallery) && gallery.length > 0;
-
   const isLite = profileMode === 'lite';
   const isProfessional = profileMode === 'professional';
   const showRequired = !isProfessional;
   const showOptional = !isLite;
   const deptRanksSaveDisabled = saving || !deptRanksDirty;
 
-  const personalProgress = isLite
-    ? {
-        first_name: !!personal.first_name?.trim(),
-        last_name: !!personal.last_name?.trim(),
-        email: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(personal.email_public || '').trim()),
-        phone_cc: String(personal.phone_cc || '').replace(/\D/g, '').length > 0,
-        phone_number: !!personal.phone_number,
-        country: !!personal.country,
-        city_port: !!personal.city_port?.trim(),
-        birth_month: !!personal.birth_month,
-        birth_year: !!personal.birth_year,
-        nationality: Array.isArray(personal.nationalities) && personal.nationalities.length > 0,
-      }
-    : {
-        first_name: !!personal.first_name?.trim(),
-        last_name: !!personal.last_name?.trim(),
-        email: !!personal.email_public?.trim(),
-
-        phone_cc: !!personal.phone_cc,
-        phone_number: !!personal.phone_number,
-        whatsapp_same: personal.whatsapp_same === true,
-        whatsapp_cc: personal.whatsapp_same ? true : !!personal.whatsapp_cc,
-        whatsapp_number: personal.whatsapp_same ? true : !!personal.whatsapp_number,
-
-        residence_country: !!personal.residence_country,
-        country: !!personal.country,
-        city_port: !!personal.city_port?.trim(),
-        contact_pref: !!personal.contact_pref,
-
-        birth_month: !!personal.birth_month,
-        birth_year: !!personal.birth_year,
-        nationality: Array.isArray(personal.nationalities) && personal.nationalities.length > 0,
-
-        gender: !!personal.gender,
-
-        linkedin: personal.linkedin === '' || !!personal.linkedin,
-        instagram: personal.instagram === '' || !!personal.instagram,
-        facebook: personal.facebook === '' || !!personal.facebook,
-        website: personal.website === '' || !!personal.website,
-      };
-
-  const deptRanksProgress = {
-    count:
-      (primaryDepartment ? 1 : 0) +
-      (primaryRank ? 1 : 0) +
-      (!isLite && Array.isArray(targetRanks) && targetRanks.length > 0 ? 1 : 0),
-    total: isLite ? 2 : 3,
-  };
-
-const experienceProgress = { count: expCount > 0 ? 1 : 0, total: 1 };
-
-  const aboutProgress = isLite
-    ? { count: profile?.about_me?.trim() ? 1 : 0, total: 1 }
-    : {
-        count:
-          (profile?.about_me?.trim() ? 1 : 0) +
-          (profile?.professional_statement?.trim() ? 1 : 0),
-        total: 2,
-      };
-
-  const lifestyleProgress = isLite
-    ? {
-        count:
-          (lifestyleHabits?.tattoosVisible ? 1 : 0) +
-          (lifestyleHabits?.drugTestWilling ? 1 : 0) +
-          (lifestyleHabits?.smoking ? 1 : 0) +
-          (lifestyleHabits?.vaping ? 1 : 0) +
-          (lifestyleHabits?.alcohol ? 1 : 0) +
-          (Array.isArray(lifestyleHabits?.dietaryAllergies) &&
-          lifestyleHabits.dietaryAllergies.length > 0
-            ? 1
-            : 0) +
-          (lifestyleHabits?.fitness ? 1 : 0),
-        total: 7,
-      }
-    : {
-        count:
-          (lifestyleHabits?.tattoosVisible ? 1 : 0) +
-          (lifestyleHabits?.drugTestWilling ? 1 : 0) +
-          (lifestyleHabits?.smoking ? 1 : 0) +
-          (lifestyleHabits?.vaping ? 1 : 0) +
-          (lifestyleHabits?.alcohol ? 1 : 0) +
-          (Array.isArray(lifestyleHabits?.dietaryAllergies) &&
-          lifestyleHabits.dietaryAllergies.length > 0
-            ? 1
-            : 0) +
-          (lifestyleHabits?.fitness ? 1 : 0),
-        total: 7,
-      };
-
-  const prefsSkillsDetail = isLite
-    ? {
-        status: !!(status && String(status).trim()),
-        availability: hasValidAvailability(availability),
-        languageLevels: hasLanguagesWithLevel(languageLevels),
-        deptSpecialties: hasDeptSkills(deptSpecialties),
-      }
-    : {
-        status: !!(status && String(status).trim()),
-        availability: !!(availability && availability.trim()),
-        regionsSeasons: Array.isArray(regionsSeasons) && regionsSeasons.length > 0,
-        contracts: Array.isArray(contracts) && contracts.length > 0,
-        rotation: Array.isArray(rotation) && rotation.length > 0,
-        vesselTypes: Array.isArray(vesselTypes) && vesselTypes.length > 0,
-        vesselSizeRange: (vesselSizeRange && typeof vesselSizeRange === 'object'
-          ? (vesselSizeRange.min != null && vesselSizeRange.max != null)
-          : Array.isArray(vesselSizeRange) && vesselSizeRange.length > 0),
-        rateSalary: !!(rateSalary && (
-          String(rateSalary.dayRateMin || '').trim() ||
-          String(rateSalary.salaryMin || '').trim()
-        )),
-        languageLevels: Array.isArray(languageLevels) && languageLevels.length > 0,
-        deptSpecialties: Array.isArray(deptSpecialties) && deptSpecialties.length > 0,
-        programTypes: Array.isArray(programTypes) && programTypes.length > 0,
-        dietaryRequirements: Array.isArray(dietaryRequirements) && dietaryRequirements.length > 0,
-        onboardPrefs: (onboardPrefs && typeof onboardPrefs === 'object' && Object.values(onboardPrefs).some(Boolean)),
-      };
-const prefsSkillsProgress = {
-  count: Object.values(prefsSkillsDetail).filter(Boolean).length,
-  total: Object.keys(prefsSkillsDetail).length,
-};
-
-const selectedDocFlags = Object.values(docFlags || {}).filter((v) =>
-  typeof v === 'boolean' || v === 'resident' || v === 'green_card'
-).length;
-const documentsProgress = isLite
-  ? {
-      count:
-        (docsMeetMin(docs) ? 1 : 0) +
-        (allDocFlagsSelected(docFlags || {}) ? 1 : 0),
-      total: 2,
-    }
-  : { count: selectedDocFlags, total: 9 };
-
-const referencesProgress = { count: refsCount > 0 ? 1 : 0, total: 1 };
-
-const educationProgress = { count: (educationCount || 0) > 0 ? 1 : 0, total: 1 };
-
 const galleryImagesCount = Array.isArray(gallery)
   ? gallery.filter((it) => (it?.type || inferTypeByName(it?.name || it?.path || it?.url || '')) === 'image').length
   : 0;
 const hasUnlimitedMedia = !!(profile?.user_id && UNLIMITED_MEDIA_USER_IDS.has(profile.user_id));
-const mediaTarget = isLite ? 3 : (hasUnlimitedMedia ? Math.max(9, galleryImagesCount || 0) : 9);
-
-const mediaProgress = {
-  count: Math.min(galleryImagesCount, mediaTarget),
-  total: mediaTarget,
-};
 
 const galleryDirty = useMemo(() => {
   const current = Array.isArray(gallery)
@@ -1626,25 +1404,24 @@ const galleryDirty = useMemo(() => {
   return JSON.stringify(current) !== JSON.stringify(base);
 }, [gallery, persistedPaths]);
 
-const progressSections = {
-  personal: personalProgress,
-  dept_ranks: deptRanksProgress,
-  experience: experienceProgress,
-  about_me: aboutProgress,
-  lifestyle: lifestyleProgress,
-  prefs_skills: prefsSkillsProgress,
-  education: educationProgress,
-  documents: documentsProgress,
-  references: referencesProgress,
-  photos_videos: mediaProgress,
-};
-
-const meetsPrefsMin =
-  !!(status && String(status).trim()) &&
-  hasValidAvailability(availability) &&
-  (Array.isArray(languageLevels) &&
-    languageLevels.some((ll) => ll && ll.lang && ll.level)) &&
-  (Array.isArray(deptSpecialties) && deptSpecialties.length > 0);
+const progressSections = buildProfileProgressSections({
+  mode: profileMode,
+  profile,
+  personal,
+  primaryDepartment,
+  primaryRank,
+  expCount,
+  aboutMe: profile?.about_me,
+  prefs: isLite
+    ? { status, availability, languageLevels, deptSpecialties }
+    : (prefsProCache || {}),
+  lifestyleHabits,
+  educationCount,
+  docs,
+  docFlags,
+  refsCount,
+  gallery,
+});
 
   const prefsSkillsSaveDisabled = saving || !prefsSkillsDirty;
 
@@ -1879,7 +1656,7 @@ const meetsPrefsMin =
             <h3 className="cp-h3">Personal details</h3>
             <PersonalDetailsSection
               profile={profile}
-              onSaved={(data) => setProfile(data)}
+              onSaved={handlePersonalSaved}
               mode={profileMode}
               readOnly={!canEdit}
             />
