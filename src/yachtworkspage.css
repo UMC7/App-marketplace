@@ -1137,6 +1137,10 @@ body:not(.dark-mode) .filters-panel h3 {
     grid-column: 1 / 2;
     order: 1;
   }
+  .block1.case5 .gender {
+    grid-column: 2 / 3;
+    order: 1;
+  }
   .block1.case5 .license {
     grid-column: 2 / 3;
     order: 1;
