@@ -11,6 +11,7 @@ import PublicReferencesSection from './sections/references';
 import PublicMediaGallerySection from './sections/media';
 import PublicEducationSection from './sections/education';
 import PublicContactDetailsSection from './sections/contact';
+import PublicCoverLetterSection from './sections/coverletter/PublicCoverLetterSection';
 import useEmitProfileView from '../../hooks/useEmitProfileView';
 import { formatAvailability, hasValidAvailability } from '../../utils/availability';
 
@@ -556,7 +557,7 @@ export default function PublicProfileView() {
 
         const { data: freshPR } = await supabase
           .from('public_profiles')
-          .select('prefs_skills, prefs_skills_lite, prefs_skills_pro, languages, skills, share_ready')
+          .select('prefs_skills, prefs_skills_lite, prefs_skills_pro, languages, skills, share_ready, professional_statement')
           .eq('handle', baseRow.handle)
           .single();
 
@@ -595,6 +596,7 @@ export default function PublicProfileView() {
           languages: mergedLanguages,
           skills: mergedSkills,
           nationalities: nat,
+          professional_statement: freshPR?.professional_statement ?? baseRow?.professional_statement ?? exposed?.professional_statement ?? null,
         };
 
         const ps = row && typeof row.prefs_skills === 'object' ? row.prefs_skills : null;
@@ -1004,6 +1006,8 @@ function computeScrollTargetTop(el, extra = 12) {
   }, [profile?.user_id, gallery]);
   useEmitProfileView(allowPublicView ? profile : null);
 
+  const coverLetterText = String(profile?.professional_statement || '').trim();
+
   if (loading) {
     return (
       <div className={`ppv-wrap ${isPreview ? 'ppv--preview' : 'ppv--public'}`} style={{ paddingTop: isPreview ? 50 : 12 }}>
@@ -1121,6 +1125,7 @@ if (!allowPublicView && !isPreview) {
           <button className="ppv-btn" onClick={() => scrollTo('ppv-media')}>Media</button>
           <button className="ppv-btn" onClick={() => scrollTo('ppv-education')}>Education</button>
           <button className="ppv-btn" onClick={() => scrollTo('ppv-contact')}>Contact</button>
+          {coverLetterText && <button className="ppv-btn" onClick={() => scrollTo('ppv-cover-letter')}>Cover Letter</button>}
         </div>
       </div>
 
@@ -1384,6 +1389,39 @@ if (!allowPublicView && !isPreview) {
               </div>
             </div>
           </div>
+
+          {coverLetterText && (
+            <div
+              className="ppv-pageSizer"
+              style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale)}px` }}
+            >
+              <div
+                className="ppv-a4Page"
+                role="region"
+                aria-label="Cover letter page"
+                style={{
+                  width: BASE_A4_WIDTH,
+                  height: BASE_A4_HEIGHT,
+                  position: 'relative',
+                  left: '50%',
+                  transform: `translateX(-50%) scale(${pageScale})`,
+                  transformOrigin: 'top center',
+                  margin: '12px 0'
+                }}
+              >
+                <div className="ppv-pageInner">
+                  <div id="ppv-cover-letter">
+                    <PublicCoverLetterSection
+                      profile={profile}
+                      text={coverLetterText}
+                      displayName={displayName}
+                      rankText={rankText}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
