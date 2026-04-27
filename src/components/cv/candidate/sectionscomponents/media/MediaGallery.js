@@ -6,12 +6,16 @@ export default function MediaGallery({
   onRemove,
   onMove,
   onSetCover,
+  onAdjustCover,
   columns = 3,
   readOnly = false,
 }) {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [current, setCurrent] = useState(0);
   const [thumbs, setThumbs] = useState({});
+  const [frameOpen, setFrameOpen] = useState(false);
+  const [frameDraft, setFrameDraft] = useState({ x: 50, y: 50 });
+  const frameAreaRef = React.useRef(null);
 
   const isHeicUrl = (u = "") => {
     const s = String(u).toLowerCase();
@@ -50,6 +54,63 @@ export default function MediaGallery({
   }, [viewerOpen, next, prev]);
 
   const currentItem = items[current];
+  const coverItem = items[0];
+
+  const normalizeFrameValue = (value, fallback = 50) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(0, Math.min(100, n));
+  };
+
+  const openFrameEditor = useCallback(() => {
+    setFrameDraft({
+      x: normalizeFrameValue(coverItem?.coverPositionX, 50),
+      y: normalizeFrameValue(coverItem?.coverPositionY, 50),
+    });
+    setFrameOpen(true);
+  }, [coverItem]);
+
+  const closeFrameEditor = useCallback(() => {
+    setFrameOpen(false);
+  }, []);
+
+  const resetFrameEditor = useCallback(() => {
+    setFrameDraft({ x: 50, y: 50 });
+  }, []);
+
+  const commitFrameEditor = useCallback(() => {
+    if (typeof onAdjustCover === "function") {
+      onAdjustCover({
+        coverPositionX: normalizeFrameValue(frameDraft.x, 50),
+        coverPositionY: normalizeFrameValue(frameDraft.y, 50),
+      });
+    }
+    setFrameOpen(false);
+  }, [frameDraft.x, frameDraft.y, onAdjustCover]);
+
+  const updateFrameFromPointer = useCallback((clientX, clientY) => {
+    const rect = frameAreaRef.current?.getBoundingClientRect();
+    if (!rect || !rect.width || !rect.height) return;
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
+    setFrameDraft({
+      x: Math.max(0, Math.min(100, x)),
+      y: Math.max(0, Math.min(100, y)),
+    });
+  }, []);
+
+  const handleFramePointerDown = useCallback((e) => {
+    e.preventDefault();
+    updateFrameFromPointer(e.clientX, e.clientY);
+    if (typeof e.currentTarget.setPointerCapture === "function") {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+  }, [updateFrameFromPointer]);
+
+  const handleFramePointerMove = useCallback((e) => {
+    if (!(e.buttons & 1)) return;
+    updateFrameFromPointer(e.clientX, e.clientY);
+  }, [updateFrameFromPointer]);
 
   useEffect(() => {
     let alive = true;
@@ -109,7 +170,7 @@ export default function MediaGallery({
     <div className="media-gallery">
       <div className={`grid ${gridColsClass}`}>
         {items.map((m, i) => {
-          const canShowActions = !readOnly && (onRemove || onMove || onSetCover);
+          const canShowActions = !readOnly && (onRemove || onMove || onSetCover || onAdjustCover);
           return (
             <figure
               key={`${m.url}-${i}`}
@@ -164,6 +225,17 @@ export default function MediaGallery({
                       onClick={() => onSetCover(i)}
                     >
                       Set cover
+                    </button>
+                  )}
+
+                  {typeof onAdjustCover === "function" && i === 0 && m?.type !== "video" && (
+                    <button
+                      className="tlb-chip tlb-chip-frame"
+                      title="Adjust framing"
+                      aria-label="Adjust framing"
+                      onClick={openFrameEditor}
+                    >
+                      Adjust framing
                     </button>
                   )}
 
@@ -224,6 +296,53 @@ export default function MediaGallery({
                 <img src={currentItem.url} alt={currentItem.name || "media"} />
               )}
               {currentItem.name && <div className="lb-caption">{currentItem.name}</div>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {frameOpen && coverItem?.url && (
+        <div className="lightbox" onClick={closeFrameEditor}>
+          <div className="lightbox-inner frame-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="lb-close" onClick={closeFrameEditor} title="Close">
+              ✕
+            </button>
+
+            <div className="frame-head">
+              <div className="frame-title">Adjust cover framing</div>
+              <div className="frame-subtitle">
+                Drag inside the frame to position the photo as it will appear on the Digital CV.
+              </div>
+            </div>
+
+            <div className="frame-stage">
+              <div
+                ref={frameAreaRef}
+                className="frame-preview"
+                onPointerDown={handleFramePointerDown}
+                onPointerMove={handleFramePointerMove}
+                style={{
+                  backgroundImage: `url("${thumbs[coverItem.url] || coverItem.url}")`,
+                  backgroundPosition: `${frameDraft.x}% ${frameDraft.y}%`,
+                }}
+              >
+                <div
+                  className="frame-focus"
+                  style={{
+                    left: `${frameDraft.x}%`,
+                    top: `${frameDraft.y}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="frame-actions">
+              <button className="frame-btn frame-reset" type="button" onClick={resetFrameEditor}>
+                Reset
+              </button>
+              <button className="frame-btn frame-save" type="button" onClick={commitFrameEditor}>
+                Save framing
+              </button>
             </div>
           </div>
         </div>
@@ -358,6 +477,11 @@ export default function MediaGallery({
             font-size:16px; line-height:1; color:#0b1220;
           }
 
+          .tlb-chip-frame::before {
+            content:"⌖";
+            font-size:15px;
+          }
+
           .tile { margin-bottom: 6px; }
         }
 
@@ -408,6 +532,89 @@ export default function MediaGallery({
         .lb-nav.left { left:12px; }
         .lb-nav.right { right:12px; }
 
+        .frame-modal {
+          width: min(92vw, 560px);
+          height: auto;
+          padding: 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          align-items: stretch;
+          justify-content: flex-start;
+          background: #101828;
+        }
+        .frame-head { padding-right: 34px; }
+        .frame-title {
+          color: #f8fafc;
+          font-size: 1rem;
+          font-weight: 700;
+        }
+        .frame-subtitle {
+          margin-top: 6px;
+          color: #cbd5e1;
+          font-size: .9rem;
+          line-height: 1.45;
+        }
+        .frame-stage {
+          display: flex;
+          justify-content: center;
+        }
+        .frame-preview {
+          position: relative;
+          width: min(100%, 250px);
+          aspect-ratio: 1 / 2.12;
+          border-radius: 12px;
+          overflow: hidden;
+          background-color: #0f172a;
+          background-repeat: no-repeat;
+          background-size: cover;
+          border: 1px solid rgba(255,255,255,.16);
+          box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+          touch-action: none;
+          cursor: grab;
+        }
+        .frame-preview:active { cursor: grabbing; }
+        .frame-preview::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border: 1px dashed rgba(255,255,255,.42);
+          pointer-events: none;
+        }
+        .frame-focus {
+          position: absolute;
+          width: 18px;
+          height: 18px;
+          border-radius: 999px;
+          background: rgba(104,173,168,.95);
+          border: 2px solid #fff;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+          box-shadow: 0 2px 12px rgba(0,0,0,.28);
+        }
+        .frame-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 8px;
+        }
+        .frame-btn {
+          appearance: none;
+          border: 1px solid rgba(255,255,255,.16);
+          border-radius: 10px;
+          padding: 9px 12px;
+          font-size: .9rem;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .frame-reset {
+          background: rgba(255,255,255,.12);
+          color: #f8fafc;
+        }
+        .frame-save {
+          background: rgba(104,173,168,.98);
+          color: #082032;
+        }
+
         /* Móvil: nav más compactos en los bordes, X siempre blanca */
         @media (max-width: 768px), (hover: none) {
           .lb-close {
@@ -421,6 +628,7 @@ export default function MediaGallery({
           }
           .lb-nav.left { left:8px; }
           .lb-nav.right { right:8px; }
+          .frame-modal { padding: 14px; }
         }
       `}</style>
     </div>

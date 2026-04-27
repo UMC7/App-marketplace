@@ -230,6 +230,7 @@ function buildLitePrefsPayload() {
   const [showCandidateProfileModal, setShowCandidateProfileModal] = useState(false);
   const [needsDocFlagsSave, setNeedsDocFlagsSave] = useState(false);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [persistedGallerySnapshot, setPersistedGallerySnapshot] = useState('[]');
 
   function normalizeLanguageLevels(arr) {
     if (!Array.isArray(arr)) return [];
@@ -408,6 +409,25 @@ function buildLitePrefsPayload() {
     /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(nameOrPath) ? 'video' : 'image'
   );
 
+  const normalizeCoverFrameValue = (value, fallback = 50) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(0, Math.min(100, n));
+  };
+
+  const serializeGalleryItems = (items) => JSON.stringify(
+    (Array.isArray(items) ? items : [])
+      .map((g) => ({
+        path: String(g?.path || '').trim(),
+        type: g?.type || inferTypeByName(g?.name || g?.path || g?.url || ''),
+        name: g?.name || null,
+        size: Number.isFinite(g?.size) ? g.size : null,
+        coverPositionX: normalizeCoverFrameValue(g?.coverPositionX, 50),
+        coverPositionY: normalizeCoverFrameValue(g?.coverPositionY, 50),
+      }))
+      .filter((g) => !!g.path)
+  );
+
   const hydrateGallery = async (items) => {
     const list = Array.isArray(items) ? items : [];
     return Promise.all(list.map(async (it) => {
@@ -419,6 +439,8 @@ function buildLitePrefsPayload() {
           type: base.type || inferTypeByName(base.url),
           name: base.name || null,
           size: base.size ?? null,
+          coverPositionX: normalizeCoverFrameValue(base.coverPositionX, 50),
+          coverPositionY: normalizeCoverFrameValue(base.coverPositionY, 50),
         };
       }
       if (base.path && base.path.startsWith('cv-docs/')) {
@@ -434,9 +456,15 @@ function buildLitePrefsPayload() {
           type: base.type || inferTypeByName(filePath),
           name: base.name || fname,
           size: base.size ?? null,
+          coverPositionX: normalizeCoverFrameValue(base.coverPositionX, 50),
+          coverPositionY: normalizeCoverFrameValue(base.coverPositionY, 50),
         };
       }
-      return base;
+      return {
+        ...base,
+        coverPositionX: normalizeCoverFrameValue(base.coverPositionX, 50),
+        coverPositionY: normalizeCoverFrameValue(base.coverPositionY, 50),
+      };
     }));
   };
 
@@ -478,6 +506,7 @@ function buildLitePrefsPayload() {
           setProfile(data || null);
           setGallery(hydratedGallery);
           setPersistedPaths(rawGallery.map((g) => g?.path).filter(Boolean));
+          setPersistedGallerySnapshot(serializeGalleryItems(rawGallery));
 
           setPrimaryDepartment(data?.primary_department || '');
           setPrimaryRank(data?.primary_role || '');
@@ -1083,6 +1112,8 @@ const generateShortHandle = () => {
       name: file?.name || safeName,
       size: file?.size ?? null,
       path: `cv-docs/${objectKey}`,
+      coverPositionX: 50,
+      coverPositionY: 50,
     };
   };
 
@@ -1118,11 +1149,13 @@ const generateShortHandle = () => {
     setSavingGallery(true);
     try {
       const payload = (Array.isArray(gallery) ? gallery : [])
-        .map(({ path, type, name, size, url }) => ({
+        .map(({ path, type, name, size, url, coverPositionX, coverPositionY }) => ({
           path: path || null,
           type: type || inferTypeByName(name || path || url || ''),
           name: name || null,
           size: Number.isFinite(size) ? size : null,
+          coverPositionX: normalizeCoverFrameValue(coverPositionX, 50),
+          coverPositionY: normalizeCoverFrameValue(coverPositionY, 50),
         }))
         .filter((it) => !!it.path);
 
@@ -1142,6 +1175,7 @@ const generateShortHandle = () => {
         .map((g) => g?.path)
         .filter(Boolean);
       setPersistedPaths(newPersisted);
+      setPersistedGallerySnapshot(serializeGalleryItems(Array.isArray(data?.gallery) ? data.gallery : []));
 
       if (removedPaths.length) {
         const relative = removedPaths.map((p) => p.replace(/^cv-docs\//, ''));
@@ -1395,14 +1429,8 @@ const galleryImagesCount = Array.isArray(gallery)
 const hasUnlimitedMedia = !!(profile?.user_id && UNLIMITED_MEDIA_USER_IDS.has(profile.user_id));
 
 const galleryDirty = useMemo(() => {
-  const current = Array.isArray(gallery)
-    ? gallery.map((g) => String(g?.path || '').trim()).filter(Boolean)
-    : [];
-  const base = Array.isArray(persistedPaths)
-    ? persistedPaths.map((p) => String(p || '').trim()).filter(Boolean)
-    : [];
-  return JSON.stringify(current) !== JSON.stringify(base);
-}, [gallery, persistedPaths]);
+  return serializeGalleryItems(gallery) !== persistedGallerySnapshot;
+}, [gallery, persistedGallerySnapshot]);
 
 const progressSections = buildProfileProgressSections({
   mode: profileMode,

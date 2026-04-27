@@ -49,6 +49,17 @@ export default function MediaSection({
     handleChange(next);
   };
 
+  const handleAdjustCover = ({ coverPositionX, coverPositionY }) => {
+    if (!Array.isArray(data) || !data.length) return;
+    const next = [...data];
+    next[0] = {
+      ...next[0],
+      coverPositionX,
+      coverPositionY,
+    };
+    handleChange(next);
+  };
+
   return (
     <>
       {!readOnly && (
@@ -72,6 +83,7 @@ export default function MediaSection({
           onRemove={readOnly ? undefined : handleRemove}
           onMove={readOnly ? undefined : handleMove}
           onSetCover={readOnly ? undefined : handleSetCover}
+          onAdjustCover={readOnly ? undefined : handleAdjustCover}
           readOnly={readOnly}
           columns={columns}
         />

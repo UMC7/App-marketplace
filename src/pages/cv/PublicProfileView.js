@@ -70,19 +70,39 @@ function inferTypeByName(nameOrPath = '') {
 
 async function hydrateMediaItem(it) {
   if (!it) return null;
+  const normalizeFrameValue = (value, fallback = 50) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(0, Math.min(100, n));
+  };
   if (typeof it === 'string') {
-    if (/^https?:\/\//i.test(it)) return { url: it, type: inferTypeByName(it) };
-    return { url: it, type: inferTypeByName(it) };
+    if (/^https?:\/\//i.test(it)) return { url: it, type: inferTypeByName(it), coverPositionX: 50, coverPositionY: 50 };
+    return { url: it, type: inferTypeByName(it), coverPositionX: 50, coverPositionY: 50 };
   }
   const base = typeof it === 'object' ? it : {};
-  if (base.url && /^https?:\/\//i.test(base.url)) return base;
+  if (base.url && /^https?:\/\//i.test(base.url)) {
+    return {
+      ...base,
+      coverPositionX: normalizeFrameValue(base.coverPositionX, 50),
+      coverPositionY: normalizeFrameValue(base.coverPositionY, 50),
+    };
+  }
   if (base.path && base.path.startsWith(`${BUCKET}/`)) {
     const objectKey = base.path.replace(`${BUCKET}/`, '');
     const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(objectKey, 3600);
     if (error) return base;
-    return { ...base, url: data?.signedUrl || base.url };
+    return {
+      ...base,
+      url: data?.signedUrl || base.url,
+      coverPositionX: normalizeFrameValue(base.coverPositionX, 50),
+      coverPositionY: normalizeFrameValue(base.coverPositionY, 50),
+    };
   }
-  return base;
+  return {
+    ...base,
+    coverPositionX: normalizeFrameValue(base.coverPositionX, 50),
+    coverPositionY: normalizeFrameValue(base.coverPositionY, 50),
+  };
 }
 
 function mapDbVisToUi(v) {
@@ -794,17 +814,27 @@ export default function PublicProfileView() {
     return [profile?.country, profile?.city_port].filter(Boolean).join(' / ');
   }, [profile?.country, profile?.city_port]);
 
-  const heroSrc = useMemo(() => {
-    if (profile?.photo_url) return profile.photo_url;
-    if (profile?.avatar_url) return profile.avatar_url;
+  const heroMedia = useMemo(() => {
+    if (profile?.photo_url) return { url: profile.photo_url, coverPositionX: 50, coverPositionY: 50 };
+    if (profile?.avatar_url) return { url: profile.avatar_url, coverPositionX: 50, coverPositionY: 50 };
     const firstImg = (gallery || []).find((g) => {
       const u = typeof g === 'string' ? g : g?.url;
       const t = typeof g === 'object' ? g?.type : '';
       const isVideo = /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(u || '') || t === 'video';
       return u && !isVideo;
     });
-    return typeof firstImg === 'string' ? firstImg : firstImg?.url || '';
+    if (typeof firstImg === 'string') {
+      return { url: firstImg, coverPositionX: 50, coverPositionY: 50 };
+    }
+    return firstImg || { url: '', coverPositionX: 50, coverPositionY: 50 };
   }, [profile?.photo_url, profile?.avatar_url, gallery]);
+
+  const heroSrc = heroMedia?.url || '';
+  const heroObjectPosition = useMemo(() => {
+    const x = Number.isFinite(Number(heroMedia?.coverPositionX)) ? Number(heroMedia.coverPositionX) : 50;
+    const y = Number.isFinite(Number(heroMedia?.coverPositionY)) ? Number(heroMedia.coverPositionY) : 50;
+    return `${x}% ${y}%`;
+  }, [heroMedia?.coverPositionX, heroMedia?.coverPositionY]);
 
   const publicUrl = useMemo(() => {
     if (!profile?.handle) return '';
@@ -1067,7 +1097,7 @@ if (!allowPublicView && !isPreview) {
         <header className="ppv-header">
           <div className="ppv-hero">
             {heroSrc ? (
-              <img className="ppv-heroImg" src={heroSrc} alt={`${profile?.first_name || 'Candidate'} photo`} />
+              <img className="ppv-heroImg" src={heroSrc} alt={`${profile?.first_name || 'Candidate'} photo`} style={{ objectPosition: heroObjectPosition }} />
             ) : (
               <div className="ppv-heroFallback">CV</div>
             )}
@@ -1164,6 +1194,7 @@ if (!allowPublicView && !isPreview) {
                       src={heroSrc}
                       alt={`${displayName} main`}
                       loading="lazy"
+                      style={{ objectPosition: heroObjectPosition }}
                     />
                   </aside>
                 )}
