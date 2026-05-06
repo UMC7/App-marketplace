@@ -79,8 +79,10 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
   // External/anonymous mode flag
   const isExternal = mode === 'external' && !!externalThreadId;
-  const isAdminThread = mode === 'admin' && !!adminThreadId;
+  const isAdminThread = mode === 'admin';
   const otherUserId = isAdminThread ? adminUserId : receiverId;
+
+  const [actualAdminThreadId, setActualAdminThreadId] = useState(adminThreadId);
 
   const { fetchUnreadMessages } = useUnreadMessages();
   const fetchUnreadRef = useRef(fetchUnreadMessages);
@@ -191,8 +193,8 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   useEffect(() => {
     if (!currentUser?.id) return;
     if (isExternal) return;
-    if (isAdminThread && adminThreadId && otherUserId) {
-      markNotificationsForChatAsRead(supabase, currentUser.id, '__admin__', otherUserId, adminThreadId);
+    if (isAdminThread && actualAdminThreadId && otherUserId) {
+      markNotificationsForChatAsRead(supabase, currentUser.id, '__admin__', otherUserId, actualAdminThreadId);
       return;
     }
     if (!offerId || !receiverId) return;
@@ -219,11 +221,16 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       }
 
       if (isAdminThread) {
+        if (!actualAdminThreadId) {
+          setMessages([]);
+          setIsChatClosed(false);
+          return;
+        }
         setIsChatClosed(false);
         const { data, error } = await supabase
           .from('admin_messages')
           .select('*')
-          .eq('thread_id', adminThreadId)
+          .eq('thread_id', actualAdminThreadId)
           .order('sent_at', { ascending: true });
 
         if (!error) {
@@ -298,7 +305,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     };
 
     fetchMessages();
-  }, [isExternal, isAdminThread, externalThreadId, adminThreadId, offerId, receiverId, currentUser, fetchUnreadMessages, refreshKey]);
+  }, [isExternal, isAdminThread, externalThreadId, actualAdminThreadId, offerId, receiverId, currentUser, fetchUnreadMessages, refreshKey]);
 
   // Refetch mensajes al volver a la app (fallback cuando Realtime se desconecta en segundo plano)
   useEffect(() => {
@@ -384,17 +391,17 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   }, [externalThreadId, isExternal]);
 
   useEffect(() => {
-    if (!isAdminThread || !adminThreadId || !currentUser) return;
+    if (!isAdminThread || !actualAdminThreadId || !currentUser) return;
 
     const channel = supabase
-      .channel(`admin-chat-${adminThreadId}`)
+      .channel(`admin-chat-${actualAdminThreadId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'admin_messages',
-          filter: `thread_id=eq.${adminThreadId}`,
+          filter: `thread_id=eq.${actualAdminThreadId}`,
         },
         async ({ new: payload }) => {
           if (!payload?.id) return;
@@ -420,7 +427,24 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     if (!message && !file) return;
 
     if (isAdminThread) {
-      if (!adminThreadId || !otherUserId) return;
+      let threadId = actualAdminThreadId;
+      if (!threadId) {
+        // Create thread on first message
+        const { data: created, error: createError } = await supabase
+          .from('admin_threads')
+          .insert({ admin_id: otherUserId, user_id: currentUser.id })
+          .select('id')
+          .single();
+        if (createError) {
+          setFileError('Failed to create chat thread.');
+          console.error('Error creating admin thread:', createError);
+          return;
+        }
+        threadId = created?.id;
+        setActualAdminThreadId(threadId);
+      }
+
+      if (!threadId || !otherUserId) return;
 
       let fileUrl = null;
       if (file) {
@@ -452,7 +476,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
       const text = message.trim();
       const payload = {
-        thread_id: adminThreadId,
+        thread_id: threadId,
         sender_id: currentUser.id,
         receiver_id: otherUserId,
         message: text || '',
@@ -470,7 +494,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         const { data: updated } = await supabase
           .from('admin_messages')
           .select('*')
-          .eq('thread_id', adminThreadId)
+          .eq('thread_id', threadId)
           .order('sent_at', { ascending: true });
         setMessages(updated || []);
       } else {

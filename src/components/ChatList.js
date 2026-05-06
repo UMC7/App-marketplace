@@ -194,6 +194,23 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
         }
       }
 
+      let adminLastTimes = {};
+      if (adminThreadIds.length) {
+        const { data: adminLastRows, error: adminLastErr } = await supabase
+          .from('admin_messages')
+          .select('thread_id, sent_at')
+          .in('thread_id', adminThreadIds)
+          .order('sent_at', { ascending: false });
+
+        if (!adminLastErr && adminLastRows) {
+          for (const row of adminLastRows) {
+            if (!adminLastTimes[row.thread_id]) {
+              adminLastTimes[row.thread_id] = row.sent_at;
+            }
+          }
+        }
+      }
+
       const usersMap = Object.fromEntries(
         (users || []).map((u) => [u.id, { nickname: u.nickname, avatar_url: u.avatar_url }])
       );
@@ -230,19 +247,15 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
         const otherUserId = thread.admin_id === currentUser.id ? thread.user_id : thread.admin_id;
         const state = adminStateMap[thread.id];
         if (state?.deleted_at) continue;
-        const { data: last } = await supabase
-          .from('admin_messages')
-          .select('sent_at')
-          .eq('thread_id', thread.id)
-          .order('sent_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+
+        const lastSentAt = adminLastTimes[thread.id];
+        if (!lastSentAt) continue;
 
         adminRows.push({
           offer_id: '__admin__',
           user_id: otherUserId,
           thread_id: thread.id,
-          sent_at: last?.sent_at || thread.created_at,
+          sent_at: lastSentAt || thread.created_at,
           nickname: usersMap[otherUserId]?.nickname || 'User',
           avatar_url: usersMap[otherUserId]?.avatar_url || null,
           offerTitle: 'Admin chats',
@@ -263,19 +276,29 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
       }
 
       const externalRows = [];
-      for (const t of threads || []) {
-        const { data: last } = await supabase
+      const externalThreadIds = (threads || []).map((t) => t.id);
+      let externalLastTimes = {};
+      if (externalThreadIds.length) {
+        const { data: externalLastRows, error: externalLastErr } = await supabase
           .from('external_messages')
-          .select('created_at')
-          .eq('thread_id', t.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          .select('thread_id, created_at')
+          .in('thread_id', externalThreadIds)
+          .order('created_at', { ascending: false });
 
+        if (!externalLastErr && externalLastRows) {
+          for (const row of externalLastRows) {
+            if (!externalLastTimes[row.thread_id]) {
+              externalLastTimes[row.thread_id] = row.created_at;
+            }
+          }
+        }
+      }
+
+      for (const t of threads || []) {
         externalRows.push({
           offer_id: '__external__',
           user_id: t.id,
-          sent_at: last?.created_at || t.created_at,
+          sent_at: externalLastTimes[t.id] || t.created_at,
           nickname: 'Anonymous',
           avatar_url: null,
           offerTitle: 'CV chat',

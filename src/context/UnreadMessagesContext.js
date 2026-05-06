@@ -21,7 +21,7 @@ export function UnreadMessagesProvider({ children }) {
         .eq('read', false),
       supabase
         .from('admin_messages')
-        .select('id')
+        .select('thread_id')
         .eq('receiver_id', currentUser.id)
         .eq('read', false),
     ]);
@@ -33,14 +33,24 @@ export function UnreadMessagesProvider({ children }) {
         .eq('user_id', currentUser.id)
         .not('deleted_at', 'is', null);
 
+      const { data: deletedAdminStates, error: adminStateError } = await supabase
+        .from('admin_chat_state')
+        .select('thread_id')
+        .eq('user_id', currentUser.id)
+        .not('deleted_at', 'is', null);
+
       if (stateError) {
-        const adminCount = adminData?.length || 0;
-        setUnreadCount(data.length + adminCount);
-        return;
+        console.error('Error fetching deleted yacht work chat states:', stateError);
+      }
+      if (adminStateError) {
+        console.error('Error fetching deleted admin chat states:', adminStateError);
       }
 
       const deletedKeys = new Set(
         (deletedStates || []).map((state) => `${state.offer_id}_${state.other_user_id}`)
+      );
+      const deletedAdminThreadIds = new Set(
+        (deletedAdminStates || []).map((state) => state.thread_id)
       );
       const idsToMarkRead = [];
       const visibleUnread = [];
@@ -61,7 +71,9 @@ export function UnreadMessagesProvider({ children }) {
           .in('id', idsToMarkRead);
       }
 
-      const adminCount = adminData?.length || 0;
+      const adminCount = (adminData || []).filter(
+        (msg) => !deletedAdminThreadIds.has(msg.thread_id)
+      ).length;
       setUnreadCount(visibleUnread.length + adminCount);
     }
   }, [currentUser]);

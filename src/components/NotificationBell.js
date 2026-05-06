@@ -10,8 +10,12 @@ export default function NotificationBell() {
   const userId = currentUser?.id;
 
   const [open, setOpen] = useState(false);
+  const PAGE_SIZE = 30;
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const btnRef = useRef(null);
   const popRef = useRef(null);
@@ -108,6 +112,26 @@ const handleItemClick = async (e, n) => {
   }
 };
 
+  const fetchNotificationPage = useCallback(async (nextPage = 0, append = false) => {
+    if (!userId) return;
+    const start = nextPage * PAGE_SIZE;
+    const end = start + PAGE_SIZE - 1;
+    const { data: listRows, error } = await supabase
+      .from("notifications")
+      .select("id, title, body, data, is_read, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .range(start, end);
+
+    if (error) {
+      console.error("Error fetching notification page:", error);
+      return;
+    }
+    const nextItems = listRows || [];
+    setItems((prev) => (append ? [...prev, ...nextItems] : nextItems));
+    setHasMore(nextItems.length === PAGE_SIZE);
+  }, [userId]);
+
   const recount = useCallback(async () => {
     if (!userId) return;
     const { count } = await supabase
@@ -115,20 +139,23 @@ const handleItemClick = async (e, n) => {
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .eq("is_read", false);
-    const { data: listRows } = await supabase
-      .from("notifications")
-      .select("id, title, body, data, is_read, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(15);
     setUnread(count ?? 0);
-    setItems(listRows ?? []);
-  }, [userId]);
+    setPage(0);
+    await fetchNotificationPage(0, false);
+  }, [userId, fetchNotificationPage]);
 
   useEffect(() => {
     if (!userId) return;
     recount();
   }, [userId, recount]);
+
+  const loadMoreNotifications = async () => {
+    const nextPage = page + 1;
+    setIsLoadingMore(true);
+    await fetchNotificationPage(nextPage, true);
+    setPage(nextPage);
+    setIsLoadingMore(false);
+  };
 
   // Realtime + polling de respaldo (por si Realtime falla en desktop)
   useEffect(() => {
@@ -140,7 +167,7 @@ const handleItemClick = async (e, n) => {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
         (payload) => {
-          setItems((prev) => [payload.new, ...prev].slice(0, 15));
+          setItems((prev) => [payload.new, ...prev].slice(0, 100));
           setUnread((c) => c + 1);
           setTimeout(recount, 400);
         }
@@ -235,31 +262,18 @@ const handleItemClick = async (e, n) => {
           onClick={(e) => {
             e.stopPropagation();
           }}
+          className="notif-dropdown"
           style={{
             position: "absolute",
             right: 0,
-            top: 44,                 // justo bajo el botón
-            width: 320,
+            top: 44,
+            width: 340,
             maxWidth: "90vw",
             maxHeight: 420,
-            background: "var(--notif-bg, #ffffff)",
-            color: "var(--notif-text, #081a3b)",
-            border: "1px solid var(--notif-border, #e5e7eb)",
-            borderRadius: 12,
-            overflow: "hidden",
-            boxShadow: "var(--notif-shadow, 0 10px 25px rgba(0,0,0,.15))",
-            zIndex: 10000,           // por encima del navbar
+            zIndex: 10000,
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "8px 10px",
-              borderBottom: "1px solid var(--notif-border, #e5e7eb)",
-            }}
-          >
+          <div className="notif-head">
             <span style={{ fontWeight: 600, fontSize: 14 }}>Notifications</span>
             <button
               onClick={markAllAsRead}
@@ -277,34 +291,43 @@ const handleItemClick = async (e, n) => {
             </button>
           </div>
 
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, maxHeight: 360, overflowY: "auto" }}>
-            {items.length === 0 ? (
-              <li style={{ padding: 14, fontSize: 13, color: "var(--notif-muted, #6b7280)" }}>
-                No notifications
-              </li>
-            ) : (
-              items.map((n) => (
-                <li
-                  key={n.id}
-                  onClick={(e) => handleItemClick(e, n)}
-                  style={{
-                    padding: "10px 12px",
-  borderBottom: "1px solid var(--notif-border, #3a3a3a)",
-  background: n.is_read ? "transparent" : "var(--notif-unread, rgba(104,173,168,0.28))",
-  boxShadow: n.is_read ? "none" : "inset 4px 0 0 0 var(--accent-color)", // ← barra turquesa
-  cursor: "pointer",
-                  }}
-                  title={n.title || "Notification"}
-                >
-                  <div style={{ fontWeight: 600, fontSize: 13 }}>{n.title || "Notification"}</div>
-                  {n.body && <div style={{ fontSize: 13, marginTop: 2 }}>{n.body}</div>}
-                  <div style={{ fontSize: 11, color: "var(--notif-muted, #6b7280)", marginTop: 4 }}>
-                    {new Date(n.created_at).toLocaleString()}
-                  </div>
+          <div className="notif-list-wrapper" style={{ maxHeight: 360, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+            <ul className="notif-list" style={{ flex: 1 }}>
+              {items.length === 0 ? (
+                <li className="notif-empty">
+                  No notifications
                 </li>
-              ))
+              ) : (
+                items.map((n) => (
+                  <li
+                    key={n.id}
+                    onClick={(e) => handleItemClick(e, n)}
+                    className={`notif-item ${!n.is_read ? "notif-unread" : ""}`}
+                    style={{ cursor: "pointer" }}
+                    title={n.title || "Notification"}
+                  >
+                    <div className="notif-item-title">{n.title || "Notification"}</div>
+                    {n.body && <div className="notif-item-body">{n.body}</div>}
+                    <div className="notif-item-time">
+                      {new Date(n.created_at).toLocaleString()}
+                    </div>
+                  </li>
+                ))
+              )}
+            </ul>
+            {hasMore && (
+              <div className="notif-load-more-wrapper">
+                <button
+                  type="button"
+                  onClick={loadMoreNotifications}
+                  disabled={isLoadingMore}
+                  className="notif-load-more"
+                >
+                  {isLoadingMore ? "Loading..." : "Load more notifications"}
+                </button>
+              </div>
             )}
-          </ul>
+          </div>
         </div>
       )}
     </div>

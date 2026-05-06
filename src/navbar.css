@@ -620,9 +620,9 @@
 }
 
 [data-theme='dark'] .notif-dropdown{
-  background: #1f2937;
-  color: #e5e7eb;
-  border-color: #374151;
+  background: #1a1a1a;
+  color: #f5f5f5;
+  border-color: #2a2a2a;
   box-shadow: 0 10px 30px rgba(0,0,0,.45);
 }
 
@@ -638,6 +638,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+[data-theme='dark'] .notif-head{
+  border-bottom-color: var(--notif-border, #2a2a2a);
   padding: 8px 10px;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -667,17 +671,17 @@
   font-size: 13px;
   color: #6b7280;
 }
-[data-theme='dark'] .notif-empty{ color:#9ca3af; }
+[data-theme='dark'] .notif-empty{ color: var(--notif-muted, #a0a0a0); }
 
 .notif-item{
   padding: 10px 12px;
   border-bottom: 1px solid #e5e7eb;
 }
 .notif-item:last-child{ border-bottom: 0; }
-[data-theme='dark'] .notif-item{ border-bottom-color:#374151; }
+[data-theme='dark'] .notif-item{ border-bottom-color: var(--notif-border, #2a2a2a); }
 
 .notif-unread{ background: #eff6ff; }
-[data-theme='dark'] .notif-unread{ background: #0b1220; }
+[data-theme='dark'] .notif-unread{ background: var(--notif-unread, #1a2a3a); }
 
 .notif-item-title{ font-weight: 600; font-size: 13px; }
 .notif-item-body { font-size: 13px; margin-top: 2px; }
@@ -685,12 +689,12 @@
 
 /* Dark mode tokens for Notifications (afecta desktop y móvil) */
 [data-theme='dark']{
-  --notif-bg: #1f2937;          /* fondo panel */
-  --notif-text: #e5e7eb;        /* texto principal */
-  --notif-border: #374151;      /* borde */
+  --notif-bg: #1a1a1a;          /* fondo panel - consistente con #121212 */
+  --notif-text: #f5f5f5;        /* texto principal */
+  --notif-border: #2a2a2a;      /* borde - oscuro y neutral */
   --notif-shadow: 0 10px 30px rgba(0,0,0,.45);
-  --notif-unread: #0b1220;      /* fondo item no leído */
-  --notif-muted: #9ca3af;       /* textos secundarios/fecha */
+  --notif-unread: #1a2a3a;      /* fondo item no leído - tono oscuro */
+  --notif-muted: #a0a0a0;       /* textos secundarios/fecha */
 }
 
 /* ===== Notifications modal header (title centered + small pill) ===== */
@@ -739,9 +743,48 @@
   cursor: default;
 }
 
+.notif-load-more-wrapper{
+  padding: 10px;
+  text-align: center;
+  border-top: 1px solid var(--notif-border, #e5e7eb);
+}
+
+.notif-load-more{
+  background: var(--primary-color, #68ada8);
+  border: none;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.notif-load-more:hover:not(:disabled){
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.notif-load-more:disabled{
+  opacity: 0.6;
+  cursor: default;
+}
+
+[data-theme='dark'] .notif-load-more{
+  background: var(--accent-color, #68ada8);
+  color: #ffffff;
+  border: none;
+  border-color: transparent;
+}
+
+[data-theme='dark'] .notif-load-more:hover:not(:disabled){
+  background: rgba(104,173,168,0.85);
+}
+
 /* Dark mode: mantener el mismo contraste */
 [data-theme='dark'] .notif-modal-head{
-  border-bottom-color: #374151;
+  border-bottom-color: var(--notif-border, #2a2a2a);
 }
 [data-theme='dark'] .notif-action-pill{
   background: var(--accent-color, #68ada8) !important;

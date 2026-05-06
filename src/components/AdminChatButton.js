@@ -80,25 +80,7 @@ const AdminChatButton = () => {
       .maybeSingle();
 
     let threadId = existing?.id;
-    if (!threadId) {
-      const { data: created, error: createError } = await supabase
-        .from('admin_threads')
-        .insert({ admin_id: adminId, user_id: currentUser.id })
-        .select('id')
-        .single();
-
-      if (createError) {
-        console.error('Error creating admin chat:', createError);
-        if (createError.code === '42501') {
-          toast.error('No tienes permisos para iniciar el chat con el admin.');
-        } else {
-          toast.error('No se pudo iniciar el chat con el admin.');
-        }
-        setLoading(false);
-        return;
-      }
-      threadId = created?.id;
-    }
+    // Removed: create thread here
 
     setAdminThreadId(threadId);
     setChatOpen(true);
