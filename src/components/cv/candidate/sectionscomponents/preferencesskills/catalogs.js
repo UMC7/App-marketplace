@@ -651,6 +651,10 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
       items: ['Structured Childcare Supervision', 'Childcare routines', 'Educational activities'],
     },
     {
+      group: 'Beauty & Grooming',
+      items: ['Makeup application', 'Manicure & pedicure services'],
+    },
+    {
       group: 'Media & Digital',
       items: [
         'Digital Content & Media Handling',

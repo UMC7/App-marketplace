@@ -863,15 +863,31 @@ const OfferTimeline = ({
   </div>
 )}
 
-    {(Array.isArray(offer.required_skills) && offer.required_skills.length > 0) && (
+    {((Array.isArray(offer.required_skills) && offer.required_skills.length > 0) ||
+      (offer.team && Array.isArray(offer.teammate_required_skills) && offer.teammate_required_skills.length > 0)) && (
   <div className="expanded-block block6 required-docs-block">
     <div className="field-label">Specific skills</div>
     <div className="field-value">
-      <div className="required-docs-grid">
-        {offer.required_skills.map((skill, index) => (
-          <span key={`skill-${skill}-${index}`} className="required-doc-chip">{skill}</span>
-        ))}
-      </div>
+      {(Array.isArray(offer.required_skills) && offer.required_skills.length > 0) && (
+        <>
+          {offer.team && <div className="required-docs-rank-label">{offer.title}:</div>}
+          <div className="required-docs-grid">
+            {offer.required_skills.map((skill, index) => (
+              <span key={`skill-r1-${skill}-${index}`} className="required-doc-chip">{skill}</span>
+            ))}
+          </div>
+        </>
+      )}
+      {(offer.team && Array.isArray(offer.teammate_required_skills) && offer.teammate_required_skills.length > 0) && (
+        <>
+          <div className="required-docs-rank-label">{offer.teammate_rank}:</div>
+          <div className="required-docs-grid">
+            {offer.teammate_required_skills.map((skill, index) => (
+              <span key={`skill-r2-${skill}-${index}`} className="required-doc-chip">{skill}</span>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   </div>
 )}

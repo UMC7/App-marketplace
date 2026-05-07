@@ -60,6 +60,7 @@ const initialState = {
   engineering_license: '',
   required_documents: BASE_REQUIRED_DOCUMENTS,
   required_skills: [],
+  teammate_required_skills: [],
   salary: '',
   is_doe: false,
   is_tips: false,
@@ -83,7 +84,7 @@ const initialState = {
   teammate_rank: '',
   teammate_required_license: '',
   teammate_engineering_license: '',
-  teammate_required_documents: [],
+  teammate_required_documents: BASE_REQUIRED_DOCUMENTS,
   teammate_salary: '',
   teammate_experience: '',
   flag: 'Foreign Flag',
@@ -252,6 +253,14 @@ useEffect(() => {
   setFormData(prev => ({
     ...prev,
     required_skills: initialValues.required_skills || [],
+  }));
+}, [initialValues]);
+
+useEffect(() => {
+  if (!Array.isArray(initialValues?.teammate_required_skills)) return;
+  setFormData(prev => ({
+    ...prev,
+    teammate_required_skills: initialValues.teammate_required_skills || [],
   }));
 }, [initialValues]);
 
@@ -731,9 +740,18 @@ const formReady = (() => {
         newState.teammate_required_license = '';
         newState.teammate_engineering_license = '';
         newState.teammate_required_documents = [];
+        newState.teammate_required_skills = [];
         newState.teammate_salary = '';
         newState.teammate_salary_currency = '';
         newState.teammate_experience = '';
+      }
+      if (name === 'team' && value === 'Yes') {
+        newState.teammate_required_documents = Array.from(
+          new Set([
+            ...(Array.isArray(prev.teammate_required_documents) ? prev.teammate_required_documents : []),
+            ...BASE_REQUIRED_DOCUMENTS,
+          ])
+        );
       }
 
       if (name === 'yacht_type') {
@@ -756,7 +774,8 @@ const formReady = (() => {
       if (name === 'teammate_rank') {
         newState.teammate_required_license = '';
         newState.teammate_engineering_license = '';
-        newState.teammate_required_documents = [];
+        newState.teammate_required_documents = [...BASE_REQUIRED_DOCUMENTS];
+        newState.teammate_required_skills = [];
       }
       if (name === 'teammate_rank' && !DECK_LICENSE_RANKS.includes(value) && !ENGINEERING_RANKS.includes(value)) {
         newState.teammate_required_license = '';
@@ -839,6 +858,7 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     teammate_required_licenses: isTeamJob && Array.isArray(sanitizedData.teammate_required_licenses) ? sanitizedData.teammate_required_licenses : [],
     teammate_required_engineering_licenses: isTeamJob && Array.isArray(sanitizedData.teammate_required_engineering_licenses) ? sanitizedData.teammate_required_engineering_licenses : [],
     teammate_required_documents: isTeamJob && Array.isArray(sanitizedData.teammate_required_documents) ? sanitizedData.teammate_required_documents : [],
+    teammate_required_skills: isTeamJob && Array.isArray(sanitizedData.teammate_required_skills) ? sanitizedData.teammate_required_skills : [],
     homeport: sanitizedData.homeport || null,
     liveaboard: sanitizedData.liveaboard || null,
     season_type: sanitizedData.season_type || null,
@@ -983,6 +1003,7 @@ const derivedEndDate = (() => {
     teammate_required_licenses: formData.team === 'Yes' ? (formData.teammate_required_license ? [formData.teammate_required_license] : []) : [],
     teammate_required_engineering_licenses: formData.team === 'Yes' ? (formData.teammate_engineering_license ? [formData.teammate_engineering_license] : []) : [],
     teammate_required_documents: formData.team === 'Yes' ? (Array.isArray(formData.teammate_required_documents) ? formData.teammate_required_documents : []) : [],
+    teammate_required_skills: formData.team === 'Yes' ? (Array.isArray(formData.teammate_required_skills) ? formData.teammate_required_skills : []) : [],
 };
 
     setLoading(true);
@@ -1141,6 +1162,7 @@ const derivedEndDate = (() => {
         improveRemarks={improveRemarks}
         renderRequiredDocsSummary={renderRequiredDocsSummary}
         onRequiredSkillsChange={(arr) => setFormData((prev) => ({ ...prev, required_skills: arr }))}
+        onTeammateRequiredSkillsChange={(arr) => setFormData((prev) => ({ ...prev, teammate_required_skills: arr }))}
       />
     )}
 

@@ -61,6 +61,7 @@ function YachtOfferFormOnboardFields({
   improveRemarks,
   renderRequiredDocsSummary,
   onRequiredSkillsChange = () => {},
+  onTeammateRequiredSkillsChange = () => {},
 }) {
   const yrs = yearsOpts || yearsOptions;
 
@@ -182,6 +183,13 @@ function YachtOfferFormOnboardFields({
               <RequiredDocumentsSelect open={showTeammateRequiredDocs} onToggle={() => setShowTeammateRequiredDocs((v) => !v)} selectedDocuments={formData.teammate_required_documents || []} onChange={onChange} name="teammate_required_documents" requiredDocumentGroups={teammateRequiredDocumentGroups} deckDocumentOptions={teammateDeckDocumentOptions} containerRef={teammateRequiredDocsRef} />
             </div>
           )}
+          <div className="form-group form-group-stack">
+            <JobSpecificSkillsSelect
+              label="Teammate specific skills:"
+              value={formData.teammate_required_skills || []}
+              onChange={onTeammateRequiredSkillsChange}
+            />
+          </div>
           <label>Teammate Experience:</label>
           <select name="teammate_experience" value={formData.teammate_experience} onChange={onChange}>
             <option value="">Select...</option>
