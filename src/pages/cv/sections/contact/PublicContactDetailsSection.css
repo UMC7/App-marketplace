@@ -4,7 +4,8 @@
 .pcd-section{
   --pcd-bullet: 6px;   /* diámetro del punto */
   --pcd-gap: 8px;      /* espacio entre punto y texto */
-  --pcd-indent: calc(var(--pcd-bullet) + var(--pcd-gap));
+  --pcd-icon: 14px;    /* ancho reservado para icono */
+  --pcd-indent: calc(var(--pcd-bullet) + var(--pcd-gap) + var(--pcd-icon) + var(--pcd-gap));
 
   /* +padding lateral para que la 1ª columna no quede “comida” por el borde */
   padding: 10px 16px 8px;
@@ -67,6 +68,29 @@
   display: inline-block;
   flex: 0 0 var(--pcd-bullet);
 }
+
+.pcd-icon{
+  width: var(--pcd-icon);
+  height: var(--pcd-icon);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  flex: 0 0 var(--pcd-icon);
+}
+.pcd-icon svg{
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.pcd-icon--email{ color: #ef4444; }
+.pcd-icon--phone{ color: #0ea5e9; }
+.pcd-icon--whatsapp{ color: #25d366; }
+.pcd-icon--facebook{ color: #1877f2; }
+.pcd-icon--instagram{ color: #e1306c; }
+.pcd-icon--website{ color: #7c3aed; }
+.pcd-icon--linkedin{ color: #0a66c2; }
 
 .pcd-label{
   font-size: 12px;

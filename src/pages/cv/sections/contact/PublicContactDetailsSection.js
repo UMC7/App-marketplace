@@ -2,6 +2,15 @@
 import React, { useMemo } from 'react';
 import './PublicContactDetailsSection.css';
 import { emitContactOpen } from '../../../../services/analytics/emitEvent';
+import {
+  FaEnvelope,
+  FaMobileAlt,
+  FaWhatsapp,
+  FaFacebookSquare,
+  FaInstagram,
+  FaGlobe,
+  FaLinkedin,
+} from 'react-icons/fa';
 
 const isBlank = (v) => String(v ?? '').trim() === '';
 
@@ -92,6 +101,7 @@ export default function PublicContactDetailsSection({ profile }) {
             <div className="pcd-field">
               <div className="pcd-headline">
                 <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-icon pcd-icon--email" aria-hidden="true"><FaEnvelope /></span>
                 <span className="pcd-label">Email</span>
               </div>
               <div className="pcd-value">
@@ -120,6 +130,7 @@ export default function PublicContactDetailsSection({ profile }) {
             <div className="pcd-field">
               <div className="pcd-headline">
                 <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-icon pcd-icon--phone" aria-hidden="true"><FaMobileAlt /></span>
                 <span className="pcd-label">Mobile phone</span>
               </div>
               <div className="pcd-value">
@@ -148,6 +159,7 @@ export default function PublicContactDetailsSection({ profile }) {
             <div className="pcd-field">
               <div className="pcd-headline">
                 <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-icon pcd-icon--whatsapp" aria-hidden="true"><FaWhatsapp /></span>
                 <span className="pcd-label">WhatsApp</span>
               </div>
               <div className="pcd-value">
@@ -176,6 +188,7 @@ export default function PublicContactDetailsSection({ profile }) {
             <div className="pcd-field">
               <div className="pcd-headline">
                 <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-icon pcd-icon--facebook" aria-hidden="true"><FaFacebookSquare /></span>
                 <span className="pcd-label">Facebook</span>
               </div>
               <div className="pcd-value">
@@ -193,6 +206,7 @@ export default function PublicContactDetailsSection({ profile }) {
             <div className="pcd-field">
               <div className="pcd-headline">
                 <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-icon pcd-icon--instagram" aria-hidden="true"><FaInstagram /></span>
                 <span className="pcd-label">Instagram</span>
               </div>
               <div className="pcd-value">
@@ -210,6 +224,7 @@ export default function PublicContactDetailsSection({ profile }) {
             <div className="pcd-field">
               <div className="pcd-headline">
                 <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-icon pcd-icon--website" aria-hidden="true"><FaGlobe /></span>
                 <span className="pcd-label">Website / Portfolio</span>
               </div>
               <div className="pcd-value">
@@ -227,6 +242,7 @@ export default function PublicContactDetailsSection({ profile }) {
             <div className="pcd-field">
               <div className="pcd-headline">
                 <span className="pcd-bullet" aria-hidden="true" />
+                <span className="pcd-icon pcd-icon--linkedin" aria-hidden="true"><FaLinkedin /></span>
                 <span className="pcd-label">LinkedIn</span>
               </div>
               <div className="pcd-value">
