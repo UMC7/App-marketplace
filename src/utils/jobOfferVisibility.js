@@ -35,11 +35,17 @@ export function isOfferVisibleOnJobBoard(offer, now = new Date()) {
     return now.getTime() <= hideAfter;
   }
 
-  if (status !== 'active') return false;
-
   const expiresAt = parseDate(offer?.expires_at);
-  if (!expiresAt) return true;
 
-  const hideAfter = expiresAt.getTime() + CLOSED_VISIBILITY_DAYS * DAY_MS;
-  return now.getTime() <= hideAfter;
+  // Active offers without expiration stay visible.
+  if (status === 'active' && !expiresAt) return true;
+
+  // Active or paused offers that reached expiration remain visible
+  // for a limited "closed" window on SeaJobs.
+  if ((status === 'active' || status === 'paused') && expiresAt) {
+    const hideAfter = expiresAt.getTime() + CLOSED_VISIBILITY_DAYS * DAY_MS;
+    return now.getTime() <= hideAfter;
+  }
+
+  return false;
 }
