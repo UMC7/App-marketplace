@@ -297,8 +297,17 @@ function drawFillRoundRect(ctx, x, y, width, height, radius, fillStyle) {
 
 function createPdfBlobFromJpegDataUrl(jpegDataUrl, imageWidthPx, imageHeightPx, widthMm = 85, heightMm = 55) {
   const imageBytes = dataUrlToUint8Array(jpegDataUrl);
-  const pageWidthPt = mmToPt(widthMm);
-  const pageHeightPt = mmToPt(heightMm);
+  const trimWidthPt = mmToPt(widthMm);
+  const trimHeightPt = mmToPt(heightMm);
+  const outerMarginMm = 3;
+  const cropOffsetMm = 1.5;
+  const cropLengthMm = 3;
+  const pageWidthPt = trimWidthPt + mmToPt(outerMarginMm * 2);
+  const pageHeightPt = trimHeightPt + mmToPt(outerMarginMm * 2);
+  const imageXPt = mmToPt(outerMarginMm);
+  const imageYPt = mmToPt(outerMarginMm);
+  const cropOffsetPt = mmToPt(cropOffsetMm);
+  const cropLengthPt = mmToPt(cropLengthMm);
   const encoder = new TextEncoder();
   const chunks = [];
   const offsets = [0];
@@ -329,7 +338,29 @@ function createPdfBlobFromJpegDataUrl(jpegDataUrl, imageWidthPx, imageHeightPx, 
   pushText(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidthPt} ${pageHeightPt}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>\n`);
   closeObject();
 
-  const contentStream = `q\n${pageWidthPt} 0 0 ${pageHeightPt} 0 0 cm\n/Im0 Do\nQ\n`;
+  const left = imageXPt;
+  const right = imageXPt + trimWidthPt;
+  const bottom = imageYPt;
+  const top = imageYPt + trimHeightPt;
+  const contentStream = [
+    'q',
+    `${trimWidthPt} 0 0 ${trimHeightPt} ${imageXPt} ${imageYPt} cm`,
+    '/Im0 Do',
+    'Q',
+    'q',
+    '0.6 w',
+    '0 G',
+    `${left} ${top + cropOffsetPt} m ${left} ${top + cropOffsetPt + cropLengthPt} l S`,
+    `${left - cropOffsetPt - cropLengthPt} ${top} m ${left - cropOffsetPt} ${top} l S`,
+    `${right} ${top + cropOffsetPt} m ${right} ${top + cropOffsetPt + cropLengthPt} l S`,
+    `${right + cropOffsetPt} ${top} m ${right + cropOffsetPt + cropLengthPt} ${top} l S`,
+    `${left} ${bottom - cropOffsetPt} m ${left} ${bottom - cropOffsetPt - cropLengthPt} l S`,
+    `${left - cropOffsetPt - cropLengthPt} ${bottom} m ${left - cropOffsetPt} ${bottom} l S`,
+    `${right} ${bottom - cropOffsetPt} m ${right} ${bottom - cropOffsetPt - cropLengthPt} l S`,
+    `${right + cropOffsetPt} ${bottom} m ${right + cropOffsetPt + cropLengthPt} ${bottom} l S`,
+    'Q',
+    '',
+  ].join('\n');
   openObject(4);
   pushText(`<< /Length ${contentStream.length} >>\nstream\n${contentStream}endstream\n`);
   closeObject();
