@@ -14,7 +14,7 @@ import PublicContactDetailsSection from './sections/contact';
 import PublicCoverLetterSection from './sections/coverletter/PublicCoverLetterSection';
 import useEmitProfileView from '../../hooks/useEmitProfileView';
 import { formatAvailability, hasValidAvailability } from '../../utils/availability';
-import { FaEnvelope, FaMapMarkerAlt, FaMobileAlt } from 'react-icons/fa';
+import { FaCopy, FaDownload, FaEnvelope, FaMapMarkerAlt, FaMobileAlt } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 const qs = (search) => new URLSearchParams(search || '');
@@ -1417,7 +1417,11 @@ if (!allowPublicView && !isPreview) {
 
   return (
     <div className={`ppv-wrap ${isPreview ? 'ppv--preview' : 'ppv--public'}`} style={{ paddingTop: isPreview ? 50 : 12 }}>
-      {isPreview && <div className="ppv-previewRibbon">Preview mode — recruiters won’t see this label</div>}
+      {isPreview && (
+        <div className="ppv-previewRibbon">
+          This business card is for personal use only and will not be visible to recruiters. Your Digital CV below remains visible to recruiters. Use the buttons above to download the card for print or copy it for sharing across social media, email, messaging apps, and other platforms.
+        </div>
+      )}
 
       {/* Header (solo en modo Preview) */}
       {isPreview && (
@@ -1444,7 +1448,12 @@ if (!allowPublicView && !isPreview) {
                     onClick={handleCopyBusinessCardImage}
                     disabled={!!cardExportBusy}
                   >
-                    {cardExportBusy === 'copy' ? 'Copying...' : 'Copy image'}
+                    <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--desktop">
+                      {cardExportBusy === 'copy' ? 'Copying...' : 'Copy image'}
+                    </span>
+                    <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--mobile" aria-hidden="true">
+                      <FaCopy />
+                    </span>
                   </button>
                   <div className="ppv-businessCardDownloadWrap">
                     <button
@@ -1454,7 +1463,12 @@ if (!allowPublicView && !isPreview) {
                       disabled={!!cardExportBusy}
                       aria-expanded={downloadMenuOpen ? 'true' : 'false'}
                     >
-                      {cardExportBusy === 'png' || cardExportBusy === 'pdf' ? 'Preparing...' : 'Download card'}
+                      <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--desktop">
+                        {cardExportBusy === 'png' || cardExportBusy === 'pdf' ? 'Preparing...' : 'Download card'}
+                      </span>
+                      <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--mobile" aria-hidden="true">
+                        <FaDownload />
+                      </span>
                     </button>
                     {downloadMenuOpen && (
                       <div className="ppv-businessCardDownloadMenu">
