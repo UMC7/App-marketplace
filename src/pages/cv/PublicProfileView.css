@@ -77,6 +77,30 @@ body.dark-mode .ppv-previewRibbon {
   box-shadow: none;
 }
 
+.ppv-businessCard--export .ppv-businessCardName {
+  font-size: 22px;
+}
+
+.ppv-businessCard--export .ppv-businessCardRank {
+  font-size: 18px;
+}
+
+.ppv-businessCard--export .ppv-businessCardLocation {
+  font-size: 14px;
+}
+
+.ppv-businessCard--export .ppv-businessCardContact {
+  font-size: 12px;
+}
+
+.ppv-businessCard--export .ppv-businessCardMetaIcon {
+  width: 12px;
+}
+
+.ppv-businessCard--export .ppv-businessCardQrCaption {
+  font-size: 9px;
+}
+
 .ppv-businessCardControls {
   position: absolute;
   top: 12px;
@@ -188,7 +212,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: 32% 1fr 21%;
+  grid-template-columns: 32% 1fr 23%;
   gap: 18px;
   background: #081525;
 }
@@ -363,7 +387,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
 }
 
 .ppv-businessCardQr {
-  width: min(136px, 100%);
+  width: min(150px, 100%);
   aspect-ratio: 1 / 1;
   background: #fff;
   border: 2px solid rgba(255, 255, 255, 0.18);
@@ -372,7 +396,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
 }
 
 .ppv-businessCardQrFallback {
-  width: min(136px, 100%);
+  width: min(150px, 100%);
   aspect-ratio: 1 / 1;
   border-radius: 8px;
   border: 2px dashed rgba(255, 255, 255, 0.7);
