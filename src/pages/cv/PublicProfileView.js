@@ -1168,7 +1168,18 @@ export default function PublicProfileView() {
     canvas.height = BUSINESS_CARD_EXPORT_HEIGHT;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not create image canvas.');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    clipRoundRect(
+      ctx,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+      16 * (BUSINESS_CARD_EXPORT_WIDTH / BASE_BUSINESS_CARD_WIDTH)
+    );
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
     return canvas;
   }, [exportBusinessCardBlob]);
 
@@ -1181,7 +1192,9 @@ export default function PublicProfileView() {
     setDownloadMenuOpen(false);
     setCardExportBusy('copy');
     try {
-      const blob = await exportBusinessCardBlob();
+      const canvas = await exportBusinessCardCanvas();
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('Could not create image.');
       await navigator.clipboard.write([new window.ClipboardItem({ 'image/png': blob })]);
       toast.success('Business card image copied.');
     } catch (e) {
@@ -1189,13 +1202,15 @@ export default function PublicProfileView() {
     } finally {
       setCardExportBusy('');
     }
-  }, [exportBusinessCardBlob]);
+  }, [exportBusinessCardCanvas]);
 
   const handleShareBusinessCardImage = useCallback(async () => {
     setDownloadMenuOpen(false);
     setCardExportBusy('share');
     try {
-      const blob = await exportBusinessCardBlob();
+      const canvas = await exportBusinessCardCanvas();
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('Could not create image.');
 
       const file = new File([blob], `business-card-${profile?.handle || 'candidate'}.png`, {
         type: 'image/png',
@@ -1219,20 +1234,22 @@ export default function PublicProfileView() {
     } finally {
       setCardExportBusy('');
     }
-  }, [exportBusinessCardBlob, profile?.handle]);
+  }, [exportBusinessCardCanvas, profile?.handle]);
 
   const handleDownloadBusinessCard = useCallback(async (format) => {
     setDownloadMenuOpen(false);
     setCardExportBusy(format);
     try {
+      const canvas = await exportBusinessCardCanvas();
+
       if (format === 'png') {
-        const blob = await exportBusinessCardBlob();
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('Could not create PNG.');
         triggerBlobDownload(blob, `business-card-${profile?.handle || 'candidate'}.png`);
         toast.success('Business card PNG downloaded.');
         return;
       }
 
-      const canvas = await exportBusinessCardCanvas();
       const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.96);
       const pdfBlob = createPdfBlobFromJpegDataUrl(
         jpegDataUrl,
@@ -1248,7 +1265,7 @@ export default function PublicProfileView() {
     } finally {
       setCardExportBusy('');
     }
-  }, [exportBusinessCardBlob, exportBusinessCardCanvas, profile?.handle]);
+  }, [exportBusinessCardCanvas, profile?.handle]);
 
   const cvDoc = useMemo(() => {
     const list = Array.isArray(documents) ? documents : [];
