@@ -15,6 +15,7 @@ import PublicCoverLetterSection from './sections/coverletter/PublicCoverLetterSe
 import useEmitProfileView from '../../hooks/useEmitProfileView';
 import { formatAvailability, hasValidAvailability } from '../../utils/availability';
 import { FaEnvelope, FaMapMarkerAlt, FaMobileAlt } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 const qs = (search) => new URLSearchParams(search || '');
 const BUCKET = 'cv-docs';
@@ -23,9 +24,13 @@ const pad2 = (n) => String(n).padStart(2, '0');
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 const BASE_A4_WIDTH  = 900;
 const BASE_A4_HEIGHT = Math.round(BASE_A4_WIDTH * (297 / 210));
+const BASE_BUSINESS_CARD_WIDTH = 520;
+const BASE_BUSINESS_CARD_HEIGHT = Math.round(BASE_BUSINESS_CARD_WIDTH * 0.647059);
 const INTRO_FIXED_PX = Math.round(BASE_A4_HEIGHT * 0.10) + 14;
 const MIN_SCALE = 0.42;
 const MAX_SCALE = 1;
+const BUSINESS_CARD_EXPORT_WIDTH = 1800;
+const BUSINESS_CARD_EXPORT_HEIGHT = Math.round((BUSINESS_CARD_EXPORT_WIDTH * 55) / 85);
 const UNLIMITED_MEDIA_USER_IDS = new Set([
   'dc3c4ca6-e892-4c25-891f-287f43f9c182',
   '377caa8a-95ee-4959-adad-c9af2eae2171',
@@ -126,6 +131,189 @@ function canonicalTypeFromText(type = '', title = '') {
   if (has(/\bgoc\b|general operator/)) return 'goc';
   if (has(/yacht\s*master|yachtmaster/)) return 'yachtmaster';
   return 'other';
+}
+
+function mmToPt(mm) {
+  return (mm * 72) / 25.4;
+}
+
+function dataUrlToUint8Array(dataUrl) {
+  const base64 = String(dataUrl || '').split(',')[1] || '';
+  const binary = window.atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function triggerBlobDownload(blob, filename) {
+  const href = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = href;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(href), 1500);
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Could not read file.'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function fetchAsDataUrl(url) {
+  const res = await fetch(url, { mode: 'cors', credentials: 'omit' });
+  if (!res.ok) throw new Error(`Could not fetch asset: ${url}`);
+  const blob = await res.blob();
+  return blobToDataUrl(blob);
+}
+
+function inlineComputedStyles(sourceEl, targetEl) {
+  if (!(sourceEl instanceof Element) || !(targetEl instanceof Element)) return;
+  const computed = getComputedStyle(sourceEl);
+  const styleText = Array.from(computed).map((prop) => `${prop}:${computed.getPropertyValue(prop)};`).join('');
+  targetEl.setAttribute('style', styleText);
+
+  const sourceChildren = Array.from(sourceEl.children);
+  const targetChildren = Array.from(targetEl.children);
+  for (let i = 0; i < sourceChildren.length; i += 1) {
+    inlineComputedStyles(sourceChildren[i], targetChildren[i]);
+  }
+}
+
+async function inlineImagesAsDataUrls(sourceRoot, targetRoot) {
+  const sourceImages = Array.from(sourceRoot.querySelectorAll('img'));
+  const targetImages = Array.from(targetRoot.querySelectorAll('img'));
+
+  await Promise.all(sourceImages.map(async (img, index) => {
+    const targetImg = targetImages[index];
+    if (!targetImg) return;
+    const src = img.currentSrc || img.src || '';
+    if (!src) return;
+
+    try {
+      const dataUrl = await fetchAsDataUrl(src);
+      targetImg.setAttribute('src', dataUrl);
+      targetImg.removeAttribute('srcset');
+    } catch {
+      targetImg.setAttribute('crossorigin', 'anonymous');
+      targetImg.setAttribute('src', src);
+      targetImg.removeAttribute('srcset');
+    }
+  }));
+}
+
+async function renderNodeToCanvas(node, { width, height }) {
+  const clone = node.cloneNode(true);
+  clone.querySelectorAll('.ppv-businessCardControls').forEach((el) => el.remove());
+  inlineComputedStyles(node, clone);
+  await inlineImagesAsDataUrls(node, clone);
+
+  clone.style.width = `${width}px`;
+  clone.style.height = `${height}px`;
+  clone.style.minWidth = '0';
+  clone.style.maxWidth = 'none';
+  clone.style.margin = '0';
+  clone.style.transform = 'none';
+  clone.style.position = 'relative';
+  clone.style.boxSizing = 'border-box';
+
+  const wrapper = document.createElement('div');
+  wrapper.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+  wrapper.style.width = `${width}px`;
+  wrapper.style.height = `${height}px`;
+  wrapper.style.margin = '0';
+  wrapper.style.padding = '0';
+  wrapper.style.overflow = 'hidden';
+  wrapper.appendChild(clone);
+
+  const serialized = new XMLSerializer().serializeToString(wrapper);
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <foreignObject width="100%" height="100%">${serialized}</foreignObject>
+    </svg>
+  `;
+  const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const svgUrl = URL.createObjectURL(svgBlob);
+
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const nextImg = new Image();
+      nextImg.onload = () => resolve(nextImg);
+      nextImg.onerror = () => reject(new Error('Could not render business card.'));
+      nextImg.src = svgUrl;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas is not available.');
+    ctx.drawImage(img, 0, 0, width, height);
+    return canvas;
+  } finally {
+    URL.revokeObjectURL(svgUrl);
+  }
+}
+
+function createPdfBlobFromJpegDataUrl(jpegDataUrl, imageWidthPx, imageHeightPx, widthMm = 85, heightMm = 55) {
+  const imageBytes = dataUrlToUint8Array(jpegDataUrl);
+  const pageWidthPt = mmToPt(widthMm);
+  const pageHeightPt = mmToPt(heightMm);
+  const encoder = new TextEncoder();
+  const chunks = [];
+  const offsets = [0];
+  let totalLength = 0;
+
+  const pushBytes = (bytes) => {
+    chunks.push(bytes);
+    totalLength += bytes.length;
+  };
+  const pushText = (text) => pushBytes(encoder.encode(text));
+  const openObject = (id) => {
+    offsets[id] = totalLength;
+    pushText(`${id} 0 obj\n`);
+  };
+  const closeObject = () => pushText('endobj\n');
+
+  pushBytes(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a, 0x25, 0xff, 0xff, 0xff, 0xff, 0x0a]));
+
+  openObject(1);
+  pushText('<< /Type /Catalog /Pages 2 0 R >>\n');
+  closeObject();
+
+  openObject(2);
+  pushText('<< /Type /Pages /Kids [3 0 R] /Count 1 >>\n');
+  closeObject();
+
+  openObject(3);
+  pushText(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidthPt} ${pageHeightPt}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>\n`);
+  closeObject();
+
+  const contentStream = `q\n${pageWidthPt} 0 0 ${pageHeightPt} 0 0 cm\n/Im0 Do\nQ\n`;
+  openObject(4);
+  pushText(`<< /Length ${contentStream.length} >>\nstream\n${contentStream}endstream\n`);
+  closeObject();
+
+  openObject(5);
+  pushText(`<< /Type /XObject /Subtype /Image /Width ${imageWidthPx} /Height ${imageHeightPx} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageBytes.length} >>\nstream\n`);
+  pushBytes(imageBytes);
+  pushText('\nendstream\n');
+  closeObject();
+
+  const xrefOffset = totalLength;
+  pushText('xref\n0 6\n');
+  pushText('0000000000 65535 f \n');
+  for (let i = 1; i <= 5; i += 1) {
+    pushText(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`);
+  }
+  pushText(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
+
+  return new Blob(chunks, { type: 'application/pdf' });
 }
 
 async function hydrateContactFields({ profileId, userId, handle }) {
@@ -362,12 +550,65 @@ export default function PublicProfileView() {
   const [twoUp, setTwoUp] = useState(false);
   const a4Ref = useRef(null);
   const introRef = useRef(null);
+  const businessCardRef = useRef(null);
+  const businessCardStageRef = useRef(null);
   const [metaTop, setMetaTop] = useState(null);
   const [pageScale, setPageScale] = useState(1);
+  const [businessCardScale, setBusinessCardScale] = useState(1);
   const wrapRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
   const lastWidthRef = useRef(typeof window !== 'undefined' ? window.innerWidth : BASE_A4_WIDTH);
   const hasLockedMetaTopRef = useRef(false);
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
+  const [cardExportBusy, setCardExportBusy] = useState('');
+
+  useEffect(() => {
+    if (!downloadMenuOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!businessCardRef.current?.contains(event.target)) {
+        setDownloadMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [downloadMenuOpen]);
+
+  useLayoutEffect(() => {
+    function measure() {
+      const node = businessCardStageRef.current;
+      const viewportW = typeof window !== 'undefined' ? window.innerWidth : BASE_BUSINESS_CARD_WIDTH;
+      const hostW = node ? node.clientWidth : viewportW;
+      const horizontalSafety = 28;
+      const safeViewportW = Math.max(220, viewportW - horizontalSafety);
+      const safeHostW = Math.max(220, hostW - horizontalSafety);
+      const availW = Math.max(220, Math.min(safeViewportW, safeHostW));
+      const nextScale = Math.min(1, availW / BASE_BUSINESS_CARD_WIDTH);
+      setBusinessCardScale(nextScale);
+    }
+
+    measure();
+
+    function onResize() {
+      measure();
+    }
+
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+
+    let observer = null;
+    if (typeof ResizeObserver !== 'undefined' && businessCardStageRef.current) {
+      observer = new ResizeObserver(() => measure());
+      observer.observe(businessCardStageRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+      observer?.disconnect?.();
+    };
+  }, []);
 
   useLayoutEffect(() => {
     function measure(widthChanged = true) {
@@ -868,6 +1109,66 @@ export default function PublicProfileView() {
     return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&data=${encodeURIComponent(publicUrl)}`;
   }, [publicUrl]);
 
+  const exportBusinessCardCanvas = useCallback(async () => {
+    if (!businessCardRef.current) throw new Error('Business card is not ready yet.');
+    return renderNodeToCanvas(businessCardRef.current, {
+      width: BUSINESS_CARD_EXPORT_WIDTH,
+      height: BUSINESS_CARD_EXPORT_HEIGHT,
+    });
+  }, []);
+
+  const handleCopyBusinessCardImage = useCallback(async () => {
+    if (!navigator?.clipboard?.write || typeof window.ClipboardItem === 'undefined') {
+      toast.error('Copy image is not supported in this browser.');
+      return;
+    }
+
+    setDownloadMenuOpen(false);
+    setCardExportBusy('copy');
+    try {
+      const canvas = await exportBusinessCardCanvas();
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('Could not create image.');
+      await navigator.clipboard.write([new window.ClipboardItem({ 'image/png': blob })]);
+      toast.success('Business card image copied.');
+    } catch (e) {
+      toast.error(e?.message || 'Could not copy image.');
+    } finally {
+      setCardExportBusy('');
+    }
+  }, [exportBusinessCardCanvas]);
+
+  const handleDownloadBusinessCard = useCallback(async (format) => {
+    setDownloadMenuOpen(false);
+    setCardExportBusy(format);
+    try {
+      const canvas = await exportBusinessCardCanvas();
+
+      if (format === 'png') {
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('Could not create PNG.');
+        triggerBlobDownload(blob, `business-card-${profile?.handle || 'candidate'}.png`);
+        toast.success('Business card PNG downloaded.');
+        return;
+      }
+
+      const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.96);
+      const pdfBlob = createPdfBlobFromJpegDataUrl(
+        jpegDataUrl,
+        canvas.width,
+        canvas.height,
+        85,
+        55
+      );
+      triggerBlobDownload(pdfBlob, `business-card-${profile?.handle || 'candidate'}.pdf`);
+      toast.success('Business card PDF downloaded.');
+    } catch (e) {
+      toast.error(e?.message || 'Could not download business card.');
+    } finally {
+      setCardExportBusy('');
+    }
+  }, [exportBusinessCardCanvas, profile?.handle]);
+
   const cvDoc = useMemo(() => {
     const list = Array.isArray(documents) ? documents : [];
     const pub = list.find((d) => (d.type || '').toLowerCase() === 'cv' && String(d.visibility || 'public').toLowerCase().trim() === 'public');
@@ -1121,67 +1422,122 @@ if (!allowPublicView && !isPreview) {
       {/* Header (solo en modo Preview) */}
       {isPreview && (
         <header className="ppv-header">
-          <div className="ppv-businessCard" role="region" aria-label="Candidate business card preview">
-            <div className="ppv-businessCardBrand">
-              <span>Powered by</span>
-              <span>Yacht Daywork</span>
-            </div>
-            <div className="ppv-businessCardBody">
-              <div className="ppv-businessCardPhotoWrap">
-                {heroSrc ? (
-                  <img
-                    className="ppv-businessCardPhoto"
-                    src={heroSrc}
-                    alt={`${profile?.first_name || 'Candidate'} photo`}
-                    style={{ objectPosition: heroObjectPosition }}
-                  />
-                ) : (
-                  <div className="ppv-businessCardPhotoFallback">CV</div>
-                )}
-              </div>
-
-              <div className="ppv-businessCardIdentity">
-                <div className="ppv-businessCardTitleGroup">
-                  <div className="ppv-businessCardName">{displayName}</div>
-                  {rankText && <div className="ppv-businessCardRank">{rankText}</div>}
-                </div>
-                <div className="ppv-businessCardDetailsGroup">
-                  {(businessCardLocation.city || businessCardLocation.country) && (
-                    <div className="ppv-businessCardMetaRow ppv-businessCardLocation">
-                      <span className="ppv-businessCardMetaIcon" aria-hidden="true"><FaMapMarkerAlt /></span>
-                      <div className="ppv-businessCardMetaText">
-                        {businessCardLocation.city && <span>{businessCardLocation.city}</span>}
-                        {businessCardLocation.country && <span>{businessCardLocation.country}</span>}
+          <div
+            ref={businessCardStageRef}
+            className="ppv-businessCardStage"
+            style={{ height: `${BASE_BUSINESS_CARD_HEIGHT * businessCardScale}px` }}
+          >
+            <div
+              className="ppv-businessCardScaler"
+              style={{ transform: `scale(${businessCardScale})` }}
+            >
+              <div
+                ref={businessCardRef}
+                className="ppv-businessCard"
+                role="region"
+                aria-label="Candidate business card preview"
+              >
+                <div className="ppv-businessCardControls">
+                  <button
+                    type="button"
+                    className="ppv-businessCardAction"
+                    onClick={handleCopyBusinessCardImage}
+                    disabled={!!cardExportBusy}
+                  >
+                    {cardExportBusy === 'copy' ? 'Copying...' : 'Copy image'}
+                  </button>
+                  <div className="ppv-businessCardDownloadWrap">
+                    <button
+                      type="button"
+                      className="ppv-businessCardAction"
+                      onClick={() => setDownloadMenuOpen((open) => !open)}
+                      disabled={!!cardExportBusy}
+                      aria-expanded={downloadMenuOpen ? 'true' : 'false'}
+                    >
+                      {cardExportBusy === 'png' || cardExportBusy === 'pdf' ? 'Preparing...' : 'Download card'}
+                    </button>
+                    {downloadMenuOpen && (
+                      <div className="ppv-businessCardDownloadMenu">
+                        <button
+                          type="button"
+                          className="ppv-businessCardDownloadOption"
+                          onClick={() => handleDownloadBusinessCard('pdf')}
+                        >
+                          Download PDF
+                        </button>
+                        <button
+                          type="button"
+                          className="ppv-businessCardDownloadOption"
+                          onClick={() => handleDownloadBusinessCard('png')}
+                        >
+                          Download PNG
+                        </button>
                       </div>
-                    </div>
-                  )}
-                  {businessCardPhone && (
-                    <div className="ppv-businessCardMetaRow ppv-businessCardContact">
-                      <span className="ppv-businessCardMetaIcon" aria-hidden="true"><FaMobileAlt /></span>
-                      <span className="ppv-businessCardMetaValue">{businessCardPhone}</span>
-                    </div>
-                  )}
-                  {businessCardEmail && (
-                    <div className="ppv-businessCardMetaRow ppv-businessCardContact">
-                      <span className="ppv-businessCardMetaIcon" aria-hidden="true"><FaEnvelope /></span>
-                      <span className="ppv-businessCardMetaValue">{businessCardEmail}</span>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+                <div className="ppv-businessCardBrand">
+                  <span>Powered by</span>
+                  <span>Yacht Daywork</span>
+                </div>
+                <div className="ppv-businessCardBody">
+                  <div className="ppv-businessCardPhotoWrap">
+                    {heroSrc ? (
+                      <img
+                        className="ppv-businessCardPhoto"
+                        src={heroSrc}
+                        alt={`${profile?.first_name || 'Candidate'} photo`}
+                        style={{ objectPosition: heroObjectPosition }}
+                      />
+                    ) : (
+                      <div className="ppv-businessCardPhotoFallback">CV</div>
+                    )}
+                  </div>
 
-              <div className="ppv-businessCardQrWrap">
-                <img
-                  className="ppv-businessCardLogo"
-                  src="/logos/yachtdayworkDarkMode.png"
-                  alt="Yacht Daywork"
-                />
-                {cardQrSrc ? (
-                  <img className="ppv-businessCardQr" src={cardQrSrc} alt="QR to digital CV" />
-                ) : (
-                  <div className="ppv-businessCardQrFallback">QR</div>
-                )}
-                <div className="ppv-businessCardQrCaption">Scan to view CV</div>
+                  <div className="ppv-businessCardIdentity">
+                    <div className="ppv-businessCardTitleGroup">
+                      <div className="ppv-businessCardName">{displayName}</div>
+                      {rankText && <div className="ppv-businessCardRank">{rankText}</div>}
+                    </div>
+                    <div className="ppv-businessCardDetailsGroup">
+                      {(businessCardLocation.city || businessCardLocation.country) && (
+                        <div className="ppv-businessCardMetaRow ppv-businessCardLocation">
+                          <span className="ppv-businessCardMetaIcon" aria-hidden="true"><FaMapMarkerAlt /></span>
+                          <div className="ppv-businessCardMetaText">
+                            {businessCardLocation.city && <span>{businessCardLocation.city}</span>}
+                            {businessCardLocation.country && <span>{businessCardLocation.country}</span>}
+                          </div>
+                        </div>
+                      )}
+                      {businessCardPhone && (
+                        <div className="ppv-businessCardMetaRow ppv-businessCardContact">
+                          <span className="ppv-businessCardMetaIcon" aria-hidden="true"><FaMobileAlt /></span>
+                          <span className="ppv-businessCardMetaValue">{businessCardPhone}</span>
+                        </div>
+                      )}
+                      {businessCardEmail && (
+                        <div className="ppv-businessCardMetaRow ppv-businessCardContact">
+                          <span className="ppv-businessCardMetaIcon" aria-hidden="true"><FaEnvelope /></span>
+                          <span className="ppv-businessCardMetaValue">{businessCardEmail}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="ppv-businessCardQrWrap">
+                    <img
+                      className="ppv-businessCardLogo"
+                      src="/logos/yachtdayworkDarkMode.png"
+                      alt="Yacht Daywork"
+                    />
+                    {cardQrSrc ? (
+                      <img className="ppv-businessCardQr" src={cardQrSrc} alt="QR to digital CV" />
+                    ) : (
+                      <div className="ppv-businessCardQrFallback">QR</div>
+                    )}
+                    <div className="ppv-businessCardQrCaption">Scan to view CV</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

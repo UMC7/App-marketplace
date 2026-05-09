@@ -31,16 +31,131 @@ body.dark-mode .ppv-previewRibbon {
   margin-bottom: 18px;
 }
 
+.ppv-businessCardStage {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  flex: 0 0 auto;
+  overflow: visible;
+  margin-inline: 0;
+  padding-right: 12px;
+  box-sizing: border-box;
+}
+
+.ppv-businessCardScaler {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 520px;
+  transform-origin: top left;
+}
+
 .ppv-businessCard {
   position: relative;
-  width: min(100%, 520px) !important;
-  min-width: 300px;
+  width: 520px !important;
+  min-width: 0;
   flex: 0 0 auto;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 12px 28px rgba(1, 10, 28, 0.14);
   overflow: hidden;
   background: #081525;
+}
+
+.ppv-businessCardControls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 6;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ppv-wrap .ppv-businessCardControls .ppv-businessCardAction,
+body.dark-mode .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction,
+:root[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction,
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction {
+  width: auto !important;
+  min-width: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(172, 172, 172, 0.48) !important;
+  color: rgba(247, 251, 255, 0.96) !important;
+  border-radius: 999px !important;
+  padding: 8px 12px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled),
+body.dark-mode .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled),
+:root[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled),
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled) {
+  background: rgba(186, 186, 186, 0.56) !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  transform: translateY(-1px);
+}
+
+.ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:disabled,
+body.dark-mode .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:disabled,
+:root[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:disabled,
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.ppv-businessCardDownloadWrap {
+  position: relative;
+}
+
+.ppv-businessCardDownloadMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 150px;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(63, 72, 86, 0.86);
+  box-shadow: 0 10px 30px rgba(1, 10, 28, 0.28);
+  backdrop-filter: blur(12px);
+}
+
+.ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption,
+body.dark-mode .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption,
+:root[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption,
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(247, 251, 255, 0.92) !important;
+  border-radius: 10px !important;
+  padding: 9px 10px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption:hover,
+body.dark-mode .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption:hover,
+:root[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption:hover,
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
 }
 
 .ppv-businessCard::before {
@@ -572,51 +687,6 @@ body.dark-mode .ppv-btn {
 @media (max-width: 720px) {
   .ppv-header {
     display: block !important;
-  }
-
-  .ppv-businessCard {
-    width: min(100%, 420px) !important;
-    min-width: 0;
-  }
-
-  .ppv-businessCardBrand {
-    left: 8px;
-    font-size: 9px;
-  }
-
-  .ppv-businessCardBody {
-    grid-template-columns: 33% 1fr 27%;
-  }
-
-  .ppv-businessCardIdentity {
-    padding: 16px 8px 10px 4px;
-  }
-
-  .ppv-businessCardTitleGroup {
-    gap: 4px;
-  }
-
-  .ppv-businessCardDetailsGroup {
-    gap: 10px;
-    margin-top: 18px;
-  }
-
-  .ppv-businessCardName {
-    font-size: clamp(15px, 5vw, 23px);
-  }
-
-  .ppv-businessCardQr,
-  .ppv-businessCardQrFallback {
-    width: min(101px, 100%);
-    border-radius: 6px;
-  }
-
-  .ppv-businessCardLogo {
-    width: min(90px, 92%);
-  }
-
-  .ppv-businessCardQrCaption {
-    font-size: 9px;
   }
 
   .ppv-a4Meta {
