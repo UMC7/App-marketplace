@@ -14,6 +14,7 @@ import PublicContactDetailsSection from './sections/contact';
 import PublicCoverLetterSection from './sections/coverletter/PublicCoverLetterSection';
 import useEmitProfileView from '../../hooks/useEmitProfileView';
 import { formatAvailability, hasValidAvailability } from '../../utils/availability';
+import { FaEnvelope, FaMapMarkerAlt, FaMobileAlt } from 'react-icons/fa';
 
 const qs = (search) => new URLSearchParams(search || '');
 const BUCKET = 'cv-docs';
@@ -814,6 +815,12 @@ export default function PublicProfileView() {
     return [profile?.country, profile?.city_port].filter(Boolean).join(' / ');
   }, [profile?.country, profile?.city_port]);
 
+  const businessCardLocation = useMemo(() => {
+    const city = typeof profile?.city_port === 'string' ? profile.city_port.trim() : '';
+    const country = typeof profile?.country === 'string' ? profile.country.trim() : '';
+    return { city, country };
+  }, [profile?.city_port, profile?.country]);
+
   const heroMedia = useMemo(() => {
     if (profile?.photo_url) return { url: profile.photo_url, coverPositionX: 50, coverPositionY: 50 };
     if (profile?.avatar_url) return { url: profile.avatar_url, coverPositionX: 50, coverPositionY: 50 };
@@ -841,6 +848,21 @@ export default function PublicProfileView() {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     return `${origin}/cv/${profile.handle}`;
   }, [profile?.handle]);
+  const businessCardPhone = useMemo(() => {
+    const ccRaw = String(profile?.phone_cc || '').trim();
+    const numberRaw = String(profile?.phone_number || '').trim();
+    if (!ccRaw && !numberRaw) return '';
+    const cc = ccRaw ? (ccRaw.startsWith('+') ? ccRaw : `+${ccRaw}`) : '';
+    return [cc, numberRaw].filter(Boolean).join(' ');
+  }, [profile?.phone_cc, profile?.phone_number]);
+  const businessCardEmail = useMemo(
+    () => String(profile?.email_public || profile?.email || '').trim(),
+    [profile?.email_public, profile?.email]
+  );
+  const cardQrSrc = useMemo(() => {
+    if (!publicUrl) return '';
+    return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&data=${encodeURIComponent(publicUrl)}`;
+  }, [publicUrl]);
 
   const cvDoc = useMemo(() => {
     const list = Array.isArray(documents) ? documents : [];
@@ -1095,39 +1117,69 @@ if (!allowPublicView && !isPreview) {
       {/* Header (solo en modo Preview) */}
       {isPreview && (
         <header className="ppv-header">
-          <div className="ppv-hero">
-            {heroSrc ? (
-              <img className="ppv-heroImg" src={heroSrc} alt={`${profile?.first_name || 'Candidate'} photo`} style={{ objectPosition: heroObjectPosition }} />
-            ) : (
-              <div className="ppv-heroFallback">CV</div>
-            )}
-          </div>
-
-          <div className="ppv-headInfo">
-            <h1 className="ppv-title">{displayName}</h1>
-
-            <div className="ppv-badges" style={{ marginTop: 6 }}>
-              {profile?.primary_department && <span className="ppv-badge">{profile.primary_department}</span>}
-              {profile?.primary_role && <span className="ppv-badge">{profile.primary_role}</span>}
+          <div className="ppv-businessCard" role="region" aria-label="Candidate business card preview">
+            <div className="ppv-businessCardBrand">
+              <span>Powered by</span>
+              <span>Yacht Daywork</span>
             </div>
+            <div className="ppv-businessCardBody">
+              <div className="ppv-businessCardPhotoWrap">
+                {heroSrc ? (
+                  <img
+                    className="ppv-businessCardPhoto"
+                    src={heroSrc}
+                    alt={`${profile?.first_name || 'Candidate'} photo`}
+                    style={{ objectPosition: heroObjectPosition }}
+                  />
+                ) : (
+                  <div className="ppv-businessCardPhotoFallback">CV</div>
+                )}
+              </div>
 
-            <div className="ppv-badges">
-              {availabilityText && <span className="ppv-badge">Availability: {availabilityText}</span>}
-              {(profile?.city_port || profile?.country) && (
-                <span className="ppv-badge">{[profile.city_port, profile.country].filter(Boolean).join(', ')}</span>
-              )}
-              {(profile?.visibility_settings?.show_age ?? profile?.show_age_public ?? true) && age != null && (
-                <span className="ppv-badge">Age: {age}</span>
-              )}
-              {langsText && <span className="ppv-badge">Languages: {langsText}</span>}
+              <div className="ppv-businessCardIdentity">
+                <div className="ppv-businessCardTitleGroup">
+                  <div className="ppv-businessCardName">{displayName}</div>
+                  {rankText && <div className="ppv-businessCardRank">{rankText}</div>}
+                </div>
+                <div className="ppv-businessCardDetailsGroup">
+                  {(businessCardLocation.city || businessCardLocation.country) && (
+                    <div className="ppv-businessCardMetaRow ppv-businessCardLocation">
+                      <span className="ppv-businessCardMetaIcon" aria-hidden="true"><FaMapMarkerAlt /></span>
+                      <div className="ppv-businessCardMetaText">
+                        {businessCardLocation.city && <span>{businessCardLocation.city}</span>}
+                        {businessCardLocation.country && <span>{businessCardLocation.country}</span>}
+                      </div>
+                    </div>
+                  )}
+                  {businessCardPhone && (
+                    <div className="ppv-businessCardMetaRow ppv-businessCardContact">
+                      <span className="ppv-businessCardMetaIcon" aria-hidden="true"><FaMobileAlt /></span>
+                      <span className="ppv-businessCardMetaValue">{businessCardPhone}</span>
+                    </div>
+                  )}
+                  {businessCardEmail && (
+                    <div className="ppv-businessCardMetaRow ppv-businessCardContact">
+                      <span className="ppv-businessCardMetaIcon" aria-hidden="true"><FaEnvelope /></span>
+                      <span className="ppv-businessCardMetaValue">{businessCardEmail}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="ppv-businessCardQrWrap">
+                <img
+                  className="ppv-businessCardLogo"
+                  src="/logos/yachtdayworkDarkMode.png"
+                  alt="Yacht Daywork"
+                />
+                {cardQrSrc ? (
+                  <img className="ppv-businessCardQr" src={cardQrSrc} alt="QR to digital CV" />
+                ) : (
+                  <div className="ppv-businessCardQrFallback">QR</div>
+                )}
+                <div className="ppv-businessCardQrCaption">Scan to view CV</div>
+              </div>
             </div>
-
-            <div className="ppv-subtle">Link: {publicUrl.replace(/^https?:\/\//, '')}</div>
-          </div>
-
-          <div className="ppv-brand">
-            <small>CV powered by</small>
-            <div className="ppv-logo">Yacht Daywork</div>
           </div>
         </header>
       )}
