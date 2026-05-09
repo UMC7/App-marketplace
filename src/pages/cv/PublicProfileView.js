@@ -578,7 +578,7 @@ export default function PublicProfileView() {
 
         const { data: freshPR } = await supabase
           .from('public_profiles')
-          .select('prefs_skills, prefs_skills_lite, prefs_skills_pro, languages, skills, share_ready, professional_statement')
+          .select('prefs_skills, prefs_skills_lite, prefs_skills_pro, languages, skills, share_ready, professional_statement, public_qr_id')
           .eq('handle', baseRow.handle)
           .single();
 
@@ -632,6 +632,7 @@ export default function PublicProfileView() {
         }
 
         bridged.share_ready = !!shareReadyFlag;
+        bridged.public_qr_id = freshPR?.public_qr_id ?? baseRow?.public_qr_id ?? null;
 
         setProfile(bridged);
         setGallery(hydrated);
@@ -844,10 +845,13 @@ export default function PublicProfileView() {
   }, [heroMedia?.coverPositionX, heroMedia?.coverPositionY]);
 
   const publicUrl = useMemo(() => {
-    if (!profile?.handle) return '';
+    if (!profile?.public_qr_id && !profile?.handle) return '';
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    if (profile?.public_qr_id) {
+      return `${origin}/cv/qr/${profile.public_qr_id}`;
+    }
     return `${origin}/cv/${profile.handle}`;
-  }, [profile?.handle]);
+  }, [profile?.handle, profile?.public_qr_id]);
   const businessCardPhone = useMemo(() => {
     const ccRaw = String(profile?.phone_cc || '').trim();
     const numberRaw = String(profile?.phone_number || '').trim();

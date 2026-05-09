@@ -49,6 +49,7 @@ import EventDetail from './pages/EventDetail';
 
 // ✅ NUEVO: vista pública del CV
 import PublicProfileView from './pages/cv/PublicProfileView';
+import PublicProfileQrRedirect from './pages/cv/PublicProfileQrRedirect';
 import ProfileAnalyticsPage from './pages/cv/ProfileAnalyticsPage';
 
 function AuthRedirectHandler() {
@@ -115,6 +116,7 @@ function AppRoutes({ currentUser }) {
           <Route path="/events/:id" element={<EventDetail />} />
 
           {/* ✅ NUEVO: ruta pública del CV */}
+          <Route path="/cv/qr/:qrId" element={<PublicProfileQrRedirect />} />
           <Route path="/cv/:handle" element={<PublicProfileView />} />
 
           <Route
