@@ -9,7 +9,7 @@ const RANKS = [
   "Dayworker", "Chief Engineer", "2nd Engineer", "3rd Engineer", "Solo Engineer", "Engineer", "Electrician", "Chef",
   "Head Chef", "Sous Chef", "Solo Chef", "Cook", "Cook/Crew Chef", "Crew Chef/Stew", "Chef/Steward(ess)", "Chef/Deck", "Butler", "Steward(ess)", "Chief Steward(ess)", "2nd Steward(ess)",
   "3rd Steward(ess)", "4th Steward(ess)", "Solo Steward(ess)", "Junior Steward(ess)", "Housekeeper", "Head of Housekeeping", "Chef/Stew/Deck", "Cook/Stew/Deck", "Cook/Steward(ess)", "Stew/Deck",
-  "Laundry/Steward(ess)", "Stew/Masseur", "Stew/Yoga Instructor", "Masseur", "Hairdresser/Barber", "Steward(ess)/Nanny", "Nanny", "Videographer", "Yoga/Pilates Instructor",
+  "Stew/Nurse", "Laundry/Steward(ess)", "Stew/Masseur", "Stew/Yoga Instructor", "Masseur", "Hairdresser/Barber", "Steward(ess)/Nanny", "Nanny", "Videographer", "Yoga/Pilates Instructor",
   "Personal Trainer", "Dive Instrutor", "Water Sport Instrutor", "Nurse", "Other"
 ];
 

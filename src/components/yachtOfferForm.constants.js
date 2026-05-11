@@ -54,7 +54,7 @@ export function formatExperienceRequirementLabel(value) {
 
 export const titles = [
   'Captain','Captain/Engineer','Skipper','Chase Boat Captain','Relief Captain',
-  'Chief Officer','2nd Officer','3rd Officer','Bosun','Deck/Engineer','Mate','Mate/Engineer','Mate/Steward(ess)',
+  'Chief Officer','OOW','2nd Officer','3rd Officer','Bosun','Deck/Engineer','Mate','Mate/Engineer','Mate/Steward(ess)',
   'Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster','Deck/Personal Trainer',
   'Deck/Cook','Dayworker',
   'Chief Engineer','2nd Engineer','3rd Engineer','Solo Engineer','Engineer','Electrician',
@@ -62,7 +62,7 @@ export const titles = [
   'Butler','Steward(ess)','Chief Steward(ess)','2nd Steward(ess)','3rd Steward(ess)',
   '4th Steward(ess)','Solo Steward(ess)','Junior Steward(ess)',
   'Housekeeper','Head of Housekeeping',
-  'Chef/Stew/Deck','Cook/Stew/Deck','Cook/Steward(ess)','Stew/Deck','Laundry/Steward(ess)',
+  'Chef/Stew/Deck','Cook/Stew/Deck','Cook/Steward(ess)','Stew/Deck','Stew/Nurse','Laundry/Steward(ess)',
   'Stew/Masseur','Stew/Yoga Instructor','Masseur','Hairdresser/Barber','Steward(ess)/Nanny','Nanny',
   'Videographer','Yoga/Pilates Instructor','Personal Trainer','Dive Instructor',
   'Water Sport Instructor','Nurse','Other'
@@ -78,7 +78,7 @@ export const ENGINEERING_RANKS = [
 
 export const DECK_LICENSE_RANKS = [
   'Captain','Captain/Engineer','Skipper','Chase Boat Captain','Relief Captain',
-  'Chief Officer','2nd Officer','3rd Officer','Bosun','Deck/Engineer','Mate','Mate/Engineer',
+  'Chief Officer','OOW','2nd Officer','3rd Officer','Bosun','Deck/Engineer','Mate','Mate/Engineer',
   'Mate/Steward(ess)','Lead Deckhand','Deckhand','Deck/Steward(ess)','Deck/Carpenter','Deck/Divemaster','Deck/Personal Trainer','Deck/Cook','Chef/Deck'
 ];
 
@@ -124,6 +124,7 @@ export const DECK_LICENSE_MAP = {
   'Relief Captain': ['Master Unlimited','Master Yachts 3000 GT','Master 1600 GRT','Master Yachts 500 GT','Master Yachts 200 GT','Yachtmaster','Master 100 GRT / OUPV'],
   'Chase Boat Captain': ['Master Yachts 200 GT','Yachtmaster','Master 100 GRT / OUPV'],
   'Chief Officer': ['Master Yachts 3000 GT','Master 1600 GRT','Master Yachts 500 GT','Chief Mate Unlimited','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
+  OOW: ['Chief Mate Unlimited','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
   '2nd Officer': ['Chief Mate Unlimited','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
   '3rd Officer': ['Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
   Mate: ['Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
@@ -613,6 +614,7 @@ export const INTERIOR_DEPARTMENT_RANKS = [
   'Steward(ess)',
   'Solo Steward(ess)',
   'Stew/Deck',
+  'Stew/Nurse',
   'Laundry/Steward(ess)',
   'Stew/Masseur',
   'Stew/Yoga Instructor',

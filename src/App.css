@@ -793,6 +793,24 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     background-color: #ffffff;
   }
+
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-pair {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 12px 18px !important;
+  }
+
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group {
+    min-width: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.position { order: 1; }
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.license,
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.engineering-license { order: 2; }
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.time-in-rank { order: 3; }
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.terms { order: 4; }
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.salary { order: 5; }
 }
 
 .region-dropdown {
@@ -1041,7 +1059,25 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
   .offer-card.expanded .expanded-block.block1 .field-group {
     margin-bottom: 12px;
   }
-}
+
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-pair {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 12px 18px !important;
+  }
+
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group {
+    min-width: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.position { order: 1; }
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.license,
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.engineering-license { order: 2; }
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.time-in-rank { order: 3; }
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.terms { order: 4; }
+  .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.salary { order: 5; }
+  }
 
 @media (min-width: 821px) {
   .offer-card.expanded .top-row {

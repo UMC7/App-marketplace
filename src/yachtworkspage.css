@@ -1171,6 +1171,7 @@ body:not(.dark-mode) .filters-panel h3 {
   /* CASE 5: team = false && years_in_rank = null */
   .block1.case5 .position {
     grid-column: 1 / 2;
+    grid-row: 1;
     order: 1;
   }
   .block1.case5 .gender {
@@ -1183,11 +1184,51 @@ body:not(.dark-mode) .filters-panel h3 {
   }
   .block1.case5 .salary {
     grid-column: 1 / 2;
+    grid-row: 2;
     order: 2;
   }
   .block1.case5 .terms {
     grid-column: 2 / 3;
+    grid-row: 2;
     order: 2;
+  }
+
+  /* NON-TEAM + years_in_rank present */
+  .offer-card.expanded:not(.team) .block1.has-time-in-rank .position {
+    grid-column: 1 / 2;
+    grid-row: 1;
+    order: 1;
+  }
+  .offer-card.expanded:not(.team) .block1.has-time-in-rank:not(.has-license):not(.has-engineering-license) .time-in-rank {
+    grid-column: 2 / 3;
+    grid-row: 1;
+    order: 1;
+  }
+  .offer-card.expanded:not(.team) .block1.has-time-in-rank.has-license .license,
+  .offer-card.expanded:not(.team) .block1.has-time-in-rank.has-engineering-license .engineering-license {
+    grid-column: 2 / 3;
+    order: 1;
+  }
+  .offer-card.expanded:not(.team) .block1.has-time-in-rank.has-license .time-in-rank,
+  .offer-card.expanded:not(.team) .block1.has-time-in-rank.has-engineering-license .time-in-rank {
+    grid-column: 1 / 2;
+    grid-row: 2;
+    order: 2;
+  }
+  .offer-card.expanded:not(.team) .block1.has-time-in-rank .gender {
+    grid-column: 1 / 2;
+    grid-row: 2;
+    order: 2;
+  }
+  .offer-card.expanded:not(.team) .block1.has-time-in-rank .salary {
+    grid-column: 1 / 2;
+    grid-row: 3;
+    order: 3;
+  }
+  .offer-card.expanded:not(.team) .block1.has-time-in-rank .terms {
+    grid-column: 2 / 3;
+    grid-row: 3;
+    order: 3;
   }
 }
 
