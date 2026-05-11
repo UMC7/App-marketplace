@@ -26,6 +26,7 @@ export const MERCHANT_VESSEL_TYPES = [
 export const REGIONS = [
   'Worldwide',
   'Mediterranean',
+  'Europe',
   'Caribbean',
   'Atlantic',
   'Pacific',

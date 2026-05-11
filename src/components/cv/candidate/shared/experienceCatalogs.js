@@ -103,6 +103,7 @@ export const CREW_SIZE_PRESETS = ["1", "2", "3", "4", "5-10", "10-15", "15-20", 
 export const REGIONS = [
   "Worldwide",
   "Mediterranean",
+  "Europe",
   "Caribbean",
   "Atlantic",
   "Pacific",

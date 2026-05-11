@@ -49,6 +49,7 @@ export const REGIONS = [
   'Baltic',
   'Caribbean',
   'Central America',
+  'Europe',
   'Indian Ocean',
   'Mediterranean',
   'Middle East',

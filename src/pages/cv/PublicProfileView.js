@@ -32,6 +32,7 @@ const MIN_SCALE = 0.42;
 const MAX_SCALE = 1;
 const BUSINESS_CARD_EXPORT_WIDTH = 1800;
 const BUSINESS_CARD_EXPORT_HEIGHT = Math.round((BUSINESS_CARD_EXPORT_WIDTH * 55) / 85);
+const BUSINESS_CARD_THEME_STORAGE_KEY = 'ydw.businessCardTheme';
 const UNLIMITED_MEDIA_USER_IDS = new Set([
   'dc3c4ca6-e892-4c25-891f-287f43f9c182',
   '377caa8a-95ee-4959-adad-c9af2eae2171',
@@ -628,6 +629,28 @@ export default function PublicProfileView() {
   const hasLockedMetaTopRef = useRef(false);
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
   const [cardExportBusy, setCardExportBusy] = useState('');
+  const [businessCardTheme, setBusinessCardTheme] = useState('light');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const storedTheme = window.localStorage.getItem(BUSINESS_CARD_THEME_STORAGE_KEY);
+      if (storedTheme === 'light' || storedTheme === 'dark') {
+        setBusinessCardTheme(storedTheme);
+      }
+    } catch (_) {
+      // Ignore storage read failures and keep the default theme.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(BUSINESS_CARD_THEME_STORAGE_KEY, businessCardTheme);
+    } catch (_) {
+      // Ignore storage write failures; the in-memory choice still works.
+    }
+  }, [businessCardTheme]);
 
   useEffect(() => {
     if (!downloadMenuOpen) return undefined;
@@ -1175,6 +1198,12 @@ export default function PublicProfileView() {
     if (!publicUrl) return '';
     return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&data=${encodeURIComponent(publicUrl)}`;
   }, [publicUrl]);
+  const businessCardLogoSrc =
+    businessCardTheme === 'light' ? '/logos/yachtdaywork.png' : '/logos/yachtdayworkDarkMode.png';
+  const businessCardRootClassName = useMemo(
+    () => `ppv-businessCard ppv-businessCard--${businessCardTheme}`,
+    [businessCardTheme]
+  );
 
   const exportBusinessCardBlob = useCallback(async () => {
     if (!businessCardExportRef.current) throw new Error('Business card is not ready yet.');
@@ -1183,12 +1212,12 @@ export default function PublicProfileView() {
       pixelRatio: BUSINESS_CARD_EXPORT_WIDTH / BASE_BUSINESS_CARD_WIDTH,
       canvasWidth: BUSINESS_CARD_EXPORT_WIDTH,
       canvasHeight: BUSINESS_CARD_EXPORT_HEIGHT,
-      backgroundColor: '#081525',
+      backgroundColor: businessCardTheme === 'light' ? '#f4fbfb' : '#081525',
       skipFonts: false,
     });
     if (!blob) throw new Error('Could not create image.');
     return blob;
-  }, []);
+  }, [businessCardTheme]);
 
   const exportBusinessCardCanvas = useCallback(async () => {
     const blob = await exportBusinessCardBlob();
@@ -1597,7 +1626,7 @@ if (!allowPublicView && !isPreview) {
         <div className="ppv-businessCardQrWrap">
           <img
             className="ppv-businessCardLogo"
-            src="/logos/yachtdayworkDarkMode.png"
+            src={businessCardLogoSrc}
             alt="Yacht Daywork"
           />
           {cardQrSrc ? (
@@ -1633,11 +1662,31 @@ if (!allowPublicView && !isPreview) {
             >
               <div
                 ref={businessCardRef}
-                className="ppv-businessCard"
+                className={businessCardRootClassName}
                 role="region"
                 aria-label="Candidate business card preview"
               >
                 <div className="ppv-businessCardControls">
+                  <div className="ppv-businessCardThemeToggle" role="group" aria-label="Business card color">
+                    <button
+                      type="button"
+                      className={`ppv-businessCardThemeOption${businessCardTheme === 'dark' ? ' is-active' : ''}`}
+                      onClick={() => setBusinessCardTheme('dark')}
+                      aria-pressed={businessCardTheme === 'dark'}
+                      disabled={!!cardExportBusy}
+                    >
+                      Dark
+                    </button>
+                    <button
+                      type="button"
+                      className={`ppv-businessCardThemeOption${businessCardTheme === 'light' ? ' is-active' : ''}`}
+                      onClick={() => setBusinessCardTheme('light')}
+                      aria-pressed={businessCardTheme === 'light'}
+                      disabled={!!cardExportBusy}
+                    >
+                      Light
+                    </button>
+                  </div>
                   <button
                     type="button"
                     className="ppv-businessCardAction"
@@ -1697,7 +1746,7 @@ if (!allowPublicView && !isPreview) {
         <div className="ppv-businessCardExportRoot" aria-hidden="true">
           <div
             ref={businessCardExportRef}
-            className="ppv-businessCard ppv-businessCard--export"
+            className={`${businessCardRootClassName} ppv-businessCard--export`}
           >
             {renderBusinessCardBody()}
           </div>

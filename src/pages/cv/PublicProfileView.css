@@ -51,15 +51,82 @@ body.dark-mode .ppv-previewRibbon {
 }
 
 .ppv-businessCard {
+  --ppv-card-bg-gradient: linear-gradient(135deg, #081525 0%, #10233d 55%, #183557 100%);
+  --ppv-card-border: rgba(255, 255, 255, 0.12);
+  --ppv-card-shadow: 0 12px 28px rgba(1, 10, 28, 0.14);
+  --ppv-card-text: #ffffff;
+  --ppv-card-rank: #7ad9cf;
+  --ppv-card-subtle: rgba(255, 255, 255, 0.88);
+  --ppv-card-subtle-strong: rgba(255, 255, 255, 0.92);
+  --ppv-card-caption: rgba(255, 255, 255, 0.7);
+  --ppv-card-accent: #6fc2bd;
+  --ppv-card-accent-text: #081525;
+  --ppv-card-photo-fallback-bg: rgba(255, 255, 255, 0.18);
+  --ppv-card-photo-fallback-text: #f7fbff;
+  --ppv-card-qr-wrap-bg: rgba(111, 194, 189, 0.06);
+  --ppv-card-qr-bg: #ffffff;
+  --ppv-card-qr-border: rgba(255, 255, 255, 0.18);
+  --ppv-card-qr-fallback-border: rgba(255, 255, 255, 0.7);
+  --ppv-card-control-border: rgba(255, 255, 255, 0.2);
+  --ppv-card-control-bg: rgba(172, 172, 172, 0.48);
+  --ppv-card-control-bg-hover: rgba(186, 186, 186, 0.56);
+  --ppv-card-control-text: rgba(247, 251, 255, 0.96);
+  --ppv-card-control-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --ppv-card-control-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --ppv-card-menu-bg: rgba(63, 72, 86, 0.86);
+  --ppv-card-menu-border: rgba(255, 255, 255, 0.12);
+  --ppv-card-menu-option-border: rgba(255, 255, 255, 0.1);
+  --ppv-card-menu-option-bg: rgba(255, 255, 255, 0.06);
+  --ppv-card-menu-option-bg-hover: rgba(255, 255, 255, 0.12);
+  --ppv-card-menu-option-text: rgba(247, 251, 255, 0.92);
+  --ppv-card-theme-active-bg: rgba(255, 255, 255, 0.92);
+  --ppv-card-theme-active-border: rgba(255, 255, 255, 0.34);
+  --ppv-card-theme-active-text: #081525;
+  --ppv-card-theme-active-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 6px 16px rgba(1, 10, 28, 0.18);
   position: relative;
   width: 520px !important;
   min-width: 0;
   flex: 0 0 auto;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 28px rgba(1, 10, 28, 0.14);
+  border: 1px solid var(--ppv-card-border);
+  box-shadow: var(--ppv-card-shadow);
   overflow: hidden;
-  background: #081525;
+  background: var(--ppv-card-bg-gradient);
+}
+
+.ppv-businessCard--light {
+  --ppv-card-bg-gradient: linear-gradient(135deg, #ffffff 0%, #f5fbfb 54%, #e4f2f2 100%);
+  --ppv-card-border: rgba(8, 26, 59, 0.14);
+  --ppv-card-shadow: 0 12px 28px rgba(8, 26, 59, 0.12);
+  --ppv-card-text: #081a3b;
+  --ppv-card-rank: #215d7a;
+  --ppv-card-subtle: rgba(8, 26, 59, 0.72);
+  --ppv-card-subtle-strong: rgba(8, 26, 59, 0.84);
+  --ppv-card-caption: rgba(8, 26, 59, 0.66);
+  --ppv-card-accent: #6fc2bd;
+  --ppv-card-accent-text: #081a3b;
+  --ppv-card-photo-fallback-bg: linear-gradient(180deg, rgba(111, 194, 189, 0.22), rgba(255, 255, 255, 0.94));
+  --ppv-card-photo-fallback-text: #0f2746;
+  --ppv-card-qr-wrap-bg: rgba(111, 194, 189, 0.14);
+  --ppv-card-qr-bg: #ffffff;
+  --ppv-card-qr-border: rgba(8, 26, 59, 0.12);
+  --ppv-card-qr-fallback-border: rgba(8, 26, 59, 0.28);
+  --ppv-card-control-border: rgba(8, 26, 59, 0.12);
+  --ppv-card-control-bg: rgba(255, 255, 255, 0.88);
+  --ppv-card-control-bg-hover: rgba(240, 247, 247, 0.98);
+  --ppv-card-control-text: #0f2746;
+  --ppv-card-control-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --ppv-card-control-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  --ppv-card-menu-bg: rgba(255, 255, 255, 0.96);
+  --ppv-card-menu-border: rgba(8, 26, 59, 0.12);
+  --ppv-card-menu-option-border: rgba(8, 26, 59, 0.1);
+  --ppv-card-menu-option-bg: rgba(111, 194, 189, 0.08);
+  --ppv-card-menu-option-bg-hover: rgba(111, 194, 189, 0.16);
+  --ppv-card-menu-option-text: #0f2746;
+  --ppv-card-theme-active-bg: #0f2746;
+  --ppv-card-theme-active-border: rgba(15, 39, 70, 0.28);
+  --ppv-card-theme-active-text: #ffffff;
+  --ppv-card-theme-active-shadow: 0 0 0 1px rgba(15, 39, 70, 0.08), 0 6px 16px rgba(8, 26, 59, 0.16);
 }
 
 .ppv-businessCardExportRoot {
@@ -108,11 +175,68 @@ body.dark-mode .ppv-previewRibbon {
   z-index: 6;
   display: flex;
   align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
+  max-width: calc(100% - 24px);
 }
 
 .ppv-businessCardActionLabel--mobile {
   display: none;
+}
+
+.ppv-businessCardThemeToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption,
+body.dark-mode .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption,
+:root[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption,
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption {
+  border: 1px solid var(--ppv-card-control-border) !important;
+  background: var(--ppv-card-control-bg) !important;
+  color: var(--ppv-card-control-text) !important;
+  border-radius: 999px !important;
+  padding: 8px 12px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  box-shadow: var(--ppv-card-control-shadow) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption:hover:not(:disabled),
+body.dark-mode .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption:hover:not(:disabled),
+:root[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption:hover:not(:disabled),
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption:hover:not(:disabled) {
+  background: var(--ppv-card-control-bg-hover) !important;
+  border-color: var(--ppv-card-control-border) !important;
+  color: var(--ppv-card-control-text) !important;
+  box-shadow: var(--ppv-card-control-shadow-hover) !important;
+  transform: translateY(-1px);
+}
+
+.ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption.is-active,
+body.dark-mode .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption.is-active,
+:root[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption.is-active,
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption.is-active {
+  background: var(--ppv-card-theme-active-bg) !important;
+  border-color: var(--ppv-card-theme-active-border) !important;
+  color: var(--ppv-card-theme-active-text) !important;
+  box-shadow: var(--ppv-card-theme-active-shadow) !important;
+}
+
+.ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption:disabled,
+body.dark-mode .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption:disabled,
+:root[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption:disabled,
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardThemeOption:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction,
@@ -124,9 +248,9 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAct
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  background: rgba(172, 172, 172, 0.48) !important;
-  color: rgba(247, 251, 255, 0.96) !important;
+  border: 1px solid var(--ppv-card-control-border) !important;
+  background: var(--ppv-card-control-bg) !important;
+  color: var(--ppv-card-control-text) !important;
   border-radius: 999px !important;
   padding: 8px 12px !important;
   font-size: 11px !important;
@@ -135,7 +259,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAct
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  box-shadow: var(--ppv-card-control-shadow) !important;
   transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -143,10 +267,10 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAct
 body.dark-mode .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled),
 :root[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled),
 html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled) {
-  background: rgba(186, 186, 186, 0.56) !important;
-  border-color: rgba(255, 255, 255, 0.24) !important;
-  color: #ffffff !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  background: var(--ppv-card-control-bg-hover) !important;
+  border-color: var(--ppv-card-control-border) !important;
+  color: var(--ppv-card-control-text) !important;
+  box-shadow: var(--ppv-card-control-shadow-hover) !important;
   transform: translateY(-1px);
 }
 
@@ -171,8 +295,8 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAct
   gap: 6px;
   padding: 8px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(63, 72, 86, 0.86);
+  border: 1px solid var(--ppv-card-menu-border);
+  background: var(--ppv-card-menu-bg);
   box-shadow: 0 10px 30px rgba(1, 10, 28, 0.28);
   backdrop-filter: blur(12px);
 }
@@ -182,9 +306,9 @@ body.dark-mode .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownload
 :root[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption,
 html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption {
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-  color: rgba(247, 251, 255, 0.92) !important;
+  border: 1px solid var(--ppv-card-menu-option-border) !important;
+  background: var(--ppv-card-menu-option-bg) !important;
+  color: var(--ppv-card-menu-option-text) !important;
   border-radius: 10px !important;
   padding: 9px 10px !important;
   font-size: 11px !important;
@@ -197,8 +321,8 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
 body.dark-mode .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption:hover,
 :root[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption:hover,
 html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCardDownloadOption:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
+  background: var(--ppv-card-menu-option-bg-hover) !important;
+  border-color: var(--ppv-card-menu-option-border) !important;
 }
 
 .ppv-businessCard::before {
@@ -214,7 +338,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   display: grid;
   grid-template-columns: 32% 1fr 23%;
   gap: 18px;
-  background: #081525;
+  background: var(--ppv-card-bg-gradient);
 }
 
 .ppv-businessCardBrand {
@@ -229,8 +353,8 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   justify-content: center;
   padding: 4px 12px 4px 36px;
   gap: 0px;
-  background: #6fc2bd;
-  color: #081525;
+  background: var(--ppv-card-accent);
+  color: var(--ppv-card-accent-text);
   font-size: 8.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -256,7 +380,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   display: flex;
   flex-direction: column;
   justify-content: center;
-  color: #f7fbff;
+  color: var(--ppv-card-text);
   min-width: 0;
 }
 
@@ -277,13 +401,13 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   font-size: clamp(16px, 2vw, 22px);
   line-height: 1.18;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--ppv-card-text);
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
 .ppv-businessCardRank {
-  color: #7ad9cf;
+  color: var(--ppv-card-rank);
   font-size: clamp(12px, 1.5vw, 18px);
   font-weight: 600;
   white-space: nowrap;
@@ -299,7 +423,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
 .ppv-businessCardMetaIcon {
   flex: 0 0 auto;
   width: 12px;
-  color: #7ad9cf;
+  color: var(--ppv-card-rank);
   opacity: 0.95;
   transform: translateY(2px);
 }
@@ -312,7 +436,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
 .ppv-businessCardLocation {
   font-size: clamp(11px, 1.1vw, 14px);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--ppv-card-subtle);
   line-height: 1.25;
 }
 
@@ -322,7 +446,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
 
 .ppv-businessCardLink {
   font-size: clamp(10px, 0.95vw, 12px);
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--ppv-card-subtle);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -330,7 +454,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
 
 .ppv-businessCardContact {
   font-size: clamp(10px, 0.95vw, 12px);
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--ppv-card-subtle-strong);
 }
 
 .ppv-businessCardMetaValue {
@@ -360,8 +484,8 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   height: 100%;
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.18);
-  color: #f7fbff;
+  background: var(--ppv-card-photo-fallback-bg);
+  color: var(--ppv-card-photo-fallback-text);
   font-weight: 700;
   font-size: 28px;
   border-top-left-radius: 20px;
@@ -375,22 +499,30 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   align-items: center;
   gap: 10px;
   padding: 18px 14px;
-  background: rgba(111, 194, 189, 0.06);
+  background: var(--ppv-card-qr-wrap-bg);
   border-left: none;
 }
 
 .ppv-businessCardLogo {
   width: min(112px, 90%);
   height: auto;
+  max-width: 90%;
   object-fit: contain;
   opacity: 0.94;
+}
+
+.ppv-businessCard--light .ppv-businessCardLogo {
+  display: block;
+  margin-inline: auto;
+  transform: translateX(-6px) scale(1.66);
+  transform-origin: center center;
 }
 
 .ppv-businessCardQr {
   width: min(150px, 100%);
   aspect-ratio: 1 / 1;
-  background: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: var(--ppv-card-qr-bg);
+  border: 2px solid var(--ppv-card-qr-border);
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(2, 6, 23, 0.12);
 }
@@ -399,8 +531,8 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   width: min(150px, 100%);
   aspect-ratio: 1 / 1;
   border-radius: 8px;
-  border: 2px dashed rgba(255, 255, 255, 0.7);
-  color: #fff;
+  border: 2px dashed var(--ppv-card-qr-fallback-border);
+  color: var(--ppv-card-text);
   display: grid;
   place-items: center;
   font-size: 12px;
@@ -412,7 +544,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--ppv-card-caption);
   text-align: center;
 }
 
