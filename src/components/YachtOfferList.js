@@ -631,9 +631,22 @@ const handleCopy = (text, field) => {
     };
   }, []);
 
-const isMobile = window.innerWidth <= 768;
-  
+const [isMobile, setIsMobile] = useState(() =>
+  typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+);
 const [showAvatarMobile, setShowAvatarMobile] = useState(false);
+
+useEffect(() => {
+  const handleResize = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
+
+  window.addEventListener('resize', handleResize);
+  handleResize();
+
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
 useEffect(() => {
   if (!isMobile) return;
   const duration = showAvatarMobile ? 3000 : 5000;

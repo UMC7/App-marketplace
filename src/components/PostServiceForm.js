@@ -146,8 +146,8 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   };
 
   return (
-    <div className="container">
-      <div className="login-form">
+    <div className="container modal-flat-form-shell">
+      <div className="login-form modal-flat-form-card">
         <h2>{mode === 'edit' ? 'Edit Service' : 'Add Service'}</h2>
 
         <form onSubmit={handleSubmit}>

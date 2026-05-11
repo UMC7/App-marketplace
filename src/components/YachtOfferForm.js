@@ -1053,9 +1053,9 @@ const derivedEndDate = (() => {
       </div>
     )}
     
-    <div className="container">
+    <div className="container modal-flat-form-shell yacht-offer-form-shell">
 
-    <div className="login-form">
+    <div className="login-form modal-flat-form-card yacht-offer-form-card">
     <h2 style={{ textAlign: 'center', color: 'var(--primary-color)', marginBottom: '20px' }}>
     Job Offer Form
     </h2>

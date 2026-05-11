@@ -175,8 +175,8 @@ const checkboxInputStyle = {
 };
 
   return (
-    <div className="container">
-      <div className="login-form">
+    <div className="container modal-flat-form-shell">
+      <div className="login-form modal-flat-form-card">
         <h2>{mode === 'edit' ? 'Edit Event' : 'New Event'}</h2>
         <form onSubmit={handleSubmit}>
           <label>Event Name:</label>

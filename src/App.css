@@ -1661,6 +1661,25 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
   }
 }
 
+@media (max-width: 768px) and (orientation: portrait) {
+  .modal-content-wrapper .modal-flat-form-shell {
+    max-width: none !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .modal-content-wrapper .modal-flat-form-card {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
 .event-details p strong:contains("Description:") {
   display: inline;
 }
