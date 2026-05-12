@@ -66,6 +66,8 @@ body.dark-mode .ppv-previewRibbon {
   --ppv-card-qr-wrap-bg: rgba(111, 194, 189, 0.06);
   --ppv-card-qr-bg: #ffffff;
   --ppv-card-qr-border: rgba(255, 255, 255, 0.18);
+  --ppv-card-qr-frame: #59c6c2;
+  --ppv-card-qr-gap: #23486c;
   --ppv-card-qr-fallback-border: rgba(255, 255, 255, 0.7);
   --ppv-card-control-border: rgba(255, 255, 255, 0.2);
   --ppv-card-control-bg: rgba(172, 172, 172, 0.48);
@@ -110,6 +112,8 @@ body.dark-mode .ppv-previewRibbon {
   --ppv-card-qr-wrap-bg: rgba(111, 194, 189, 0.14);
   --ppv-card-qr-bg: #ffffff;
   --ppv-card-qr-border: rgba(8, 26, 59, 0.12);
+  --ppv-card-qr-frame: #59c6c2;
+  --ppv-card-qr-gap: #ffffff;
   --ppv-card-qr-fallback-border: rgba(8, 26, 59, 0.28);
   --ppv-card-control-border: rgba(8, 26, 59, 0.12);
   --ppv-card-control-bg: rgba(255, 255, 255, 0.88);
@@ -518,13 +522,22 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   transform-origin: center center;
 }
 
+.ppv-businessCard--light .ppv-businessCardQrWrap {
+  padding-top: 24px;
+  padding-bottom: 12px;
+  gap: 16px;
+}
+
 .ppv-businessCardQr {
   width: min(150px, 100%);
   aspect-ratio: 1 / 1;
   background: var(--ppv-card-qr-bg);
   border: 2px solid var(--ppv-card-qr-border);
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(2, 6, 23, 0.12);
+  box-shadow:
+    0 0 0 4px var(--ppv-card-qr-gap),
+    0 0 0 6px var(--ppv-card-qr-frame),
+    0 2px 8px rgba(2, 6, 23, 0.12);
 }
 
 .ppv-businessCardQrFallback {
@@ -532,6 +545,9 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   aspect-ratio: 1 / 1;
   border-radius: 8px;
   border: 2px dashed var(--ppv-card-qr-fallback-border);
+  box-shadow:
+    0 0 0 4px var(--ppv-card-qr-gap),
+    0 0 0 6px var(--ppv-card-qr-frame);
   color: var(--ppv-card-text);
   display: grid;
   place-items: center;
