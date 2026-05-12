@@ -155,7 +155,7 @@ export default function PublicProfileView() {
     } catch (_) {
       // Ignore storage read failures and keep the default theme.
     }
-  }, [computeScrollTargetTop]);
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
