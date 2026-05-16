@@ -116,15 +116,35 @@ export default function AnalyticsUsersTab() {
     async function fetchUsers() {
       setLoading(true);
       setError('');
-      const { data, error: fetchError } = await supabase
-        .from('users')
-        .select('id, created_at, birth_year, is_candidate, cv_mode, phone, phone_code, phone_number');
+      const chunkSize = 500;
+      let offset = 0;
+      let allRows = [];
+      let fetchError = null;
+
+      while (true) {
+        const { data: chunk, error } = await supabase
+          .from('users')
+          .select('id, created_at, birth_year, is_candidate, cv_mode, phone, phone_code, phone_number')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + chunkSize - 1);
+
+        if (error) {
+          fetchError = error;
+          break;
+        }
+
+        const rows = chunk || [];
+        allRows = allRows.concat(rows);
+        if (rows.length < chunkSize) break;
+        offset += chunkSize;
+      }
+
       if (!isMounted) return;
       if (fetchError) {
         setError(fetchError.message || 'Failed to load users.');
         setUsers([]);
       } else {
-        setUsers(data || []);
+        setUsers(allRows);
       }
       setLoading(false);
     }
