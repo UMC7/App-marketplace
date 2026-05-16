@@ -3,6 +3,7 @@ import { FaCopy, FaDownload, FaEnvelope, FaMapMarkerAlt, FaMobileAlt, FaShareAlt
 
 function PublicProfileBusinessCardBody({
   businessCardEmail,
+  businessCardEnabled,
   businessCardLocation,
   businessCardLogoSrc,
   businessCardPhone,
@@ -72,9 +73,11 @@ function PublicProfileBusinessCardBody({
           {cardQrSrc ? (
             <img className="ppv-businessCardQr" src={cardQrSrc} alt="QR to digital CV" />
           ) : (
-            <div className="ppv-businessCardQrFallback">QR</div>
+            <div className="ppv-businessCardQrFallback">{businessCardEnabled ? 'QR' : 'Locked'}</div>
           )}
-          <div className="ppv-businessCardQrCaption">Scan to view CV</div>
+          <div className="ppv-businessCardQrCaption">
+            {businessCardEnabled ? 'Scan to view CV' : 'Complete Lite to unlock'}
+          </div>
         </div>
       </div>
     </>
@@ -90,6 +93,7 @@ export default function PublicProfileBusinessCard({
   businessCardScale,
   businessCardStageRef,
   businessCardTheme,
+  canShareDigitalCv,
   cardExportBusy,
   downloadMenuOpen,
   handleCopyBusinessCardImage,
@@ -142,7 +146,8 @@ export default function PublicProfileBusinessCard({
                   type="button"
                   className="ppv-businessCardAction"
                   onClick={isMobile ? handleShareBusinessCardImage : handleCopyBusinessCardImage}
-                  disabled={!!cardExportBusy}
+                  disabled={!!cardExportBusy || !canShareDigitalCv}
+                  title={canShareDigitalCv ? '' : 'Complete Lite mode to unlock sharing.'}
                 >
                   <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--desktop">
                     {cardExportBusy === 'copy' ? 'Copying...' : 'Copy image'}
@@ -156,7 +161,8 @@ export default function PublicProfileBusinessCard({
                     type="button"
                     className="ppv-businessCardAction"
                     onClick={() => setDownloadMenuOpen((open) => !open)}
-                    disabled={!!cardExportBusy}
+                    disabled={!!cardExportBusy || !canShareDigitalCv}
+                    title={canShareDigitalCv ? '' : 'Complete Lite mode to unlock downloads.'}
                     aria-expanded={downloadMenuOpen ? 'true' : 'false'}
                   >
                     <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--desktop">
@@ -186,7 +192,10 @@ export default function PublicProfileBusinessCard({
                   )}
                 </div>
               </div>
-              <PublicProfileBusinessCardBody {...businessCardBodyProps} />
+              <PublicProfileBusinessCardBody
+                {...businessCardBodyProps}
+                businessCardEnabled={canShareDigitalCv}
+              />
             </div>
           </div>
         </div>
@@ -197,7 +206,10 @@ export default function PublicProfileBusinessCard({
           ref={businessCardExportRef}
           className={`${businessCardRootClassName} ppv-businessCard--export`}
         >
-          <PublicProfileBusinessCardBody {...businessCardBodyProps} />
+          <PublicProfileBusinessCardBody
+            {...businessCardBodyProps}
+            businessCardEnabled={canShareDigitalCv}
+          />
         </div>
       </div>
     </>

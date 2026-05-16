@@ -192,3 +192,90 @@ export function buildProfileProgressSections({ mode = 'lite', ...data } = {}) {
   }
   return buildLiteProgressSections(data);
 }
+
+export function calculateProfileProgressPercent(sections = {}) {
+  const entries = Object.entries(sections);
+  if (!entries.length) return 0;
+
+  const acc = entries.reduce(
+    (accum, [, v]) => {
+      const { ratio, weight } = toRatioAndWeight(v);
+      accum.weightSum += weight;
+      accum.scoreSum += ratio * weight;
+      return accum;
+    },
+    { scoreSum: 0, weightSum: 0 }
+  );
+
+  if (acc.weightSum <= 0) return 0;
+  return Math.round((acc.scoreSum / acc.weightSum) * 100);
+}
+
+function toRatioAndWeight(v) {
+  let weight = 1;
+  let ratio = 0;
+
+  if (typeof v === 'number' && Number.isFinite(v)) {
+    ratio = normalizeNumberToRatio(v);
+    return { ratio, weight };
+  }
+
+  if (Array.isArray(v)) {
+    if (!v.length) return { ratio: 0, weight };
+    if (v.every((x) => typeof x === 'boolean')) {
+      const t = v.filter(Boolean).length;
+      ratio = t / v.length;
+      return { ratio: clamp01(ratio), weight };
+    }
+    if (v.every((x) => x && typeof x === 'object' && 'done' in x)) {
+      const t = v.filter((x) => !!x.done).length;
+      ratio = t / v.length;
+      return { ratio: clamp01(ratio), weight };
+    }
+    return { ratio: 1, weight };
+  }
+
+  if (typeof v === 'string') {
+    return { ratio: v.trim() ? 1 : 0, weight };
+  }
+
+  if (v && typeof v === 'object') {
+    if (Number.isFinite(v.weight) && v.weight > 0) {
+      weight = v.weight;
+    }
+    if (Number.isFinite(v.progress)) {
+      ratio = normalizeNumberToRatio(v.progress);
+      return { ratio, weight };
+    }
+    if (Number.isFinite(v.value)) {
+      ratio = normalizeNumberToRatio(v.value);
+      return { ratio, weight };
+    }
+    if (Number.isFinite(v.count) && Number.isFinite(v.total) && v.total > 0) {
+      ratio = v.count / v.total;
+      return { ratio: clamp01(ratio), weight };
+    }
+    if (Number.isFinite(v.done) && Number.isFinite(v.total) && v.total > 0) {
+      ratio = v.done / v.total;
+      return { ratio: clamp01(ratio), weight };
+    }
+    const bools = Object.values(v).filter((x) => typeof x === 'boolean');
+    if (bools.length) {
+      ratio = bools.filter(Boolean).length / bools.length;
+      return { ratio: clamp01(ratio), weight };
+    }
+    return { ratio: 1, weight };
+  }
+
+  return { ratio: v ? 1 : 0, weight };
+}
+
+function normalizeNumberToRatio(n) {
+  if (n <= 1) return clamp01(n);
+  if (n <= 100) return clamp01(n / 100);
+  return 1;
+}
+
+function clamp01(x) {
+  return Math.max(0, Math.min(1, Number(x) || 0));
+}

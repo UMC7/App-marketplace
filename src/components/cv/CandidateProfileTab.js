@@ -24,7 +24,7 @@ import AboutMeSection from './candidate/cvsections/aboutmesection';
 import LifestyleHabitsSection from './candidate/cvsections/LifestyleHabitsSection';
 import Modal from '../Modal';
 import { hasValidAvailability } from '../../utils/availability';
-import { buildProfileProgressSections } from './progress/profileProgress';
+import { buildCandidateProfileProgressSections } from './progress/candidateProfileProgressData';
 
 function hasLanguagesWithLevel(languageLevels) {
   if (!Array.isArray(languageLevels)) return false;
@@ -1432,7 +1432,7 @@ const galleryDirty = useMemo(() => {
   return serializeGalleryItems(gallery) !== persistedGallerySnapshot;
 }, [gallery, persistedGallerySnapshot]);
 
-const progressSections = buildProfileProgressSections({
+const progressSections = buildCandidateProfileProgressSections({
   mode: profileMode,
   profile,
   personal,
@@ -1440,16 +1440,20 @@ const progressSections = buildProfileProgressSections({
   primaryRank,
   expCount,
   aboutMe: profile?.about_me,
-  prefs: isLite
-    ? { status, availability, languageLevels, deptSpecialties }
-    : (prefsProCache || {}),
-  lifestyleHabits,
-  educationCount,
   docs,
-  docFlags,
+  educationCount,
   refsCount,
   gallery,
-});
+  litePrefs: {
+    status,
+    availability,
+    languageLevels,
+    deptSpecialties,
+    lifestyleHabits,
+    docFlags,
+  },
+  professionalPrefs: prefsProCache || {},
+}).activeSections;
 
   const prefsSkillsSaveDisabled = saving || !prefsSkillsDirty;
 

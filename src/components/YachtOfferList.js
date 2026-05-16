@@ -11,6 +11,10 @@ import ScrollToTopButton from '../components/ScrollToTopButton';
 import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 import { toast } from 'react-toastify';
 import { getOfferBoardDate, isOfferClosed, isOfferVisibleOnJobBoard } from '../utils/jobOfferVisibility';
+import {
+  buildProfessionalProgressSections,
+  calculateProfileProgressPercent,
+} from './cv/progress/profileProgress';
 
 function YachtOfferList({
   offers,
@@ -291,22 +295,27 @@ useEffect(() => {
     };
   }
 
-  const fetchShareReady = async () => {
+  const fetchDirectApplicationReadiness = async () => {
     try {
       const { data } = await supabase
         .from('public_profiles')
-        .select('share_ready')
+        .select('share_ready, gender, residence_country, contact_pref, target_ranks, professional_statement, prefs_skills_pro')
         .eq('user_id', currentUser.id)
         .maybeSingle();
 
       if (cancelled) return;
-      setDirectApplicationReady(Boolean(data?.share_ready));
+      const professionalSections = buildProfessionalProgressSections({
+        profile: data || {},
+        prefs: data?.prefs_skills_pro || {},
+      });
+      const professionalPercent = calculateProfileProgressPercent(professionalSections);
+      setDirectApplicationReady(Boolean(data?.share_ready) && professionalPercent === 100);
     } catch (e) {
       if (!cancelled) setDirectApplicationReady(false);
     }
   };
 
-  fetchShareReady();
+  fetchDirectApplicationReadiness();
   return () => {
     cancelled = true;
   };

@@ -671,14 +671,16 @@ export default function PublicProfileView() {
     return `${x}% ${y}%`;
   }, [heroMedia?.coverPositionX, heroMedia?.coverPositionY]);
 
+  const canShareDigitalCv = profile?.share_ready === true;
   const publicUrl = useMemo(() => {
+    if (!canShareDigitalCv) return '';
     if (!profile?.public_qr_id && !profile?.handle) return '';
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     if (profile?.public_qr_id) {
       return `${origin}/cv/qr/${profile.public_qr_id}`;
     }
     return `${origin}/cv/${profile.handle}`;
-  }, [profile?.handle, profile?.public_qr_id]);
+  }, [canShareDigitalCv, profile?.handle, profile?.public_qr_id]);
   const businessCardPhone = useMemo(() => {
     const ccRaw = String(profile?.phone_cc || '').trim();
     const numberRaw = String(profile?.phone_number || '').trim();
@@ -725,6 +727,7 @@ export default function PublicProfileView() {
   ]);
 
   const exportBusinessCardBlob = useCallback(async () => {
+    if (!canShareDigitalCv) throw new Error('Complete Lite mode to unlock business card sharing.');
     if (!businessCardExportRef.current) throw new Error('Business card is not ready yet.');
     const blob = await htmlToImageBlob(businessCardExportRef.current, {
       cacheBust: true,
@@ -736,7 +739,7 @@ export default function PublicProfileView() {
     });
     if (!blob) throw new Error('Could not create image.');
     return blob;
-  }, [businessCardTheme]);
+  }, [businessCardTheme, canShareDigitalCv]);
 
   const exportBusinessCardCanvas = useCallback(async () => {
     const blob = await exportBusinessCardBlob();
@@ -1061,7 +1064,9 @@ if (!allowPublicView && !isPreview) {
     <div className={`ppv-wrap ${isPreview ? 'ppv--preview' : 'ppv--public'}`} style={{ paddingTop: isPreview ? 50 : 12 }}>
       {isPreview && (
         <div className="ppv-previewRibbon">
-          This business card is for personal use only and will not be visible to recruiters. Your Digital CV below remains visible to recruiters. Use the buttons above to download the card for print or copy it for sharing across social media, email, messaging apps, and other platforms.
+          {canShareDigitalCv
+            ? 'This business card is for personal use only and will not be visible to recruiters. Your Digital CV below remains visible to recruiters. Use the buttons above to download the card for print or copy it for sharing across social media, email, messaging apps, and other platforms.'
+            : 'Complete Lite mode to 100% to unlock your public Digital CV link, QR, and business card sharing or download actions. The preview remains available while you finish your profile.'}
         </div>
       )}
 
@@ -1076,6 +1081,7 @@ if (!allowPublicView && !isPreview) {
           businessCardScale={businessCardScale}
           businessCardStageRef={businessCardStageRef}
           businessCardTheme={businessCardTheme}
+          canShareDigitalCv={canShareDigitalCv}
           cardExportBusy={cardExportBusy}
           downloadMenuOpen={downloadMenuOpen}
           handleCopyBusinessCardImage={handleCopyBusinessCardImage}
