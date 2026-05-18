@@ -6,6 +6,7 @@ function PublicProfileBusinessCardBody({
   businessCardEnabled,
   businessCardLocation,
   businessCardLogoSrc,
+  businessCardNameClassName,
   businessCardPhone,
   cardQrSrc,
   displayName,
@@ -36,7 +37,7 @@ function PublicProfileBusinessCardBody({
 
         <div className="ppv-businessCardIdentity">
           <div className="ppv-businessCardTitleGroup">
-            <div className="ppv-businessCardName">{displayName}</div>
+            <div className={businessCardNameClassName || 'ppv-businessCardName'}>{displayName}</div>
             {rankText && <div className="ppv-businessCardRank">{rankText}</div>}
           </div>
           <div className="ppv-businessCardDetailsGroup">

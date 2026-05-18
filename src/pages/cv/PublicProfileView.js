@@ -42,7 +42,10 @@ const BASE_A4_WIDTH  = 900;
 const BASE_A4_HEIGHT = Math.round(BASE_A4_WIDTH * (297 / 210));
 const BASE_BUSINESS_CARD_WIDTH = 520;
 const BASE_BUSINESS_CARD_HEIGHT = Math.round(BASE_BUSINESS_CARD_WIDTH * 0.647059);
-const INTRO_FIXED_PX = Math.round(BASE_A4_HEIGHT * 0.10) + 14;
+const INTRO_BASE_HEIGHT = Math.round(BASE_A4_HEIGHT * 0.10);
+const INTRO_LONG_HEIGHT = Math.round(BASE_A4_HEIGHT * 0.118);
+const INTRO_VERY_LONG_HEIGHT = Math.round(BASE_A4_HEIGHT * 0.132);
+const INTRO_META_GAP = 14;
 const MIN_SCALE = 0.42;
 const MAX_SCALE = 1;
 const BUSINESS_CARD_EXPORT_WIDTH = 1800;
@@ -144,6 +147,53 @@ export default function PublicProfileView() {
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
   const [cardExportBusy, setCardExportBusy] = useState('');
   const [businessCardTheme, setBusinessCardTheme] = useState('light');
+  const displayName = useMemo(() => {
+    const full = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
+    return full || profile?.headline || 'Yacht Candidate';
+  }, [profile?.first_name, profile?.last_name, profile?.headline]);
+  const displayNameLayout = useMemo(() => {
+    const normalized = String(displayName || '').trim();
+    if (!normalized) {
+      return {
+        introNameClassName: 'ppv-introName',
+        businessCardNameClassName: 'ppv-businessCardName',
+        introHeight: INTRO_BASE_HEIGHT,
+        introMetaTop: INTRO_BASE_HEIGHT + INTRO_META_GAP,
+      };
+    }
+
+    const compactLength = normalized.replace(/\s+/g, '').length;
+    const longestWord = normalized
+      .split(/\s+/)
+      .reduce((max, word) => Math.max(max, word.length), 0);
+
+    if (compactLength >= 24 || longestWord >= 12) {
+      return {
+        introNameClassName: 'ppv-introName ppv-introName--veryLong',
+        businessCardNameClassName: 'ppv-businessCardName ppv-businessCardName--veryLong',
+        introHeight: INTRO_VERY_LONG_HEIGHT,
+        introMetaTop: INTRO_VERY_LONG_HEIGHT + INTRO_META_GAP,
+      };
+    }
+    if (compactLength >= 18 || longestWord >= 9) {
+      return {
+        introNameClassName: 'ppv-introName ppv-introName--long',
+        businessCardNameClassName: 'ppv-businessCardName ppv-businessCardName--long',
+        introHeight: INTRO_LONG_HEIGHT,
+        introMetaTop: INTRO_LONG_HEIGHT + INTRO_META_GAP,
+      };
+    }
+    return {
+      introNameClassName: 'ppv-introName',
+      businessCardNameClassName: 'ppv-businessCardName',
+      introHeight: INTRO_BASE_HEIGHT,
+      introMetaTop: INTRO_BASE_HEIGHT + INTRO_META_GAP,
+    };
+  }, [displayName]);
+  const introNameClassName = displayNameLayout.introNameClassName;
+  const businessCardNameClassName = displayNameLayout.businessCardNameClassName;
+  const introHeight = displayNameLayout.introHeight;
+  const introMetaTop = displayNameLayout.introMetaTop;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -228,7 +278,7 @@ export default function PublicProfileView() {
       setMetaTop((prev) => {
         if (hasLockedMetaTopRef.current && prev != null) return prev;
         hasLockedMetaTopRef.current = true;
-        return INTRO_FIXED_PX;
+        return introMetaTop;
       });
 
       const vh = window.innerHeight || document.documentElement.clientHeight || 0;
@@ -257,7 +307,7 @@ export default function PublicProfileView() {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onOrientation);
     };
-  }, []);
+  }, [introMetaTop]);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 720px)');
@@ -284,7 +334,7 @@ export default function PublicProfileView() {
         let s = availW / BASE_A4_WIDTH;
         s = clamp(s, MIN_SCALE, MAX_SCALE);
         setPageScale(s);
-        setMetaTop((prev) => prev ?? INTRO_FIXED_PX);
+        setMetaTop((prev) => prev ?? introMetaTop);
       }
     }
     if (document.readyState === 'complete') afterStable();
@@ -294,7 +344,7 @@ export default function PublicProfileView() {
       cancelled = true;
       window.removeEventListener('load', afterStable, { once: true });
     };
-  }, []);
+  }, [introMetaTop]);
 
   useEffect(() => {
     const { restore } = setViewportContent('width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes');
@@ -584,28 +634,6 @@ export default function PublicProfileView() {
     (profile?.visibility_settings?.show_age ?? profile?.show_age_public ?? true) === true;
   const age = calcAge(profile?.birth_month, profile?.birth_year);
 
-  const displayName = useMemo(() => {
-    const full = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
-    return full || profile?.headline || 'Yacht Candidate';
-  }, [profile?.first_name, profile?.last_name, profile?.headline]);
-
-  const introNameClassName = useMemo(() => {
-    const normalized = String(displayName || '').trim();
-    if (!normalized) return 'ppv-introName';
-    const compactLength = normalized.replace(/\s+/g, '').length;
-    const longestWord = normalized
-      .split(/\s+/)
-      .reduce((max, word) => Math.max(max, word.length), 0);
-
-    if (compactLength >= 24 || longestWord >= 12) {
-      return 'ppv-introName ppv-introName--veryLong';
-    }
-    if (compactLength >= 18 || longestWord >= 9) {
-      return 'ppv-introName ppv-introName--long';
-    }
-    return 'ppv-introName';
-  }, [displayName]);
-
   const rankText = useMemo(() => {
     if (profile?.primary_role) return profile.primary_role;
     const tr = Array.isArray(profile?.target_ranks) ? profile.target_ranks : [];
@@ -706,6 +734,7 @@ export default function PublicProfileView() {
     businessCardEmail,
     businessCardLocation,
     businessCardLogoSrc,
+    businessCardNameClassName,
     businessCardPhone,
     cardQrSrc,
     displayName,
@@ -717,6 +746,7 @@ export default function PublicProfileView() {
     businessCardEmail,
     businessCardLocation,
     businessCardLogoSrc,
+    businessCardNameClassName,
     businessCardPhone,
     cardQrSrc,
     displayName,
@@ -1164,7 +1194,7 @@ if (!allowPublicView && !isPreview) {
                   className="ppv-a4Intro"
                   aria-label="Intro"
                   ref={introRef}
-                  style={{ zIndex: 2 }}
+                  style={{ zIndex: 2, height: introHeight }}
                 >
                   <div className="ppv-introInner">
                     <div className={introNameClassName}>{displayName}</div>

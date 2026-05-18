@@ -152,6 +152,14 @@ body.dark-mode .ppv-previewRibbon {
   font-size: 22px;
 }
 
+.ppv-businessCard--export .ppv-businessCardName.ppv-businessCardName--long {
+  font-size: 20px;
+}
+
+.ppv-businessCard--export .ppv-businessCardName.ppv-businessCardName--veryLong {
+  font-size: 18px;
+}
+
 .ppv-businessCard--export .ppv-businessCardRank {
   font-size: 18px;
 }
@@ -392,6 +400,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 .ppv-businessCardDetailsGroup {
@@ -408,6 +417,32 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   color: var(--ppv-card-text);
   letter-spacing: -0.01em;
   white-space: nowrap;
+}
+
+.ppv-businessCardName.ppv-businessCardName--long {
+  font-size: clamp(15px, 1.85vw, 19px);
+  line-height: 1.14;
+  text-overflow: clip;
+  white-space: normal;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.ppv-businessCardName.ppv-businessCardName--veryLong {
+  font-size: clamp(14px, 1.65vw, 17px);
+  line-height: 1.1;
+  text-overflow: clip;
+  white-space: normal;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .ppv-businessCardRank {
@@ -753,6 +788,10 @@ body.dark-mode .ppv-btn {
   padding-right: 18px;
   text-align: left;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
 }
 .ppv-introName {
   font-size: 40px;
@@ -768,10 +807,23 @@ body.dark-mode .ppv-btn {
 
 .ppv-introName.ppv-introName--long {
   font-size: 34px;
+  max-width: 76%;
+  margin-inline: auto;
 }
 
 .ppv-introName.ppv-introName--veryLong {
   font-size: 30px;
+  line-height: 0.98;
+  max-width: 72%;
+  margin-inline: auto;
+}
+
+.ppv-introName.ppv-introName--long + .ppv-introRank,
+.ppv-introName.ppv-introName--veryLong + .ppv-introRank {
+  display: block;
+  width: 100%;
+  max-width: 72%;
+  margin-inline: auto;
 }
 .ppv-introRank {
   font-size: 26px;
@@ -790,10 +842,12 @@ body.dark-mode .ppv-btn {
 
   .ppv-introName.ppv-introName--long {
     font-size: 29px;
+    max-width: 82%;
   }
 
   .ppv-introName.ppv-introName--veryLong {
     font-size: 25px;
+    max-width: 78%;
   }
 
   .ppv-introRank {
