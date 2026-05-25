@@ -167,24 +167,35 @@ export default function PublicProfileView() {
       .split(/\s+/)
       .reduce((max, word) => Math.max(max, word.length), 0);
 
+    let introNameClassName = 'ppv-introName';
+    if (compactLength >= 32 || longestWord >= 15) {
+      introNameClassName = 'ppv-introName ppv-introName--fitXXL';
+    } else if (compactLength >= 28 || longestWord >= 13) {
+      introNameClassName = 'ppv-introName ppv-introName--fitXL';
+    } else if (compactLength >= 24 || longestWord >= 11) {
+      introNameClassName = 'ppv-introName ppv-introName--fitLG';
+    } else if (compactLength >= 22 || longestWord >= 10) {
+      introNameClassName = 'ppv-introName ppv-introName--fitMD';
+    }
+
     if (compactLength >= 24 || longestWord >= 12) {
       return {
-        introNameClassName: 'ppv-introName ppv-introName--veryLong',
+        introNameClassName,
         businessCardNameClassName: 'ppv-businessCardName ppv-businessCardName--veryLong',
-        introHeight: INTRO_VERY_LONG_HEIGHT,
-        introMetaTop: INTRO_VERY_LONG_HEIGHT + INTRO_META_GAP,
+        introHeight: INTRO_BASE_HEIGHT,
+        introMetaTop: INTRO_BASE_HEIGHT + INTRO_META_GAP,
       };
     }
-    if (compactLength >= 18 || longestWord >= 9) {
+    if (compactLength >= 22 || longestWord >= 11) {
       return {
-        introNameClassName: 'ppv-introName ppv-introName--long',
+        introNameClassName,
         businessCardNameClassName: 'ppv-businessCardName ppv-businessCardName--long',
-        introHeight: INTRO_LONG_HEIGHT,
-        introMetaTop: INTRO_LONG_HEIGHT + INTRO_META_GAP,
+        introHeight: INTRO_BASE_HEIGHT,
+        introMetaTop: INTRO_BASE_HEIGHT + INTRO_META_GAP,
       };
     }
     return {
-      introNameClassName: 'ppv-introName',
+      introNameClassName,
       businessCardNameClassName: 'ppv-businessCardName',
       introHeight: INTRO_BASE_HEIGHT,
       introMetaTop: INTRO_BASE_HEIGHT + INTRO_META_GAP,
