@@ -3,7 +3,11 @@ import MatchBorder from './MatchBorder';
 import ThemeLogo from './ThemeLogo';
 import Avatar from './Avatar';
 import LoadingSpinner from './LoadingSpinner';
-import { formatOfferDate } from './yachtOfferForm.utils';
+import {
+  formatOfferDate,
+  isPrimaryLicenseAllowedForRank,
+  isEngineeringLicenseAllowedForRank,
+} from './yachtOfferForm.utils';
 import { isOfferClosed } from '../utils/jobOfferVisibility';
 
 const REMARKS_DISCLAIMER = 'Disclaimer:\nYacht Daywork Ltd. connects employers and crew directly and is not involved in hiring decisions or private agreements. Please communicate responsibly and remain cautious when applying.';
@@ -152,12 +156,16 @@ const OfferTimeline = ({
                     const isExpanded = !isClosed && expandedOfferId === offer.id;
                     const primaryScore = Number(String(offer.match_primary_score).replace('%','')) || 0;
                     const teammateScore = Number(String(offer.match_teammate_score).replace('%','')) || 0;
-                    const rank1DeckLic = Array.isArray(offer.required_licenses) && offer.required_licenses[0] ? offer.required_licenses[0] : null;
-                    const rank1EngineLic = Array.isArray(offer.required_engineering_licenses) && offer.required_engineering_licenses[0] ? offer.required_engineering_licenses[0] : null;
+                    const rank1DeckLicRaw = Array.isArray(offer.required_licenses) && offer.required_licenses[0] ? offer.required_licenses[0] : null;
+                    const rank1EngineLicRaw = Array.isArray(offer.required_engineering_licenses) && offer.required_engineering_licenses[0] ? offer.required_engineering_licenses[0] : null;
+                    const rank1DeckLic = isPrimaryLicenseAllowedForRank(offer.title, rank1DeckLicRaw) ? rank1DeckLicRaw : null;
+                    const rank1EngineLic = isEngineeringLicenseAllowedForRank(offer.title, rank1EngineLicRaw) ? rank1EngineLicRaw : null;
                     const rank1DocsRaw = Array.isArray(offer.required_documents) ? offer.required_documents : (typeof offer.required_documents === 'string' ? offer.required_documents.split(',').map((d) => d.trim()).filter(Boolean) : []);
                     const rank1DocsOnly = rank1DocsRaw.filter((doc) => doc !== rank1DeckLic && doc !== rank1EngineLic);
-                    const rank2DeckLic = Array.isArray(offer.teammate_required_licenses) && offer.teammate_required_licenses[0] ? offer.teammate_required_licenses[0] : null;
-                    const rank2EngineLic = Array.isArray(offer.teammate_required_engineering_licenses) && offer.teammate_required_engineering_licenses[0] ? offer.teammate_required_engineering_licenses[0] : null;
+                    const rank2DeckLicRaw = Array.isArray(offer.teammate_required_licenses) && offer.teammate_required_licenses[0] ? offer.teammate_required_licenses[0] : null;
+                    const rank2EngineLicRaw = Array.isArray(offer.teammate_required_engineering_licenses) && offer.teammate_required_engineering_licenses[0] ? offer.teammate_required_engineering_licenses[0] : null;
+                    const rank2DeckLic = isPrimaryLicenseAllowedForRank(offer.teammate_rank, rank2DeckLicRaw) ? rank2DeckLicRaw : null;
+                    const rank2EngineLic = isEngineeringLicenseAllowedForRank(offer.teammate_rank, rank2EngineLicRaw) ? rank2EngineLicRaw : null;
                     const rank2DocsRaw = Array.isArray(offer.teammate_required_documents) ? offer.teammate_required_documents : [];
                     const rank2DocsOnly = rank2DocsRaw.filter((doc) => doc !== rank2DeckLic && doc !== rank2EngineLic);
                     const hasRank1 = rank1DeckLic || rank1EngineLic || rank1DocsOnly.length > 0;
@@ -427,7 +435,7 @@ const OfferTimeline = ({
     : (offer.years_in_rank !== null && offer.years_in_rank !== undefined)
       ? ''
       : 'case5'
-} ${offer.teammate_rank && (offer.teammate_experience === null || offer.teammate_experience === undefined) ? 'no-rank2' : ''} ${Array.isArray(offer.required_licenses) && offer.required_licenses.length > 0 ? 'has-license' : ''} ${Array.isArray(offer.required_engineering_licenses) && offer.required_engineering_licenses.length > 0 ? 'has-engineering-license' : ''} ${(offer.years_in_rank !== null && offer.years_in_rank !== undefined) ? 'has-time-in-rank' : ''}`}>
+} ${offer.teammate_rank && (offer.teammate_experience === null || offer.teammate_experience === undefined) ? 'no-rank2' : ''} ${rank1DeckLic ? 'has-license' : ''} ${rank1EngineLic ? 'has-engineering-license' : ''} ${(offer.years_in_rank !== null && offer.years_in_rank !== undefined) ? 'has-time-in-rank' : ''}`}>
   <div className="field-pair">
     {offer.title && (
       <div className="field-group position">
@@ -436,16 +444,16 @@ const OfferTimeline = ({
       </div>
     )}
 
-    {Array.isArray(offer.required_licenses) && offer.required_licenses.length > 0 && (
+    {rank1DeckLic && (
       <div className="field-group license">
         <div className="field-label">License</div>
-        <div className="field-value">{offer.required_licenses[0]}</div>
+        <div className="field-value">{rank1DeckLic}</div>
       </div>
     )}
-    {Array.isArray(offer.required_engineering_licenses) && offer.required_engineering_licenses.length > 0 && (
+    {rank1EngineLic && (
       <div className="field-group engineering-license">
         <div className="field-label">Engineering License</div>
-        <div className="field-value">{offer.required_engineering_licenses[0]}</div>
+        <div className="field-value">{rank1EngineLic}</div>
       </div>
     )}
     {(offer.years_in_rank !== null && offer.years_in_rank !== undefined) && (

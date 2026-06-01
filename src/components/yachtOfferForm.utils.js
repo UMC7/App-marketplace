@@ -3,6 +3,7 @@
 import {
   ELECTRICIAN_LICENSE_OPTIONS,
   ENGINEERING_LICENSE_OPTIONS,
+  ENGINEERING_LICENSE_FIELD_OPTIONS,
   DECK_LICENSE_MAP,
   DECK_DOCUMENT_MAP,
 } from './yachtOfferForm.constants';
@@ -161,3 +162,19 @@ export const getDeckLicenseOptionsForRank = (rank) => DECK_LICENSE_MAP[rank] || 
 
 export const getDeckDocumentOptionsForRank = (rank) =>
   DECK_DOCUMENT_MAP[rank] || [];
+
+export const isDeckLicenseAllowedForRank = (rank, license) =>
+  !!license && getDeckLicenseOptionsForRank(rank).includes(license);
+
+export const isEngineeringLicenseAllowedForRank = (rank, license) => {
+  if (!license) return false;
+  const allowed = new Set([
+    ...getEngineeringLicenseOptionsForRank(rank),
+    ...ENGINEERING_LICENSE_FIELD_OPTIONS,
+  ]);
+  return allowed.has(license);
+};
+
+export const isPrimaryLicenseAllowedForRank = (rank, license) =>
+  isDeckLicenseAllowedForRank(rank, license) ||
+  isEngineeringLicenseAllowedForRank(rank, license);

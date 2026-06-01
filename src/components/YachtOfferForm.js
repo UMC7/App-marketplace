@@ -40,6 +40,8 @@ import {
   getEngineeringLicenseOptionsForRank,
   getDeckLicenseOptionsForRank,
   getDeckDocumentOptionsForRank,
+  isPrimaryLicenseAllowedForRank,
+  isEngineeringLicenseAllowedForRank,
 } from './yachtOfferForm.utils';
 
 const BASE_REQUIRED_DOCUMENTS = ['ENG1 Seafarer Medical Certificate', 'STCW Basic Training (A-VI/1)'];
@@ -204,9 +206,12 @@ useEffect(() => {
 
 useEffect(() => {
   if (!Array.isArray(initialValues?.required_licenses)) return;
+  const initialLicense = initialValues.required_licenses[0] || '';
   setFormData(prev => ({
     ...prev,
-    required_license: initialValues.required_licenses[0] || '',
+    required_license: isPrimaryLicenseAllowedForRank(initialValues.title, initialLicense)
+        ? initialLicense
+        : '',
   }));
 }, [initialValues]);
 
@@ -422,8 +427,12 @@ const autoFillFromText = async () => {
         merged.required_documents = Array.from(new Set([...(Array.isArray(merged.required_documents) ? merged.required_documents : []), ...BASE_REQUIRED_DOCUMENTS]));
       }
 
-      if (!merged.required_license && typeof data.required_license === 'string' && data.required_license.trim()) {
-        merged.required_license = data.required_license.trim();
+      const normalizedTitle = merged.title || normalizeTitle(data.rank);
+      const parsedRequiredLicense = typeof data.required_license === 'string' ? data.required_license.trim() : '';
+      const isParsedRequiredLicenseAllowed = isPrimaryLicenseAllowedForRank(normalizedTitle, parsedRequiredLicense);
+
+      if (!merged.required_license && isParsedRequiredLicenseAllowed) {
+        merged.required_license = parsedRequiredLicense;
       }
 
       if (
@@ -943,6 +952,14 @@ const startDayRange = isDayRangeValue(start_day) ? String(start_day).toLowerCase
 const endDayRange = isDayRangeValue(end_day) ? String(end_day).toLowerCase() : null;
 const requiredLicenses = required_license ? [required_license] : [];
 const engineeringLicensesArray = engineering_license ? [engineering_license] : [];
+const sanitizedRequiredLicenses =
+  isPrimaryLicenseAllowedForRank(formData.title, required_license)
+    ? requiredLicenses
+    : [];
+const sanitizedEngineeringLicenses =
+  isEngineeringLicenseAllowedForRank(formData.title, engineering_license)
+    ? engineeringLicensesArray
+    : [];
 const derivedStartDate = (() => {
   if (!start_month) return null;
   const year = getInferredYear(start_month);
@@ -968,8 +985,8 @@ const derivedEndDate = (() => {
     end_day_range: endDateMonthOnly ? null : endDayRange,
     start_date_month_only: startDateMonthOnly,
     end_date_month_only: endDateMonthOnly,
-    required_licenses: requiredLicenses,
-    required_engineering_licenses: engineeringLicensesArray,
+    required_licenses: sanitizedRequiredLicenses,
+    required_engineering_licenses: sanitizedEngineeringLicenses,
     required_documents: Array.isArray(required_documents) ? required_documents : [],
     required_skills: Array.isArray(required_skills) ? required_skills : [],
     years_in_rank:
@@ -1000,8 +1017,14 @@ const derivedEndDate = (() => {
       : formData.teammate_experience
       ? Number(formData.teammate_experience)
       : null,
-    teammate_required_licenses: formData.team === 'Yes' ? (formData.teammate_required_license ? [formData.teammate_required_license] : []) : [],
-    teammate_required_engineering_licenses: formData.team === 'Yes' ? (formData.teammate_engineering_license ? [formData.teammate_engineering_license] : []) : [],
+    teammate_required_licenses:
+      formData.team === 'Yes' && isPrimaryLicenseAllowedForRank(formData.teammate_rank, formData.teammate_required_license)
+        ? [formData.teammate_required_license]
+        : [],
+    teammate_required_engineering_licenses:
+      formData.team === 'Yes' && isEngineeringLicenseAllowedForRank(formData.teammate_rank, formData.teammate_engineering_license)
+        ? [formData.teammate_engineering_license]
+        : [],
     teammate_required_documents: formData.team === 'Yes' ? (Array.isArray(formData.teammate_required_documents) ? formData.teammate_required_documents : []) : [],
     teammate_required_skills: formData.team === 'Yes' ? (Array.isArray(formData.teammate_required_skills) ? formData.teammate_required_skills : []) : [],
 };
