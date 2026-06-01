@@ -75,6 +75,13 @@ export default function DocumentsSectionController({
     if (mode === "single") {
       const updated = cleanedUi[0];
       if (!updated) return handleClose();
+      if (String(updated.id || "").startsWith("tmp-")) {
+        setDocs((prev) =>
+          prev.map((d) => (String(d.id) === String(updated.id) ? coerceDoc(updated) : d))
+        );
+        handleClose();
+        return;
+      }
 
       try {
         await persistSingleUpdate(updated);

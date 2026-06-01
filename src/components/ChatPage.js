@@ -11,6 +11,23 @@ import { markNotificationsForChatAsRead } from '../utils/notificationRoutes';
 import { parseServerDate } from '../utils/dateUtils';
 
 const MAX_CHAT_FILE_MB = 50;
+const CHAT_FILE_ACCEPT = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+].join(',');
+const ALLOWED_CHAT_FILE_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.webp', '.doc', '.docx'];
+const ALLOWED_CHAT_FILE_MIME_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
 
 const DISCLAIMER_PARAGRAPHS = [
   'Yacht Daywork connects candidates and employers but is not involved in the hiring process.',
@@ -101,7 +118,46 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       resetFileInput();
       return false;
     }
+    const rawName = String(nextFile.name || '').toLowerCase();
+    const rawType = String(nextFile.type || '').toLowerCase();
+    const hasAllowedExtension = ALLOWED_CHAT_FILE_EXTENSIONS.some((ext) => rawName.endsWith(ext));
+    const hasAllowedMime = ALLOWED_CHAT_FILE_MIME_TYPES.has(rawType);
+    if (!hasAllowedExtension && !hasAllowedMime) {
+      setFileError('Unsupported file type. Use PDF, JPG, PNG, WEBP, DOC or DOCX.');
+      resetFileInput();
+      return false;
+    }
     return true;
+  };
+
+  const sanitizeChatFileName = (name) => {
+    const cleaned = String(name || 'upload')
+      .normalize('NFC')
+      .replace(/[^\w.\-]+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_+|_+$/g, '');
+    return cleaned || 'upload';
+  };
+
+  const uploadChatAttachment = async (storagePrefix, nextFile) => {
+    const safeName = sanitizeChatFileName(nextFile?.name);
+    const path = `${storagePrefix}/${Date.now()}_${safeName}`;
+    const { error: uploadError } = await supabase.storage
+      .from('chat-uploads')
+      .upload(path, nextFile, {
+        contentType: nextFile?.type || undefined,
+      });
+    if (uploadError) throw uploadError;
+
+    const oneWeekSeconds = 60 * 60 * 24 * 7;
+    const { data, error: signError } = await supabase.storage
+      .from('chat-uploads')
+      .createSignedUrl(path, oneWeekSeconds);
+    if (signError || !data?.signedUrl) {
+      throw signError || new Error('Failed to sign file.');
+    }
+
+    return data.signedUrl;
   };
 
   const openAvatarPreview = (url, name) => {
@@ -450,28 +506,16 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       if (file) {
         if (!validateFile(file)) return;
         setUploading(true);
-        const path = `admin-chat/${adminThreadId}/${Date.now()}_${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from('chat-uploads')
-          .upload(path, file);
-        if (uploadError) {
+        try {
+          fileUrl = await uploadChatAttachment(`admin-chat/${threadId}`, file);
+        } catch (uploadError) {
           setUploading(false);
-          setFileError(uploadError.message || 'Upload failed.');
+          setFileError(uploadError?.message || 'Upload failed.');
           console.error('Error uploading file:', uploadError);
           return;
-        }
-        const oneWeekSeconds = 60 * 60 * 24 * 7;
-        const { data, error: signError } = await supabase.storage
-          .from('chat-uploads')
-          .createSignedUrl(path, oneWeekSeconds);
-        if (signError || !data?.signedUrl) {
+        } finally {
           setUploading(false);
-          setFileError(signError?.message || 'Failed to sign file.');
-          console.error('Error signing file:', signError);
-          return;
         }
-        fileUrl = data.signedUrl;
-        setUploading(false);
       }
 
       const text = message.trim();
@@ -535,28 +579,16 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     if (file) {
       if (!validateFile(file)) return;
       setUploading(true);
-      const path = `chat/${offerId}/${Date.now()}_${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('chat-uploads')
-        .upload(path, file);
-      if (uploadError) {
+      try {
+        fileUrl = await uploadChatAttachment(`chat/${offerId}`, file);
+      } catch (uploadError) {
         setUploading(false);
-        setFileError(uploadError.message || 'Upload failed.');
+        setFileError(uploadError?.message || 'Upload failed.');
         console.error('Error uploading file:', uploadError);
         return;
-      }
-      const oneWeekSeconds = 60 * 60 * 24 * 7;
-      const { data, error: signError } = await supabase.storage
-        .from('chat-uploads')
-        .createSignedUrl(path, oneWeekSeconds);
-      if (signError || !data?.signedUrl) {
+      } finally {
         setUploading(false);
-        setFileError(signError?.message || 'Failed to sign file.');
-        console.error('Error signing file:', signError);
-        return;
       }
-      fileUrl = data.signedUrl;
-      setUploading(false);
     }
 
     const { error } = await supabase.from('yacht_work_messages').insert({
@@ -719,6 +751,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
             <input
               id="file-input"
               type="file"
+              accept={CHAT_FILE_ACCEPT}
               ref={fileInputRef}
               onChange={(e) => {
                 const nextFile = e.target.files?.[0] || null;

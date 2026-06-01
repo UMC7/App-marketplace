@@ -1197,7 +1197,8 @@ const generateShortHandle = () => {
   const handleSaveDocs = async (nextDocs = [], pendingFiles) => {
     if (!canEdit) return;
     try {
-      setDocs(Array.isArray(nextDocs) ? nextDocs : []);
+      const incomingDocs = Array.isArray(nextDocs) ? nextDocs : [];
+      setDocs(incomingDocs);
 
       if (!profile?.id || !profile?.user_id) {
         toast.error('Profile not loaded yet.');
@@ -1206,11 +1207,12 @@ const generateShortHandle = () => {
       const uid = profile.user_id;
 
       const fileMap = pendingFiles instanceof Map ? pendingFiles : new Map();
+      const persistedDocsByTempId = new Map();
 
       let ok = 0;
       let fail = 0;
 
-      for (const doc of Array.isArray(nextDocs) ? nextDocs : []) {
+      for (const doc of incomingDocs) {
         const file = fileMap.get(doc.id);
         if (!file) continue;
 
@@ -1226,14 +1228,28 @@ const generateShortHandle = () => {
           visibility: (doc.visibility || 'after_contact'),
         };
 
-        const { error: docErr } = await supabase
+        const { data: insertedDoc, error: docErr } = await supabase
           .from('public_documents')
-          .insert([insertDoc]);
-
+          .insert([insertDoc])
+          .select('id, file_url, title, visibility, created_at')
+          .single();
+        
         if (docErr) {
           console.warn('public_documents insert error:', docErr);
           fail++;
           continue;
+        }
+
+        if (insertedDoc) {
+          persistedDocsByTempId.set(String(doc.id), {
+            id: String(insertedDoc.id),
+            title: insertedDoc.title || 'Untitled document',
+            issuedOn: doc.issuedOn || undefined,
+            expiresOn: doc.expiresOn || undefined,
+            visibility: mapDbVisibilityToUi(insertedDoc.visibility),
+            mimeType: doc.mimeType,
+            sizeBytes: doc.sizeBytes,
+          });
         }
 
         const hasDates = !!(doc.issuedOn || doc.expiresOn);
@@ -1256,6 +1272,14 @@ const generateShortHandle = () => {
         }
 
         ok++;
+      }
+
+      if (persistedDocsByTempId.size > 0) {
+        setDocs(
+          incomingDocs
+            .map((doc) => persistedDocsByTempId.get(String(doc.id)) || doc)
+            .filter((doc, index, arr) => arr.findIndex((item) => String(item.id) === String(doc.id)) === index)
+        );
       }
 
       if (ok && !fail) toast.success(`Saved ${ok} document(s).`);
