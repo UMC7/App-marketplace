@@ -547,6 +547,10 @@ const INTERIOR_RANKS_WITH_GALLEY_SUBGROUP = new Set([
   'Cook/Steward(ess)',
   'Deck/Cook',
 ]);
+const INTERIOR_OPTIONS_DUPLICATED_BY_GALLEY = new Set([
+  'Food Hygiene / Food Safety Level 2',
+  'Food Hygiene / Food Safety Level 3',
+]);
 
 const getRequiredDocumentGroupsForRank = (rank) => {
   if (!rank) return [];
@@ -564,6 +568,19 @@ const appendGalleyCulinarySubgroup = (groups, rank) => {
   return [...groups, GALLEY_CULINARY_DOCUMENT_GROUP];
 };
 
+const removeInteriorGalleyDuplicates = (groups, rank) => {
+  if (!INTERIOR_RANKS_WITH_GALLEY_SUBGROUP.has(rank)) return groups;
+
+  return groups.map((group) => {
+    if (group.label !== 'Interior (Service & Hospitality)') return group;
+
+    return {
+      ...group,
+      options: group.options.filter((option) => !INTERIOR_OPTIONS_DUPLICATED_BY_GALLEY.has(option)),
+    };
+  });
+};
+
 const RANKS_WITH_DECK_MCA_SUBGROUP = new Set(['Chef/Deck']);
 
 const appendDeckMcaSubgroup = (groups, rank) => {
@@ -574,7 +591,10 @@ const appendDeckMcaSubgroup = (groups, rank) => {
 
 const requiredDocumentGroups = appendDeckMcaSubgroup(
   appendGalleyCulinarySubgroup(
-    getRequiredDocumentGroupsForRank(formData.title),
+    removeInteriorGalleyDuplicates(
+      getRequiredDocumentGroupsForRank(formData.title),
+      formData.title
+    ),
     formData.title
   ),
   formData.title
@@ -583,7 +603,10 @@ const requiredDocumentGroups = appendDeckMcaSubgroup(
 const teammateRank = formData.teammate_rank || '';
 const teammateRequiredDocumentGroups = appendDeckMcaSubgroup(
   appendGalleyCulinarySubgroup(
-    getRequiredDocumentGroupsForRank(teammateRank),
+    removeInteriorGalleyDuplicates(
+      getRequiredDocumentGroupsForRank(teammateRank),
+      teammateRank
+    ),
     teammateRank
   ),
   teammateRank
