@@ -6,6 +6,8 @@ import {
   ENGINEERING_LICENSE_FIELD_OPTIONS,
   DECK_LICENSE_MAP,
   DECK_DOCUMENT_MAP,
+  LEGACY_YACHTMASTER_LICENSE,
+  YACHTMASTER_OFFSHORE_LICENSE,
 } from './yachtOfferForm.constants';
 
 export const getInferredYear = (monthValue) => {
@@ -160,11 +162,14 @@ export const getEngineeringLicenseOptionsForRank = (rank) => {
 
 export const getDeckLicenseOptionsForRank = (rank) => DECK_LICENSE_MAP[rank] || [];
 
+export const normalizeDeckLicenseValue = (license) =>
+  license === LEGACY_YACHTMASTER_LICENSE ? YACHTMASTER_OFFSHORE_LICENSE : license;
+
 export const getDeckDocumentOptionsForRank = (rank) =>
   DECK_DOCUMENT_MAP[rank] || [];
 
 export const isDeckLicenseAllowedForRank = (rank, license) =>
-  !!license && getDeckLicenseOptionsForRank(rank).includes(license);
+  !!license && getDeckLicenseOptionsForRank(rank).includes(normalizeDeckLicenseValue(license));
 
 export const isEngineeringLicenseAllowedForRank = (rank, license) => {
   if (!license) return false;

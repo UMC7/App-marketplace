@@ -1,0 +1,395 @@
+.seacrew-tabs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.seacrew-tab {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.seacrew-tab.active {
+  background: #ecfeff;
+  border-color: #2dd4bf;
+  color: #0f172a;
+}
+
+.seacrew-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 360px));
+  justify-content: center;
+  gap: 22px;
+}
+
+.seacrew-card {
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 350px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.seacrew-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+}
+
+.seacrew-card-media {
+  position: relative;
+  height: 220px;
+  width: 100%;
+  background: #0b1020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.seacrew-card-slider {
+  width: 100%;
+  height: 100%;
+}
+
+.seacrew-card-slider .slick-list,
+.seacrew-card-slider .slick-track,
+.seacrew-card-slider .slick-slide {
+  height: 100%;
+}
+
+.seacrew-card-slider img {
+  width: 100%;
+  display: block;
+}
+
+.seacrew-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #0b1020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seacrew-media-blur {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  transform: scale(1.08);
+  filter: blur(18px) brightness(0.85);
+}
+
+.seacrew-card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+/* Collapsed card: emphasize cover image and compact footer */
+.seacrew-card.collapsed {
+  min-height: 360px;
+  cursor: pointer;
+}
+
+.seacrew-card.collapsed .seacrew-card-media {
+  height: 260px;
+}
+
+.seacrew-card.collapsed .seacrew-card-body {
+  padding: 14px 18px;
+}
+
+/* Expanded card: carousel sits above details */
+.seacrew-card.expanded {
+  cursor: pointer;
+}
+
+.seacrew-card.expanded .seacrew-card-media {
+  height: 340px;
+}
+
+.seacrew-slide-frame {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: #0b1020;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.seacrew-image {
+  position: relative;
+  z-index: 1;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.seacrew-image-collapsed {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.seacrew-image-expanded {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.seacrew-card-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.seacrew-card-name {
+  margin: 0;
+  font-size: clamp(1.7rem, 2.2vw, 2.15rem);
+  line-height: 1.02;
+  font-family: "Segoe Script", "Snell Roundhand", "Lucida Handwriting", "Brush Script MT", cursive;
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: 0.01em;
+  color: #0b1220;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.seacrew-card-title {
+  color: #0f172a;
+  font-weight: 700;
+  margin: 0;
+}
+
+.seacrew-card-summary-text {
+  color: #334155;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.seacrew-card-details {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.seacrew-card-actions {
+  margin-top: 10px;
+  padding-top: 4px;
+}
+
+.seacrew-chat-btn {
+  width: 100%;
+  border: 1px solid rgba(45, 212, 191, 0.34);
+  background: linear-gradient(180deg, rgba(45, 212, 191, 0.18) 0%, rgba(13, 148, 136, 0.26) 100%);
+  color: #e6fffb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  box-shadow: 0 10px 24px rgba(13, 148, 136, 0.18);
+}
+
+.seacrew-chat-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(94, 234, 212, 0.52);
+  background: linear-gradient(180deg, rgba(45, 212, 191, 0.24) 0%, rgba(13, 148, 136, 0.34) 100%);
+  box-shadow: 0 14px 28px rgba(13, 148, 136, 0.24);
+}
+
+.seacrew-card-detailRow {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 0 0 7px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.seacrew-card-detailRow:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.seacrew-card-detailEmoji {
+  font-size: 0.95rem;
+  line-height: 1;
+  opacity: 0.95;
+}
+
+.seacrew-card-detailLabel {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.seacrew-card-detailValue {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.seacrew-card-languages {
+  color: #475569;
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.seacrew-empty {
+  padding: 54px 0;
+  text-align: center;
+  color: #475569;
+}
+
+.seacrew-empty h3 {
+  margin-bottom: 10px;
+}
+
+@media (max-width: 900px) {
+  .seacrew-list {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 360px));
+  }
+
+  .seacrew-card {
+    min-height: auto;
+    max-width: none;
+  }
+
+  .seacrew-card-media {
+    height: 260px;
+  }
+
+  .seacrew-card.expanded .seacrew-card-media,
+  .seacrew-slide-frame {
+    height: 320px;
+  }
+}
+
+@media (max-width: 620px) {
+  .seacrew-list {
+    grid-template-columns: 1fr;
+  }
+
+  .seacrew-card.collapsed .seacrew-card-media {
+    height: 240px;
+  }
+
+  .seacrew-card.expanded .seacrew-card-media,
+  .seacrew-slide-frame {
+    height: 300px;
+  }
+}
+
+/* Dark mode adjustments */
+body.dark-mode .seacrew-card {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+body.dark-mode .seacrew-card:hover {
+  background-color: var(--card-hover) !important;
+}
+
+body.dark-mode .seacrew-card-media {
+  background-color: var(--card-bg) !important;
+}
+
+body.dark-mode .seacrew-card-media img {
+  background-color: var(--card-bg) !important;
+}
+
+body.dark-mode .seacrew-card-body p,
+body.dark-mode .seacrew-card-languages {
+  color: var(--text-muted) !important;
+}
+
+body.dark-mode .seacrew-card-name {
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .seacrew-card-title {
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .seacrew-card-detailLabel {
+  color: rgba(219, 234, 244, 0.62) !important;
+}
+
+body.dark-mode .seacrew-card-detailValue {
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .seacrew-chat-btn {
+  color: #e6fffb;
+}
+
+body.dark-mode .seacrew-tab {
+  background: rgba(255,255,255,0.03) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .seacrew-tab.active {
+  background: var(--primary-color) !important;
+  color: var(--bg-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+body.dark-mode .seacrew-empty {
+  color: var(--text-muted) !important;
+}

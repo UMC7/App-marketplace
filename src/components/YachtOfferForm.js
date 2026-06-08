@@ -42,6 +42,7 @@ import {
   getDeckDocumentOptionsForRank,
   isPrimaryLicenseAllowedForRank,
   isEngineeringLicenseAllowedForRank,
+  normalizeDeckLicenseValue,
 } from './yachtOfferForm.utils';
 
 const BASE_REQUIRED_DOCUMENTS = ['ENG1 Seafarer Medical Certificate', 'STCW Basic Training (A-VI/1)'];
@@ -206,7 +207,7 @@ useEffect(() => {
 
 useEffect(() => {
   if (!Array.isArray(initialValues?.required_licenses)) return;
-  const initialLicense = initialValues.required_licenses[0] || '';
+  const initialLicense = normalizeDeckLicenseValue(initialValues.required_licenses[0] || '');
   setFormData(prev => ({
     ...prev,
     required_license: isPrimaryLicenseAllowedForRank(initialValues.title, initialLicense)
@@ -276,7 +277,7 @@ useEffect(() => {
   const td = initialValues.teammate_required_documents;
   setFormData(prev => ({
     ...prev,
-    ...(Array.isArray(tr) && tr[0] != null && { teammate_required_license: tr[0] }),
+    ...(Array.isArray(tr) && tr[0] != null && { teammate_required_license: normalizeDeckLicenseValue(tr[0]) }),
     ...(Array.isArray(te) && te[0] != null && { teammate_engineering_license: te[0] }),
     ...(Array.isArray(td) && { teammate_required_documents: td }),
   }));
@@ -428,7 +429,9 @@ const autoFillFromText = async () => {
       }
 
       const normalizedTitle = merged.title || normalizeTitle(data.rank);
-      const parsedRequiredLicense = typeof data.required_license === 'string' ? data.required_license.trim() : '';
+      const parsedRequiredLicense = normalizeDeckLicenseValue(
+        typeof data.required_license === 'string' ? data.required_license.trim() : ''
+      );
       const isParsedRequiredLicenseAllowed = isPrimaryLicenseAllowedForRank(normalizedTitle, parsedRequiredLicense);
 
       if (!merged.required_license && isParsedRequiredLicenseAllowed) {
@@ -973,10 +976,12 @@ const startDateMonthOnly = !!start_month && !start_day;
 const endDateMonthOnly = !!end_month && !end_day;
 const startDayRange = isDayRangeValue(start_day) ? String(start_day).toLowerCase() : null;
 const endDayRange = isDayRangeValue(end_day) ? String(end_day).toLowerCase() : null;
-const requiredLicenses = required_license ? [required_license] : [];
+const normalizedRequiredLicense = normalizeDeckLicenseValue(required_license);
+const normalizedTeammateRequiredLicense = normalizeDeckLicenseValue(formData.teammate_required_license);
+const requiredLicenses = normalizedRequiredLicense ? [normalizedRequiredLicense] : [];
 const engineeringLicensesArray = engineering_license ? [engineering_license] : [];
 const sanitizedRequiredLicenses =
-  isPrimaryLicenseAllowedForRank(formData.title, required_license)
+  isPrimaryLicenseAllowedForRank(formData.title, normalizedRequiredLicense)
     ? requiredLicenses
     : [];
 const sanitizedEngineeringLicenses =
@@ -1041,8 +1046,8 @@ const derivedEndDate = (() => {
       ? Number(formData.teammate_experience)
       : null,
     teammate_required_licenses:
-      formData.team === 'Yes' && isPrimaryLicenseAllowedForRank(formData.teammate_rank, formData.teammate_required_license)
-        ? [formData.teammate_required_license]
+      formData.team === 'Yes' && isPrimaryLicenseAllowedForRank(formData.teammate_rank, normalizedTeammateRequiredLicense)
+        ? [normalizedTeammateRequiredLicense]
         : [],
     teammate_required_engineering_licenses:
       formData.team === 'Yes' && isEngineeringLicenseAllowedForRank(formData.teammate_rank, formData.teammate_engineering_license)

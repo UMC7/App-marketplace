@@ -349,11 +349,13 @@ function UsersTab({ currentUser }) {
             const origin = typeof window !== 'undefined' ? window.location.origin : '';
             const handle = String(profile?.handle || '').trim();
             const shareReady = profile?.share_ready === true;
-            const hasPublicCv = shareReady && Boolean(handle);
+            const liteProgress = calculateProfileProgressPercent(liteSections);
+            const professionalProgress = calculateProfileProgressPercent(professionalSections);
+            const hasPublicCv = shareReady && Boolean(handle) && liteProgress === 100;
 
             return [String(u.id), {
-              lite_progress: calculateProfileProgressPercent(liteSections),
-              professional_progress: calculateProfileProgressPercent(professionalSections),
+              lite_progress: liteProgress,
+              professional_progress: professionalProgress,
               cv_public_status: hasPublicCv ? 'Ready' : 'Incomplete',
               cv_link: hasPublicCv ? `${origin}/cv/${handle}` : '',
             }];

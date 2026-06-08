@@ -209,10 +209,15 @@ export function normalizeTitleToEnglish(raw, contextText = "") {
     },
     {
       match: /(master\s*of\s*yachts?\s*limited.*500|yacht\s*master.*500|patr[o¢]n.*500)/i,
+      label: "Master 500 GT (Yachts) CoC",
+    },
+    {
+      match: /(oow\s*\(?(yachts?)?\)?\s*500\s*gt|officer\s*of\s*the\s*watch.*500\s*gt)/i,
+      label: "OOW 500 GT (Yachts) CoC",
     },
     {
       match: /(master\s*of\s*yachts?|yacht\s*master|yachtmaster|patr[o¢]n\s*de\s*yate)/i,
-      label: "Yacht Master",
+      label: "Yachtmaster Offshore (RYA/MCA)",
     },
 
     // ENG1

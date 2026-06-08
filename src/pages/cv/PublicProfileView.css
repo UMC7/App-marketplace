@@ -25,6 +25,75 @@ body.dark-mode .ppv-previewRibbon {
   color: var(--text-color, #f5f5f5);
 }
 
+.ppv-seacrewPreviewSection {
+  width: 100%;
+  margin: 0 0 18px;
+}
+
+.ppv-seacrewPreviewInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ppv-seacrewPreviewHeading {
+  width: 100%;
+  color: var(--text-color, #f5f5f5);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+
+.ppv-seacrewPreviewCardWrap {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  --ppv-card-control-border: rgba(255, 255, 255, 0.2);
+  --ppv-card-control-bg: rgba(172, 172, 172, 0.48);
+  --ppv-card-control-bg-hover: rgba(186, 186, 186, 0.56);
+  --ppv-card-control-text: rgba(247, 251, 255, 0.96);
+  --ppv-card-control-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --ppv-card-control-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.ppv-seacrewPreviewCardWrap--light {
+  --ppv-card-control-border: rgba(8, 26, 59, 0.12);
+  --ppv-card-control-bg: rgba(255, 255, 255, 0.88);
+  --ppv-card-control-bg-hover: rgba(240, 247, 247, 0.98);
+  --ppv-card-control-text: #0f2746;
+  --ppv-card-control-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --ppv-card-control-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.ppv-seacrewPreviewAction {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 6;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+.ppv-seacrewPreviewSection .seacrew-card {
+  margin: 0;
+  width: 100%;
+  max-width: 360px;
+}
+
+@media (max-width: 620px) {
+  .ppv-seacrewPreviewAction {
+    top: 10px;
+    right: 10px;
+  }
+
+  .ppv-seacrewPreviewCardWrap,
+  .ppv-seacrewPreviewSection .seacrew-card {
+    max-width: none;
+  }
+}
+
 .ppv-header {
   display: flex !important;
   justify-content: center;
@@ -254,7 +323,11 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardThe
 .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction,
 body.dark-mode .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction,
 :root[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction,
-html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction {
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction,
+.ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction,
+body.dark-mode .ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction,
+:root[data-theme='dark'] .ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction,
+html[data-theme='dark'] .ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction {
   width: auto !important;
   min-width: 0 !important;
   display: inline-flex !important;
@@ -278,7 +351,11 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAct
 .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled),
 body.dark-mode .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled),
 :root[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled),
-html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled) {
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:hover:not(:disabled),
+.ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction:hover:not(:disabled),
+body.dark-mode .ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction:hover:not(:disabled),
+:root[data-theme='dark'] .ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction:hover:not(:disabled),
+html[data-theme='dark'] .ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction:hover:not(:disabled) {
   background: var(--ppv-card-control-bg-hover) !important;
   border-color: var(--ppv-card-control-border) !important;
   color: var(--ppv-card-control-text) !important;
@@ -289,7 +366,11 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAct
 .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:disabled,
 body.dark-mode .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:disabled,
 :root[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:disabled,
-html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:disabled {
+html[data-theme='dark'] .ppv-wrap .ppv-businessCardControls .ppv-businessCardAction:disabled,
+.ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction:disabled,
+body.dark-mode .ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction:disabled,
+:root[data-theme='dark'] .ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction:disabled,
+html[data-theme='dark'] .ppv-wrap .ppv-seacrewPreviewCardWrap .ppv-businessCardAction:disabled {
   opacity: 0.7;
   cursor: wait;
 }

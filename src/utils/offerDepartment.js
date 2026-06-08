@@ -18,7 +18,7 @@ const getOfferDepartmentFromTitle = (offer) => {
   if (workEnv === 'shore-based') return 'Shore-based';
 
   if ([
-    'captain', 'captain/engineer', 'skipper', 'chase boat captain', 'relief captain', 'chief officer',
+    'captain', 'captain/engineer', 'skipper', 'chase boat captain', 'relief captain', 'chief officer', 'oow',
     '2nd officer', '3rd officer', 'bosun', 'deck/engineer', 'mate', 'lead deckhand', 'deckhand',
     'deck/steward(ess)', 'deck/carpenter', 'deck/divemaster'
   ].some(role => title.includes(role))) return 'Deck';
@@ -34,7 +34,7 @@ const getOfferDepartmentFromTitle = (offer) => {
   if ([
     'chief steward(ess)', '2nd steward(ess)', '2nd stewardess', '3rd steward(ess)', '3rd stewardess',
     '4th steward(ess)', '4th stewardess', 'steward(ess)', 'stewardess', 'steward', 'solo steward(ess)',
-    'junior steward(ess)', 'stew/deck', 'laundry/steward(ess)', 'stew/masseur',
+    'junior steward(ess)', 'stew/deck', 'laundry/steward(ess)', 'stew/masseur', 'stew/personal trainer',
     'masseur', 'hairdresser', 'barber', 'butler', 'housekeeper', 'head of housekeeping', 'cook/stew/deck'
   ].some(role => title.includes(role))) return 'Interior';
 

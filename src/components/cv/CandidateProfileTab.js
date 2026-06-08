@@ -25,73 +25,7 @@ import LifestyleHabitsSection from './candidate/cvsections/LifestyleHabitsSectio
 import Modal from '../Modal';
 import { hasValidAvailability } from '../../utils/availability';
 import { buildCandidateProfileProgressSections } from './progress/candidateProfileProgressData';
-
-function hasLanguagesWithLevel(languageLevels) {
-  if (!Array.isArray(languageLevels)) return false;
-  return languageLevels.some(ll => ll && ll.lang && String(ll.lang).trim() && ll.level && String(ll.level).trim());
-}
-
-function hasDeptSkills(deptSpecialties) {
-  if (!Array.isArray(deptSpecialties)) return false;
-  return deptSpecialties.some(it => {
-    if (!it) return false;
-    if (typeof it === 'string') return String(it).trim().length > 0;
-    const deptOk = !!(it.department || it.dept || it.name);
-    const skillsArr = it.skills || it.items || it.list || [];
-    const skillsOk = Array.isArray(skillsArr) ? skillsArr.length > 0 : false;
-    return deptOk && skillsOk;
-  });
-}
-
-function allDocFlagsSelected(docFlags) {
-  if (!docFlags || typeof docFlags !== 'object') return false;
-  const keys = [
-    'passport6m','schengenVisa','stcwBasic','seamansBook','eng1',
-    'usVisa','drivingLicense','pdsd','covidVaccine'
-  ];
-  return keys.every((k) => {
-    if (k === 'schengenVisa') {
-      return docFlags[k] === true || docFlags[k] === false || docFlags[k] === 'resident';
-    }
-    if (k === 'usVisa') {
-      return docFlags[k] === true || docFlags[k] === false || docFlags[k] === 'green_card';
-    }
-    return typeof docFlags[k] === 'boolean';
-  });
-}
-
-function docsMeetMin(docs) {
-  if (!Array.isArray(docs) || docs.length < 3) return false;
-  let valid = 0;
-  for (const d of docs) {
-    const titleOk = !!String(d?.title || '').trim();
-    const issuedOk = !!String(d?.issuedOn || '').trim();
-    const expiryOk = true;
-    const visOk = !!String(d?.visibility || 'unlisted').trim();
-    if (titleOk && issuedOk && expiryOk && visOk) valid++;
-    if (valid >= 3) return true;
-  }
-  return false;
-}
-
-function personalMeetsMin(p) {
-  if (!p) return false;
-  const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(p.email_public || '').trim());
-  const phoneCcOk = String(p.phone_cc || '').replace(/\D/g, '').length > 0;
-  const phoneNumOk = String(p.phone_number || '').trim().length > 0;
-  const natsOk = Array.isArray(p.nationalities) && p.nationalities.length > 0;
-  return Boolean(
-    String(p.first_name || '').trim() &&
-    String(p.last_name || '').trim() &&
-    emailOk &&
-    phoneCcOk && phoneNumOk &&
-    p.country &&
-    String(p.city_port || '').trim() &&
-    p.birth_month &&
-    p.birth_year &&
-    natsOk
-  );
-}
+import { calculateProfileProgressPercent } from './progress/profileProgress';
 
 const CANDIDATE_PROFILE_MODAL_KEY = 'seajobs_candidate_profile_modal_seen';
 const CANDIDATE_PROFILE_MODAL_DELAY_MS = 5000;
@@ -859,7 +793,7 @@ useEffect(() => {
   };
 
   const handlePreview = () => {
-    if (!publicUrl) return;
+    if (!publicUrl || !isShareReady) return;
     const isMobile = window.innerWidth <= 720;
     if (isMobile) {
       window.location.href = `${publicUrl}?preview=1`;
@@ -1447,9 +1381,6 @@ const generateShortHandle = () => {
   const showOptional = !isLite;
   const deptRanksSaveDisabled = saving || !deptRanksDirty;
 
-const galleryImagesCount = Array.isArray(gallery)
-  ? gallery.filter((it) => (it?.type || inferTypeByName(it?.name || it?.path || it?.url || '')) === 'image').length
-  : 0;
 const hasUnlimitedMedia = !!(profile?.user_id && UNLIMITED_MEDIA_USER_IDS.has(profile.user_id));
 
 const galleryDirty = useMemo(() => {
@@ -1479,63 +1410,37 @@ const progressSections = buildCandidateProfileProgressSections({
   professionalPrefs: prefsProCache || {},
 }).activeSections;
 
+const liteProgressSections = buildCandidateProfileProgressSections({
+  mode: 'lite',
+  profile,
+  personal,
+  primaryDepartment,
+  primaryRank,
+  expCount,
+  aboutMe: profile?.about_me,
+  docs,
+  educationCount,
+  refsCount,
+  gallery,
+  litePrefs: {
+    status,
+    availability,
+    languageLevels,
+    deptSpecialties,
+    lifestyleHabits,
+    docFlags,
+  },
+  professionalPrefs: prefsProCache || {},
+}).activeSections;
+
+const liteProgressPercent = calculateProfileProgressPercent(liteProgressSections);
+
   const prefsSkillsSaveDisabled = saving || !prefsSkillsDirty;
 
-  const liteSnapshot = isLite
-    ? {
-        status,
-        availability,
-        languageLevels,
-        deptSpecialties,
-        lifestyleHabits,
-        docFlags,
-      }
-    : (prefsLiteCache || {});
-
-  const meetsLifestyleMin =
-  !!(liteSnapshot?.lifestyleHabits?.tattoosVisible && String(liteSnapshot.lifestyleHabits.tattoosVisible).trim()) &&
-  !!(liteSnapshot?.lifestyleHabits?.drugTestWilling && String(liteSnapshot.lifestyleHabits.drugTestWilling).trim()) &&
-  !!(liteSnapshot?.lifestyleHabits?.smoking && String(liteSnapshot.lifestyleHabits.smoking).trim()) &&
-  !!(liteSnapshot?.lifestyleHabits?.vaping && String(liteSnapshot.lifestyleHabits.vaping).trim()) &&
-  !!(liteSnapshot?.lifestyleHabits?.alcohol && String(liteSnapshot.lifestyleHabits.alcohol).trim()) &&
-  Array.isArray(liteSnapshot?.lifestyleHabits?.dietaryAllergies) && liteSnapshot.lifestyleHabits.dietaryAllergies.length > 0 &&
-  !!(liteSnapshot?.lifestyleHabits?.fitness && String(liteSnapshot.lifestyleHabits.fitness).trim());
-
   const lifestyleSaveDisabled = saving || !lifestyleDirty;
-
-  const meetsMediaMin = galleryImagesCount >= 3;
   const gallerySaveDisabled = savingGallery || !galleryDirty || !canEdit;
 
-  const meetsAboutMin = !!(profile?.about_me && String(profile.about_me).trim());
-
-  const meetsPrefsSkillsMin =
-    !!(liteSnapshot?.status && String(liteSnapshot.status).trim()) &&
-    hasValidAvailability(liteSnapshot?.availability) &&
-    hasLanguagesWithLevel(liteSnapshot?.languageLevels) &&
-    hasDeptSkills(liteSnapshot?.deptSpecialties);
-
-  const meetsExperienceMin = Number(expCount || 0) >= 1;
-
-  const meetsEducationMin = Number(educationCount || 0) >= 1;
-
-  const meetsDocumentsMin = docsMeetMin(docs) && allDocFlagsSelected(liteSnapshot?.docFlags || {});
-
-  const meetsReferencesMin = Number(refsCount || 0) >= 1;
-
-  const meetsPersonalMin = personalMeetsMin(personal);
-
-  const isShareReady = Boolean(
-    meetsPersonalMin &&
-    hasDeptRanks &&
-    meetsExperienceMin &&
-    meetsAboutMin &&
-    meetsPrefsSkillsMin &&
-    meetsLifestyleMin &&
-    meetsEducationMin &&
-    meetsDocumentsMin &&
-    meetsReferencesMin &&
-    meetsMediaMin
-  );
+  const isShareReady = liteProgressPercent === 100;
 
   useEffect(() => {
     if (isAdminView) return;
@@ -1669,8 +1574,14 @@ const progressSections = buildCandidateProfileProgressSections({
               className="cp-btn"
               type="button"
               onClick={handlePreview}
-              disabled={!publicUrl || saving}
-              title={!publicUrl ? 'Link not generated yet' : undefined}
+              disabled={!publicUrl || saving || !isShareReady}
+              title={
+                !publicUrl
+                  ? 'Link not generated yet'
+                  : !isShareReady
+                  ? 'Complete Lite to 100% to enable preview'
+                  : undefined
+              }
             >
               Preview
             </button>

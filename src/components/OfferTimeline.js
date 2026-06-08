@@ -7,6 +7,7 @@ import {
   formatOfferDate,
   isPrimaryLicenseAllowedForRank,
   isEngineeringLicenseAllowedForRank,
+  normalizeDeckLicenseValue,
 } from './yachtOfferForm.utils';
 import { isOfferClosed } from '../utils/jobOfferVisibility';
 
@@ -50,7 +51,7 @@ const getRoleImage = (title) => {
   const lowerTitle = title.toLowerCase();
 
   if ([
-    'captain', 'captain/engineer', 'skipper', 'chase boat captain', 'relief captain', 'chief officer', '2nd officer', '3rd officer', 'bosun', 'deck/engineer', 'mate', 'lead deckhand', 'deckhand', 'deck/steward(ess)', 'deck/carpenter', 'deck/divemaster'
+    'captain', 'captain/engineer', 'skipper', 'chase boat captain', 'relief captain', 'chief officer', 'oow', '2nd officer', '3rd officer', 'bosun', 'deck/engineer', 'mate', 'lead deckhand', 'deckhand', 'deck/steward(ess)', 'deck/carpenter', 'deck/divemaster'
   ].some(role => lowerTitle.includes(role))) return 'deckdepartment';
 
   if ([
@@ -63,7 +64,7 @@ const getRoleImage = (title) => {
   if ([
     'chief steward(ess)', '2nd steward(ess)', '2nd stewardess', '3rd steward(ess)', '3rd stewardess',
     '4th steward(ess)', '4th stewardess', 'steward(ess)', 'stewardess', 'steward', 'solo steward(ess)',
-    'junior steward(ess)', 'stew/deck', 'laundry/steward(ess)', 'stew/masseur',
+    'junior steward(ess)', 'stew/deck', 'laundry/steward(ess)', 'stew/masseur', 'stew/personal trainer',
     'masseur', 'hairdresser', 'barber', 'butler', 'housekeeper', 'head of housekeeping', 'cook/stew/deck'
   ].some(role => lowerTitle.includes(role))) return 'interiordepartment';
 
@@ -158,13 +159,17 @@ const OfferTimeline = ({
                     const teammateScore = Number(String(offer.match_teammate_score).replace('%','')) || 0;
                     const rank1DeckLicRaw = Array.isArray(offer.required_licenses) && offer.required_licenses[0] ? offer.required_licenses[0] : null;
                     const rank1EngineLicRaw = Array.isArray(offer.required_engineering_licenses) && offer.required_engineering_licenses[0] ? offer.required_engineering_licenses[0] : null;
-                    const rank1DeckLic = isPrimaryLicenseAllowedForRank(offer.title, rank1DeckLicRaw) ? rank1DeckLicRaw : null;
+                    const rank1DeckLic = isPrimaryLicenseAllowedForRank(offer.title, rank1DeckLicRaw)
+                      ? normalizeDeckLicenseValue(rank1DeckLicRaw)
+                      : null;
                     const rank1EngineLic = isEngineeringLicenseAllowedForRank(offer.title, rank1EngineLicRaw) ? rank1EngineLicRaw : null;
                     const rank1DocsRaw = Array.isArray(offer.required_documents) ? offer.required_documents : (typeof offer.required_documents === 'string' ? offer.required_documents.split(',').map((d) => d.trim()).filter(Boolean) : []);
                     const rank1DocsOnly = rank1DocsRaw.filter((doc) => doc !== rank1DeckLic && doc !== rank1EngineLic);
                     const rank2DeckLicRaw = Array.isArray(offer.teammate_required_licenses) && offer.teammate_required_licenses[0] ? offer.teammate_required_licenses[0] : null;
                     const rank2EngineLicRaw = Array.isArray(offer.teammate_required_engineering_licenses) && offer.teammate_required_engineering_licenses[0] ? offer.teammate_required_engineering_licenses[0] : null;
-                    const rank2DeckLic = isPrimaryLicenseAllowedForRank(offer.teammate_rank, rank2DeckLicRaw) ? rank2DeckLicRaw : null;
+                    const rank2DeckLic = isPrimaryLicenseAllowedForRank(offer.teammate_rank, rank2DeckLicRaw)
+                      ? normalizeDeckLicenseValue(rank2DeckLicRaw)
+                      : null;
                     const rank2EngineLic = isEngineeringLicenseAllowedForRank(offer.teammate_rank, rank2EngineLicRaw) ? rank2EngineLicRaw : null;
                     const rank2DocsRaw = Array.isArray(offer.teammate_required_documents) ? offer.teammate_required_documents : [];
                     const rank2DocsOnly = rank2DocsRaw.filter((doc) => doc !== rank2DeckLic && doc !== rank2EngineLic);

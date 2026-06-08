@@ -61,6 +61,7 @@ export const RANKS_BY_DEPT = {
     "Stew/Nurse",
     "Stew/Masseur",
     "Stew/Yoga Instructor",
+    "Stew/Personal Trainer",
     "Steward(ess)/Nanny",
     "Chef/Stew/Deck",
     "Cook/Stew/Deck",

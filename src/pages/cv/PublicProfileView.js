@@ -14,6 +14,7 @@ import PublicEducationSection from './sections/education';
 import PublicContactDetailsSection from './sections/contact';
 import PublicCoverLetterSection from './sections/coverletter/PublicCoverLetterSection';
 import PublicProfileBusinessCard from './PublicProfileBusinessCard';
+import PublicProfileSeaCrewCard from './PublicProfileSeaCrewCard';
 import useEmitProfileView from '../../hooks/useEmitProfileView';
 import { formatAvailability, hasValidAvailability } from '../../utils/availability';
 import { toast } from 'react-toastify';
@@ -55,6 +56,16 @@ const UNLIMITED_MEDIA_USER_IDS = new Set([
   'dc3c4ca6-e892-4c25-891f-287f43f9c182',
   '377caa8a-95ee-4959-adad-c9af2eae2171',
 ]);
+
+function getProfileUserLookupKeys(profile) {
+  return [
+    profile?.user_id,
+    profile?.owner_user_id,
+    profile?.id,
+  ]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+}
 
 function dateRange(aY, aM, bY, bM, isCurrent) {
   const a = fmtYM(aY, aM);
@@ -147,6 +158,8 @@ export default function PublicProfileView() {
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
   const [cardExportBusy, setCardExportBusy] = useState('');
   const [businessCardTheme, setBusinessCardTheme] = useState('light');
+  const [seaCrewVisibilityBusy, setSeaCrewVisibilityBusy] = useState(false);
+  const [userNickname, setUserNickname] = useState('');
   const displayName = useMemo(() => {
     const full = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
     return full || profile?.headline || 'Yacht Candidate';
@@ -205,6 +218,55 @@ export default function PublicProfileView() {
   const businessCardNameClassName = displayNameLayout.businessCardNameClassName;
   const introHeight = displayNameLayout.introHeight;
   const introMetaTop = displayNameLayout.introMetaTop;
+
+  useEffect(() => {
+    setUserNickname('');
+  }, [profile?.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadNickname() {
+      const inlineNickname = String(profile?.nickname || profile?.userNickname || '').trim();
+      if (inlineNickname) {
+        setUserNickname(inlineNickname);
+        return;
+      }
+
+      const userIds = Array.from(new Set(getProfileUserLookupKeys(profile)));
+      if (!userIds.length) return;
+
+      try {
+        const { data: userRows, error: usersError } = await supabase
+          .from('users')
+          .select('id, nickname')
+          .in('id', userIds);
+
+        if (usersError) {
+          console.warn('SeaCrew preview nickname lookup failed:', usersError);
+          return;
+        }
+
+        if (cancelled) return;
+
+        const nicknameMap = new Map(
+          (userRows || []).map((row) => [String(row.id || '').trim(), String(row.nickname || '').trim()])
+        );
+        const nickname =
+          userIds
+            .map((id) => nicknameMap.get(id) || '')
+            .find((value) => value) || '';
+        setUserNickname(nickname);
+      } catch (nicknameError) {
+        console.warn('SeaCrew preview nickname lookup failed:', nicknameError);
+      }
+    }
+
+    if (profile) loadNickname();
+    return () => {
+      cancelled = true;
+    };
+  }, [profile]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -710,16 +772,66 @@ export default function PublicProfileView() {
     return `${x}% ${y}%`;
   }, [heroMedia?.coverPositionX, heroMedia?.coverPositionY]);
 
-  const canShareDigitalCv = profile?.share_ready === true;
   const publicUrl = useMemo(() => {
-    if (!canShareDigitalCv) return '';
     if (!profile?.public_qr_id && !profile?.handle) return '';
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     if (profile?.public_qr_id) {
       return `${origin}/cv/qr/${profile.public_qr_id}`;
     }
     return `${origin}/cv/${profile.handle}`;
-  }, [canShareDigitalCv, profile?.handle, profile?.public_qr_id]);
+  }, [profile?.handle, profile?.public_qr_id]);
+  const docFlags = useMemo(() => {
+    const ps = profile?.prefs_skills && typeof profile.prefs_skills === 'object' ? profile.prefs_skills : {};
+    return (ps && typeof ps.docFlags === 'object') ? ps.docFlags : {};
+  }, [profile?.prefs_skills]);
+  const isShareReadyByData = useMemo(() => {
+    if (!profile) return false;
+    const ps = profile?.prefs_skills && typeof profile.prefs_skills === 'object' ? profile.prefs_skills : {};
+    const languageLevels = Array.isArray(ps.languageLevels) ? ps.languageLevels : (profile?.languages || []);
+    const deptSpecialties = Array.isArray(ps.deptSpecialties) ? ps.deptSpecialties : (profile?.skills || []);
+    const lifestyleHabits = ps?.lifestyleHabits && typeof ps.lifestyleHabits === 'object' ? ps.lifestyleHabits : {};
+
+    const meetsPersonalMin = personalMeetsMin(profile);
+    const meetsDeptRanks = !!(profile?.primary_department && profile?.primary_role);
+    const meetsExperienceMin = Array.isArray(experiences) && experiences.length > 0;
+    const meetsAboutMin =
+      !!(profile?.about_me && String(profile.about_me).trim()) ||
+      !!(profile?.professional_statement && String(profile.professional_statement).trim());
+    const meetsPrefsSkillsMin =
+      !!(ps?.status && String(ps.status).trim()) &&
+      hasValidAvailability(ps?.availability) &&
+      hasLanguagesWithLevel(languageLevels) &&
+      hasDeptSkills(deptSpecialties);
+    const meetsLifestyleMin =
+      !!(lifestyleHabits?.tattoosVisible && String(lifestyleHabits.tattoosVisible).trim()) &&
+      !!(lifestyleHabits?.drugTestWilling && String(lifestyleHabits.drugTestWilling).trim()) &&
+      !!(lifestyleHabits?.smoking && String(lifestyleHabits.smoking).trim()) &&
+      !!(lifestyleHabits?.vaping && String(lifestyleHabits.vaping).trim()) &&
+      !!(lifestyleHabits?.alcohol && String(lifestyleHabits.alcohol).trim()) &&
+      Array.isArray(lifestyleHabits?.dietaryAllergies) && lifestyleHabits.dietaryAllergies.length > 0 &&
+      !!(lifestyleHabits?.fitness && String(lifestyleHabits.fitness).trim());
+    const meetsEducationMin = Array.isArray(education) && education.length > 0;
+    const meetsDocumentsMin = docsMeetMin(documents) && allDocFlagsSelected(docFlags);
+    const meetsReferencesMin = Array.isArray(references) && references.length > 0;
+    const galleryImagesCount = Array.isArray(gallery)
+      ? gallery.filter((it) => (it?.type || inferTypeByName(it?.name || it?.path || it?.url || '')) === 'image').length
+      : 0;
+    const meetsMediaMin = galleryImagesCount >= 3;
+
+    return Boolean(
+      meetsPersonalMin &&
+      meetsDeptRanks &&
+      meetsExperienceMin &&
+      meetsAboutMin &&
+      meetsPrefsSkillsMin &&
+      meetsLifestyleMin &&
+      meetsEducationMin &&
+      meetsDocumentsMin &&
+      meetsReferencesMin &&
+      meetsMediaMin
+    );
+  }, [profile, experiences, documents, references, education, gallery, docFlags]);
+  const canShareDigitalCv = profile?.share_ready === true && isShareReadyByData;
   const businessCardPhone = useMemo(() => {
     const ccRaw = String(profile?.phone_cc || '').trim();
     const numberRaw = String(profile?.phone_number || '').trim();
@@ -741,6 +853,71 @@ export default function PublicProfileView() {
     () => `ppv-businessCard ppv-businessCard--${businessCardTheme}`,
     [businessCardTheme]
   );
+  const isSeaCrewCardVisible = useMemo(
+    () => (profile?.visibility_settings?.show_in_seacrew ?? true) === true,
+    [profile?.visibility_settings]
+  );
+  const seaCrewPreviewProfile = useMemo(() => ({
+    ...profile,
+    photo_url: heroSrc || profile?.photo_url || '',
+    city: profile?.city || profile?.city_port || '',
+    city_port: profile?.city_port || profile?.city || '',
+    userNickname,
+    displayName,
+    yachtingMonths,
+    employmentStatus,
+    availability: profile?.availability || '',
+    prefs_skills_lite: {
+      ...(profile?.prefs_skills_lite && typeof profile.prefs_skills_lite === 'object' ? profile.prefs_skills_lite : {}),
+      status: employmentStatus || profile?.prefs_skills_lite?.status || profile?.prefs_skills?.status || '',
+      availability: profile?.availability || profile?.prefs_skills_lite?.availability || profile?.prefs_skills?.availability || '',
+      rank: rankText || profile?.prefs_skills_lite?.rank || profile?.prefs_skills?.rank || '',
+    },
+    gallery,
+  }), [
+    displayName,
+    employmentStatus,
+    gallery,
+    heroSrc,
+    profile,
+    rankText,
+    userNickname,
+    yachtingMonths,
+  ]);
+  const toggleSeaCrewCardVisibility = useCallback(async () => {
+    if (!isPreview || !profile?.id || seaCrewVisibilityBusy) return;
+
+    const nextVisible = !isSeaCrewCardVisible;
+    const nextVisibilitySettings = {
+      ...(profile?.visibility_settings && typeof profile.visibility_settings === 'object' ? profile.visibility_settings : {}),
+      show_in_seacrew: nextVisible,
+    };
+
+    setSeaCrewVisibilityBusy(true);
+    try {
+      const { data, error } = await supabase
+        .from('public_profiles')
+        .update({
+          visibility_settings: nextVisibilitySettings,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile.id)
+        .select('visibility_settings')
+        .single();
+
+      if (error) throw error;
+
+      setProfile((prev) => ({
+        ...prev,
+        visibility_settings: data?.visibility_settings || nextVisibilitySettings,
+      }));
+      toast.success(nextVisible ? 'SeaCrew card enabled.' : 'SeaCrew card hidden.');
+    } catch (e) {
+      toast.error(e?.message || 'Could not update SeaCrew card visibility.');
+    } finally {
+      setSeaCrewVisibilityBusy(false);
+    }
+  }, [isPreview, isSeaCrewCardVisible, profile, seaCrewVisibilityBusy]);
   const businessCardBodyProps = useMemo(() => ({
     businessCardEmail,
     businessCardLocation,
@@ -984,61 +1161,8 @@ function computeScrollTargetTop(el, extra = 12) {
     return heroSrc ? { ['--ppv-photo-url']: `url("${heroSrc}")` } : {};
   }, [heroSrc]);
 
-  const docFlags = useMemo(() => {
-    const ps = profile?.prefs_skills && typeof profile.prefs_skills === 'object' ? profile.prefs_skills : {};
-    return (ps && typeof ps.docFlags === 'object') ? ps.docFlags : {};
-  }, [profile?.prefs_skills]);
-
-  const isShareReadyByData = useMemo(() => {
-    if (!profile) return false;
-    const ps = profile?.prefs_skills && typeof profile.prefs_skills === 'object' ? profile.prefs_skills : {};
-    const languageLevels = Array.isArray(ps.languageLevels) ? ps.languageLevels : (profile?.languages || []);
-    const deptSpecialties = Array.isArray(ps.deptSpecialties) ? ps.deptSpecialties : (profile?.skills || []);
-    const lifestyleHabits = ps?.lifestyleHabits && typeof ps.lifestyleHabits === 'object' ? ps.lifestyleHabits : {};
-
-    const meetsPersonalMin = personalMeetsMin(profile);
-    const meetsDeptRanks = !!(profile?.primary_department && profile?.primary_role);
-    const meetsExperienceMin = Array.isArray(experiences) && experiences.length > 0;
-    const meetsAboutMin =
-      !!(profile?.about_me && String(profile.about_me).trim()) ||
-      !!(profile?.professional_statement && String(profile.professional_statement).trim());
-    const meetsPrefsSkillsMin =
-      !!(ps?.status && String(ps.status).trim()) &&
-      hasValidAvailability(ps?.availability) &&
-      hasLanguagesWithLevel(languageLevels) &&
-      hasDeptSkills(deptSpecialties);
-    const meetsLifestyleMin =
-      !!(lifestyleHabits?.tattoosVisible && String(lifestyleHabits.tattoosVisible).trim()) &&
-      !!(lifestyleHabits?.drugTestWilling && String(lifestyleHabits.drugTestWilling).trim()) &&
-      !!(lifestyleHabits?.smoking && String(lifestyleHabits.smoking).trim()) &&
-      !!(lifestyleHabits?.vaping && String(lifestyleHabits.vaping).trim()) &&
-      !!(lifestyleHabits?.alcohol && String(lifestyleHabits.alcohol).trim()) &&
-      Array.isArray(lifestyleHabits?.dietaryAllergies) && lifestyleHabits.dietaryAllergies.length > 0 &&
-      !!(lifestyleHabits?.fitness && String(lifestyleHabits.fitness).trim());
-    const meetsEducationMin = Array.isArray(education) && education.length > 0;
-    const meetsDocumentsMin = docsMeetMin(documents) && allDocFlagsSelected(docFlags);
-    const meetsReferencesMin = Array.isArray(references) && references.length > 0;
-    const galleryImagesCount = Array.isArray(gallery)
-      ? gallery.filter((it) => (it?.type || inferTypeByName(it?.name || it?.path || it?.url || '')) === 'image').length
-      : 0;
-    const meetsMediaMin = galleryImagesCount >= 3;
-
-    return Boolean(
-      meetsPersonalMin &&
-      meetsDeptRanks &&
-      meetsExperienceMin &&
-      meetsAboutMin &&
-      meetsPrefsSkillsMin &&
-      meetsLifestyleMin &&
-      meetsEducationMin &&
-      meetsDocumentsMin &&
-      meetsReferencesMin &&
-      meetsMediaMin
-    );
-  }, [profile, experiences, documents, references, education, gallery, docFlags]);
-
   const allowPublicView = useMemo(
-    () => isPreview || (profile?.share_ready === true) || isShareReadyByData,
+    () => isPreview || (profile?.share_ready === true && isShareReadyByData),
     [isPreview, profile?.share_ready, isShareReadyByData]
   );
   const publicMediaMaxItems = useMemo(() => {
@@ -1113,25 +1237,52 @@ if (!allowPublicView && !isPreview) {
 
       {/* Header (solo en modo Preview) */}
       {isPreview && (
-        <PublicProfileBusinessCard
-          baseBusinessCardHeight={BASE_BUSINESS_CARD_HEIGHT}
-          businessCardBodyProps={businessCardBodyProps}
-          businessCardExportRef={businessCardExportRef}
-          businessCardRef={businessCardRef}
-          businessCardRootClassName={businessCardRootClassName}
-          businessCardScale={businessCardScale}
-          businessCardStageRef={businessCardStageRef}
-          businessCardTheme={businessCardTheme}
-          canShareDigitalCv={canShareDigitalCv}
-          cardExportBusy={cardExportBusy}
-          downloadMenuOpen={downloadMenuOpen}
-          handleCopyBusinessCardImage={handleCopyBusinessCardImage}
-          handleDownloadBusinessCard={handleDownloadBusinessCard}
-          handleShareBusinessCardImage={handleShareBusinessCardImage}
-          isMobile={isMobile}
-          setBusinessCardTheme={setBusinessCardTheme}
-          setDownloadMenuOpen={setDownloadMenuOpen}
-        />
+        <>
+          <section className="ppv-seacrewPreviewSection" aria-label="SeaCrew card preview">
+            <div className="ppv-seacrewPreviewInner">
+              <div className="ppv-seacrewPreviewHeading">SeaCrew card preview</div>
+              <div className={`ppv-seacrewPreviewCardWrap ppv-seacrewPreviewCardWrap--${businessCardTheme}`}>
+                <button
+                  type="button"
+                  className="ppv-businessCardAction ppv-seacrewPreviewAction"
+                  onClick={toggleSeaCrewCardVisibility}
+                  disabled={!!seaCrewVisibilityBusy}
+                >
+                  <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--desktop">
+                    {seaCrewVisibilityBusy
+                      ? 'Saving...'
+                      : isSeaCrewCardVisible
+                        ? 'Hide SeaCrew card'
+                        : 'Show SeaCrew card'}
+                  </span>
+                  <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--mobile" aria-hidden="true">
+                    {isSeaCrewCardVisible ? '👁' : '🚫'}
+                  </span>
+                </button>
+                <PublicProfileSeaCrewCard profile={seaCrewPreviewProfile} />
+              </div>
+            </div>
+          </section>
+          <PublicProfileBusinessCard
+            baseBusinessCardHeight={BASE_BUSINESS_CARD_HEIGHT}
+            businessCardBodyProps={businessCardBodyProps}
+            businessCardExportRef={businessCardExportRef}
+            businessCardRef={businessCardRef}
+            businessCardRootClassName={businessCardRootClassName}
+            businessCardScale={businessCardScale}
+            businessCardStageRef={businessCardStageRef}
+            businessCardTheme={businessCardTheme}
+            canShareDigitalCv={canShareDigitalCv}
+            cardExportBusy={cardExportBusy}
+            downloadMenuOpen={downloadMenuOpen}
+            handleCopyBusinessCardImage={handleCopyBusinessCardImage}
+            handleDownloadBusinessCard={handleDownloadBusinessCard}
+            handleShareBusinessCardImage={handleShareBusinessCardImage}
+            isMobile={isMobile}
+            setBusinessCardTheme={setBusinessCardTheme}
+            setDownloadMenuOpen={setDownloadMenuOpen}
+          />
+        </>
       )}
 
       {/* Sticky action bar */}

@@ -61,6 +61,11 @@ const TITLE_CATALOG = [
         aliases: ["Officer of the Watch 3000 GT", "II/1 (Yachts)"],
       },
       {
+        id: "coc_oow_500",
+        label: "OOW (Yachts) 500 GT — MCA CoC (STCW II/1 Yachts)",
+        aliases: ["Officer of the Watch 500 GT", "OOW 500 GT", "Yachts OOW 500"],
+      },
+      {
         id: "coc_master_500",
         label: "Master (Yachts) 500 GT - MCA CoC (STCW II/2 Yachts)",
         aliases: ["Master 500 GT", "MCA Master <500 GT", "II/2 <500 GT"],

@@ -63,7 +63,7 @@ export const titles = [
   '4th Steward(ess)','Solo Steward(ess)','Junior Steward(ess)',
   'Housekeeper','Head of Housekeeping',
   'Chef/Stew/Deck','Cook/Stew/Deck','Cook/Steward(ess)','Stew/Deck','Stew/Nurse','Laundry/Steward(ess)',
-  'Stew/Masseur','Stew/Yoga Instructor','Masseur','Hairdresser/Barber','Steward(ess)/Nanny','Nanny',
+  'Stew/Masseur','Stew/Yoga Instructor','Stew/Personal Trainer','Masseur','Hairdresser/Barber','Steward(ess)/Nanny','Nanny',
   'Videographer','Yoga/Pilates Instructor','Personal Trainer','Dive Instructor',
   'Water Sport Instructor','Nurse','Other'
 ];
@@ -117,29 +117,33 @@ export const ENGINEERING_LICENSE_FIELD_OPTIONS = [
   'AEC 1 – Approved Engine Course 1',
 ];
 
+export const LEGACY_YACHTMASTER_LICENSE = 'Yachtmaster';
+export const YACHTMASTER_OFFSHORE_LICENSE = 'Yachtmaster Offshore';
+export const YACHTMASTER_OCEAN_LICENSE = 'Yachtmaster Ocean';
+
 export const DECK_LICENSE_MAP = {
-  Captain: ['Master Unlimited','Master Yachts 3000 GT','Master 1600 GRT','Master Yachts 500 GT','Master Yachts 200 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  'Captain/Engineer': ['Master Yachts 500 GT','Master Yachts 200 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  Skipper: ['Master Yachts 200 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  'Relief Captain': ['Master Unlimited','Master Yachts 3000 GT','Master 1600 GRT','Master Yachts 500 GT','Master Yachts 200 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  'Chase Boat Captain': ['Master Yachts 200 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  'Chief Officer': ['Master Yachts 3000 GT','Master 1600 GRT','Master Yachts 500 GT','Chief Mate Unlimited','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  OOW: ['Chief Mate Unlimited','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  '2nd Officer': ['Chief Mate Unlimited','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  '3rd Officer': ['Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  Mate: ['Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  'Mate/Engineer': ['Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  'Mate/Steward(ess)': ['Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  Bosun: ['OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  'Deck/Engineer': ['OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  'Lead Deckhand': ['OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  Deckhand: ['OOW Yachts 3000 GT','Yachtmaster','Master 100 GRT / OUPV'],
-  'Deck/Steward(ess)': ['Yachtmaster','Master 100 GRT / OUPV'],
-  'Deck/Carpenter': ['Yachtmaster','Master 100 GRT / OUPV'],
-  'Deck/Divemaster': ['Yachtmaster','Master 100 GRT / OUPV'],
-  'Deck/Cook': ['Yachtmaster','Master 100 GRT / OUPV'],
-  'Chef/Deck': ['Yachtmaster','Master 100 GRT / OUPV'],
-  'Deck/Personal Trainer': ['Yachtmaster','Master 100 GRT / OUPV'],
+  Captain: ['Master Unlimited','Master Yachts 3000 GT','Master 1600 GRT','Master Yachts 500 GT','Master Yachts 200 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Captain/Engineer': ['Master Yachts 500 GT','Master Yachts 200 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  Skipper: ['Master Yachts 200 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Relief Captain': ['Master Unlimited','Master Yachts 3000 GT','Master 1600 GRT','Master Yachts 500 GT','Master Yachts 200 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Chase Boat Captain': ['Master Yachts 200 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Chief Officer': ['Master Yachts 3000 GT','Master 1600 GRT','Master Yachts 500 GT','Master Yachts 200 GT','Chief Mate Unlimited','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','OOW Yachts 500 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  OOW: ['Master Yachts 200 GT','Chief Mate Unlimited','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','OOW Yachts 500 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  '2nd Officer': ['Master Yachts 200 GT','Chief Mate Unlimited','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','OOW Yachts 500 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  '3rd Officer': ['Master Yachts 200 GT','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','OOW Yachts 500 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  Mate: ['Master Yachts 200 GT','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','OOW Yachts 500 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Mate/Engineer': ['Master Yachts 200 GT','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','OOW Yachts 500 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Mate/Steward(ess)': ['Master Yachts 200 GT','Chief Mate Yachts 3000 GT','OOW Unlimited','OOW Yachts 3000 GT','OOW Yachts 500 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  Bosun: ['Master Yachts 200 GT','OOW Yachts 3000 GT','OOW Yachts 500 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Deck/Engineer': ['Master Yachts 200 GT','OOW Yachts 3000 GT','OOW Yachts 500 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Lead Deckhand': ['OOW Yachts 3000 GT','OOW Yachts 500 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  Deckhand: ['OOW Yachts 3000 GT','OOW Yachts 500 GT',YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Deck/Steward(ess)': [YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Deck/Carpenter': [YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Deck/Divemaster': [YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Deck/Cook': [YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Chef/Deck': [YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
+  'Deck/Personal Trainer': [YACHTMASTER_OFFSHORE_LICENSE,YACHTMASTER_OCEAN_LICENSE,'Master 100 GRT / OUPV'],
 };
 
 export const DECK_DOCUMENT_MAP = {
@@ -528,6 +532,7 @@ export const RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS = {
   'Relief Captain': CAPTAIN_REQUIRED_DOCUMENT_GROUPS,
   'Chase Boat Captain': DECK_COMMAND_ENGINE_ROOM_NO_RADIO_DOCUMENT_GROUPS,
   'Chief Officer': DECK_COMMAND_NO_RADIO_DOCUMENT_GROUPS,
+  OOW: DECK_COMMAND_NO_RADIO_DOCUMENT_GROUPS,
   '2nd Officer': DECK_COMMAND_NO_RADIO_DOCUMENT_GROUPS,
   '3rd Officer': DECK_COMMAND_NO_RADIO_DOCUMENT_GROUPS,
   Mate: DECK_COMMAND_ENGINE_ROOM_NO_RADIO_DOCUMENT_GROUPS,
@@ -618,6 +623,7 @@ export const INTERIOR_DEPARTMENT_RANKS = [
   'Laundry/Steward(ess)',
   'Stew/Masseur',
   'Stew/Yoga Instructor',
+  'Stew/Personal Trainer',
   'Steward(ess)/Nanny',
   'Butler',
   'Head of Housekeeping',

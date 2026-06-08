@@ -97,6 +97,8 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   // External/anonymous mode flag
   const isExternal = mode === 'external' && !!externalThreadId;
   const isAdminThread = mode === 'admin';
+  const isDirectInternal = !isExternal && !isAdminThread && !offerId && !!receiverId;
+  const isOfferInternal = !isExternal && !isAdminThread && !!offerId && !!receiverId;
   const otherUserId = isAdminThread ? adminUserId : receiverId;
 
   const [actualAdminThreadId, setActualAdminThreadId] = useState(adminThreadId);
@@ -229,7 +231,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
   useEffect(() => {
     const loadOffer = async () => {
-      if (isExternal || isAdminThread || !offerId) {
+      if (!isOfferInternal) {
         setOfferMeta(null);
         return;
       }
@@ -243,7 +245,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       }
     };
     loadOffer();
-  }, [isExternal, isAdminThread, offerId]);
+  }, [isOfferInternal, offerId]);
 
   // Marcar como leídas las notificaciones de este chat al abrir la conversación
   useEffect(() => {
@@ -253,9 +255,9 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       markNotificationsForChatAsRead(supabase, currentUser.id, '__admin__', otherUserId, actualAdminThreadId);
       return;
     }
-    if (!offerId || !receiverId) return;
+    if (!isOfferInternal) return;
     markNotificationsForChatAsRead(supabase, currentUser.id, offerId, receiverId);
-  }, [isExternal, isAdminThread, currentUser?.id, offerId, receiverId, adminThreadId, otherUserId]);
+  }, [isExternal, isAdminThread, isOfferInternal, currentUser?.id, offerId, receiverId, adminThreadId, otherUserId, actualAdminThreadId]);
 
   // Load messages (internal vs external)
   useEffect(() => {
@@ -308,17 +310,22 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         return;
       }
 
-      // Internal (existing flow)
-      if (!offerId) return;
-      const { data, error } = await supabase
+      // Internal (offer-based or direct)
+      if (!receiverId) return;
+      let messageQuery = supabase
         .from('yacht_work_messages')
         .select('id, sender_id, receiver_id, message, file_url, sent_at, read')
-        .eq('offer_id', offerId)
         .or(
           `and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId}),` +
           `and(sender_id.eq.${receiverId},receiver_id.eq.${currentUser.id})`
         )
         .order('sent_at', { ascending: true });
+
+      messageQuery = isOfferInternal
+        ? messageQuery.eq('offer_id', offerId)
+        : messageQuery.is('offer_id', null);
+
+      const { data, error } = await messageQuery;
 
       if (!error) {
         setMessages(data);
@@ -338,13 +345,17 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         }
       }
 
-      const { data: otherState, error: otherStateError } = await supabase
+      let otherStateQuery = supabase
         .from('yacht_work_chat_state')
         .select('deleted_at')
-        .eq('offer_id', offerId)
         .eq('user_id', receiverId)
-        .eq('other_user_id', currentUser.id)
-        .maybeSingle();
+        .eq('other_user_id', currentUser.id);
+
+      otherStateQuery = isOfferInternal
+        ? otherStateQuery.eq('offer_id', offerId)
+        : otherStateQuery.is('offer_id', null);
+
+      const { data: otherState, error: otherStateError } = await otherStateQuery.maybeSingle();
 
       if (otherStateError) {
         console.error('Error checking chat closed state:', otherStateError);
@@ -361,7 +372,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     };
 
     fetchMessages();
-  }, [isExternal, isAdminThread, externalThreadId, actualAdminThreadId, offerId, receiverId, currentUser, fetchUnreadMessages, refreshKey]);
+  }, [isExternal, isAdminThread, isOfferInternal, isDirectInternal, externalThreadId, actualAdminThreadId, offerId, receiverId, currentUser, fetchUnreadMessages, refreshKey]);
 
   // Refetch mensajes al volver a la app (fallback cuando Realtime se desconecta en segundo plano)
   useEffect(() => {
@@ -374,10 +385,10 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
   useEffect(() => {
     if (isExternal || isAdminThread) return;
-    if (!currentUser || !offerId || !receiverId) return;
+    if (!currentUser || !receiverId) return;
 
     const channel = supabase
-      .channel(`yacht-work-chat-${offerId}-${receiverId}-${currentUser.id}`, {
+      .channel(`yacht-work-chat-${offerId || 'direct'}-${receiverId}-${currentUser.id}`, {
         config: { private: true },
       })
       .on(
@@ -386,7 +397,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
           event: 'INSERT',
           schema: 'public',
           table: 'yacht_work_messages',
-          filter: `offer_id=eq.${offerId}`,
+          ...(isOfferInternal ? { filter: `offer_id=eq.${offerId}` } : {}),
         },
         async (ev) => {
           const payload = ev?.new ?? ev?.record ?? ev;
@@ -394,7 +405,10 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
           const isRelevant =
             (payload.sender_id === currentUser.id && payload.receiver_id === receiverId) ||
             (payload.sender_id === receiverId && payload.receiver_id === currentUser.id);
-          if (!isRelevant) return;
+          const isMatchingThread = isOfferInternal
+            ? payload.offer_id === offerId
+            : payload.offer_id == null;
+          if (!isRelevant || !isMatchingThread) return;
 
           setMessages((prev) => {
             if (prev.some((msg) => msg.id === payload.id)) return prev;
@@ -419,7 +433,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUser, offerId, receiverId, isExternal, isAdminThread]);
+  }, [currentUser, offerId, receiverId, isExternal, isAdminThread, isOfferInternal]);
 
   useEffect(() => {
     if (!isExternal || !externalThreadId) return;
@@ -580,7 +594,8 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       if (!validateFile(file)) return;
       setUploading(true);
       try {
-        fileUrl = await uploadChatAttachment(`chat/${offerId}`, file);
+        const uploadPath = offerId ? `chat/${offerId}` : `chat/direct/${receiverId}`;
+        fileUrl = await uploadChatAttachment(uploadPath, file);
       } catch (uploadError) {
         setUploading(false);
         setFileError(uploadError?.message || 'Upload failed.');
@@ -592,7 +607,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     }
 
     const { error } = await supabase.from('yacht_work_messages').insert({
-      offer_id: offerId,
+      offer_id: offerId || null,
       sender_id: currentUser.id,
       receiver_id: receiverId,
       message: message || null,
@@ -606,15 +621,20 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       resetFileInput();
       setFileError('');
 
-      const { data: updated } = await supabase
+      let updatedQuery = supabase
         .from('yacht_work_messages')
         .select('id, sender_id, receiver_id, message, file_url, sent_at, read')
-        .eq('offer_id', offerId)
         .or(
           `and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId}),` +
           `and(sender_id.eq.${receiverId},receiver_id.eq.${currentUser.id})`
         )
         .order('sent_at', { ascending: true });
+
+      updatedQuery = isOfferInternal
+        ? updatedQuery.eq('offer_id', offerId)
+        : updatedQuery.is('offer_id', null);
+
+      const { data: updated } = await updatedQuery;
 
       setMessages(updated);
     } else {
@@ -823,7 +843,9 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     ? 'Anonymous chat'
     : isAdminThread
       ? `Admin chat – ${otherNickname}`
-      : `Offer private chat – ${otherNickname}`;
+      : isDirectInternal
+        ? `Private chat – ${otherNickname}`
+        : `Offer private chat – ${otherNickname}`;
   const offerLabel = offerMeta?.teammate_rank || offerMeta?.title;
   const handleOpenOffer = () => {
     if (!offerId) return;

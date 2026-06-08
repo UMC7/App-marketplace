@@ -9,6 +9,8 @@ export const DOCUMENT_TITLE_OPTIONS = [
   { value: "Master 3000 GT (Yachts) CoC", group: "Deck - Yacht CoC" },
   { value: "Chief Mate 3000 GT (Yachts) CoC", group: "Deck - Yacht CoC" },
   { value: "OOW 3000 GT (Yachts) CoC", group: "Deck - Yacht CoC" },
+  { value: "OOW 500 GT (Yachts) CoC", group: "Deck - Yacht CoC" },
+  { value: "Master 500 GT (Yachts) CoC", group: "Deck - Yacht CoC" },
   { value: "Master (Yachts) 200 GT - MCA CoC (STCW II/2 Yachts)", group: "Deck - Yacht CoC" },
 
   { value: "Yachtmaster Ocean (RYA/MCA)", group: "Deck — Yachtmasters" },
@@ -99,6 +101,10 @@ export const DOCUMENT_TITLE_ALIASES = new Map(
     ["yachtmaster 200", "Yacht Master 200 Tons"],
     ["patron de yate 200", "Yacht Master 200 Tons"],
     ["yacht master 200", "Yacht Master 200 Tons"],
+    ["master yachts 500 gt", "Master 500 GT (Yachts) CoC"],
+    ["master 500 gt", "Master 500 GT (Yachts) CoC"],
+    ["oow yachts 500 gt", "OOW 500 GT (Yachts) CoC"],
+    ["oow 500 gt", "OOW 500 GT (Yachts) CoC"],
     ["yachtmaster offshore", "Yachtmaster Offshore (RYA/MCA)"],
     ["yachtmaster ocean", "Yachtmaster Ocean (RYA/MCA)"],
 
