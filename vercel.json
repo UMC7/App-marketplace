@@ -11,6 +11,10 @@
     {
       "source": "/e/:id",
       "destination": "/api/event-og?event=:id"
+    },
+    {
+      "source": "/((?!api/|.*\\..*).*)",
+      "destination": "/index.html"
     }
   ]
 }
