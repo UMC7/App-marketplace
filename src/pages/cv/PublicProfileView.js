@@ -160,6 +160,9 @@ export default function PublicProfileView() {
   const [businessCardTheme, setBusinessCardTheme] = useState('light');
   const [seaCrewVisibilityBusy, setSeaCrewVisibilityBusy] = useState(false);
   const [userNickname, setUserNickname] = useState('');
+  const introInnerRef = useRef(null);
+  const introNameRef = useRef(null);
+  const [introNameInlineStyle, setIntroNameInlineStyle] = useState(null);
   const displayName = useMemo(() => {
     const full = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
     return full || profile?.headline || 'Yacht Candidate';
@@ -179,45 +182,139 @@ export default function PublicProfileView() {
     const longestWord = normalized
       .split(/\s+/)
       .reduce((max, word) => Math.max(max, word.length), 0);
+    const uppercaseCount = (normalized.match(/[A-ZÁÉÍÓÚÜÑÇ]/g) || []).length;
+    const uppercaseRatio = compactLength > 0 ? uppercaseCount / compactLength : 0;
+    const isUppercaseHeavy = uppercaseRatio >= 0.72 && compactLength >= 16;
+    const needsWrappedIntro =
+      compactLength >= 26 ||
+      longestWord >= 13 ||
+      (isUppercaseHeavy && compactLength >= 20);
 
     let introNameClassName = 'ppv-introName';
-    if (compactLength >= 32 || longestWord >= 15) {
+    if (compactLength >= 32 || longestWord >= 15 || (isUppercaseHeavy && compactLength >= 24)) {
       introNameClassName = 'ppv-introName ppv-introName--fitXXL';
-    } else if (compactLength >= 28 || longestWord >= 13) {
+    } else if (compactLength >= 28 || longestWord >= 13 || (isUppercaseHeavy && compactLength >= 22)) {
       introNameClassName = 'ppv-introName ppv-introName--fitXL';
-    } else if (compactLength >= 24 || longestWord >= 11) {
+    } else if (compactLength >= 24 || longestWord >= 11 || (isUppercaseHeavy && compactLength >= 20)) {
       introNameClassName = 'ppv-introName ppv-introName--fitLG';
-    } else if (compactLength >= 22 || longestWord >= 10) {
+    } else if (compactLength >= 22 || longestWord >= 10 || (isUppercaseHeavy && compactLength >= 18)) {
       introNameClassName = 'ppv-introName ppv-introName--fitMD';
     }
 
-    if (compactLength >= 24 || longestWord >= 12) {
+    if (needsWrappedIntro) {
+      introNameClassName += ' ppv-introName--wrap';
+    }
+
+    if (compactLength >= 24 || longestWord >= 12 || (isUppercaseHeavy && compactLength >= 20)) {
       return {
         introNameClassName,
         businessCardNameClassName: 'ppv-businessCardName ppv-businessCardName--veryLong',
-        introHeight: INTRO_BASE_HEIGHT,
-        introMetaTop: INTRO_BASE_HEIGHT + INTRO_META_GAP,
+        introHeight: needsWrappedIntro ? INTRO_VERY_LONG_HEIGHT : INTRO_BASE_HEIGHT,
+        introMetaTop: (needsWrappedIntro ? INTRO_VERY_LONG_HEIGHT : INTRO_BASE_HEIGHT) + INTRO_META_GAP,
       };
     }
-    if (compactLength >= 22 || longestWord >= 11) {
+    if (compactLength >= 22 || longestWord >= 11 || (isUppercaseHeavy && compactLength >= 18)) {
       return {
         introNameClassName,
         businessCardNameClassName: 'ppv-businessCardName ppv-businessCardName--long',
-        introHeight: INTRO_BASE_HEIGHT,
-        introMetaTop: INTRO_BASE_HEIGHT + INTRO_META_GAP,
+        introHeight: needsWrappedIntro ? INTRO_LONG_HEIGHT : INTRO_BASE_HEIGHT,
+        introMetaTop: (needsWrappedIntro ? INTRO_LONG_HEIGHT : INTRO_BASE_HEIGHT) + INTRO_META_GAP,
       };
     }
     return {
       introNameClassName,
       businessCardNameClassName: 'ppv-businessCardName',
-      introHeight: INTRO_BASE_HEIGHT,
-      introMetaTop: INTRO_BASE_HEIGHT + INTRO_META_GAP,
+      introHeight: needsWrappedIntro ? INTRO_LONG_HEIGHT : INTRO_BASE_HEIGHT,
+      introMetaTop: (needsWrappedIntro ? INTRO_LONG_HEIGHT : INTRO_BASE_HEIGHT) + INTRO_META_GAP,
     };
   }, [displayName]);
   const introNameClassName = displayNameLayout.introNameClassName;
   const businessCardNameClassName = displayNameLayout.businessCardNameClassName;
   const introHeight = displayNameLayout.introHeight;
   const introMetaTop = displayNameLayout.introMetaTop;
+
+  useLayoutEffect(() => {
+    const nameNode = introNameRef.current;
+    const containerNode = introInnerRef.current;
+    if (!nameNode || !containerNode || typeof window === 'undefined') return undefined;
+
+    const fitName = () => {
+      const availableWidth = Math.max(0, Math.floor(containerNode.clientWidth - 2));
+      if (!availableWidth) {
+        setIntroNameInlineStyle(null);
+        return;
+      }
+
+      nameNode.style.removeProperty('font-size');
+      nameNode.style.removeProperty('letter-spacing');
+      nameNode.style.removeProperty('transform');
+      nameNode.style.removeProperty('transform-origin');
+
+      const computed = window.getComputedStyle(nameNode);
+      const baseFontSize = parseFloat(computed.fontSize) || 40;
+      let nextFontSize = baseFontSize;
+
+      const measureWidth = () => Math.ceil(nameNode.scrollWidth);
+      let measuredWidth = measureWidth();
+
+      if (measuredWidth <= availableWidth) {
+        setIntroNameInlineStyle(null);
+        return;
+      }
+
+      const proportionalSize = Math.floor((baseFontSize * availableWidth / measuredWidth) * 10) / 10;
+      nextFontSize = Math.max(13, Math.min(baseFontSize, proportionalSize));
+
+      nameNode.style.fontSize = `${nextFontSize}px`;
+      if (nextFontSize < 20) {
+        nameNode.style.letterSpacing = '0.002em';
+      }
+
+      measuredWidth = measureWidth();
+      while (measuredWidth > availableWidth && nextFontSize > 13) {
+        nextFontSize = Math.max(13, Math.floor((nextFontSize - 0.5) * 10) / 10);
+        nameNode.style.fontSize = `${nextFontSize}px`;
+        measuredWidth = measureWidth();
+      }
+
+      const nextStyle = {
+        fontSize: `${nextFontSize}px`,
+      };
+      if (nextFontSize < 20) nextStyle.letterSpacing = '0.002em';
+
+      if (measuredWidth > availableWidth) {
+        const scaleX = Math.max(0.88, availableWidth / measuredWidth);
+        nextStyle.transform = `scaleX(${scaleX})`;
+        nextStyle.transformOrigin = 'left center';
+      }
+
+      setIntroNameInlineStyle(nextStyle);
+    };
+
+    const rafId = window.requestAnimationFrame(fitName);
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => fitName())
+        : null;
+
+    if (resizeObserver) {
+      resizeObserver.observe(containerNode);
+      resizeObserver.observe(nameNode);
+    }
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        window.requestAnimationFrame(fitName);
+      }).catch(() => {});
+    }
+
+    window.addEventListener('resize', fitName);
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', fitName);
+    };
+  }, [displayName, introNameClassName]);
 
   useEffect(() => {
     setUserNickname('');
@@ -1358,8 +1455,14 @@ if (!allowPublicView && !isPreview) {
                   ref={introRef}
                   style={{ zIndex: 2, height: introHeight }}
                 >
-                  <div className="ppv-introInner">
-                    <div className={introNameClassName}>{displayName}</div>
+                  <div className="ppv-introInner" ref={introInnerRef}>
+                    <div
+                      className={introNameClassName}
+                      ref={introNameRef}
+                      style={introNameInlineStyle || undefined}
+                    >
+                      {displayName}
+                    </div>
                     {rankText && <div className="ppv-introRank">{rankText}</div>}
                   </div>
                 </section>

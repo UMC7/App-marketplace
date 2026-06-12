@@ -876,6 +876,7 @@ body.dark-mode .ppv-btn {
 }
 
 .ppv-introName {
+  display: block;
   font-size: 40px;
   line-height: 1.02;
   font-family: "Segoe Script", "Snell Roundhand", "Lucida Handwriting", "Brush Script MT", cursive;
@@ -885,12 +886,24 @@ body.dark-mode .ppv-btn {
   color: #0b1220;
   max-width: calc(100% - 2px);
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .ppv-introName.ppv-introName--fitMD { font-size: 34px; }
 .ppv-introName.ppv-introName--fitLG { font-size: 28px; }
 .ppv-introName.ppv-introName--fitXL { font-size: 24px; }
 .ppv-introName.ppv-introName--fitXXL { font-size: 21px; }
+
+.ppv-introName.ppv-introName--wrap {
+  white-space: normal;
+  max-width: 100%;
+  line-height: 0.94;
+  overflow: hidden;
+  text-wrap: balance;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
 
 .ppv-introRank {
   font-size: 26px;
