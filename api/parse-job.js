@@ -1,6 +1,6 @@
 // pages/api/parse-job.js
 import OpenAI from "openai";
-import { generateRemarks as buildRemarks } from "./job-parser/remarks.js";
+import { generateRemarks as buildRemarks } from "../server/job-parser/remarks.js";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
