@@ -544,6 +544,37 @@ body.dark-mode .required-doc-chip {
   width: auto !important;
 }
 
+.seacrew-highlight-inline {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+  .seacrew-filters-panel {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    align-items: center;
+  }
+
+  .seacrew-filters-panel h3,
+  .seacrew-filters-panel .clear-filters {
+    grid-column: 1 / -1 !important;
+  }
+
+  .seacrew-filters-panel .seacrew-highlight-inline {
+    grid-column: 4;
+    align-self: center;
+    justify-self: start;
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 1023px) {
+  .seacrew-filters-panel .seacrew-highlight-inline {
+    grid-column: 1 / -1;
+    white-space: normal;
+  }
+}
+
 /* ===== Fix legibility in light mode (mobile & desktop) ===== */
 body:not(.dark-mode) .filters-container,
 body:not(.dark-mode) .filters-panel {

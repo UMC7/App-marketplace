@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import supabase from '../supabase';
 import Slider from 'react-slick';
 import LoadingSpinner from './LoadingSpinner';
+import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 import '../styles/SeaCrewList.css';
 
 const STORAGE_BUCKET = 'cv-docs';
@@ -129,14 +130,158 @@ const sliderSettings = {
   adaptiveHeight: false,
 };
 
+const shareBarStyle = {
+  display: 'flex',
+  gap: 10,
+  flexWrap: 'wrap',
+  justifyContent: 'center',
+  marginTop: 8,
+};
+
+const roundShareBtnStyle = {
+  width: 44,
+  height: 44,
+  borderRadius: '9999px',
+  border: '1px solid rgba(0,0,0,0.1)',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: '#fff',
+  cursor: 'pointer',
+  boxShadow: '0 1px 2px rgba(0,0,0,.06)',
+};
+
+const whatsAppShareBtnStyle = {
+  ...roundShareBtnStyle,
+  background: '#25D366',
+  border: 'none',
+};
+
+const shareIconImgStyle = { width: 22, height: 22, display: 'block' };
+const shareIconStyle = { fontSize: 22, color: '#111' };
+
 export default function SeaCrewList({ profiles, loading, currentUserId, onRequestChat }) {
   const [expandedId, setExpandedId] = useState(null);
+  const [markedProfiles, setMarkedProfiles] = useState(() => {
+    if (!currentUserId) return [];
+    try {
+      const stored = localStorage.getItem(`markedSeaCrewProfiles_user_${currentUserId}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error parsing marked SeaCrew profiles from localStorage', error);
+      return [];
+    }
+  });
   const [resolvedCoverImages, setResolvedCoverImages] = useState({});
   const [resolvedExpandedImages, setResolvedExpandedImages] = useState({});
   const [visibleProfileIds, setVisibleProfileIds] = useState({});
   const items = useMemo(() => (Array.isArray(profiles) ? profiles : []), [profiles]);
   const cardRefs = useRef(new Map());
   const mediaUrlCacheRef = useRef(new Map());
+  const supportsWebShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const showNativeShare = supportsWebShare || isInNativeApp();
+
+  const getShareUrl = (profile) => {
+    if (typeof window === 'undefined') return '';
+    if (profile?.public_qr_id) {
+      return `${window.location.origin}/cv/qr/${encodeURIComponent(profile.public_qr_id)}`;
+    }
+    if (profile?.handle) {
+      return `${window.location.origin}/cv/${encodeURIComponent(profile.handle)}`;
+    }
+    return '';
+  };
+
+  const getShareData = (profile) => {
+    const rank = getRank(profile);
+    const displayName = profile?.userNickname || 'Candidate';
+    const locationText = [profile?.city || profile?.city_port, profile?.country].filter(Boolean).join(' - ');
+    return {
+      title: `${displayName} · SeaCrew`,
+      text: `${displayName}${rank ? ` · ${rank}` : ''}${locationText ? ` · ${locationText}` : ''}`,
+      url: getShareUrl(profile),
+    };
+  };
+
+  const handleCopyLink = async (profile) => {
+    const shareUrl = getShareUrl(profile);
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('Link copied!');
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = shareUrl;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      alert('Link copied!');
+    }
+  };
+
+  const handleWhatsApp = (profile) => {
+    const data = getShareData(profile);
+    if (!data.url) return;
+    const msg = `SeaCrew: ${data.text}\n${data.url}`;
+    const wa = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    window.open(wa, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShare = async (profile, event) => {
+    event.stopPropagation();
+    const data = getShareData(profile);
+    if (!data.url) return;
+    if (isInNativeApp()) {
+      postShareToNative(data);
+      return;
+    }
+    if (navigator.share) {
+      try {
+        await navigator.share(data);
+      } catch (err) {
+        if (err && err.name !== 'AbortError') {
+          console.error('Share failed', err);
+        }
+      }
+    }
+  };
+
+  const toggleMark = (profileId) => {
+    setMarkedProfiles((prevMarked) => {
+      const updated = prevMarked.includes(profileId)
+        ? prevMarked.filter((id) => id !== profileId)
+        : [...prevMarked, profileId];
+
+      if (currentUserId) {
+        try {
+          localStorage.setItem(
+            `markedSeaCrewProfiles_user_${currentUserId}`,
+            JSON.stringify(updated)
+          );
+        } catch (error) {
+          console.error('Error saving marked SeaCrew profiles to localStorage', error);
+        }
+      }
+
+      return updated;
+    });
+  };
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setMarkedProfiles([]);
+      return;
+    }
+
+    try {
+      const stored = localStorage.getItem(`markedSeaCrewProfiles_user_${currentUserId}`);
+      setMarkedProfiles(stored ? JSON.parse(stored) : []);
+    } catch (error) {
+      console.error('Error loading marked SeaCrew profiles from localStorage', error);
+      setMarkedProfiles([]);
+    }
+  }, [currentUserId]);
 
   useEffect(() => {
     setExpandedId(null);
@@ -283,6 +428,8 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
         const countryLabel = String(profile.country || '').trim();
         const rankLabel = getRank(profile);
         const isExpanded = expandedId === profile.id;
+        const isMarked = markedProfiles.includes(profile.id);
+        const shareUrl = getShareUrl(profile);
         const chatReceiverId = String(profile.chatReceiverId || '').trim();
         const canStartChat =
           Boolean(chatReceiverId) &&
@@ -315,7 +462,7 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
         return (
           <article
             key={profile.id}
-            className={`seacrew-card ${isExpanded ? 'expanded' : 'collapsed'}`}
+            className={`seacrew-card ${isExpanded ? 'expanded' : 'collapsed'} ${isMarked ? 'marked' : ''}`}
             onClick={toggle}
             data-profile-id={profile.id}
             ref={(node) => {
@@ -378,7 +525,21 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
             </div>
 
             <div className="seacrew-card-body">
-              <h3 className="seacrew-card-name">{displayName}</h3>
+              <div className="seacrew-card-header">
+                <h3 className="seacrew-card-name">{displayName}</h3>
+                <button
+                  type="button"
+                  className={`seacrew-mark-toggle no-toggle ${isMarked ? 'active' : ''}`}
+                  aria-label={isMarked ? 'Unmark candidate' : 'Mark candidate'}
+                  aria-pressed={isMarked}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggleMark(profile.id);
+                  }}
+                >
+                  {isMarked ? '✔' : ''}
+                </button>
+              </div>
               <p className="seacrew-card-title">{rankLabel}</p>
               {isExpanded && (
                 <div className="seacrew-card-details">
@@ -407,6 +568,54 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
                     <span className="seacrew-card-detailLabel">Experience</span>
                     <span className="seacrew-card-detailValue">{experienceLabel}</span>
                   </p>
+                  {shareUrl && (
+                    <div className="seacrew-card-actions seacrew-share-actions no-toggle">
+                      <div
+                        className="seacrew-share-bar"
+                        style={shareBarStyle}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        {showNativeShare ? (
+                          <button
+                            type="button"
+                            onClick={(event) => handleShare(profile, event)}
+                            style={roundShareBtnStyle}
+                            aria-label="Share"
+                            title="Share"
+                          >
+                            <span className="material-icons" style={shareIconStyle}>ios_share</span>
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleWhatsApp(profile);
+                              }}
+                              style={whatsAppShareBtnStyle}
+                              aria-label="Share on WhatsApp"
+                              title="Share on WhatsApp"
+                            >
+                              <img src="/icons/whatsapp.svg" alt="" style={shareIconImgStyle} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleCopyLink(profile);
+                              }}
+                              style={roundShareBtnStyle}
+                              aria-label="Copy share link"
+                              title="Copy link"
+                            >
+                              <img src="/icons/link.svg" alt="" style={shareIconImgStyle} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   {canStartChat && (
                     <div className="seacrew-card-actions no-toggle">
                       <button

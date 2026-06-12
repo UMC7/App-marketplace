@@ -6,14 +6,21 @@
 }
 
 .seacrew-tab {
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  background: rgba(255, 255, 255, 0.96);
   color: #0f172a;
   padding: 10px 18px;
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.seacrew-tab:hover:not(.active) {
+  transform: translateY(-1px);
+  border-color: rgba(45, 212, 191, 0.42);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.1);
 }
 
 .seacrew-tab.active {
@@ -42,9 +49,23 @@
   max-width: 360px;
 }
 
+.seacrew-card.marked {
+  box-shadow:
+    0 0 0 6px rgba(104, 173, 168, 0.7),
+    0 0 0 9px rgba(104, 173, 168, 0.4),
+    0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
 .seacrew-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+}
+
+.seacrew-card.marked:hover {
+  box-shadow:
+    0 0 0 6px rgba(104, 173, 168, 0.7),
+    0 0 0 9px rgba(104, 173, 168, 0.4),
+    0 18px 42px rgba(0, 0, 0, 0.12);
 }
 
 .seacrew-card-media {
@@ -188,6 +209,13 @@
   flex: 1;
 }
 
+.seacrew-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .seacrew-card-name {
   margin: 0;
   font-size: clamp(1.7rem, 2.2vw, 2.15rem);
@@ -200,6 +228,37 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.seacrew-mark-toggle {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.seacrew-mark-toggle:hover {
+  transform: translateY(-1px);
+  border-color: rgba(104, 173, 168, 0.7);
+}
+
+.seacrew-mark-toggle.active {
+  border-color: rgba(104, 173, 168, 0.85);
+  background: rgba(104, 173, 168, 0.18);
+  color: #0f172a;
+  box-shadow: 0 8px 18px rgba(104, 173, 168, 0.22);
 }
 
 .seacrew-card-title {
@@ -245,6 +304,20 @@
   border-color: rgba(94, 234, 212, 0.52);
   background: linear-gradient(180deg, rgba(45, 212, 191, 0.24) 0%, rgba(13, 148, 136, 0.34) 100%);
   box-shadow: 0 14px 28px rgba(13, 148, 136, 0.24);
+}
+
+body:not(.dark-mode) .seacrew-chat-btn {
+  border-color: var(--primary-color, #081a3b);
+  background: var(--primary-color, #081a3b);
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(8, 26, 59, 0.16);
+}
+
+body:not(.dark-mode) .seacrew-chat-btn:hover {
+  border-color: var(--accent-color, #5cb8b0);
+  background: var(--accent-color, #5cb8b0);
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(92, 184, 176, 0.24);
 }
 
 .seacrew-card-detailRow {
@@ -379,9 +452,16 @@ body.dark-mode .seacrew-chat-btn {
 }
 
 body.dark-mode .seacrew-tab {
-  background: rgba(255,255,255,0.03) !important;
-  border-color: var(--border-color) !important;
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.12) !important;
   color: var(--text-color) !important;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+}
+
+body.dark-mode .seacrew-tab:hover:not(.active) {
+  border-color: rgba(45, 212, 191, 0.38) !important;
+  background: rgba(255,255,255,0.11) !important;
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.28);
 }
 
 body.dark-mode .seacrew-tab.active {

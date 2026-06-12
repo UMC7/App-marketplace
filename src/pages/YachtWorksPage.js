@@ -183,7 +183,7 @@ const SeaCrewFilterPanel = React.forwardRef(({
 }, ref) => {
   return (
     <div ref={ref} className="filter-body expanded">
-      <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
+      <div className="filters-container filters-panel show seacrew-filters-panel" style={{ marginBottom: '20px' }}>
         <h3 style={{ gridColumn: '1 / -1' }}>Crew Filters</h3>
 
         <select
@@ -219,6 +219,20 @@ const SeaCrewFilterPanel = React.forwardRef(({
           ))}
         </select>
 
+        <label
+          htmlFor="crewSelectedOnly"
+          className="filter-checkbox-label seacrew-highlight-inline"
+          style={{ marginBottom: 0 }}
+        >
+          <input
+            id="crewSelectedOnly"
+            type="checkbox"
+            checked={Boolean(filters.selectedOnly)}
+            onChange={() => setFilters((prev) => ({ ...prev, selectedOnly: !prev.selectedOnly }))}
+          />
+          <span><strong>Only highlighted</strong></span>
+        </label>
+
         <button
           className="clear-filters"
           style={{
@@ -230,7 +244,7 @@ const SeaCrewFilterPanel = React.forwardRef(({
             borderRadius: '10px',
             fontWeight: 600,
           }}
-          onClick={() => setFilters({ rank: '', city: '', country: '' })}
+          onClick={() => setFilters({ rank: '', city: '', country: '', selectedOnly: false })}
         >
           Clear All Filters
         </button>
@@ -305,6 +319,7 @@ function YachtWorksPage() {
     rank: '',
     city: '',
     country: '',
+    selectedOnly: false,
   });
   const [crewVisibleCount, setCrewVisibleCount] = useState(SEACREW_PAGE_SIZE);
 
@@ -691,21 +706,39 @@ function YachtWorksPage() {
     const rankFilter = String(crewFilters.rank || '').trim().toLowerCase();
     const cityFilter = String(crewFilters.city || '').trim().toLowerCase();
     const countryFilter = String(crewFilters.country || '').trim().toLowerCase();
+    const selectedOnly = Boolean(crewFilters.selectedOnly);
+    let markedProfiles = [];
+
+    if (selectedOnly && user?.id) {
+      try {
+        const stored = localStorage.getItem(`markedSeaCrewProfiles_user_${user.id}`);
+        markedProfiles = stored ? JSON.parse(stored) : [];
+      } catch (error) {
+        console.error('Error loading marked SeaCrew profiles for filtering', error);
+        markedProfiles = [];
+      }
+    }
 
     return items.filter((profile) => {
       const rank = getSeaCrewRankValue(profile).toLowerCase();
       const city = getSeaCrewCityValue(profile).toLowerCase();
       const country = getSeaCrewCountryValue(profile).toLowerCase();
 
+      if (selectedOnly && !markedProfiles.includes(profile.id)) return false;
       if (rankFilter && rank !== rankFilter) return false;
       if (cityFilter && city !== cityFilter) return false;
       if (countryFilter && country !== countryFilter) return false;
       return true;
     });
-  }, [crewFilters, crewProfiles]);
+  }, [crewFilters, crewProfiles, user]);
 
   const hasActiveCrewFilters = useMemo(
-    () => Object.values(crewFilters).some((value) => String(value || '').trim().length > 0),
+    () => (
+      Boolean(crewFilters.selectedOnly) ||
+      String(crewFilters.rank || '').trim().length > 0 ||
+      String(crewFilters.city || '').trim().length > 0 ||
+      String(crewFilters.country || '').trim().length > 0
+    ),
     [crewFilters]
   );
 
@@ -931,14 +964,14 @@ function YachtWorksPage() {
           className={`seacrew-tab${activeTab === 'jobs' ? ' active' : ''}`}
           onClick={() => setActiveTab('jobs')}
         >
-          SeaJobs
+          Available Offers
         </button>
         <button
           type="button"
           className={`seacrew-tab${activeTab === 'crew' ? ' active' : ''}`}
           onClick={() => setActiveTab('crew')}
         >
-          SeaCrew
+          Available Crew
         </button>
       </div>
       {activeTab === 'crew' && crewError && (
