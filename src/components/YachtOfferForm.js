@@ -74,6 +74,7 @@ const initialState = {
   is_random_drug_testing: false,
   is_charter_experience_required: false,
   local_candidates_only: false,
+  candidate_location_requirement: '',
   years_in_rank: '',
   gender: '',
   description: '',
@@ -282,6 +283,20 @@ useEffect(() => {
     ...(Array.isArray(td) && { teammate_required_documents: td }),
   }));
 }, [initialValues?.teammate_required_licenses, initialValues?.teammate_required_engineering_licenses, initialValues?.teammate_required_documents]);
+
+useEffect(() => {
+  if (!initialValues) return;
+  setFormData((prev) => {
+    if (prev.candidate_location_requirement) return prev;
+    if (typeof initialValues.candidate_location_requirement === 'string' && initialValues.candidate_location_requirement.trim()) {
+      return { ...prev, candidate_location_requirement: initialValues.candidate_location_requirement };
+    }
+    if (initialValues.local_candidates_only) {
+      return { ...prev, candidate_location_requirement: 'local_only' };
+    }
+    return prev;
+  });
+}, [initialValues]);
   const [loading, setLoading] = useState(false);
   const [rewriteLoading, setRewriteLoading] = useState(false);
   const [previousRemarks, setPreviousRemarks] = useState('');
@@ -764,6 +779,9 @@ const formReady = (() => {
         ...prev,
         [name]: type === 'checkbox' ? checked : nextValue,
       };
+      if (name === 'candidate_location_requirement') {
+        newState.local_candidates_only = value === 'local_only';
+      }
 
       // 🔹 Si cambia salary_currency y hay team
       if (name === 'salary_currency' && prev.team === 'Yes') {
@@ -906,6 +924,7 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     is_random_drug_testing: !!sanitizedData.is_random_drug_testing,
     is_charter_experience_required: !!sanitizedData.is_charter_experience_required,
     local_candidates_only: !!sanitizedData.local_candidates_only,
+    candidate_location_requirement: sanitizedData.candidate_location_requirement || (sanitizedData.local_candidates_only ? 'local_only' : null),
     holidays: coerceOptionalNumber(sanitizedData.holidays),
     language_1: sanitizedData.language_1 || null,
     language_1_fluency: sanitizedData.language_1_fluency || null,

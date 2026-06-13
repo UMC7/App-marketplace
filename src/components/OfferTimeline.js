@@ -718,10 +718,14 @@ const OfferTimeline = ({
       </div>
     )}
 
-    {offer.local_candidates_only && (
+    {(offer.candidate_location_requirement || offer.local_candidates_only) && (
       <div className="field-group">
-        <div className="field-label">Local candidates only</div>
-        <div className="field-value">Yes</div>
+        <div className="field-label">Candidate location preference</div>
+        <div className="field-value">
+          {offer.candidate_location_requirement === 'region_only'
+            ? 'Region candidates only'
+            : 'Local candidates only'}
+        </div>
       </div>
     )}
 

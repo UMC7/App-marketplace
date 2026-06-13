@@ -191,10 +191,12 @@ function YachtOfferFormShoreBasedFields({
             <option value="">Select...</option>
             {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
-          <label className="form-checkbox-label gap-after-field">
-            <input type="checkbox" name="local_candidates_only" checked={formData.local_candidates_only} onChange={onChange} />
-            <span>Local candidates only</span>
-          </label>
+          <label>Candidate location preference:</label>
+          <select name="candidate_location_requirement" value={formData.candidate_location_requirement || ''} onChange={onChange}>
+            <option value="">No preference</option>
+            <option value="local_only">Local candidates only</option>
+            <option value="region_only">Region candidates only</option>
+          </select>
         </>
       )}
 

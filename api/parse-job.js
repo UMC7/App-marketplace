@@ -967,7 +967,7 @@ Do not include comments, markdown, or extra text.
       yacht_type: YACHT_TYPES.join("|"),
       uses: "Private|Charter|Private/Charter|",
       homeport: "",
-      liveaboard: "Own Cabin|Share Cabin|No|",
+      liveaboard: "Own Cabin|Share Cabin|Crew house provided|No|",
       season_type: "",
       holidays: "",
       is_asap: "true|false",
@@ -998,7 +998,7 @@ Do not include comments, markdown, or extra text.
 - uses: map "Private", "Charter" or "Private/Charter" if present.
 - propulsion_type: normalize to one of [Shaft Drive, Pod Drive, Waterjet, Sail Drive, Outboard, Stern Drive] when explicitly mentioned (e.g., "IPS/Azipod/Zeus pods" => "Pod Drive"; "waterjet/jet" => "Waterjet"; "stern drive/sterndrive/z-drive" => "Stern Drive"; "twin screw/straight shaft" => "Shaft Drive"). Otherwise "".
 - team: "Yes" if it explicitly mentions a couple, pair, team role, or a second crew role paired with the main rank; otherwise "No".
-- liveaboard: "Share Cabin" if the text says share/sharing cabin; "Own Cabin" if said; "No" for shore-based. If team="Yes", prefer "Own Cabin".
+- liveaboard: "Crew house provided" if the text explicitly mentions crew house or shore accommodation being provided; otherwise "Share Cabin" if the text says share/sharing cabin; "Own Cabin" if said; "No" for shore-based. If team="Yes", prefer "Own Cabin".
 - languages: fill language_1/_2 and *_fluency when explicit (e.g. "English / Fluent").
 - years_in_rank: Find the numeric value for "years in rank" or "experience" and convert it to a single number (e.g., "5+ years" -> "5", "2-3 years" -> "2", "proven experience" -> "2.5"). If the term "green" is used, return "Green".
 - city and country: infer both if possible. If only a city is stated, include the corresponding country in 'country'.
@@ -1245,6 +1245,8 @@ if (out.city) {
   out.liveaboard = "No";
 } else if (notLiveaboardRegExp.test(t)) {
   out.liveaboard = "No";
+} else if (/\b(?:crew\s*house|shore(?:-|\s)accommodation|land(?:-|\s)based\s+accommodation)\b/i.test(finalText)) {
+  out.liveaboard = "Crew house provided";
 } else if (/\b(?:own|private|single|solo|individual|separate)\b(?:\s+berth)?\s*-?\s*cabins?\b/i.test(finalText)) {
   out.liveaboard = "Own Cabin";
 } else if (/\b(?:share(?:s|d)?|sharing)\b(?:\s+(?:a|one|the))?\s+cabins?\b/i.test(finalText)) {

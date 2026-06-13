@@ -284,6 +284,7 @@ function YachtOfferFormOnboardFields({
         <option value="No">No</option>
         <option value="Own Cabin">Own Cabin</option>
         <option value="Share Cabin">Share Cabin</option>
+        <option value="Crew house provided">Crew house provided</option>
         <option value="Flexible">Flexible</option>
       </select>
 
@@ -406,10 +407,12 @@ function YachtOfferFormOnboardFields({
 
       <label>Country/Region: <span style={{ color: 'red' }}>*</span></label>
       <FilterableRankSelect name="country" value={formData.country} onChange={onChange} className={highlightClass(!formData.country)} required promptText="Select..." optionGroups={COUNTRY_REGION_GROUPS} modalTitle="Country / Region" searchPlaceholder="Search country or region..." />
-      <label className="form-checkbox-label gap-after-field">
-        <input type="checkbox" name="local_candidates_only" checked={formData.local_candidates_only} onChange={onChange} />
-        <span>Local candidates only</span>
-      </label>
+      <label>Candidate location preference:</label>
+      <select name="candidate_location_requirement" value={formData.candidate_location_requirement || ''} onChange={onChange}>
+        <option value="">No preference</option>
+        <option value="local_only">Local candidates only</option>
+        <option value="region_only">Region candidates only</option>
+      </select>
 
       <label>Contact Email:</label>
       <input type="email" name="contact_email" value={formData.contact_email} onChange={onChange} />
