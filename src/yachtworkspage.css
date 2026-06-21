@@ -1251,6 +1251,12 @@ body:not(.dark-mode) .filters-panel h3 {
     grid-row: 2;
     order: 2;
   }
+  .offer-card.expanded:not(.team) .block1.has-time-in-rank.has-license .gender,
+  .offer-card.expanded:not(.team) .block1.has-time-in-rank.has-engineering-license .gender {
+    grid-column: 2 / 3;
+    grid-row: 2;
+    order: 2;
+  }
   .offer-card.expanded:not(.team) .block1.has-time-in-rank .salary {
     grid-column: 1 / 2;
     grid-row: 3;
