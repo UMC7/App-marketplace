@@ -63,7 +63,7 @@ export const titles = [
   '4th Steward(ess)','Solo Steward(ess)','Junior Steward(ess)',
   'Housekeeper','Head of Housekeeping',
   'Chef/Stew/Deck','Cook/Stew/Deck','Cook/Steward(ess)','Stew/Deck','Stew/Nurse','Laundry/Steward(ess)',
-  'Stew/Masseur','Stew/Yoga Instructor','Stew/Personal Trainer','Masseur','Hairdresser/Barber','Steward(ess)/Nanny','Nanny',
+  'Stew/Masseur','Stew/Yoga Instructor','Stew/Personal Trainer','Stew/Hairdresser','Masseur','Hairdresser/Barber','Steward(ess)/Nanny','Nanny',
   'Videographer','Yoga/Pilates Instructor','Personal Trainer','Dive Instructor',
   'Water Sport Instructor','Nurse','Other'
 ];
@@ -625,6 +625,7 @@ export const INTERIOR_DEPARTMENT_RANKS = [
   'Stew/Masseur',
   'Stew/Yoga Instructor',
   'Stew/Personal Trainer',
+  'Stew/Hairdresser',
   'Steward(ess)/Nanny',
   'Butler',
   'Head of Housekeeping',

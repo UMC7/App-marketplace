@@ -653,7 +653,18 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
     },
     {
       group: 'Beauty & Grooming',
-      items: ['Makeup application', 'Manicure & pedicure services'],
+      items: [
+        'Professional hairdressing qualifications',
+        'Ladies haircut & styling',
+        'Gentlemen haircut & barbering',
+        'Blow-dry & finish styling',
+        'Hair up / event styling',
+        'Hair colouring basics',
+        'Keratin / smoothing treatments',
+        'Scalp & haircare treatments',
+        'Makeup application',
+        'Manicure & pedicure services',
+      ],
     },
     {
       group: 'Media & Digital',
