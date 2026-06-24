@@ -142,6 +142,22 @@ function countGalleryImages(gallery) {
   }).length;
 }
 
+function buildSeaCrewReadyProfiles(profiles) {
+  return profiles.filter((profile) => {
+    const handle = String(profile?.handle || '').trim();
+    const galleryImageCount = countGalleryImages(profile?.gallery);
+    const statusValue = getSeaCrewStatusValue(profile).toLowerCase();
+    const isSeaCrewVisible = (profile?.visibility_settings?.show_in_seacrew ?? true) === true;
+    return (
+      Boolean(handle) &&
+      profile?.share_ready === true &&
+      galleryImageCount > 0 &&
+      statusValue !== 'not available' &&
+      isSeaCrewVisible
+    );
+  });
+}
+
 function chunkArray(items, size = 100) {
   const safeSize = Math.max(1, Number(size) || 100);
   const chunks = [];
@@ -172,6 +188,203 @@ function getSeaCrewCountryValue(profile) {
 
 function getSeaCrewStatusValue(profile) {
   return String(profile?.prefs_skills_lite?.status || profile?.prefs_skills?.status || '').trim();
+}
+
+async function fetchSeaCrewProfilesLegacy() {
+  const { data, error } = await supabase
+    .from('public_profiles')
+    .select('*')
+    .not('handle', 'is', null)
+    .neq('handle', '')
+    .eq('share_ready', true)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  const profiles = Array.isArray(data) ? data : [];
+  const normalizedProfiles = profiles.map(normalizePublicProfileForProgress);
+  const profileIds = normalizedProfiles
+    .map((profile) => (isUuidLike(profile.id) ? profile.id : null))
+    .filter(Boolean);
+  const nicknameIds = Array.from(
+    new Set(
+      normalizedProfiles.flatMap((profile) => getSeaCrewUserLookupKeys(profile).filter(isUuidLike))
+    )
+  );
+
+  const nicknameMap = new Map();
+  for (const idChunk of chunkArray(nicknameIds)) {
+    try {
+      const { data: userRows, error: usersError } = await supabase
+        .from('users')
+        .select('id, nickname')
+        .in('id', idChunk);
+
+      if (usersError) {
+        console.warn('SeaCrew nickname batch lookup failed:', usersError);
+        continue;
+      }
+
+      (userRows || []).forEach((row) => {
+        const nickname = String(row?.nickname || '').trim();
+        if (nickname) nicknameMap.set(String(row.id), nickname);
+      });
+    } catch (nicknameError) {
+      console.warn('SeaCrew nickname batch lookup failed:', nicknameError);
+    }
+  }
+
+  if (nicknameIds.length && nicknameMap.size === 0 && window.location.hostname !== 'localhost') {
+    try {
+      const response = await fetch('/api/seacrew-nicknames', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: nicknameIds }),
+      });
+      const payload = await response.json();
+      if (response.ok && payload?.nicknames && typeof payload.nicknames === 'object') {
+        Object.entries(payload.nicknames).forEach(([id, nickname]) => {
+          const safeNickname = String(nickname || '').trim();
+          if (safeNickname) nicknameMap.set(id, safeNickname);
+        });
+      }
+    } catch (nicknameError) {
+      console.warn('Error loading SeaCrew nicknames from API:', nicknameError);
+    }
+  }
+
+  const experienceMap = new Map();
+  for (const profileIdChunk of chunkArray(profileIds)) {
+    try {
+      const { data: experienceRows, error: experiencesError } = await supabase
+        .from('profile_experiences')
+        .select('profile_id, start_year, start_month, end_year, end_month, is_current')
+        .in('profile_id', profileIdChunk);
+
+      if (experiencesError) {
+        console.warn('SeaCrew experience batch lookup failed:', experiencesError);
+        continue;
+      }
+
+      (experienceRows || []).forEach((row) => {
+        const key = String(row.profile_id || '').trim();
+        if (!key) return;
+        const current = experienceMap.get(key) || [];
+        current.push(row);
+        experienceMap.set(key, current);
+      });
+    } catch (experiencesError) {
+      console.warn('SeaCrew experience batch lookup failed:', experiencesError);
+    }
+  }
+
+  const yachtingMonthsMap = new Map();
+  for (const profileIdChunk of chunkArray(profileIds, 25)) {
+    try {
+      const yachtingEntries = await Promise.all(
+        profileIdChunk.map(async (profileId) => {
+          const { data: monthsData, error: monthsError } = await supabase.rpc('rpc_yachting_months', {
+            profile_uuid: profileId,
+          });
+          if (monthsError) {
+            console.warn('SeaCrew yachting months lookup failed for', profileId, monthsError);
+            return [profileId, null];
+          }
+          return [profileId, typeof monthsData === 'number' ? monthsData : null];
+        })
+      );
+
+      yachtingEntries.forEach(([profileId, months]) => {
+        yachtingMonthsMap.set(profileId, months);
+      });
+    } catch (monthsError) {
+      console.warn('SeaCrew yachting months batch lookup failed:', monthsError);
+    }
+  }
+
+  const enrichedProfiles = normalizedProfiles.map((profile) => {
+    const nicknameLookupKeys = getSeaCrewUserLookupKeys(profile).filter(isUuidLike);
+    const userNickname =
+      nicknameLookupKeys
+        .map((id) => nicknameMap.get(id) || '')
+        .find((value) => String(value || '').trim()) || '';
+
+    const profileExperiences = isUuidLike(profile.id)
+      ? experienceMap.get(profile.id) || []
+      : [];
+    const yachtingMonths = isUuidLike(profile.id)
+      ? yachtingMonthsMap.get(profile.id) ?? null
+      : null;
+    const chatReceiverId =
+      nicknameLookupKeys.find((value) => value !== String(profile.id || '').trim()) ||
+      nicknameLookupKeys[0] ||
+      '';
+
+    return {
+      ...profile,
+      userNickname,
+      profile_experiences: profileExperiences,
+      yachtingMonths,
+      chatReceiverId,
+    };
+  });
+
+  return buildSeaCrewReadyProfiles(enrichedProfiles);
+}
+
+async function fetchSeaCrewProfilesRpc() {
+  const { data, error } = await supabase.rpc('rpc_seacrew_profiles');
+  if (error) throw error;
+
+  return normalizeSeaCrewProfileRows(data);
+}
+
+function normalizeSeaCrewProfileRows(rows) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  const enrichedProfiles = safeRows.map((row) => {
+    const baseProfile = normalizePublicProfileForProgress(
+      row?.profile && typeof row.profile === 'object' ? row.profile : {}
+    );
+    const rawMonths = Number(row?.yachting_months);
+    return {
+      ...baseProfile,
+      userNickname: String(row?.user_nickname || '').trim(),
+      yachtingMonths: Number.isFinite(rawMonths) ? rawMonths : null,
+      employmentStatus: String(row?.employment_status || '').trim(),
+      chatReceiverId: String(row?.chat_receiver_id || '').trim(),
+    };
+  });
+
+  return buildSeaCrewReadyProfiles(enrichedProfiles);
+}
+
+async function fetchSeaCrewProfilesPageFullRpc({ offset = 0, limit = SEACREW_PAGE_SIZE } = {}) {
+  const { data, error } = await supabase.rpc('rpc_seacrew_profiles_page_full', {
+    page_offset: offset,
+    page_limit: limit,
+  });
+  if (error) throw error;
+  return normalizeSeaCrewProfileRows(data);
+}
+
+async function fetchSeaCrewFilterOptionsRpc() {
+  const { data, error } = await supabase.rpc('rpc_seacrew_filter_options');
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return {
+    ranks: Array.isArray(row?.ranks) ? row.ranks.filter(Boolean) : [],
+    cities: Array.isArray(row?.cities) ? row.cities.filter(Boolean) : [],
+    countries: Array.isArray(row?.countries) ? row.countries.filter(Boolean) : [],
+  };
+}
+
+async function fetchSeaCrewProfiles() {
+  try {
+    return await fetchSeaCrewProfilesRpc();
+  } catch (rpcError) {
+    console.warn('SeaCrew RPC fetch failed, falling back to legacy loader:', rpcError);
+    return fetchSeaCrewProfilesLegacy();
+  }
 }
 
 const SeaCrewFilterPanel = React.forwardRef(({
@@ -264,6 +477,8 @@ function YachtWorksPage() {
   const [crewProfiles, setCrewProfiles] = useState(null);
   const [crewLoading, setCrewLoading] = useState(false);
   const [crewError, setCrewError] = useState('');
+  const [crewHasMore, setCrewHasMore] = useState(false);
+  const [crewFilterOptions, setCrewFilterOptions] = useState({ ranks: [], cities: [], countries: [] });
   const [activeTab, setActiveTab] = useState('jobs');
   const [showPrefsIntro, setShowPrefsIntro] = useState(false);
   const [prefsIntroSeen, setPrefsIntroSeen] = useState(false);
@@ -321,7 +536,7 @@ function YachtWorksPage() {
     country: '',
     selectedOnly: false,
   });
-  const [crewVisibleCount, setCrewVisibleCount] = useState(SEACREW_PAGE_SIZE);
+  const crewRequestIdRef = React.useRef(0);
 
   const [preferences, setPreferences] = useState({
     positions: [],
@@ -402,178 +617,79 @@ function YachtWorksPage() {
   }, []);
 
   useEffect(() => {
-    if (activeTab !== 'crew' || crewLoading || !userLoaded || crewProfiles !== null) {
-      return;
-    }
+    if (activeTab !== 'crew' || !userLoaded) return;
 
-    const fetchCrewProfiles = async () => {
+    let cancelled = false;
+    const loadOptions = async () => {
+      try {
+        const options = await fetchSeaCrewFilterOptionsRpc();
+        if (!cancelled) setCrewFilterOptions(options);
+      } catch (error) {
+        console.warn('SeaCrew filter options RPC failed:', error);
+      }
+    };
+
+    loadOptions();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, userLoaded]);
+
+  const hasCrewFiltersApplied = useMemo(
+    () => (
+      Boolean(crewFilters.selectedOnly) ||
+      String(crewFilters.rank || '').trim().length > 0 ||
+      String(crewFilters.city || '').trim().length > 0 ||
+      String(crewFilters.country || '').trim().length > 0
+    ),
+    [crewFilters]
+  );
+
+  useEffect(() => {
+    if (activeTab !== 'crew' || !userLoaded) return;
+
+    const requestId = ++crewRequestIdRef.current;
+    const loadCrewProfiles = async () => {
       setCrewLoading(true);
       setCrewError('');
-      const { data, error } = await supabase
-        .from('public_profiles')
-        .select('*')
-        .not('handle', 'is', null)
-        .neq('handle', '')
-        .eq('share_ready', true)
-        .order('created_at', { ascending: false });
-
-      if (error) {
+      try {
+        if (hasCrewFiltersApplied) {
+          const readyProfiles = await fetchSeaCrewProfiles();
+          if (crewRequestIdRef.current !== requestId) return;
+          setCrewProfiles(readyProfiles);
+          setCrewHasMore(false);
+        } else {
+          try {
+            const firstPage = await fetchSeaCrewProfilesPageFullRpc({
+              offset: 0,
+              limit: SEACREW_PAGE_SIZE,
+            });
+            if (crewRequestIdRef.current !== requestId) return;
+            setCrewProfiles(firstPage);
+            setCrewHasMore(firstPage.length === SEACREW_PAGE_SIZE);
+          } catch (pageError) {
+            console.warn('SeaCrew paged RPC failed, falling back to full loader:', pageError);
+            const readyProfiles = await fetchSeaCrewProfiles();
+            if (crewRequestIdRef.current !== requestId) return;
+            setCrewProfiles(readyProfiles.slice(0, SEACREW_PAGE_SIZE));
+            setCrewHasMore(readyProfiles.length > SEACREW_PAGE_SIZE);
+          }
+        }
+      } catch (error) {
         const message = error.message || 'Failed to load SeaCrew profiles.';
         console.error('Error fetching SeaCrew profiles:', error);
         setCrewError(message);
         setCrewProfiles([]);
-        setCrewLoading(false);
-        return;
-      }
-
-      const profiles = Array.isArray(data) ? data : [];
-      const normalizedProfiles = profiles.map(normalizePublicProfileForProgress);
-      const profileIds = normalizedProfiles
-        .map((profile) => (isUuidLike(profile.id) ? profile.id : null))
-        .filter(Boolean);
-      const nicknameIds = Array.from(
-        new Set(
-          normalizedProfiles.flatMap((profile) => getSeaCrewUserLookupKeys(profile).filter(isUuidLike))
-        )
-      );
-
-      const nicknameMap = new Map();
-      for (const idChunk of chunkArray(nicknameIds)) {
-        try {
-          const { data: userRows, error: usersError } = await supabase
-            .from('users')
-            .select('id, nickname')
-            .in('id', idChunk);
-
-          if (usersError) {
-            console.warn('SeaCrew nickname batch lookup failed:', usersError);
-            continue;
-          }
-
-          (userRows || []).forEach((row) => {
-            const nickname = String(row?.nickname || '').trim();
-            if (nickname) nicknameMap.set(String(row.id), nickname);
-          });
-        } catch (nicknameError) {
-          console.warn('SeaCrew nickname batch lookup failed:', nicknameError);
+        setCrewHasMore(false);
+      } finally {
+        if (crewRequestIdRef.current === requestId) {
+          setCrewLoading(false);
         }
       }
-
-      if (nicknameIds.length && nicknameMap.size === 0 && window.location.hostname !== 'localhost') {
-        try {
-          const response = await fetch('/api/seacrew-nicknames', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userIds: nicknameIds }),
-          });
-          const payload = await response.json();
-          if (response.ok && payload?.nicknames && typeof payload.nicknames === 'object') {
-            Object.entries(payload.nicknames).forEach(([id, nickname]) => {
-              const safeNickname = String(nickname || '').trim();
-              if (safeNickname) nicknameMap.set(id, safeNickname);
-            });
-          }
-        } catch (nicknameError) {
-          console.warn('Error loading SeaCrew nicknames from API:', nicknameError);
-        }
-      }
-
-      const experienceMap = new Map();
-      for (const profileIdChunk of chunkArray(profileIds)) {
-        try {
-          const { data: experienceRows, error: experiencesError } = await supabase
-            .from('profile_experiences')
-            .select('profile_id, start_year, start_month, end_year, end_month, is_current')
-            .in('profile_id', profileIdChunk);
-
-          if (experiencesError) {
-            console.warn('SeaCrew experience batch lookup failed:', experiencesError);
-            continue;
-          }
-
-          (experienceRows || []).forEach((row) => {
-            const key = String(row.profile_id || '').trim();
-            if (!key) return;
-            const current = experienceMap.get(key) || [];
-            current.push(row);
-            experienceMap.set(key, current);
-          });
-        } catch (experiencesError) {
-          console.warn('SeaCrew experience batch lookup failed:', experiencesError);
-        }
-      }
-
-      const yachtingMonthsMap = new Map();
-      for (const profileIdChunk of chunkArray(profileIds, 25)) {
-        try {
-          const yachtingEntries = await Promise.all(
-            profileIdChunk.map(async (profileId) => {
-              const { data: monthsData, error: monthsError } = await supabase.rpc('rpc_yachting_months', {
-                profile_uuid: profileId,
-              });
-              if (monthsError) {
-                console.warn('SeaCrew yachting months lookup failed for', profileId, monthsError);
-                return [profileId, null];
-              }
-              return [profileId, typeof monthsData === 'number' ? monthsData : null];
-            })
-          );
-
-          yachtingEntries.forEach(([profileId, months]) => {
-            yachtingMonthsMap.set(profileId, months);
-          });
-        } catch (monthsError) {
-          console.warn('SeaCrew yachting months batch lookup failed:', monthsError);
-        }
-      }
-
-      const enrichedProfiles = normalizedProfiles.map((profile) => {
-        const nicknameLookupKeys = getSeaCrewUserLookupKeys(profile).filter(isUuidLike);
-        const userNickname =
-          nicknameLookupKeys
-            .map((id) => nicknameMap.get(id) || '')
-            .find((value) => String(value || '').trim()) || '';
-
-        const profileExperiences = isUuidLike(profile.id)
-          ? experienceMap.get(profile.id) || []
-          : [];
-        const yachtingMonths = isUuidLike(profile.id)
-          ? yachtingMonthsMap.get(profile.id) ?? null
-          : null;
-        const chatReceiverId =
-          nicknameLookupKeys.find((value) => value !== String(profile.id || '').trim()) ||
-          nicknameLookupKeys[0] ||
-          '';
-
-        return {
-          ...profile,
-          userNickname,
-          profile_experiences: profileExperiences,
-          yachtingMonths,
-          chatReceiverId,
-        };
-      });
-
-      const readyProfiles = enrichedProfiles.filter((profile) => {
-        const handle = String(profile?.handle || '').trim();
-        const galleryImageCount = countGalleryImages(profile?.gallery);
-        const statusValue = getSeaCrewStatusValue(profile).toLowerCase();
-        const isSeaCrewVisible = (profile?.visibility_settings?.show_in_seacrew ?? true) === true;
-        return (
-          Boolean(handle) &&
-          profile?.share_ready === true &&
-          galleryImageCount > 0 &&
-          statusValue !== 'not available' &&
-          isSeaCrewVisible
-        );
-      });
-
-      setCrewProfiles(readyProfiles);
-      setCrewLoading(false);
     };
 
-    fetchCrewProfiles();
-  }, [activeTab, crewProfiles, crewLoading, userLoaded, user?.id]);
+    loadCrewProfiles();
+  }, [activeTab, userLoaded, hasCrewFiltersApplied]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -607,11 +723,6 @@ function YachtWorksPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [activeTab, openPanel]);
-
-  useEffect(() => {
-    if (activeTab !== 'crew') return;
-    setCrewVisibleCount(SEACREW_PAGE_SIZE);
-  }, [activeTab, crewFilters]);
 
   const filteredOffers = useMemo(() => {
     return offers.filter((offer) => {
@@ -675,31 +786,25 @@ function YachtWorksPage() {
   }, [offers, filters, user]);
 
   const crewRankOptions = useMemo(() => {
-    const values = new Set(
-      (Array.isArray(crewProfiles) ? crewProfiles : [])
-        .map(getSeaCrewRankValue)
-        .filter(Boolean)
-    );
-    return Array.from(values).sort((a, b) => a.localeCompare(b));
-  }, [crewProfiles]);
+    const source = crewFilterOptions.ranks.length
+      ? crewFilterOptions.ranks
+      : (Array.isArray(crewProfiles) ? crewProfiles : []).map(getSeaCrewRankValue).filter(Boolean);
+    return Array.from(new Set(source)).sort((a, b) => a.localeCompare(b));
+  }, [crewFilterOptions.ranks, crewProfiles]);
 
   const crewCityOptions = useMemo(() => {
-    const values = new Set(
-      (Array.isArray(crewProfiles) ? crewProfiles : [])
-        .map(getSeaCrewCityValue)
-        .filter(Boolean)
-    );
-    return Array.from(values).sort((a, b) => a.localeCompare(b));
-  }, [crewProfiles]);
+    const source = crewFilterOptions.cities.length
+      ? crewFilterOptions.cities
+      : (Array.isArray(crewProfiles) ? crewProfiles : []).map(getSeaCrewCityValue).filter(Boolean);
+    return Array.from(new Set(source)).sort((a, b) => a.localeCompare(b));
+  }, [crewFilterOptions.cities, crewProfiles]);
 
   const crewCountryOptions = useMemo(() => {
-    const values = new Set(
-      (Array.isArray(crewProfiles) ? crewProfiles : [])
-        .map(getSeaCrewCountryValue)
-        .filter(Boolean)
-    );
-    return Array.from(values).sort((a, b) => a.localeCompare(b));
-  }, [crewProfiles]);
+    const source = crewFilterOptions.countries.length
+      ? crewFilterOptions.countries
+      : (Array.isArray(crewProfiles) ? crewProfiles : []).map(getSeaCrewCountryValue).filter(Boolean);
+    return Array.from(new Set(source)).sort((a, b) => a.localeCompare(b));
+  }, [crewFilterOptions.countries, crewProfiles]);
 
   const filteredCrewProfiles = useMemo(() => {
     const items = Array.isArray(crewProfiles) ? crewProfiles : [];
@@ -732,22 +837,33 @@ function YachtWorksPage() {
     });
   }, [crewFilters, crewProfiles, user]);
 
-  const hasActiveCrewFilters = useMemo(
-    () => (
-      Boolean(crewFilters.selectedOnly) ||
-      String(crewFilters.rank || '').trim().length > 0 ||
-      String(crewFilters.city || '').trim().length > 0 ||
-      String(crewFilters.country || '').trim().length > 0
-    ),
-    [crewFilters]
-  );
+  const visibleCrewProfiles = useMemo(() => filteredCrewProfiles, [filteredCrewProfiles]);
 
-  const visibleCrewProfiles = useMemo(
-    () => (hasActiveCrewFilters ? filteredCrewProfiles : filteredCrewProfiles.slice(0, crewVisibleCount)),
-    [filteredCrewProfiles, crewVisibleCount, hasActiveCrewFilters]
-  );
+  const hasMoreCrewProfiles = !hasCrewFiltersApplied && crewHasMore;
 
-  const hasMoreCrewProfiles = !hasActiveCrewFilters && filteredCrewProfiles.length > crewVisibleCount;
+  const handleLoadMoreCrew = async () => {
+    if (crewLoading || hasCrewFiltersApplied || !crewHasMore) return;
+    const requestId = ++crewRequestIdRef.current;
+    setCrewLoading(true);
+    setCrewError('');
+    try {
+      const nextPage = await fetchSeaCrewProfilesPageFullRpc({
+        offset: Array.isArray(crewProfiles) ? crewProfiles.length : 0,
+        limit: SEACREW_PAGE_SIZE,
+      });
+      if (crewRequestIdRef.current !== requestId) return;
+      setCrewProfiles((prev) => [...(Array.isArray(prev) ? prev : []), ...nextPage]);
+      setCrewHasMore(nextPage.length === SEACREW_PAGE_SIZE);
+    } catch (error) {
+      const message = error.message || 'Failed to load more SeaCrew profiles.';
+      console.error('Error loading more SeaCrew profiles:', error);
+      setCrewError(message);
+    } finally {
+      if (crewRequestIdRef.current === requestId) {
+        setCrewLoading(false);
+      }
+    }
+  };
 
   const prefsReady = useMemo(() => {
     const posOK = (preferences.positions || []).length > 0;
@@ -1097,7 +1213,7 @@ function YachtWorksPage() {
               <button
                 type="button"
                 className="landing-button"
-                onClick={() => setCrewVisibleCount((prev) => prev + SEACREW_PAGE_SIZE)}
+                onClick={handleLoadMoreCrew}
               >
                 Load more crew
               </button>

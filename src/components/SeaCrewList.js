@@ -100,7 +100,7 @@ function computeExperienceMonths(experiences) {
 }
 
 function getEmploymentStatus(profile) {
-  const status = profile?.prefs_skills_lite?.status || profile?.prefs_skills?.status;
+  const status = profile?.prefs_skills_lite?.status || profile?.prefs_skills?.status || profile?.employmentStatus;
   if (status && typeof status === 'string' && status.trim()) return status.trim();
   const experiences = profile?.profile_experiences;
   if (Array.isArray(experiences) && experiences.some((e) => e?.is_current)) return 'Employed';
