@@ -7,6 +7,7 @@ import {
   formatOfferDate,
   isPrimaryLicenseAllowedForRank,
   isEngineeringLicenseAllowedForRank,
+  normalizeEngineeringLicenseValue,
   normalizeDeckLicenseValue,
 } from './yachtOfferForm.utils';
 import { isOfferClosed } from '../utils/jobOfferVisibility';
@@ -162,7 +163,9 @@ const OfferTimeline = ({
                     const rank1DeckLic = isPrimaryLicenseAllowedForRank(offer.title, rank1DeckLicRaw)
                       ? normalizeDeckLicenseValue(rank1DeckLicRaw)
                       : null;
-                    const rank1EngineLic = isEngineeringLicenseAllowedForRank(offer.title, rank1EngineLicRaw) ? rank1EngineLicRaw : null;
+                    const rank1EngineLic = isEngineeringLicenseAllowedForRank(offer.title, rank1EngineLicRaw)
+                      ? normalizeEngineeringLicenseValue(rank1EngineLicRaw)
+                      : null;
                     const rank1DocsRaw = Array.isArray(offer.required_documents) ? offer.required_documents : (typeof offer.required_documents === 'string' ? offer.required_documents.split(',').map((d) => d.trim()).filter(Boolean) : []);
                     const rank1DocsOnly = rank1DocsRaw.filter((doc) => doc !== rank1DeckLic && doc !== rank1EngineLic);
                     const rank2DeckLicRaw = Array.isArray(offer.teammate_required_licenses) && offer.teammate_required_licenses[0] ? offer.teammate_required_licenses[0] : null;
@@ -170,7 +173,9 @@ const OfferTimeline = ({
                     const rank2DeckLic = isPrimaryLicenseAllowedForRank(offer.teammate_rank, rank2DeckLicRaw)
                       ? normalizeDeckLicenseValue(rank2DeckLicRaw)
                       : null;
-                    const rank2EngineLic = isEngineeringLicenseAllowedForRank(offer.teammate_rank, rank2EngineLicRaw) ? rank2EngineLicRaw : null;
+                    const rank2EngineLic = isEngineeringLicenseAllowedForRank(offer.teammate_rank, rank2EngineLicRaw)
+                      ? normalizeEngineeringLicenseValue(rank2EngineLicRaw)
+                      : null;
                     const rank2DocsRaw = Array.isArray(offer.teammate_required_documents) ? offer.teammate_required_documents : [];
                     const rank2DocsOnly = rank2DocsRaw.filter((doc) => doc !== rank2DeckLic && doc !== rank2EngineLic);
                     const hasRank1 = rank1DeckLic || rank1EngineLic || rank1DocsOnly.length > 0;

@@ -23,7 +23,6 @@ export const ROTATION_CYCLES = [
   '3:3',
   '4:2',
   '5:1',
-  '10:10',
 ];
 
 // Tipos de embarcación

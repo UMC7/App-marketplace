@@ -98,6 +98,17 @@ export default function PreferencesSkills({
   const isMobile = useIsMobile();
   const isLite = mode === 'lite';
   const isProfessional = mode === 'professional';
+  const rotationEnabled = Array.isArray(contracts) && contracts.includes('Rotational');
+
+  const handleContractsChange = React.useCallback(
+    (nextContracts) => {
+      onChangeContracts?.(nextContracts);
+      if (!(Array.isArray(nextContracts) && nextContracts.includes('Rotational'))) {
+        onChangeRotation?.([]);
+      }
+    },
+    [onChangeContracts, onChangeRotation]
+  );
 
   const hasLanguagesWithLevel = (arr) =>
     Array.isArray(arr) && arr.some((ll) => ll && ll.lang && String(ll.lang).trim() && ll.level && String(ll.level).trim());
@@ -169,11 +180,15 @@ export default function PreferencesSkills({
       <div className="cp-form">
         <div style={twoCol}>
           <RegionsSeasonsPicker value={regionsSeasons} onChange={onChangeRegionsSeasons} />
-          <ContractTypesSelector value={contracts} onChange={onChangeContracts} />
+          <ContractTypesSelector value={contracts} onChange={handleContractsChange} />
         </div>
 
         <div style={twoCol}>
-          <RotationPreferencePicker value={rotation} onChange={onChangeRotation} />
+          <RotationPreferencePicker
+            value={rotation}
+            onChange={onChangeRotation}
+            disabled={!rotationEnabled}
+          />
           <VesselTypePreferenceSelector
             value={Array.isArray(vesselTypes) ? vesselTypes : []}
             onChange={onChangeVesselTypes}
@@ -223,8 +238,12 @@ export default function PreferencesSkills({
 
       {/* Accepted contract types | Preferred rotation cycles */}
       <div style={twoCol}>
-        <ContractTypesSelector value={contracts} onChange={onChangeContracts} />
-        <RotationPreferencePicker value={rotation} onChange={onChangeRotation} />
+        <ContractTypesSelector value={contracts} onChange={handleContractsChange} />
+        <RotationPreferencePicker
+          value={rotation}
+          onChange={onChangeRotation}
+          disabled={!rotationEnabled}
+        />
       </div>
 
       {/* Preferred vessel types | Desired LOA range */}

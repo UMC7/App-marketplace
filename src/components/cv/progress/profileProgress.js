@@ -77,6 +77,10 @@ function hasRateSalary(value) {
   );
 }
 
+function hasRotationalContract(contracts) {
+  return Array.isArray(contracts) && contracts.some((item) => String(item || '').trim() === 'Rotational');
+}
+
 function imageCount(gallery) {
   if (!Array.isArray(gallery)) return 0;
   return gallery.filter((item) => {
@@ -154,6 +158,7 @@ export function buildProfessionalProgressSections({
   prefs = {},
 } = {}) {
   const targetRanks = profile?.target_ranks || [];
+  const rotationApplies = hasRotationalContract(prefs?.contracts);
   return {
     personal: {
       count:
@@ -174,14 +179,14 @@ export function buildProfessionalProgressSections({
       count:
         (hasAnySelectedItem(prefs?.regionsSeasons) ? 1 : 0) +
         (hasAnySelectedItem(prefs?.contracts) ? 1 : 0) +
-        (hasAnySelectedItem(prefs?.rotation) ? 1 : 0) +
+        (rotationApplies && hasAnySelectedItem(prefs?.rotation) ? 1 : 0) +
         (hasAnySelectedItem(prefs?.vesselTypes) ? 1 : 0) +
         (hasAnySelectedItem(prefs?.vesselSizeRange) ? 1 : 0) +
         (hasRateSalary(prefs?.rateSalary) ? 1 : 0) +
         (hasAnySelectedItem(prefs?.programTypes) ? 1 : 0) +
         (hasAnySelectedItem(prefs?.dietaryRequirements) ? 1 : 0) +
         (hasAnySelectedItem(prefs?.onboardPrefs) ? 1 : 0),
-      total: 9,
+      total: rotationApplies ? 9 : 8,
     },
   };
 }

@@ -10,7 +10,6 @@ import {
   formatExperienceRequirementLabel,
   types,
   VISA_OPTIONS,
-  ENGINEERING_LICENSE_FIELD_OPTIONS,
   COUNTRIES,
 } from './yachtOfferForm.constants';
 import { getDaySelectOptions } from './yachtOfferForm.utils';
@@ -172,7 +171,7 @@ function YachtOfferFormOnboardFields({
                   <label>Teammate Engineering License:</label>
                   <select name="teammate_engineering_license" value={formData.teammate_engineering_license} onChange={onChange}>
                     <option value="">Select...</option>
-                    {ENGINEERING_LICENSE_FIELD_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                    {engineeringLicenseFieldOptions.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </>
               )}

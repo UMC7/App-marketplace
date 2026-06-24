@@ -135,6 +135,8 @@ export const DOCUMENT_TITLE_ALIASES = new Map(
     ["food hygiene level 3", "Food Safety & Hygiene Level 3 (Supervising)"],
     ["wset 2", "WSET Level 2 Award in Wines"],
     ["wset 3", "WSET Level 3 Award in Wines"],
+    ["aec 1 + aec 2", "AEC 2 (Approved Engine Course 2)"],
+    ["aec 1 + aec 2 approved engine course", "AEC 2 (Approved Engine Course 2)"],
 
     // Docs & Media
     ["cv", "CV / Resume"],

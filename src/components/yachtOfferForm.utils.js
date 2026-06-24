@@ -10,6 +10,11 @@ import {
   YACHTMASTER_OFFSHORE_LICENSE,
 } from './yachtOfferForm.constants';
 
+const AEC2_ENGINEERING_LICENSE = 'AEC 2 - Approved Engine Course 2';
+const FULL_AEC_ENGINEERING_LICENSE = 'AEC 1 + AEC 2 - Approved Engine Course';
+const AEC2_ENGINEERING_FIELD_LICENSE = 'AEC 2 â€“ Approved Engine Course 2';
+const FULL_AEC_ENGINEERING_FIELD_LICENSE = 'AEC 1 + AEC 2 â€“ Approved Engine Course';
+
 export const getInferredYear = (monthValue) => {
   const month = Number(monthValue);
   if (!month) return null;
@@ -136,7 +141,7 @@ const SOLO_ENGINEER_EXCLUSIONS = new Set([
 
 const ENGINEERING_LICENSE_EXCLUSIONS = {
   'Chief Engineer': new Set([
-    'AEC 2 - Approved Engine Course 2',
+    FULL_AEC_ENGINEERING_LICENSE,
     'AEC 1 - Approved Engine Course 1',
     'Engineering Officer of the Watch (EOOW) - STCW III/1',
     'Second Engineer Unlimited - STCW III/2',
@@ -147,6 +152,12 @@ const ENGINEERING_LICENSE_EXCLUSIONS = {
   ]),
   'Solo Engineer': SOLO_ENGINEER_EXCLUSIONS,
   Engineer: SOLO_ENGINEER_EXCLUSIONS,
+};
+
+export const normalizeEngineeringLicenseValue = (license) => {
+  if (license === AEC2_ENGINEERING_LICENSE) return FULL_AEC_ENGINEERING_LICENSE;
+  if (license === AEC2_ENGINEERING_FIELD_LICENSE) return FULL_AEC_ENGINEERING_FIELD_LICENSE;
+  return license;
 };
 
 export const getEngineeringLicenseOptionsForRank = (rank) => {
@@ -173,11 +184,12 @@ export const isDeckLicenseAllowedForRank = (rank, license) =>
 
 export const isEngineeringLicenseAllowedForRank = (rank, license) => {
   if (!license) return false;
+  const normalizedLicense = normalizeEngineeringLicenseValue(license);
   const allowed = new Set([
-    ...getEngineeringLicenseOptionsForRank(rank),
-    ...ENGINEERING_LICENSE_FIELD_OPTIONS,
+    ...getEngineeringLicenseOptionsForRank(rank).map(normalizeEngineeringLicenseValue),
+    ...ENGINEERING_LICENSE_FIELD_OPTIONS.map(normalizeEngineeringLicenseValue),
   ]);
-  return allowed.has(license);
+  return allowed.has(normalizedLicense);
 };
 
 export const isPrimaryLicenseAllowedForRank = (rank, license) =>

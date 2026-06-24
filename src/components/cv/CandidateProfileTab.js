@@ -128,6 +128,10 @@ function buildLitePrefsPayload() {
   };
 }
 
+function hasRotationalContractSelected(value) {
+  return Array.isArray(value) && value.some((item) => String(item || '').trim() === 'Rotational');
+}
+
   const [personal, setPersonal] = useState({
     first_name: '',
     last_name: '',
@@ -227,6 +231,12 @@ function buildLitePrefsPayload() {
     setDietaryRequirements(Array.isArray(ps?.dietaryRequirements) ? ps.dietaryRequirements : []);
     setOnboardPrefs(ps?.onboardPrefs && typeof ps.onboardPrefs === 'object' ? ps.onboardPrefs : {});
   }
+
+  useEffect(() => {
+    if (hasRotationalContractSelected(contracts)) return;
+    if (!Array.isArray(rotation) || rotation.length === 0) return;
+    setRotation([]);
+  }, [contracts, rotation]);
 
   useEffect(() => {
     const mode = isAdminView
@@ -508,9 +518,17 @@ function buildLitePrefsPayload() {
               : (data?.compensation && typeof data.compensation === 'object'
                 ? data.compensation
                 : { currency: 'USD', dayRateMin: '', salaryMin: '' }),
-            rotation: Array.isArray((useLite ? seedLite : seedPro)?.rotation)
-              ? (useLite ? seedLite : seedPro).rotation
-              : ((useLite ? seedLite : seedPro)?.rotation ? [(useLite ? seedLite : seedPro).rotation] : []),
+            rotation: hasRotationalContractSelected(
+              Array.isArray((useLite ? seedLite : seedPro)?.contracts)
+                ? (useLite ? seedLite : seedPro).contracts
+                : (Array.isArray(data?.contract_types) ? data.contract_types : [])
+            )
+              ? (
+                Array.isArray((useLite ? seedLite : seedPro)?.rotation)
+                  ? (useLite ? seedLite : seedPro).rotation
+                  : ((useLite ? seedLite : seedPro)?.rotation ? [(useLite ? seedLite : seedPro).rotation] : [])
+              )
+              : [],
             vesselTypes: Array.isArray((useLite ? seedLite : seedPro)?.vesselTypes) ? (useLite ? seedLite : seedPro).vesselTypes : [],
             vesselSizeRange: (useLite ? seedLite : seedPro)?.vesselSizeRange ?? [],
             programTypes: Array.isArray((useLite ? seedLite : seedPro)?.programTypes) ? (useLite ? seedLite : seedPro).programTypes : [],
@@ -938,6 +956,7 @@ const generateShortHandle = () => {
       toast.error('Please choose an availability date.');
       return;
     }
+  const effectiveRotation = hasRotationalContractSelected(contracts) ? rotation : [];
   const payload = isLite
     ? buildLitePrefsPayload()
     : buildPrefsSkillsPayload({
@@ -947,7 +966,7 @@ const generateShortHandle = () => {
         contracts,
         languageLevels,
         deptSpecialties,
-        rotation,
+        rotation: effectiveRotation,
         vesselTypes,
         vesselSizeRange,
         rateSalary,
@@ -985,7 +1004,7 @@ const generateShortHandle = () => {
         languageLevels,
         deptSpecialties,
         rateSalary,
-        rotation,
+        rotation: effectiveRotation,
         vesselTypes,
         vesselSizeRange,
         programTypes,
@@ -1317,7 +1336,7 @@ const generateShortHandle = () => {
       languageLevels,
       deptSpecialties,
       rateSalary,
-      rotation,
+      rotation: hasRotationalContractSelected(contracts) ? rotation : [],
       vesselTypes,
       vesselSizeRange,
       programTypes,

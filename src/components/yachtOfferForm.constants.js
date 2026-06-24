@@ -95,7 +95,7 @@ export const ENGINEERING_LICENSE_OPTIONS = [
   'Y3 - Yacht Engineer ≤500 GT',
   'Y4 - Yacht Engineer ≤200 GT',
   'Small Vessel Chief Engineer - MCA SV',
-  'AEC 2 - Approved Engine Course 2',
+  'AEC 1 + AEC 2 - Approved Engine Course',
   'AEC 1 - Approved Engine Course 1',
   'MEOL (Yachts) - Marine Engine Operator Licence',
 ];
@@ -103,7 +103,7 @@ export const ENGINEERING_LICENSE_OPTIONS = [
 export const ELECTRICIAN_LICENSE_OPTIONS = [
   'Engineering Officer of the Watch (EOOW) - STCW III/1',
   'MEO (Yachts) - Marine Engine Operator Licence',
-  'AEC 2 - Approved Engine Course 2',
+  'AEC 1 + AEC 2 - Approved Engine Course',
   'AEC 1 - Approved Engine Course 1',
 ];
 
@@ -113,7 +113,7 @@ export const ENGINEERING_LICENSE_FIELD_OPTIONS = [
   'Y3 - Yacht Engineer ≤500 GT',
   'Y4 – Yacht Engineer ≤200 GT',
   'MEO (Yachts) – Marine Engine Operator',
-  'AEC 2 – Approved Engine Course 2',
+  'AEC 1 + AEC 2 – Approved Engine Course',
   'AEC 1 – Approved Engine Course 1',
 ];
 
@@ -290,7 +290,7 @@ export const CAPTAIN_REQUIRED_DOCUMENT_GROUPS = [
 
 const ENGINE_ROOM_AEC_GROUP = {
   label: 'Engine Room / AEC',
-  options: ['AEC 2 - Approved Engine Course 2', 'AEC 1 - Approved Engine Course 1'],
+  options: ['AEC 1 + AEC 2 - Approved Engine Course', 'AEC 1 - Approved Engine Course 1'],
 };
 
 export const DECK_COMMAND_REQUIRED_DOCUMENT_GROUPS = [
@@ -781,3 +781,4 @@ export const COUNTRIES = [
   'Thailand','Trinidad and Tobago','Tunisia','Turkey','United Arab Emirates','United Kingdom',
   'United States','Uruguay','Vanuatu','Venezuela','Vietnam',
 ];
+

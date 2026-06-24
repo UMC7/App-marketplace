@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react';
 
 // Regiones ordenadas alfabéticamente (sin “seasons”)
 const REGIONS = [
+  'Any',
   'Antarctic',
   'Arctic',
   'Atlantic',
@@ -28,6 +29,7 @@ const REGIONS = [
 ];
 
 const MAX = 3;
+const ANY_REGION = 'Any';
 
 export default function RegionsSeasonsPicker({
   value,
@@ -43,7 +45,13 @@ export default function RegionsSeasonsPicker({
 
   const add = () => {
     if (!pick) return;
+    if (pick === ANY_REGION) {
+      commit([ANY_REGION]);
+      setPick('');
+      return;
+    }
     const set = new Set(selected);
+    set.delete(ANY_REGION);
     if (set.size >= MAX) return; // límite
     set.add(pick);
     commit(Array.from(set));
@@ -56,7 +64,12 @@ export default function RegionsSeasonsPicker({
     commit(Array.from(set));
   };
 
-  const canAdd = !!pick && selected.length < MAX && !selected.includes(pick);
+  const hasAnySelected = selected.includes(ANY_REGION);
+  const canAdd =
+    !!pick &&
+    !selected.includes(pick) &&
+    ((pick === ANY_REGION && selected.length === 0) ||
+      (pick !== ANY_REGION && !hasAnySelected && selected.length < MAX));
 
   return (
     <div>
@@ -69,7 +82,15 @@ export default function RegionsSeasonsPicker({
         >
           <option value="">Select…</option>
           {REGIONS.map((r) => (
-            <option key={r} value={r} disabled={selected.includes(r)}>
+            <option
+              key={r}
+              value={r}
+              disabled={
+                selected.includes(r) ||
+                (hasAnySelected && r !== ANY_REGION) ||
+                (!hasAnySelected && selected.length > 0 && r === ANY_REGION)
+              }
+            >
               {r}
             </option>
           ))}

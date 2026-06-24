@@ -42,6 +42,7 @@ import {
   getDeckDocumentOptionsForRank,
   isPrimaryLicenseAllowedForRank,
   isEngineeringLicenseAllowedForRank,
+  normalizeEngineeringLicenseValue,
   normalizeDeckLicenseValue,
 } from './yachtOfferForm.utils';
 
@@ -226,7 +227,7 @@ useEffect(() => {
   if (!arr) return;
   setFormData(prev => ({
     ...prev,
-    engineering_license: arr[0] || '',
+    engineering_license: normalizeEngineeringLicenseValue(arr[0] || ''),
   }));
 }, [initialValues]);
 
@@ -279,7 +280,7 @@ useEffect(() => {
   setFormData(prev => ({
     ...prev,
     ...(Array.isArray(tr) && tr[0] != null && { teammate_required_license: normalizeDeckLicenseValue(tr[0]) }),
-    ...(Array.isArray(te) && te[0] != null && { teammate_engineering_license: te[0] }),
+    ...(Array.isArray(te) && te[0] != null && { teammate_engineering_license: normalizeEngineeringLicenseValue(te[0]) }),
     ...(Array.isArray(td) && { teammate_required_documents: td }),
   }));
 }, [initialValues?.teammate_required_licenses, initialValues?.teammate_required_engineering_licenses, initialValues?.teammate_required_documents]);
@@ -548,7 +549,7 @@ const licenseOptions = needsEngineeringLicense
   : needsDeckLicense
     ? getDeckLicenseOptionsForRank(formData.title)
     : [];
-const engineeringLicenseFieldOptions = ENGINEERING_LICENSE_FIELD_OPTIONS;
+const engineeringLicenseFieldOptions = ENGINEERING_LICENSE_FIELD_OPTIONS.map(normalizeEngineeringLicenseValue);
 const isCaptainTierDeckRank = CAPTAIN_TIER_DECK_RANKS.includes(formData.title);
 const DISABLE_DECK_DOC_INSERT_RANKS = new Set(['Mate/Engineer']);
 const deckDocumentOptions =
@@ -998,13 +999,15 @@ const endDayRange = isDayRangeValue(end_day) ? String(end_day).toLowerCase() : n
 const normalizedRequiredLicense = normalizeDeckLicenseValue(required_license);
 const normalizedTeammateRequiredLicense = normalizeDeckLicenseValue(formData.teammate_required_license);
 const requiredLicenses = normalizedRequiredLicense ? [normalizedRequiredLicense] : [];
-const engineeringLicensesArray = engineering_license ? [engineering_license] : [];
+const normalizedEngineeringLicense = normalizeEngineeringLicenseValue(engineering_license);
+const normalizedTeammateEngineeringLicense = normalizeEngineeringLicenseValue(formData.teammate_engineering_license);
+const engineeringLicensesArray = normalizedEngineeringLicense ? [normalizedEngineeringLicense] : [];
 const sanitizedRequiredLicenses =
   isPrimaryLicenseAllowedForRank(formData.title, normalizedRequiredLicense)
     ? requiredLicenses
     : [];
 const sanitizedEngineeringLicenses =
-  isEngineeringLicenseAllowedForRank(formData.title, engineering_license)
+  isEngineeringLicenseAllowedForRank(formData.title, normalizedEngineeringLicense)
     ? engineeringLicensesArray
     : [];
 const derivedStartDate = (() => {
@@ -1069,8 +1072,8 @@ const derivedEndDate = (() => {
         ? [normalizedTeammateRequiredLicense]
         : [],
     teammate_required_engineering_licenses:
-      formData.team === 'Yes' && isEngineeringLicenseAllowedForRank(formData.teammate_rank, formData.teammate_engineering_license)
-        ? [formData.teammate_engineering_license]
+      formData.team === 'Yes' && isEngineeringLicenseAllowedForRank(formData.teammate_rank, normalizedTeammateEngineeringLicense)
+        ? [normalizedTeammateEngineeringLicense]
         : [],
     teammate_required_documents: formData.team === 'Yes' ? (Array.isArray(formData.teammate_required_documents) ? formData.teammate_required_documents : []) : [],
     teammate_required_skills: formData.team === 'Yes' ? (Array.isArray(formData.teammate_required_skills) ? formData.teammate_required_skills : []) : [],
