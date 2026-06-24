@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import supabase from '../supabase';
 import YachtOfferList from '../components/YachtOfferList';
 import SeaCrewList from '../components/SeaCrewList';
@@ -494,6 +494,7 @@ function YachtWorksPage() {
   const crewFiltersRef = React.useRef(null);
   const crewDesktopToggleRef = React.useRef(null);
   const crewMobileToggleRef = React.useRef(null);
+  const crewLoadMoreSentinelRef = useRef(null);
 
   // -------- Acordeón exclusivo --------
   // 'filters' | 'prefs' | null
@@ -841,7 +842,7 @@ function YachtWorksPage() {
 
   const hasMoreCrewProfiles = !hasCrewFiltersApplied && crewHasMore;
 
-  const handleLoadMoreCrew = async () => {
+  const handleLoadMoreCrew = useCallback(async () => {
     if (crewLoading || hasCrewFiltersApplied || !crewHasMore) return;
     const requestId = ++crewRequestIdRef.current;
     setCrewLoading(true);
@@ -863,7 +864,29 @@ function YachtWorksPage() {
         setCrewLoading(false);
       }
     }
-  };
+  }, [crewHasMore, crewLoading, crewProfiles, hasCrewFiltersApplied]);
+
+  useEffect(() => {
+    if (activeTab !== 'crew' || hasCrewFiltersApplied || !hasMoreCrewProfiles) return undefined;
+    if (typeof IntersectionObserver === 'undefined') return undefined;
+
+    const sentinel = crewLoadMoreSentinelRef.current;
+    if (!sentinel) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          handleLoadMoreCrew();
+        }
+      },
+      { rootMargin: '420px 0px' }
+    );
+
+    observer.observe(sentinel);
+    return () => {
+      observer.disconnect();
+    };
+  }, [activeTab, handleLoadMoreCrew, hasCrewFiltersApplied, hasMoreCrewProfiles]);
 
   const prefsReady = useMemo(() => {
     const posOK = (preferences.positions || []).length > 0;
@@ -1204,19 +1227,21 @@ function YachtWorksPage() {
           )}
           <SeaCrewList
             profiles={visibleCrewProfiles}
-            loading={crewLoading}
+            loading={crewLoading && !Array.isArray(crewProfiles)}
             currentUserId={user?.id || ''}
             onRequestChat={handleRequestCrewChat}
           />
-          {!crewLoading && hasMoreCrewProfiles && (
-            <div style={{ display: 'flex', justifyContent: 'center', margin: '26px 0 10px' }}>
-              <button
-                type="button"
-                className="landing-button"
-                onClick={handleLoadMoreCrew}
-              >
-                Load more crew
-              </button>
+          {hasMoreCrewProfiles && (
+            <div
+              ref={crewLoadMoreSentinelRef}
+              className="seacrew-loadmore-sentinel"
+              aria-hidden="true"
+            >
+              {crewLoading && (
+                <div className="seacrew-inline-loader" aria-label="Loading more crew">
+                  <div className="seacrew-inline-loader-spinner" />
+                </div>
+              )}
             </div>
           )}
         </>

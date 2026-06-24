@@ -480,6 +480,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
 .ppv-businessCardTitleGroup {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
   min-width: 0;
 }
@@ -492,38 +493,35 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
 }
 
 .ppv-businessCardName {
+  display: inline-block;
+  width: max-content;
+  max-width: none;
   font-size: clamp(16px, 2vw, 22px);
   line-height: 1.18;
-  font-weight: 700;
+  font-family: "Segoe Script", "Snell Roundhand", "Lucida Handwriting", "Brush Script MT", cursive;
+  font-weight: 600;
+  font-style: normal;
   color: var(--ppv-card-text);
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
 
 .ppv-businessCardName.ppv-businessCardName--long {
   font-size: clamp(15px, 1.85vw, 19px);
   line-height: 1.14;
-  text-overflow: clip;
-  white-space: normal;
-  text-wrap: balance;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  white-space: nowrap;
 }
 
 .ppv-businessCardName.ppv-businessCardName--veryLong {
   font-size: clamp(14px, 1.65vw, 17px);
   line-height: 1.1;
-  text-overflow: clip;
-  white-space: normal;
-  text-wrap: balance;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  white-space: nowrap;
+}
+
+.ppv-businessCardName.ppv-businessCardName--ultraLong {
+  font-size: clamp(11px, 1.25vw, 14px);
+  line-height: 1.02;
+  white-space: nowrap;
 }
 
 .ppv-businessCardRank {

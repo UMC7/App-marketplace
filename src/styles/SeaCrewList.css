@@ -473,3 +473,34 @@ body.dark-mode .seacrew-tab.active {
 body.dark-mode .seacrew-empty {
   color: var(--text-muted) !important;
 }
+
+.seacrew-loadmore-sentinel {
+  min-height: 64px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 18px 0 6px;
+}
+
+.seacrew-inline-loader {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.seacrew-inline-loader-spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 3px solid rgba(104, 173, 168, 0.22);
+  border-top-color: #68ada8;
+  animation: seacrew-spin 0.9s linear infinite;
+}
+
+@keyframes seacrew-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

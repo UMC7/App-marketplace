@@ -163,6 +163,8 @@ export default function PublicProfileView() {
   const introInnerRef = useRef(null);
   const introNameRef = useRef(null);
   const [introNameInlineStyle, setIntroNameInlineStyle] = useState(null);
+  const businessCardNameRef = useRef(null);
+  const [businessCardNameInlineStyle, setBusinessCardNameInlineStyle] = useState(null);
   const displayName = useMemo(() => {
     const full = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
     return full || profile?.headline || 'Yacht Candidate';
@@ -205,6 +207,14 @@ export default function PublicProfileView() {
       introNameClassName += ' ppv-introName--wrap';
     }
 
+    if (compactLength >= 28 || longestWord >= 14 || (isUppercaseHeavy && compactLength >= 24)) {
+      return {
+        introNameClassName,
+        businessCardNameClassName: 'ppv-businessCardName ppv-businessCardName--ultraLong',
+        introHeight: needsWrappedIntro ? INTRO_VERY_LONG_HEIGHT : INTRO_BASE_HEIGHT,
+        introMetaTop: (needsWrappedIntro ? INTRO_VERY_LONG_HEIGHT : INTRO_BASE_HEIGHT) + INTRO_META_GAP,
+      };
+    }
     if (compactLength >= 24 || longestWord >= 12 || (isUppercaseHeavy && compactLength >= 20)) {
       return {
         introNameClassName,
@@ -315,6 +325,81 @@ export default function PublicProfileView() {
       window.removeEventListener('resize', fitName);
     };
   }, [displayName, introNameClassName]);
+
+  useLayoutEffect(() => {
+    const nameNode = businessCardNameRef.current;
+    const containerNode = nameNode?.parentElement;
+    if (!nameNode || !containerNode || typeof window === 'undefined') return undefined;
+
+    const fitName = () => {
+      const availableWidth = Math.max(0, Math.floor(containerNode.clientWidth - 2));
+      if (!availableWidth) {
+        setBusinessCardNameInlineStyle(null);
+        return;
+      }
+
+      nameNode.style.removeProperty('font-size');
+      nameNode.style.removeProperty('letter-spacing');
+
+      const computed = window.getComputedStyle(nameNode);
+      const baseFontSize = parseFloat(computed.fontSize) || 22;
+      let nextFontSize = baseFontSize;
+
+      const measureWidth = () => Math.ceil(nameNode.getBoundingClientRect().width);
+      let measuredWidth = measureWidth();
+
+      if (measuredWidth <= availableWidth) {
+        setBusinessCardNameInlineStyle(null);
+        return;
+      }
+
+      const proportionalSize = Math.floor((baseFontSize * availableWidth / measuredWidth) * 10) / 10;
+      nextFontSize = Math.max(11, Math.min(baseFontSize, proportionalSize));
+
+      nameNode.style.fontSize = `${nextFontSize}px`;
+      if (nextFontSize < 16) {
+        nameNode.style.letterSpacing = '0';
+      }
+
+      measuredWidth = measureWidth();
+      while (measuredWidth > availableWidth && nextFontSize > 11) {
+        nextFontSize = Math.max(11, Math.floor((nextFontSize - 0.4) * 10) / 10);
+        nameNode.style.fontSize = `${nextFontSize}px`;
+        measuredWidth = measureWidth();
+      }
+
+      const nextStyle = {
+        fontSize: `${nextFontSize}px`,
+      };
+      if (nextFontSize < 16) nextStyle.letterSpacing = '0';
+
+      setBusinessCardNameInlineStyle(nextStyle);
+    };
+
+    const rafId = window.requestAnimationFrame(fitName);
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => fitName())
+        : null;
+
+    if (resizeObserver) {
+      resizeObserver.observe(containerNode);
+      resizeObserver.observe(nameNode);
+    }
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        window.requestAnimationFrame(fitName);
+      }).catch(() => {});
+    }
+
+    window.addEventListener('resize', fitName);
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', fitName);
+    };
+  }, [displayName, businessCardNameClassName, businessCardTheme]);
 
   useEffect(() => {
     setUserNickname('');
@@ -1020,6 +1105,8 @@ export default function PublicProfileView() {
     businessCardLocation,
     businessCardLogoSrc,
     businessCardNameClassName,
+    businessCardNameInlineStyle,
+    businessCardNameRef,
     businessCardPhone,
     cardQrSrc,
     displayName,
@@ -1032,6 +1119,7 @@ export default function PublicProfileView() {
     businessCardLocation,
     businessCardLogoSrc,
     businessCardNameClassName,
+    businessCardNameInlineStyle,
     businessCardPhone,
     cardQrSrc,
     displayName,
