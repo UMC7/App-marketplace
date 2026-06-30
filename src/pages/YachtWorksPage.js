@@ -13,6 +13,7 @@ import { isOfferVisibleOnJobBoard } from '../utils/jobOfferVisibility';
 import { inferTypeByName } from './cv/publicProfileView.utils';
 
 const SEACREW_PAGE_SIZE = 18;
+const SEACREW_MAX_PAGE_BATCHES = 6;
 
 const countriesByRegion = {
   'North America': ['Bermuda (UK)', 'Canada', 'United States', 'Mexico'],
@@ -190,6 +191,38 @@ function getSeaCrewStatusValue(profile) {
   return String(profile?.prefs_skills_lite?.status || profile?.prefs_skills?.status || '').trim();
 }
 
+function mapSeaCrewProfileRows(rows) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  return safeRows.map((row) => {
+    const baseProfile = normalizePublicProfileForProgress(
+      row?.profile && typeof row.profile === 'object' ? row.profile : {}
+    );
+    const rawMonths = Number(row?.yachting_months);
+    return {
+      ...baseProfile,
+      userNickname: String(row?.user_nickname || '').trim(),
+      yachtingMonths: Number.isFinite(rawMonths) ? rawMonths : null,
+      employmentStatus: String(row?.employment_status || '').trim(),
+      chatReceiverId: String(row?.chat_receiver_id || '').trim(),
+    };
+  });
+}
+
+function mergeUniqueSeaCrewProfiles(existingProfiles, incomingProfiles) {
+  const seen = new Set();
+  const merged = [];
+
+  [...(Array.isArray(existingProfiles) ? existingProfiles : []), ...(Array.isArray(incomingProfiles) ? incomingProfiles : [])]
+    .forEach((profile) => {
+      const profileId = String(profile?.id || '').trim();
+      if (!profileId || seen.has(profileId)) return;
+      seen.add(profileId);
+      merged.push(profile);
+    });
+
+  return merged;
+}
+
 async function fetchSeaCrewProfilesLegacy() {
   const { data, error } = await supabase
     .from('public_profiles')
@@ -340,22 +373,7 @@ async function fetchSeaCrewProfilesRpc() {
 }
 
 function normalizeSeaCrewProfileRows(rows) {
-  const safeRows = Array.isArray(rows) ? rows : [];
-  const enrichedProfiles = safeRows.map((row) => {
-    const baseProfile = normalizePublicProfileForProgress(
-      row?.profile && typeof row.profile === 'object' ? row.profile : {}
-    );
-    const rawMonths = Number(row?.yachting_months);
-    return {
-      ...baseProfile,
-      userNickname: String(row?.user_nickname || '').trim(),
-      yachtingMonths: Number.isFinite(rawMonths) ? rawMonths : null,
-      employmentStatus: String(row?.employment_status || '').trim(),
-      chatReceiverId: String(row?.chat_receiver_id || '').trim(),
-    };
-  });
-
-  return buildSeaCrewReadyProfiles(enrichedProfiles);
+  return buildSeaCrewReadyProfiles(mapSeaCrewProfileRows(rows));
 }
 
 async function fetchSeaCrewProfilesPageFullRpc({ offset = 0, limit = SEACREW_PAGE_SIZE } = {}) {
@@ -364,7 +382,45 @@ async function fetchSeaCrewProfilesPageFullRpc({ offset = 0, limit = SEACREW_PAG
     page_limit: limit,
   });
   if (error) throw error;
-  return normalizeSeaCrewProfileRows(data);
+  const normalizedRows = mapSeaCrewProfileRows(data);
+  return {
+    rawCount: Array.isArray(data) ? data.length : 0,
+    items: buildSeaCrewReadyProfiles(normalizedRows),
+  };
+}
+
+async function fetchSeaCrewProfilesPageWindow({
+  offset = 0,
+  bufferedProfiles = [],
+  targetCount = SEACREW_PAGE_SIZE,
+  batchSize = SEACREW_PAGE_SIZE,
+  maxBatches = SEACREW_MAX_PAGE_BATCHES,
+} = {}) {
+  let nextOffset = Math.max(0, Number(offset) || 0);
+  let queue = Array.isArray(bufferedProfiles) ? [...bufferedProfiles] : [];
+  let hasMore = true;
+  let batchCount = 0;
+
+  while (queue.length < targetCount && hasMore && batchCount < maxBatches) {
+    const { rawCount, items } = await fetchSeaCrewProfilesPageFullRpc({
+      offset: nextOffset,
+      limit: batchSize,
+    });
+
+    queue = mergeUniqueSeaCrewProfiles(queue, items);
+    nextOffset += rawCount;
+    hasMore = rawCount === batchSize;
+    batchCount += 1;
+
+    if (rawCount === 0) break;
+  }
+
+  return {
+    items: queue.slice(0, targetCount),
+    bufferedProfiles: queue.slice(targetCount),
+    nextOffset,
+    hasMore: hasMore || queue.length > targetCount,
+  };
 }
 
 async function fetchSeaCrewFilterOptionsRpc() {
@@ -538,6 +594,8 @@ function YachtWorksPage() {
     selectedOnly: false,
   });
   const crewRequestIdRef = React.useRef(0);
+  const crewNextOffsetRef = React.useRef(0);
+  const crewBufferedProfilesRef = React.useRef([]);
 
   const [preferences, setPreferences] = useState({
     positions: [],
@@ -655,23 +713,30 @@ function YachtWorksPage() {
       setCrewError('');
       try {
         if (hasCrewFiltersApplied) {
+          crewNextOffsetRef.current = 0;
+          crewBufferedProfilesRef.current = [];
           const readyProfiles = await fetchSeaCrewProfiles();
           if (crewRequestIdRef.current !== requestId) return;
           setCrewProfiles(readyProfiles);
           setCrewHasMore(false);
         } else {
           try {
-            const firstPage = await fetchSeaCrewProfilesPageFullRpc({
+            const firstPage = await fetchSeaCrewProfilesPageWindow({
               offset: 0,
-              limit: SEACREW_PAGE_SIZE,
+              bufferedProfiles: [],
+              targetCount: SEACREW_PAGE_SIZE,
             });
             if (crewRequestIdRef.current !== requestId) return;
-            setCrewProfiles(firstPage);
-            setCrewHasMore(firstPage.length === SEACREW_PAGE_SIZE);
+            crewNextOffsetRef.current = firstPage.nextOffset;
+            crewBufferedProfilesRef.current = firstPage.bufferedProfiles;
+            setCrewProfiles(firstPage.items);
+            setCrewHasMore(firstPage.hasMore);
           } catch (pageError) {
             console.warn('SeaCrew paged RPC failed, falling back to full loader:', pageError);
             const readyProfiles = await fetchSeaCrewProfiles();
             if (crewRequestIdRef.current !== requestId) return;
+            crewNextOffsetRef.current = readyProfiles.length;
+            crewBufferedProfilesRef.current = [];
             setCrewProfiles(readyProfiles.slice(0, SEACREW_PAGE_SIZE));
             setCrewHasMore(readyProfiles.length > SEACREW_PAGE_SIZE);
           }
@@ -679,10 +744,12 @@ function YachtWorksPage() {
       } catch (error) {
         const message = error.message || 'Failed to load SeaCrew profiles.';
         console.error('Error fetching SeaCrew profiles:', error);
-        setCrewError(message);
-        setCrewProfiles([]);
-        setCrewHasMore(false);
-      } finally {
+      setCrewError(message);
+      crewNextOffsetRef.current = 0;
+      crewBufferedProfilesRef.current = [];
+      setCrewProfiles([]);
+      setCrewHasMore(false);
+    } finally {
         if (crewRequestIdRef.current === requestId) {
           setCrewLoading(false);
         }
@@ -848,13 +915,16 @@ function YachtWorksPage() {
     setCrewLoading(true);
     setCrewError('');
     try {
-      const nextPage = await fetchSeaCrewProfilesPageFullRpc({
-        offset: Array.isArray(crewProfiles) ? crewProfiles.length : 0,
-        limit: SEACREW_PAGE_SIZE,
+      const nextPage = await fetchSeaCrewProfilesPageWindow({
+        offset: crewNextOffsetRef.current,
+        bufferedProfiles: crewBufferedProfilesRef.current,
+        targetCount: SEACREW_PAGE_SIZE,
       });
       if (crewRequestIdRef.current !== requestId) return;
-      setCrewProfiles((prev) => [...(Array.isArray(prev) ? prev : []), ...nextPage]);
-      setCrewHasMore(nextPage.length === SEACREW_PAGE_SIZE);
+      crewNextOffsetRef.current = nextPage.nextOffset;
+      crewBufferedProfilesRef.current = nextPage.bufferedProfiles;
+      setCrewProfiles((prev) => mergeUniqueSeaCrewProfiles(prev, nextPage.items));
+      setCrewHasMore(nextPage.hasMore);
     } catch (error) {
       const message = error.message || 'Failed to load more SeaCrew profiles.';
       console.error('Error loading more SeaCrew profiles:', error);
@@ -864,7 +934,7 @@ function YachtWorksPage() {
         setCrewLoading(false);
       }
     }
-  }, [crewHasMore, crewLoading, crewProfiles, hasCrewFiltersApplied]);
+  }, [crewHasMore, crewLoading, hasCrewFiltersApplied]);
 
   useEffect(() => {
     if (activeTab !== 'crew' || hasCrewFiltersApplied || !hasMoreCrewProfiles) return undefined;

@@ -23,8 +23,21 @@ as $$
       and btrim(p.handle) <> ''
       and coalesce((p.visibility_settings->>'show_in_seacrew')::boolean, true) = true
       and coalesce(nullif(lower(btrim(p.prefs_skills_lite->>'status')), ''), nullif(lower(btrim(p.prefs_skills->>'status')), ''), '') <> 'not available'
-      and jsonb_typeof(coalesce(p.gallery, '[]'::jsonb)) = 'array'
-      and jsonb_array_length(coalesce(p.gallery, '[]'::jsonb)) > 0
+      and exists (
+        select 1
+        from jsonb_array_elements(
+          case
+            when jsonb_typeof(coalesce(p.gallery, '[]'::jsonb)) = 'array' then coalesce(p.gallery, '[]'::jsonb)
+            else '[]'::jsonb
+          end
+        ) as gallery_item(item)
+        where not (
+          case
+            when jsonb_typeof(gallery_item.item) = 'string' then trim(both '"' from gallery_item.item::text)
+            else coalesce(gallery_item.item->>'url', gallery_item.item->>'path', gallery_item.item->>'name', '')
+          end
+        ) ~* '\.(mp4|webm|mov|m4v|avi|mkv)$'
+      )
   )
   select
     coalesce(array_agg(rank order by rank) filter (where rank is not null), '{}'::text[]) as ranks,
@@ -57,6 +70,23 @@ as $$
     where p.handle is not null
       and btrim(p.handle) <> ''
       and p.share_ready = true
+      and coalesce((p.visibility_settings->>'show_in_seacrew')::boolean, true) = true
+      and coalesce(nullif(lower(btrim(p.prefs_skills_lite->>'status')), ''), nullif(lower(btrim(p.prefs_skills->>'status')), ''), '') <> 'not available'
+      and exists (
+        select 1
+        from jsonb_array_elements(
+          case
+            when jsonb_typeof(coalesce(p.gallery, '[]'::jsonb)) = 'array' then coalesce(p.gallery, '[]'::jsonb)
+            else '[]'::jsonb
+          end
+        ) as gallery_item(item)
+        where not (
+          case
+            when jsonb_typeof(gallery_item.item) = 'string' then trim(both '"' from gallery_item.item::text)
+            else coalesce(gallery_item.item->>'url', gallery_item.item->>'path', gallery_item.item->>'name', '')
+          end
+        ) ~* '\.(mp4|webm|mov|m4v|avi|mkv)$'
+      )
     order by p.created_at desc
     offset greatest(coalesce(page_offset, 0), 0)
     limit greatest(least(coalesce(page_limit, 18), 100), 1)

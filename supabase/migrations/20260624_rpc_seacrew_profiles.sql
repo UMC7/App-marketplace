@@ -19,6 +19,23 @@ as $$
     where p.handle is not null
       and btrim(p.handle) <> ''
       and p.share_ready = true
+      and coalesce((p.visibility_settings->>'show_in_seacrew')::boolean, true) = true
+      and coalesce(nullif(lower(btrim(p.prefs_skills_lite->>'status')), ''), nullif(lower(btrim(p.prefs_skills->>'status')), ''), '') <> 'not available'
+      and exists (
+        select 1
+        from jsonb_array_elements(
+          case
+            when jsonb_typeof(coalesce(p.gallery, '[]'::jsonb)) = 'array' then coalesce(p.gallery, '[]'::jsonb)
+            else '[]'::jsonb
+          end
+        ) as gallery_item(item)
+        where not (
+          case
+            when jsonb_typeof(gallery_item.item) = 'string' then trim(both '"' from gallery_item.item::text)
+            else coalesce(gallery_item.item->>'url', gallery_item.item->>'path', gallery_item.item->>'name', '')
+          end
+        ) ~* '\.(mp4|webm|mov|m4v|avi|mkv)$'
+      )
   )
   select
     to_jsonb(b) as profile,
@@ -27,9 +44,7 @@ as $$
     case when coalesce(exp.has_current, false) then 'Employed' else 'Unemployed' end as employment_status,
     coalesce(
       nullif(case when b.user_id::text <> b.id::text then b.user_id::text else '' end, ''),
-      nullif(case when b.owner_user_id::text <> b.id::text then b.owner_user_id::text else '' end, ''),
       nullif(b.user_id::text, ''),
-      nullif(b.owner_user_id::text, ''),
       nullif(b.id::text, '')
     ) as chat_receiver_id
   from base b
@@ -38,8 +53,7 @@ as $$
     from (
       values
         (nullif(b.user_id::text, ''), 1),
-        (nullif(b.owner_user_id::text, ''), 2),
-        (nullif(b.id::text, ''), 3)
+        (nullif(b.id::text, ''), 2)
     ) as lookup(user_id, ord)
     join public.users u
       on u.id::text = lookup.user_id
