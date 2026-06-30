@@ -284,10 +284,31 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
   }, [currentUserId]);
 
   useEffect(() => {
-    setExpandedId(null);
-    setResolvedCoverImages({});
-    setResolvedExpandedImages({});
-    setVisibleProfileIds({});
+    const activeProfileIds = new Set(
+      items
+        .map((profile) => String(profile?.id || '').trim())
+        .filter(Boolean)
+    );
+
+    setExpandedId((prev) => (activeProfileIds.has(String(prev || '').trim()) ? prev : null));
+    setResolvedCoverImages((prev) => {
+      const next = Object.fromEntries(
+        Object.entries(prev).filter(([profileId]) => activeProfileIds.has(profileId))
+      );
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next;
+    });
+    setResolvedExpandedImages((prev) => {
+      const next = Object.fromEntries(
+        Object.entries(prev).filter(([profileId]) => activeProfileIds.has(profileId))
+      );
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next;
+    });
+    setVisibleProfileIds((prev) => {
+      const next = Object.fromEntries(
+        Object.entries(prev).filter(([profileId]) => activeProfileIds.has(profileId))
+      );
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next;
+    });
   }, [items]);
 
   useEffect(() => {
