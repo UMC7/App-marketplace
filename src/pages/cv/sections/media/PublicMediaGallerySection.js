@@ -3,18 +3,27 @@ import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom';
 import './PublicMediaGallerySection.css';
 
-function inferType(u = '', explicit) {
+function inferType(source = '', explicit) {
+  const s = String(source).toLowerCase().split('?')[0].split('#')[0];
+  if (/\.(mp4|webm|mov|m4v|avi|mkv)$/.test(s)) return 'video';
+  if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|rtf)$/.test(s)) return 'document';
   if (explicit) return explicit;
-  const s = String(u).toLowerCase();
-  return /\.(mp4|webm|mov|m4v|avi|mkv)$/.test(s) ? 'video' : 'image';
+  return 'image';
 }
+
 function isHeicUrl(u = '') {
   const s = String(u).toLowerCase();
   const clean = s.split('?')[0].split('#')[0];
   return clean.endsWith('.heic') || clean.endsWith('.heif');
 }
-function getThumbUrl(u = '') { return u; }
-function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+
+function getThumbUrl(u = '') {
+  return u;
+}
+
+function clamp(n, a, b) {
+  return Math.max(a, Math.min(b, n));
+}
 
 function Lightbox({ open, item, onClose, onPrev, onNext, hasMultiple = false }) {
   const isVideo = item?.type === 'video';
@@ -47,44 +56,42 @@ function Lightbox({ open, item, onClose, onPrev, onNext, hasMultiple = false }) 
   if (!open) return null;
 
   return createPortal(
-    (
-      <div className="pmg-lightbox" role="dialog" aria-modal="true" onClick={onClose}>
-        <div className="pmg-lightbox-inner" onClick={(e)=>e.stopPropagation()}>
-          <button className="pmg-lightbox-close" onClick={onClose} aria-label="Close">✕</button>
-          {hasMultiple && (
-            <>
-              <button
-                className="pmg-lightbox-nav pmg-lightbox-prev"
-                onClick={onPrev}
-                aria-label="Previous media"
-                type="button"
-              >
-                ‹
-              </button>
-              <button
-                className="pmg-lightbox-nav pmg-lightbox-next"
-                onClick={onNext}
-                aria-label="Next media"
-                type="button"
-              >
-                ›
-              </button>
-            </>
-          )}
-          {isVideo ? (
-            <video
-              className="pmg-lightbox-media"
-              src={item.url}
-              controls
-              playsInline
-              controlsList="nodownload"
-            />
-          ) : (
-            <img className="pmg-lightbox-media" src={item.url} alt="" />
-          )}
-        </div>
+    <div className="pmg-lightbox" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="pmg-lightbox-inner" onClick={(e) => e.stopPropagation()}>
+        <button className="pmg-lightbox-close" onClick={onClose} aria-label="Close">x</button>
+        {hasMultiple && (
+          <>
+            <button
+              className="pmg-lightbox-nav pmg-lightbox-prev"
+              onClick={onPrev}
+              aria-label="Previous media"
+              type="button"
+            >
+              {'<'}
+            </button>
+            <button
+              className="pmg-lightbox-nav pmg-lightbox-next"
+              onClick={onNext}
+              aria-label="Next media"
+              type="button"
+            >
+              {'>'}
+            </button>
+          </>
+        )}
+        {isVideo ? (
+          <video
+            className="pmg-lightbox-media"
+            src={item.url}
+            controls
+            playsInline
+            controlsList="nodownload"
+          />
+        ) : (
+          <img className="pmg-lightbox-media" src={item.url} alt="" />
+        )}
       </div>
-    ),
+    </div>,
     document.body
   );
 }
@@ -100,23 +107,26 @@ export default function PublicMediaGallerySection({
     const mapped = src
       .map((g) => {
         if (!g) return null;
-        if (typeof g === 'string') return { url: g, type: inferType(g) };
+        if (typeof g === 'string') {
+          return { url: g, type: inferType(g) };
+        }
         const url = g.url || g.file_url || g.publicUrl || '';
         if (!url) return null;
-        return { ...g, url, type: inferType(url, g.type) };
+        return { ...g, url, type: inferType(g.name || g.path || url, g.type) };
       })
+      .filter((item) => item?.type === 'image' || item?.type === 'video')
       .filter(Boolean);
     return mapped.slice(0, maxItems);
   }, [gallery, maxItems]);
 
-  const [active, setActive] = useState(Math.min(Math.floor(items.length/2), Math.max(0, items.length-1)));
+  const [active, setActive] = useState(Math.min(Math.floor(items.length / 2), Math.max(0, items.length - 1)));
   const trackRef = useRef(null);
   const [thumbs, setThumbs] = useState({});
 
   useEffect(() => {
     function onKey(e) {
-      if (e.key === 'ArrowLeft') setActive((i)=>clamp(i-1,0,items.length-1));
-      if (e.key === 'ArrowRight') setActive((i)=>clamp(i+1,0,items.length-1));
+      if (e.key === 'ArrowLeft') setActive((i) => clamp(i - 1, 0, items.length - 1));
+      if (e.key === 'ArrowRight') setActive((i) => clamp(i + 1, 0, items.length - 1));
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -177,11 +187,11 @@ export default function PublicMediaGallerySection({
   }, [items]);
 
   const [lbOpen, setLbOpen] = useState(false);
-  const openLb = useCallback((index)=>{
+  const openLb = useCallback((index) => {
     setActive(index);
     setLbOpen(true);
-  },[]);
-  const closeLb = useCallback(()=>{ setLbOpen(false); },[]);
+  }, []);
+  const closeLb = useCallback(() => { setLbOpen(false); }, []);
   const prevLb = useCallback(() => {
     setActive((i) => clamp(i - 1, 0, items.length - 1));
   }, [items.length]);
@@ -217,9 +227,11 @@ export default function PublicMediaGallerySection({
       <div className="pmg-coverflow" role="listbox" aria-label="Media carousel">
         <button
           className="pmg-nav pmg-prev"
-          onClick={() => setActive((i)=>clamp(i-1,0,items.length-1))}
+          onClick={() => setActive((i) => clamp(i - 1, 0, items.length - 1))}
           aria-label="Previous"
-        >‹</button>
+        >
+          {'<'}
+        </button>
 
         <div className="pmg-track" ref={trackRef}>
           {items.map((it, i) => {
@@ -241,14 +253,14 @@ export default function PublicMediaGallerySection({
             return (
               <button
                 key={i}
-                className={`pmg-card ${abs===0 ? 'is-active' : ''}`}
+                className={`pmg-card ${abs === 0 ? 'is-active' : ''}`}
                 style={style}
                 onClick={() => openLb(i)}
                 role="option"
-                aria-selected={abs===0}
+                aria-selected={abs === 0}
                 title={isVideo ? 'Play video' : 'View photo'}
               >
-                {isVideo && <span className="pmg-badgeVideo">▶</span>}
+                {isVideo && <span className="pmg-badgeVideo">Play</span>}
                 {isVideo ? (
                   <video src={it.url} preload="metadata" muted playsInline />
                 ) : (
@@ -266,19 +278,21 @@ export default function PublicMediaGallerySection({
 
         <button
           className="pmg-nav pmg-next"
-          onClick={() => setActive((i)=>clamp(i+1,0,items.length-1))}
+          onClick={() => setActive((i) => clamp(i + 1, 0, items.length - 1))}
           aria-label="Next"
-        >›</button>
+        >
+          {'>'}
+        </button>
       </div>
 
       <div className="pmg-dots" role="tablist" aria-label="Slides">
-        {items.map((_, i)=>(
+        {items.map((_, i) => (
           <button
             key={i}
-            className={`pmg-dot ${i===active?'is-on':''}`}
-            onClick={()=>setActive(i)}
-            aria-label={`Go to item ${i+1}`}
-            aria-selected={i===active}
+            className={`pmg-dot ${i === active ? 'is-on' : ''}`}
+            onClick={() => setActive(i)}
+            aria-label={`Go to item ${i + 1}`}
+            aria-selected={i === active}
             role="tab"
           />
         ))}

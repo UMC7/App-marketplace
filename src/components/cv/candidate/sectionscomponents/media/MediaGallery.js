@@ -1,6 +1,15 @@
 // src/components/cv/candidate/sectionscomponents/media/MediaGallery.js
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
+function inferKind(item) {
+  const value = String(item?.name || item?.path || item?.url || "").toLowerCase().split("?")[0].split("#")[0];
+  if (/\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(value)) return "video";
+  if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|rtf)$/i.test(value)) return "document";
+  const explicit = String(item?.type || "").trim().toLowerCase();
+  if (explicit) return explicit;
+  return "image";
+}
+
 export default function MediaGallery({
   items = [],
   onRemove,
@@ -171,6 +180,7 @@ export default function MediaGallery({
       <div className={`grid ${gridColsClass}`}>
         {items.map((m, i) => {
           const canShowActions = !readOnly && (onRemove || onMove || onSetCover || onAdjustCover);
+          const mediaType = inferKind(m);
           return (
             <figure
               key={`${m.url}-${i}`}
@@ -181,8 +191,12 @@ export default function MediaGallery({
               onKeyDown={(e) => e.key === "Enter" && openViewer(i)}
               title={m.name || ""}
             >
-              {m.type === "video" ? (
+              {mediaType === "video" ? (
                 <video src={m.url} preload="metadata" />
+              ) : mediaType === "document" ? (
+                <div className="tile-doc" aria-label={m.name || `document-${i}`}>
+                  <span className="tile-doc-icon">PDF</span>
+                </div>
               ) : (
                 <img
                   src={thumbs[m.url] || m.url}
@@ -217,7 +231,7 @@ export default function MediaGallery({
                     </>
                   )}
 
-                  {typeof onSetCover === "function" && i !== 0 && (
+                  {typeof onSetCover === "function" && i !== 0 && mediaType === "image" && (
                     <button
                       className="tlb-chip"
                       title="Set as cover"
@@ -228,7 +242,7 @@ export default function MediaGallery({
                     </button>
                   )}
 
-                  {typeof onAdjustCover === "function" && i === 0 && m?.type !== "video" && (
+                  {typeof onAdjustCover === "function" && i === 0 && mediaType === "image" && (
                     <button
                       className="tlb-chip tlb-chip-frame"
                       title="Adjust framing"
@@ -268,7 +282,7 @@ export default function MediaGallery({
                 </button>
               )}
 
-              {i === 0 && <div className="cover-badge">Cover</div>}
+              {i === 0 && mediaType === "image" && <div className="cover-badge">Cover</div>}
               {m.name && <figcaption className="caption">{m.name}</figcaption>}
             </figure>
           );
@@ -290,8 +304,17 @@ export default function MediaGallery({
             </button>
 
             <div className="lb-content">
-              {currentItem.type === "video" ? (
+              {inferKind(currentItem) === "video" ? (
                 <video src={currentItem.url} controls autoPlay />
+              ) : inferKind(currentItem) === "document" ? (
+                <div className="lb-doc">
+                  <div className="lb-doc-icon">PDF</div>
+                  {currentItem.url ? (
+                    <a href={currentItem.url} target="_blank" rel="noreferrer">
+                      Open document
+                    </a>
+                  ) : null}
+                </div>
               ) : (
                 <img src={currentItem.url} alt={currentItem.name || "media"} />
               )}
@@ -301,7 +324,7 @@ export default function MediaGallery({
         </div>
       )}
 
-      {frameOpen && coverItem?.url && (
+      {frameOpen && coverItem?.url && inferKind(coverItem) === "image" && (
         <div className="lightbox" onClick={closeFrameEditor}>
           <div className="lightbox-inner frame-modal" onClick={(e) => e.stopPropagation()}>
             <button className="lb-close" onClick={closeFrameEditor} title="Close">
@@ -371,6 +394,23 @@ export default function MediaGallery({
           background:var(--card, #ffffff); cursor:pointer; display:flex; flex-direction:column;
         }
         .tile img, .tile video { width:100%; height:220px; object-fit:cover; background:var(--card-2, #f8fafc); }
+        .tile-doc {
+          width:100%;
+          height:220px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          background:linear-gradient(135deg, #0f172a, #334155);
+          color:#fff;
+          font-weight:700;
+          letter-spacing:.08em;
+        }
+        .tile-doc-icon {
+          padding:10px 14px;
+          border:1px solid rgba(255,255,255,.28);
+          border-radius:999px;
+          background:rgba(255,255,255,.08);
+        }
 
         .caption {
           padding:8px 10px; font-size:.9rem; color:var(--muted-2, #6b7280); white-space:nowrap;
@@ -503,6 +543,29 @@ export default function MediaGallery({
         .lb-content img, .lb-content video {
           max-width:100%; max-height: calc(100% - 40px);
           object-fit:contain; background:#000;
+        }
+        .lb-doc {
+          min-width:min(320px, 80vw);
+          min-height:220px;
+          display:flex;
+          flex-direction:column;
+          align-items:center;
+          justify-content:center;
+          gap:16px;
+          color:#fff;
+        }
+        .lb-doc-icon {
+          padding:14px 18px;
+          border-radius:14px;
+          background:rgba(255,255,255,.1);
+          border:1px solid rgba(255,255,255,.2);
+          font-weight:700;
+          letter-spacing:.08em;
+        }
+        .lb-doc a {
+          color:#9bd3cf;
+          text-decoration:none;
+          font-weight:600;
         }
         .lb-caption { color:rgba(255,255,255,.75); font-size:.95rem; text-align:center; }
 

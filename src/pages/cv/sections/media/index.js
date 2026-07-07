@@ -1,2 +1,4 @@
 // src/pages/cv/sections/media/index.js
-export { default } from './PublicMediaGallerySection';
+import PublicMediaGallerySection from './PublicMediaGallerySection';
+
+export default PublicMediaGallerySection;

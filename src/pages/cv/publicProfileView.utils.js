@@ -38,7 +38,10 @@ export function dateRange(aY, aM, bY, bM, isCurrent) {
 }
 
 export function inferTypeByName(nameOrPath = '') {
-  return /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(nameOrPath) ? 'video' : 'image';
+  const value = String(nameOrPath || '').toLowerCase().split('?')[0].split('#')[0];
+  if (/\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(value)) return 'video';
+  if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|rtf)$/i.test(value)) return 'document';
+  return 'image';
 }
 
 export function mapDbVisToUi(v) {

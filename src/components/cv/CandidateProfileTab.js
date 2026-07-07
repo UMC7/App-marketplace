@@ -350,7 +350,9 @@ function hasRotationalContractSelected(value) {
   }, [profile?.handle]);
 
   const inferTypeByName = (nameOrPath = '') => (
-    /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(nameOrPath) ? 'video' : 'image'
+    /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(nameOrPath) ? 'video'
+      : /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|rtf)$/i.test(nameOrPath) ? 'document'
+      : 'image'
   );
 
   const normalizeCoverFrameValue = (value, fallback = 50) => {

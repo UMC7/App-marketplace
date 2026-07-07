@@ -933,19 +933,31 @@ export default function PublicProfileView() {
   }, [profile?.city_port, profile?.country]);
 
   const heroMedia = useMemo(() => {
-    if (profile?.photo_url) return { url: profile.photo_url, coverPositionX: 50, coverPositionY: 50 };
-    if (profile?.avatar_url) return { url: profile.avatar_url, coverPositionX: 50, coverPositionY: 50 };
-    const firstImg = (gallery || []).find((g) => {
-      const u = typeof g === 'string' ? g : g?.url;
-      const t = typeof g === 'object' ? g?.type : '';
-      const isVideo = /\.(mp4|webm|mov|m4v|avi|mkv)$/i.test(u || '') || t === 'video';
-      return u && !isVideo;
-    });
-    if (typeof firstImg === 'string') {
-      return { url: firstImg, coverPositionX: 50, coverPositionY: 50 };
+    if (profile?.hero_image_url && inferTypeByName(profile.hero_image_url) === 'image') {
+      return { url: profile.hero_image_url, coverPositionX: 50, coverPositionY: 50 };
     }
-    return firstImg || { url: '', coverPositionX: 50, coverPositionY: 50 };
-  }, [profile?.photo_url, profile?.avatar_url, gallery]);
+    if (profile?.photo_url && inferTypeByName(profile.photo_url) === 'image') {
+      return { url: profile.photo_url, coverPositionX: 50, coverPositionY: 50 };
+    }
+    if (profile?.avatar_url && inferTypeByName(profile.avatar_url) === 'image') {
+      return { url: profile.avatar_url, coverPositionX: 50, coverPositionY: 50 };
+    }
+
+    const firstGalleryImage = (Array.isArray(gallery) ? gallery : []).find((item) => {
+      const candidate = item?.url || item?.path || item?.name || '';
+      return candidate && inferTypeByName(candidate) === 'image';
+    });
+
+    if (firstGalleryImage?.url) {
+      return {
+        url: firstGalleryImage.url,
+        coverPositionX: Number.isFinite(Number(firstGalleryImage.coverPositionX)) ? Number(firstGalleryImage.coverPositionX) : 50,
+        coverPositionY: Number.isFinite(Number(firstGalleryImage.coverPositionY)) ? Number(firstGalleryImage.coverPositionY) : 50,
+      };
+    }
+
+    return { url: '', coverPositionX: 50, coverPositionY: 50 };
+  }, [gallery, profile?.avatar_url, profile?.hero_image_url, profile?.photo_url]);
 
   const heroSrc = heroMedia?.url || '';
   const heroObjectPosition = useMemo(() => {
