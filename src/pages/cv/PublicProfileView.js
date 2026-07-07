@@ -67,6 +67,27 @@ function getProfileUserLookupKeys(profile) {
     .filter(Boolean);
 }
 
+function buildCompactPublicName(profile) {
+  const firstNameParts = String(profile?.first_name || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  const lastNameParts = String(profile?.last_name || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const firstName = firstNameParts[0] || '';
+  const secondNameInitial = firstNameParts[1] ? `${firstNameParts[1][0]}.` : '';
+  const firstSurname = lastNameParts[0] || '';
+
+  const compactName = [firstName, secondNameInitial, firstSurname].filter(Boolean).join(' ').trim();
+  if (compactName) return compactName;
+
+  const full = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
+  return full || profile?.headline || 'Yacht Candidate';
+}
+
 function dateRange(aY, aM, bY, bM, isCurrent) {
   const a = fmtYM(aY, aM);
   const b = isCurrent ? 'Present' : fmtYM(bY, bM);
@@ -166,9 +187,8 @@ export default function PublicProfileView() {
   const businessCardNameRef = useRef(null);
   const [businessCardNameInlineStyle, setBusinessCardNameInlineStyle] = useState(null);
   const displayName = useMemo(() => {
-    const full = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
-    return full || profile?.headline || 'Yacht Candidate';
-  }, [profile?.first_name, profile?.last_name, profile?.headline]);
+    return buildCompactPublicName(profile);
+  }, [profile]);
   const displayNameLayout = useMemo(() => {
     const normalized = String(displayName || '').trim();
     if (!normalized) {
@@ -372,6 +392,12 @@ export default function PublicProfileView() {
         fontSize: `${nextFontSize}px`,
       };
       if (nextFontSize < 16) nextStyle.letterSpacing = '0';
+
+      if (measuredWidth > availableWidth) {
+        const scaleX = Math.max(0.84, availableWidth / measuredWidth);
+        nextStyle.transform = `scaleX(${scaleX})`;
+        nextStyle.transformOrigin = 'center center';
+      }
 
       setBusinessCardNameInlineStyle(nextStyle);
     };

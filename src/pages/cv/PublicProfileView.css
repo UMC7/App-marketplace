@@ -429,8 +429,8 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: 32% 1fr 23%;
-  gap: 18px;
+  grid-template-columns: 30% 1fr 20%;
+  gap: 8px;
   background: var(--ppv-card-bg-gradient);
 }
 
@@ -469,7 +469,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
 }
 
 .ppv-businessCardIdentity {
-  padding: 26px 18px 20px 10px;
+  padding: 26px 10px 20px 4px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -478,11 +478,15 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
 }
 
 .ppv-businessCardTitleGroup {
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
   min-width: 0;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: left;
 }
 
 .ppv-businessCardDetailsGroup {
@@ -504,6 +508,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   color: var(--ppv-card-text);
   letter-spacing: 0.01em;
   white-space: nowrap;
+  text-align: left;
 }
 
 .ppv-businessCardName.ppv-businessCardName--long {
@@ -529,6 +534,7 @@ html[data-theme='dark'] .ppv-wrap .ppv-businessCardDownloadMenu .ppv-businessCar
   font-size: clamp(12px, 1.5vw, 18px);
   font-weight: 600;
   white-space: nowrap;
+  text-align: left;
 }
 
 .ppv-businessCardMetaRow {
