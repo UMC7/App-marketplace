@@ -267,6 +267,7 @@ export default function PublicProfileView() {
     const nameNode = introNameRef.current;
     const containerNode = introInnerRef.current;
     if (!nameNode || !containerNode || typeof window === 'undefined') return undefined;
+    let resizeRafId = 0;
 
     const fitName = () => {
       const availableWidth = Math.max(0, Math.floor(containerNode.clientWidth - 2));
@@ -277,6 +278,8 @@ export default function PublicProfileView() {
 
       nameNode.style.removeProperty('font-size');
       nameNode.style.removeProperty('letter-spacing');
+      nameNode.style.removeProperty('transform');
+      nameNode.style.removeProperty('transform-origin');
       nameNode.style.removeProperty('transform');
       nameNode.style.removeProperty('transform-origin');
 
@@ -324,12 +327,17 @@ export default function PublicProfileView() {
     const rafId = window.requestAnimationFrame(fitName);
     const resizeObserver =
       typeof ResizeObserver !== 'undefined'
-        ? new ResizeObserver(() => fitName())
+        ? new ResizeObserver(() => {
+            if (resizeRafId) window.cancelAnimationFrame(resizeRafId);
+            resizeRafId = window.requestAnimationFrame(() => {
+              resizeRafId = 0;
+              fitName();
+            });
+          })
         : null;
 
     if (resizeObserver) {
       resizeObserver.observe(containerNode);
-      resizeObserver.observe(nameNode);
     }
 
     if (document.fonts?.ready) {
@@ -341,6 +349,7 @@ export default function PublicProfileView() {
     window.addEventListener('resize', fitName);
     return () => {
       window.cancelAnimationFrame(rafId);
+      if (resizeRafId) window.cancelAnimationFrame(resizeRafId);
       resizeObserver?.disconnect();
       window.removeEventListener('resize', fitName);
     };
@@ -350,6 +359,7 @@ export default function PublicProfileView() {
     const nameNode = businessCardNameRef.current;
     const containerNode = nameNode?.parentElement;
     if (!nameNode || !containerNode || typeof window === 'undefined') return undefined;
+    let resizeRafId = 0;
 
     const fitName = () => {
       const availableWidth = Math.max(0, Math.floor(containerNode.clientWidth - 2));
@@ -365,7 +375,7 @@ export default function PublicProfileView() {
       const baseFontSize = parseFloat(computed.fontSize) || 22;
       let nextFontSize = baseFontSize;
 
-      const measureWidth = () => Math.ceil(nameNode.getBoundingClientRect().width);
+      const measureWidth = () => Math.ceil(Math.max(nameNode.scrollWidth, nameNode.getBoundingClientRect().width));
       let measuredWidth = measureWidth();
 
       if (measuredWidth <= availableWidth) {
@@ -405,12 +415,17 @@ export default function PublicProfileView() {
     const rafId = window.requestAnimationFrame(fitName);
     const resizeObserver =
       typeof ResizeObserver !== 'undefined'
-        ? new ResizeObserver(() => fitName())
+        ? new ResizeObserver(() => {
+            if (resizeRafId) window.cancelAnimationFrame(resizeRafId);
+            resizeRafId = window.requestAnimationFrame(() => {
+              resizeRafId = 0;
+              fitName();
+            });
+          })
         : null;
 
     if (resizeObserver) {
       resizeObserver.observe(containerNode);
-      resizeObserver.observe(nameNode);
     }
 
     if (document.fonts?.ready) {
@@ -422,10 +437,11 @@ export default function PublicProfileView() {
     window.addEventListener('resize', fitName);
     return () => {
       window.cancelAnimationFrame(rafId);
+      if (resizeRafId) window.cancelAnimationFrame(resizeRafId);
       resizeObserver?.disconnect();
       window.removeEventListener('resize', fitName);
     };
-  }, [displayName, businessCardNameClassName, businessCardTheme]);
+  }, [displayName, businessCardNameClassName]);
 
   useEffect(() => {
     setUserNickname('');
@@ -511,6 +527,8 @@ export default function PublicProfileView() {
   }, [downloadMenuOpen]);
 
   useLayoutEffect(() => {
+    let resizeRafId = 0;
+
     function measure() {
       const node = businessCardStageRef.current;
       const viewportW = typeof window !== 'undefined' ? window.innerWidth : BASE_BUSINESS_CARD_WIDTH;
@@ -520,7 +538,7 @@ export default function PublicProfileView() {
       const safeHostW = Math.max(220, hostW - horizontalSafety);
       const availW = Math.max(220, Math.min(safeViewportW, safeHostW));
       const nextScale = Math.min(1, availW / BASE_BUSINESS_CARD_WIDTH);
-      setBusinessCardScale(nextScale);
+      setBusinessCardScale((prev) => (Math.abs(prev - nextScale) < 0.001 ? prev : nextScale));
     }
 
     measure();
@@ -533,14 +551,22 @@ export default function PublicProfileView() {
     window.addEventListener('orientationchange', onResize);
 
     let observer = null;
-    if (typeof ResizeObserver !== 'undefined' && businessCardStageRef.current) {
-      observer = new ResizeObserver(() => measure());
-      observer.observe(businessCardStageRef.current);
+    const observerTarget = businessCardStageRef.current?.parentElement || businessCardStageRef.current;
+    if (typeof ResizeObserver !== 'undefined' && observerTarget) {
+      observer = new ResizeObserver(() => {
+        if (resizeRafId) window.cancelAnimationFrame(resizeRafId);
+        resizeRafId = window.requestAnimationFrame(() => {
+          resizeRafId = 0;
+          measure();
+        });
+      });
+      observer.observe(observerTarget);
     }
 
     return () => {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onResize);
+      if (resizeRafId) window.cancelAnimationFrame(resizeRafId);
       observer?.disconnect?.();
     };
   }, []);

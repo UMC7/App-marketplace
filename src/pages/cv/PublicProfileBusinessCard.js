@@ -217,6 +217,7 @@ export default function PublicProfileBusinessCard({
         >
           <PublicProfileBusinessCardBody
             {...businessCardBodyProps}
+            businessCardNameRef={null}
             businessCardEnabled={canShareDigitalCv}
           />
         </div>

@@ -104,13 +104,20 @@ export default function PublicReferencesSection({
       const h = (last.offsetTop + last.offsetHeight) - first.offsetTop;
       setMaxListH(needsScroll ? Math.max(0, h) : null);
     };
-    const ro = new ResizeObserver(measure);
+    let resizeRafId = 0;
+    const ro = new ResizeObserver(() => {
+      if (resizeRafId) cancelAnimationFrame(resizeRafId);
+      resizeRafId = requestAnimationFrame(() => {
+        resizeRafId = 0;
+        measure();
+      });
+    });
     ro.observe(el);
-    Array.from(el.children).forEach(c => ro.observe(c));
     window.addEventListener('resize', measure);
     const id = requestAnimationFrame(measure);
     return () => {
       cancelAnimationFrame(id);
+      if (resizeRafId) cancelAnimationFrame(resizeRafId);
       ro.disconnect();
       window.removeEventListener('resize', measure);
     };

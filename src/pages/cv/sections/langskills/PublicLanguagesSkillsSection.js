@@ -274,10 +274,21 @@ function CollapsibleSkillsGroup({ title, items }) {
       }
       setFirstRowCount(count);
     };
-    const ro = new ResizeObserver(measure);
+    let resizeRafId = 0;
+    const ro = new ResizeObserver(() => {
+      if (resizeRafId) cancelAnimationFrame(resizeRafId);
+      resizeRafId = requestAnimationFrame(() => {
+        resizeRafId = 0;
+        measure();
+      });
+    });
     ro.observe(el);
-    requestAnimationFrame(measure);
-    return () => ro.disconnect();
+    const id = requestAnimationFrame(measure);
+    return () => {
+      cancelAnimationFrame(id);
+      if (resizeRafId) cancelAnimationFrame(resizeRafId);
+      ro.disconnect();
+    };
   }, [items]);
 
   const needsToggle = firstRowCount > 0 && items.length > firstRowCount;
