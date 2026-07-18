@@ -11,6 +11,7 @@ import { getOfferDepartment } from '../utils/offerDepartment';
 import { normalizeYachtUse } from '../components/cv/candidate/shared/experienceCatalogs';
 import { isOfferVisibleOnJobBoard } from '../utils/jobOfferVisibility';
 import { inferTypeByName } from './cv/publicProfileView.utils';
+import { useLocation } from 'react-router-dom';
 
 const SEACREW_PAGE_SIZE = 18;
 const SEACREW_MAX_PAGE_BATCHES = 6;
@@ -525,6 +526,8 @@ const SeaCrewFilterPanel = React.forwardRef(({
 SeaCrewFilterPanel.displayName = 'SeaCrewFilterPanel';
 
 function YachtWorksPage() {
+  const location = useLocation();
+  const requestedTab = new URLSearchParams(location.search).get('tab');
   const [offers, setOffers] = useState([]);
   const [user, setUser] = useState(null);
   const [userLoaded, setUserLoaded] = useState(false);
@@ -535,7 +538,7 @@ function YachtWorksPage() {
   const [crewError, setCrewError] = useState('');
   const [crewHasMore, setCrewHasMore] = useState(false);
   const [crewFilterOptions, setCrewFilterOptions] = useState({ ranks: [], cities: [], countries: [] });
-  const [activeTab, setActiveTab] = useState('jobs');
+  const [activeTab, setActiveTab] = useState(requestedTab === 'crew' ? 'crew' : 'jobs');
   const [showPrefsIntro, setShowPrefsIntro] = useState(false);
   const [prefsIntroSeen, setPrefsIntroSeen] = useState(false);
   const [showCrewChatIntro, setShowCrewChatIntro] = useState(false);
@@ -558,6 +561,16 @@ function YachtWorksPage() {
   const togglePanel = (panel) => {
     setOpenPanel((prev) => (prev === panel ? null : panel));
   };
+
+  useEffect(() => {
+    if (requestedTab === 'crew') {
+      setActiveTab('crew');
+      return;
+    }
+    if (requestedTab === 'jobs') {
+      setActiveTab('jobs');
+    }
+  }, [requestedTab]);
   const isFiltersOpen = openPanel === 'filters';
   const isPrefsOpen  = openPanel === 'prefs';
 

@@ -1,5 +1,6 @@
 // src/components/AdminChatButton.js
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import { useAuth } from '../context/AuthContext';
 import Modal from './Modal';
@@ -9,14 +10,17 @@ import { toast } from 'react-toastify';
 
 const AdminChatButton = () => {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [hideInChat, setHideInChat] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [adminUserId, setAdminUserId] = useState(null);
   const [adminThreadId, setAdminThreadId] = useState(null);
 
-  const isAdmin = useMemo(() => currentUser?.role === 'admin', [currentUser?.role]);
+  const isAdmin = useMemo(
+    () => currentUser?.role === 'admin' || currentUser?.app_metadata?.role === 'admin',
+    [currentUser?.role, currentUser?.app_metadata?.role]
+  );
 
   useEffect(() => {
     const observer = new MutationObserver(() =>
@@ -55,55 +59,68 @@ const AdminChatButton = () => {
 
   const openAdminChat = async () => {
     if (!currentUser?.id) {
-      setShowLoginRequiredModal(true);
+      toast.info('Please sign in to chat with the admin.');
+      navigate('/login');
       return;
     }
     if (isAdmin) return;
 
     setLoading(true);
-    const adminId = await ensureAdminUser();
-    if (!adminId) {
+    try {
+      const adminId = await ensureAdminUser();
+      if (!adminId) {
+        toast.error('No se pudo cargar el chat con el admin.');
+        return;
+      }
+      if (adminId === currentUser.id) return;
+
+      const { data: threads, error: threadsError } = await supabase
+        .from('admin_threads')
+        .select('id')
+        .eq('admin_id', adminId)
+        .eq('user_id', currentUser.id);
+
+      if (threadsError) {
+        console.error('Unable to load admin threads.', threadsError);
+        toast.error('No se pudo abrir el chat con el admin.');
+        return;
+      }
+
+      let reusableThreadId = null;
+      const threadIds = (threads || []).map((row) => row?.id).filter(Boolean);
+
+      if (threadIds.length > 0) {
+        const { data: threadStates, error: stateError } = await supabase
+          .from('admin_chat_state')
+          .select('thread_id, user_id, deleted_at')
+          .in('thread_id', threadIds)
+          .in('user_id', [currentUser.id, adminId]);
+
+        if (stateError) {
+          console.error('Unable to load admin chat state.', stateError);
+        }
+
+        const deletedThreadIds = new Set(
+          (threadStates || [])
+            .filter((row) => row?.deleted_at)
+            .map((row) => row.thread_id)
+        );
+
+        reusableThreadId =
+          threadIds.find((threadId) => !deletedThreadIds.has(threadId)) || null;
+      }
+
+      setAdminThreadId(reusableThreadId);
+      setChatOpen(true);
+    } finally {
       setLoading(false);
-      toast.error('No se pudo cargar el chat con el admin.');
-      return;
     }
-    if (adminId === currentUser.id) {
-      setLoading(false);
-      return;
-    }
-
-    const { data: existing } = await supabase
-      .from('admin_threads')
-      .select('id')
-      .eq('admin_id', adminId)
-      .eq('user_id', currentUser.id)
-      .maybeSingle();
-
-    let threadId = existing?.id;
-    // Removed: create thread here
-
-    setAdminThreadId(threadId);
-    setChatOpen(true);
-    setLoading(false);
   };
 
   if (isAdmin || (hideInChat && !chatOpen)) return null;
 
   return (
     <>
-      {showLoginRequiredModal && (
-        <Modal onClose={() => setShowLoginRequiredModal(false)}>
-          <div style={{ padding: '16px 0', textAlign: 'center' }}>
-            <p style={{ margin: 0, fontSize: '16px', lineHeight: 1.5 }}>
-              To chat with the admin, you need to be logged in.
-            </p>
-            <p style={{ margin: '12px 0 0', fontSize: '14px', opacity: 0.85 }}>
-              Please sign in or create an account to use this feature.
-            </p>
-          </div>
-        </Modal>
-      )}
-
       {!chatOpen && (
         <button
           type="button"
@@ -117,7 +134,7 @@ const AdminChatButton = () => {
         </button>
       )}
 
-      {chatOpen && adminThreadId && adminUserId && (
+      {chatOpen && adminUserId && (
         <Modal onClose={() => setChatOpen(false)}>
           <ChatPage
             mode="admin"

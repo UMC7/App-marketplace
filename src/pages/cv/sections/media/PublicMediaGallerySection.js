@@ -201,7 +201,7 @@ export default function PublicMediaGallerySection({
   const lbItem = items[active] || null;
 
   const titleStyle = {
-    color: '#0b1220',
+    color: 'var(--ppv-cv-title, #0b1220)',
     opacity: 1,
     mixBlendMode: 'normal',
     textShadow: 'none',

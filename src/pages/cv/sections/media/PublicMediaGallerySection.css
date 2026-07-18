@@ -11,8 +11,8 @@
 }
 
 .pmg-section{
-  background:#fff;
-  border:1px solid rgba(0,0,0,.08);
+  background:var(--ppv-cv-card-bg, #fff);
+  border:1px solid var(--ppv-cv-card-border, rgba(0,0,0,.08));
   border-radius:12px;
   padding:14px 16px;
   margin:14px 0;
@@ -25,7 +25,7 @@
   font-weight:700;
   letter-spacing:.1em;
   text-transform:uppercase;
-  color:#0b1220 !important;
+  color:var(--ppv-cv-title, #0b1220) !important;
   opacity:1 !important;
   mix-blend-mode:normal !important;
   text-shadow:none !important;
@@ -35,7 +35,7 @@
 .pmg-subtitle{ display:none; }
 
 .pmg-empty{
-  text-align:center; padding:24px 8px; color:#64748b; font-size:14px;
+  text-align:center; padding:24px 8px; color:var(--ppv-cv-muted, #64748b); font-size:14px;
 }
 
 .pmg-coverflow{
@@ -56,9 +56,9 @@
   width: 160px; height: 220px;
   border-radius:14px;
   overflow:hidden;
-  border:1px solid rgba(0,0,0,.06);
-  background:#f8fafc;
-  box-shadow: 0 12px 26px rgba(2,6,23,.12);
+  border:1px solid var(--ppv-cv-card-border, rgba(0,0,0,.06));
+  background:var(--ppv-cv-card-bg-soft, #f8fafc);
+  box-shadow: var(--ppv-cv-card-shadow, 0 12px 26px rgba(2,6,23,.12));
   cursor:pointer;
   transition: transform .35s ease, opacity .25s ease, box-shadow .2s ease;
   will-change: transform;
@@ -125,10 +125,11 @@
 .pmg-nav{
   position:absolute; top:50%; transform:translateY(-50%);
   width:34px; height:34px; border-radius:999px;
-  border:1px solid rgba(0,0,0,.12);
-  background:#ffffffcc; backdrop-filter: blur(6px);
+  border:1px solid var(--ppv-cv-button-border, rgba(0,0,0,.12));
+  background:var(--ppv-cv-button-bg, #ffffffcc); backdrop-filter: blur(6px);
   display:grid; place-items:center;
   cursor:pointer; font-size:20px; line-height:1;
+  color: var(--ppv-cv-button-text, #0b1220);
   z-index: 2000;
 }
 .pmg-prev{ left:8px; } .pmg-next{ right:8px; }
@@ -139,9 +140,9 @@
 }
 .pmg-dot{
   width:8px; height:8px; border-radius:999px; border:1px solid rgba(0,0,0,.38);
-  background:#fff; cursor:pointer;
+  background:var(--ppv-cv-card-bg, #fff); cursor:pointer;
 }
-.pmg-dot.is-on{ background:#0b1220; border-color:#0b1220; }
+.pmg-dot.is-on{ background:var(--ppv-cv-text, #0b1220); border-color:var(--ppv-cv-text, #0b1220); }
 
 .pmg-lightbox{
   position:fixed;

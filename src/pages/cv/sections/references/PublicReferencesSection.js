@@ -153,7 +153,7 @@ export default function PublicReferencesSection({
         <div className="ppv-sectionTitleWrap">
           <h2
             className="ppv-sectionTitle"
-            style={{ color: '#0b1220', opacity: 1, mixBlendMode: 'normal', textShadow: 'none' }}
+            style={{ color: 'var(--ppv-cv-title, #0b1220)', opacity: 1, mixBlendMode: 'normal', textShadow: 'none' }}
           >
             {title}
           </h2>
@@ -200,11 +200,12 @@ export default function PublicReferencesSection({
                     alignItems: 'center',
                     gap: 12,
                     padding: '10px 12px',
-                    border: '1px solid rgba(15,23,42,.14)',
+                    border: '1px solid var(--ppv-cv-card-border, rgba(15,23,42,.14))',
                     borderRadius: 12,
-                    background: '#fff',
+                    background: 'var(--ppv-cv-card-bg, #fff)',
                     marginBottom: 10,
-                    boxShadow: '0 4px 10px rgba(2,6,23,.05)',
+                    boxShadow: 'var(--ppv-cv-card-shadow, 0 4px 10px rgba(2,6,23,.05))',
+                    color: 'var(--ppv-cv-text, #0b1220)',
                   }}
                 >
                   <span className="ppv-docBullet" aria-hidden="true" style={{ paddingLeft: 6 }}>•</span>
@@ -255,8 +256,9 @@ export default function PublicReferencesSection({
                     style={{
                       borderRadius: 10,
                       padding: '6px 8px',
-                      border: '1px solid rgba(0,0,0,.18)',
-                      background: '#f3f4f6',
+                      border: '1px solid var(--ppv-cv-button-border, rgba(0,0,0,.18))',
+                      background: 'var(--ppv-cv-button-bg, #f3f4f6)',
+                      color: 'var(--ppv-cv-button-text, #0b1220)',
                       cursor: hasAttachment ? 'pointer' : 'not-allowed',
                       opacity: hasAttachment ? 1 : .6,
                     }}
@@ -286,8 +288,8 @@ const lbl = {
   letterSpacing: '.12em',
   fontWeight: 700,
   textTransform: 'uppercase',
-  color: '#334155',
+  color: 'var(--ppv-cv-meta-label, #334155)',
   marginBottom: 2,
   textAlign: 'left',
 };
-const val = { fontSize: 14 };
+const val = { fontSize: 14, color: 'var(--ppv-cv-text, #0b1220)' };

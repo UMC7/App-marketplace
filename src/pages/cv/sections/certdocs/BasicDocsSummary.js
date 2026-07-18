@@ -116,14 +116,14 @@ function ItemRow({ label, ok }) {
       alignItems: 'center',
       gap: 10,
       padding: '6px 10px',
-      background: '#fff',
-      border: '1px solid rgba(0,0,0,.08)',
+      background: 'var(--ppv-cv-card-bg, #fff)',
+      border: '1px solid var(--ppv-cv-card-border, rgba(0,0,0,.08))',
       borderRadius: 12,
-      boxShadow: '0 1px 3px rgba(2,6,23,.06)',
+      boxShadow: 'var(--ppv-cv-card-shadow, 0 1px 3px rgba(2,6,23,.06))',
     }}>
       {/* Icono a la izquierda (como pediste) */}
       <StatusBadge ok={ok}/>
-      <span style={{ fontSize: 14, color: '#0b1220' }}>{label}</span>
+      <span style={{ fontSize: 14, color: 'var(--ppv-cv-text, #0b1220)' }}>{label}</span>
     </div>
   );
 }

@@ -330,6 +330,95 @@ body.dark-mode .slick-dots li.slick-active button:before {
 }
 
 /* =========================
+   LANDING FEATURE PROMOS
+   ========================= */
+body.dark-mode .landing-scroll-cue {
+  color: var(--text-muted) !important;
+}
+
+body.dark-mode .landing-scroll-cue__text {
+  color: #7fa9bf !important;
+}
+
+body.dark-mode .landing-scroll-cue__chevron {
+  border-right-color: rgba(104, 173, 168, 0.78) !important;
+  border-bottom-color: rgba(104, 173, 168, 0.78) !important;
+}
+
+body.dark-mode .feature-promo-section {
+  background:
+    radial-gradient(circle at top left, rgba(104, 173, 168, 0.1), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(127, 169, 191, 0.08), transparent 28%);
+}
+
+body.dark-mode .feature-promo-section::before {
+  background: rgba(104, 173, 168, 0.1);
+}
+
+body.dark-mode .feature-promo-section::after {
+  background: rgba(127, 169, 191, 0.08);
+}
+
+body.dark-mode .feature-promo-kicker,
+body.dark-mode .feature-promo-eyebrow {
+  color: #7fd1cb !important;
+}
+
+body.dark-mode .feature-promo-header h2,
+body.dark-mode .feature-promo-copy h3 {
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .feature-promo-intro,
+body.dark-mode .feature-promo-copy > p:last-of-type {
+  color: var(--text-muted) !important;
+}
+
+body.dark-mode .feature-promo-card {
+  background: linear-gradient(180deg, rgba(34, 34, 34, 0.96), rgba(24, 24, 24, 0.98)) !important;
+  border: 1px solid rgba(104, 173, 168, 0.16) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28) !important;
+}
+
+body.dark-mode .feature-promo-card::after {
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.02) 35%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.02) 65%,
+    transparent 100%
+  );
+}
+
+body.dark-mode .feature-promo-card--cv::before {
+  background:
+    linear-gradient(160deg, rgba(104, 173, 168, 0.12), transparent 42%),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.015));
+}
+
+body.dark-mode .feature-promo-card--card::before {
+  background:
+    linear-gradient(160deg, rgba(127, 169, 191, 0.12), transparent 40%),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.015));
+}
+
+body.dark-mode .feature-promo-card--jobs::before,
+body.dark-mode .feature-promo-card--crew::before {
+  background:
+    linear-gradient(160deg, rgba(104, 173, 168, 0.1), transparent 40%),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.015));
+}
+
+body.dark-mode .feature-promo-link {
+  color: #7fd1cb !important;
+}
+
+body.dark-mode .feature-promo-link:hover {
+  color: #a2e6e1 !important;
+}
+
+/* =========================
    COOKIE BANNER BUTTONS
    ========================= */
 body.dark-mode .cookie-banner button:nth-child(2),

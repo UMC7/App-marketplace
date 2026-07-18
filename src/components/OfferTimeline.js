@@ -180,7 +180,8 @@ const OfferTimeline = ({
                     const rank2DocsOnly = rank2DocsRaw.filter((doc) => doc !== rank2DeckLic && doc !== rank2EngineLic);
                     const hasRank1 = rank1DeckLic || rank1EngineLic || rank1DocsOnly.length > 0;
                     const hasRank2 = offer.team && (rank2DeckLic || rank2EngineLic || rank2DocsOnly.length > 0);
-                    const hasAnyRequiredDocs = hasRank1 || hasRank2;
+                    const isShoreBased = offer.work_environment === 'Shore-based';
+                    const hasAnyRequiredDocs = !isShoreBased && (hasRank1 || hasRank2);
                     const remarkParagraphs = (() => {
                       const description = offer.description || '';
                       return description
@@ -188,7 +189,6 @@ const OfferTimeline = ({
                         .map((paragraph) => paragraph.trim())
                         .filter(Boolean);
                     })();
-                    const isShoreBased = offer.work_environment === 'Shore-based';
                     const languagesAvailable =
                       Boolean(
                         offer.language_1 ||
@@ -286,10 +286,6 @@ const OfferTimeline = ({
                       return (
                         <div className="expanded-block block4">
                           <div className="field-pair">
-                            <div className="field-group">
-                              <div className="field-label">Work Location</div>
-                              <div className="field-value">{workLocation}</div>
-                            </div>
                             {offer.city && (
                               <div className="field-group">
                                 <div className="field-label">City</div>
@@ -302,8 +298,12 @@ const OfferTimeline = ({
                                 <div className="field-value">{offer.country}</div>
                               </div>
                             )}
+                            <div className="field-group">
+                              <div className="field-label">Work Location</div>
+                              <div className="field-value">{workLocation}</div>
+                            </div>
                             {offer.contact_email && (
-                              <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+                              <div className="field-group">
                                 <div
                                   className="field-label"
                                   style={{

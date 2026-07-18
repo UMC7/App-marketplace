@@ -79,7 +79,7 @@ export default function CertDocModal({ open, onClose, src, title = 'Document' })
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,.5)',
+        background: 'var(--ppv-cv-modal-overlay, rgba(0,0,0,.5))',
         display: 'grid',
         placeItems: 'center',
         zIndex: 50,
@@ -91,7 +91,7 @@ export default function CertDocModal({ open, onClose, src, title = 'Document' })
         onClick={(e) => e.stopPropagation()}
         tabIndex={-1}
         style={{
-          background: '#fff',
+          background: 'var(--ppv-cv-modal-bg, #fff)',
           width: 'min(920px, 96vw)',
           height: 'min(86vh, 920px)',
           borderRadius: 12,
@@ -111,7 +111,7 @@ export default function CertDocModal({ open, onClose, src, title = 'Document' })
             justifyContent: 'space-between',
             gap: 8,
             padding: '10px 12px',
-            borderBottom: '1px solid rgba(0,0,0,.12)',
+            borderBottom: '1px solid var(--ppv-cv-divider, rgba(0,0,0,.12))',
           }}
         >
           <div
@@ -122,6 +122,7 @@ export default function CertDocModal({ open, onClose, src, title = 'Document' })
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
+              color: 'var(--ppv-cv-text, #0b1220)',
             }}
             title={title}
           >
@@ -145,7 +146,7 @@ export default function CertDocModal({ open, onClose, src, title = 'Document' })
         </div>
 
         {/* Viewer */}
-        <div style={{ flex: 1, position: 'relative', background: '#0b122006' }}>
+        <div style={{ flex: 1, position: 'relative', background: 'var(--ppv-cv-modal-surface, #0b122006)' }}>
           {kind === 'pdf' ? (
             <iframe title="Document" src={src} style={{ width: '100%', height: '100%', border: 0 }} />
           ) : kind === 'image' ? (
@@ -155,7 +156,7 @@ export default function CertDocModal({ open, onClose, src, title = 'Document' })
               style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
             />
           ) : (
-            <div style={{ padding: 16 }}>
+            <div style={{ padding: 16, color: 'var(--ppv-cv-text, #0b1220)' }}>
               <p>
                 Preview not available for this file type.{` `}
                 {src ? (

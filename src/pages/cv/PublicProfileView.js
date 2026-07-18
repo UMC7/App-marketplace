@@ -52,10 +52,18 @@ const MAX_SCALE = 1;
 const BUSINESS_CARD_EXPORT_WIDTH = 1800;
 const BUSINESS_CARD_EXPORT_HEIGHT = Math.round((BUSINESS_CARD_EXPORT_WIDTH * 55) / 85);
 const BUSINESS_CARD_THEME_STORAGE_KEY = 'ydw.businessCardTheme';
+const DIGITAL_CV_THEME_STORAGE_KEY = 'ydw.digitalCvTheme';
 const UNLIMITED_MEDIA_USER_IDS = new Set([
   'dc3c4ca6-e892-4c25-891f-287f43f9c182',
   '377caa8a-95ee-4959-adad-c9af2eae2171',
 ]);
+
+function getActiveSiteTheme() {
+  if (typeof document === 'undefined') return 'light';
+  if (document.body.classList.contains('dark-mode')) return 'dark';
+  if (document.documentElement.getAttribute('data-theme') === 'dark') return 'dark';
+  return 'light';
+}
 
 function getProfileUserLookupKeys(profile) {
   return [
@@ -178,7 +186,8 @@ export default function PublicProfileView() {
   const hasLockedMetaTopRef = useRef(false);
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
   const [cardExportBusy, setCardExportBusy] = useState('');
-  const [businessCardTheme, setBusinessCardTheme] = useState('light');
+  const [businessCardTheme, setBusinessCardTheme] = useState(() => getActiveSiteTheme());
+  const [digitalCvTheme, setDigitalCvTheme] = useState(() => getActiveSiteTheme());
   const [seaCrewVisibilityBusy, setSeaCrewVisibilityBusy] = useState(false);
   const [userNickname, setUserNickname] = useState('');
   const introInnerRef = useRef(null);
@@ -495,23 +504,20 @@ export default function PublicProfileView() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const storedTheme = window.localStorage.getItem(BUSINESS_CARD_THEME_STORAGE_KEY);
-      if (storedTheme === 'light' || storedTheme === 'dark') {
-        setBusinessCardTheme(storedTheme);
-      }
-    } catch (_) {
-      // Ignore storage read failures and keep the default theme.
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
       window.localStorage.setItem(BUSINESS_CARD_THEME_STORAGE_KEY, businessCardTheme);
     } catch (_) {
       // Ignore storage write failures; the in-memory choice still works.
     }
   }, [businessCardTheme]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(DIGITAL_CV_THEME_STORAGE_KEY, digitalCvTheme);
+    } catch (_) {
+      // Ignore storage write failures; the in-memory choice still works.
+    }
+  }, [digitalCvTheme]);
 
   useEffect(() => {
     if (!downloadMenuOpen) return undefined;
@@ -1099,6 +1105,10 @@ export default function PublicProfileView() {
     () => `ppv-businessCard ppv-businessCard--${businessCardTheme}`,
     [businessCardTheme]
   );
+  const digitalCvRootClassName = useMemo(
+    () => `ppv-digitalCvThemeRoot ppv-digitalCvThemeRoot--${digitalCvTheme}`,
+    [digitalCvTheme]
+  );
   const isSeaCrewCardVisible = useMemo(
     () => (profile?.visibility_settings?.show_in_seacrew ?? true) === true,
     [profile?.visibility_settings]
@@ -1465,6 +1475,7 @@ if (!allowPublicView && !isPreview) {
     fontWeight: 700,
     opacity: 0.8,
     textTransform: 'uppercase',
+    color: 'var(--ppv-cv-meta-label)',
   };
 
   const metaValueStyle = {
@@ -1472,6 +1483,7 @@ if (!allowPublicView && !isPreview) {
     fontWeight: 700,
     textAlign: 'center',
     justifySelf: 'center',
+    color: 'var(--ppv-cv-meta-value)',
   };
 
   return (
@@ -1562,7 +1574,7 @@ if (!allowPublicView && !isPreview) {
       </div>
 
       {/* Páginas A4 (contenido envuelto en .ppv-pageInner para escalar solo en pantalla) */}
-      <main className="ppv-body" ref={wrapRef}>
+      <main className={`ppv-body ${digitalCvRootClassName}`} ref={wrapRef}>
         <div
           className={`ppv-pages ${twoUp ? 'ppv-twoUp' : 'ppv-stacked'}`}
           role="region"
@@ -1607,6 +1619,31 @@ if (!allowPublicView && !isPreview) {
                   ref={introRef}
                   style={{ zIndex: 2, height: introHeight }}
                 >
+                  {isPreview && (
+                    <div
+                      className="ppv-businessCardControls ppv-businessCardControls--cvRibbon"
+                      aria-label="Digital CV theme controls"
+                    >
+                      <div className="ppv-businessCardThemeToggle" role="group" aria-label="Digital CV color">
+                        <button
+                          type="button"
+                          className={`ppv-businessCardThemeOption${digitalCvTheme === 'dark' ? ' is-active' : ''}`}
+                          onClick={() => setDigitalCvTheme('dark')}
+                          aria-pressed={digitalCvTheme === 'dark'}
+                        >
+                          Dark
+                        </button>
+                        <button
+                          type="button"
+                          className={`ppv-businessCardThemeOption${digitalCvTheme === 'light' ? ' is-active' : ''}`}
+                          onClick={() => setDigitalCvTheme('light')}
+                          aria-pressed={digitalCvTheme === 'light'}
+                        >
+                          Light
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div className="ppv-introInner" ref={introInnerRef}>
                     <div
                       className={introNameClassName}
@@ -1694,13 +1731,14 @@ if (!allowPublicView && !isPreview) {
                   </div>
 
                   <div
+                    className="ppv-summaryCard"
                     style={{
                       width: '100%',
                       maxWidth: 720,
                       margin: '0 auto',
                       paddingTop: 12,
-                      borderTop: '1px solid rgba(0,0,0,.12)',
-                      color: '#0b1220',
+                      borderTop: '1px solid var(--ppv-cv-divider)',
+                      color: 'var(--ppv-cv-text)',
                       textAlign: 'left',
                     }}
                   >

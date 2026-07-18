@@ -133,13 +133,32 @@
 
 .pcd-muted{ opacity: .6; }
 
-/* ===== Dark mode: solo tipografía ===== */
-body.dark-mode .pcd-section { color: #0b1220 !important; }
-body.dark-mode .pcd-section .pcd-title { color: #0b1220 !important; }
-body.dark-mode .pcd-section .pcd-label { color: #0b1220 !important; }
-body.dark-mode .pcd-section .pcd-value { color: #0b1220 !important; }
-body.dark-mode .pcd-section .pcd-value a { color: #2563eb !important; }
-body.dark-mode .pcd-section .pcd-muted { color: #64748b !important; opacity:1 !important; }
+/* ===== Digital CV dark mode ===== */
+.ppv-digitalCvThemeRoot--dark .pcd-section {
+  color: var(--ppv-cv-text) !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .pcd-section .pcd-title {
+  color: var(--ppv-cv-title) !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .pcd-section .pcd-label {
+  color: #7fcfcb !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .pcd-section .pcd-value,
+.ppv-digitalCvThemeRoot--dark .pcd-section .pcd-value span {
+  color: #ffffff !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .pcd-section .pcd-value a {
+  color: #ffffff !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .pcd-section .pcd-muted {
+  color: var(--ppv-cv-muted) !important;
+  opacity: 1 !important;
+}
 
 /* ===== Responsive ===== */
 @media (max-width: 900px){

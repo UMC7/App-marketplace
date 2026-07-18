@@ -125,8 +125,8 @@ function LanguageBar({ lang, level }) {
     width: '100%',
     height: 18,
     borderRadius: 999,
-    border: '2px solid #000',
-    background: 'linear-gradient(90deg, #c8f2f4 0%, #8be3e9 40%, #18a7b5 100%)',
+    border: '2px solid var(--ppv-cv-text, #000)',
+    background: 'var(--ppv-cv-meter-track, linear-gradient(90deg, #c8f2f4 0%, #8be3e9 40%, #18a7b5 100%))',
     overflow: 'hidden',
   };
 
@@ -136,19 +136,19 @@ function LanguageBar({ lang, level }) {
     right: 0,
     bottom: 0,
     width: `${100 - pct}%`,
-    background: '#e5e7eb',
+    background: 'var(--ppv-cv-track-bg, #e5e7eb)',
   };
 
   return (
-    <div style={{ width: '100%', maxWidth: 360, textAlign: 'center' }}>
-      <div style={{ fontWeight: 700, marginBottom: 8 }}>
+    <div style={{ width: '100%', maxWidth: 360, textAlign: 'center', color: 'var(--ppv-cv-text, #0b1220)' }}>
+      <div style={{ fontWeight: 700, marginBottom: 8, color: 'var(--ppv-cv-text, #0b1220)' }}>
         {lang}
         {flag && <span className="pls-lang-flag" aria-hidden="true">{flag}</span>}
       </div>
       <div style={trackStyle}>
         <div style={maskStyle} />
       </div>
-      <div style={{ marginTop: 8, fontSize: 13, fontWeight: 700 }}>{pretty}</div>
+      <div style={{ marginTop: 8, fontSize: 13, fontWeight: 700, color: 'var(--ppv-cv-muted, #334155)' }}>{pretty}</div>
     </div>
   );
 }

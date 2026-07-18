@@ -47,6 +47,8 @@ import {
 } from './yachtOfferForm.utils';
 
 const BASE_REQUIRED_DOCUMENTS = ['ENG1 Seafarer Medical Certificate', 'STCW Basic Training (A-VI/1)'];
+const withBaseRequiredDocuments = (documents) =>
+  Array.from(new Set([...(Array.isArray(documents) ? documents : []), ...BASE_REQUIRED_DOCUMENTS]));
 
 const initialState = {
   work_environment: '',
@@ -62,7 +64,7 @@ const initialState = {
   end_day: '',
   required_license: '',
   engineering_license: '',
-  required_documents: BASE_REQUIRED_DOCUMENTS,
+  required_documents: [],
   required_skills: [],
   teammate_required_skills: [],
   salary: '',
@@ -89,7 +91,7 @@ const initialState = {
   teammate_rank: '',
   teammate_required_license: '',
   teammate_engineering_license: '',
-  teammate_required_documents: BASE_REQUIRED_DOCUMENTS,
+  teammate_required_documents: [],
   teammate_salary: '',
   teammate_experience: '',
   flag: 'Foreign Flag',
@@ -134,7 +136,7 @@ function normalizeInitialValues(row) {
         }
         if (Array.isArray(def) && !Array.isArray(v)) return [k, [...def]];
         if (k === 'required_documents' && Array.isArray(v)) {
-          return [k, Array.from(new Set([...(v || []), ...BASE_REQUIRED_DOCUMENTS]))];
+          return [k, row.work_environment === 'Onboard' ? withBaseRequiredDocuments(v) : v];
         }
         return [k, v];
       })
@@ -235,7 +237,9 @@ useEffect(() => {
   if (!Array.isArray(initialValues?.required_documents)) return;
   setFormData(prev => ({
     ...prev,
-    required_documents: Array.from(new Set([...(initialValues.required_documents || []), ...BASE_REQUIRED_DOCUMENTS])),
+    required_documents: initialValues.work_environment === 'Onboard'
+      ? withBaseRequiredDocuments(initialValues.required_documents)
+      : (initialValues.required_documents || []),
   }));
 }, [initialValues]);
 
@@ -400,7 +404,9 @@ const autoFillFromText = async () => {
 
         if (k === "required_documents") {
           const arr = Array.isArray(v) ? v : [];
-          merged.required_documents = Array.from(new Set([...(Array.isArray(merged.required_documents) ? merged.required_documents : []), ...BASE_REQUIRED_DOCUMENTS, ...arr]));
+          merged.required_documents = (merged.work_environment === 'Onboard' || data.work_environment === 'Onboard')
+            ? withBaseRequiredDocuments([...(Array.isArray(merged.required_documents) ? merged.required_documents : []), ...arr])
+            : arr;
           continue;
         }
 
@@ -441,7 +447,7 @@ const autoFillFromText = async () => {
       }
 
       if (merged.work_environment === 'Onboard' || data.work_environment === 'Onboard') {
-        merged.required_documents = Array.from(new Set([...(Array.isArray(merged.required_documents) ? merged.required_documents : []), ...BASE_REQUIRED_DOCUMENTS]));
+        merged.required_documents = withBaseRequiredDocuments(merged.required_documents);
       }
 
       const normalizedTitle = merged.title || normalizeTitle(data.rank);
@@ -800,12 +806,21 @@ const formReady = (() => {
         newState.teammate_experience = '';
       }
       if (name === 'team' && value === 'Yes') {
-        newState.teammate_required_documents = Array.from(
-          new Set([
-            ...(Array.isArray(prev.teammate_required_documents) ? prev.teammate_required_documents : []),
-            ...BASE_REQUIRED_DOCUMENTS,
-          ])
-        );
+        newState.teammate_required_documents = prev.work_environment === 'Onboard'
+          ? withBaseRequiredDocuments(prev.teammate_required_documents)
+          : [];
+      }
+
+      if (name === 'work_environment' && value !== 'Onboard') {
+        newState.required_documents = [];
+        newState.teammate_required_documents = [];
+      }
+
+      if (name === 'work_environment' && value === 'Onboard') {
+        newState.required_documents = withBaseRequiredDocuments(prev.required_documents);
+        if (prev.team === 'Yes') {
+          newState.teammate_required_documents = withBaseRequiredDocuments(prev.teammate_required_documents);
+        }
       }
 
       if (name === 'yacht_type') {
@@ -828,7 +843,7 @@ const formReady = (() => {
       if (name === 'teammate_rank') {
         newState.teammate_required_license = '';
         newState.teammate_engineering_license = '';
-        newState.teammate_required_documents = [...BASE_REQUIRED_DOCUMENTS];
+        newState.teammate_required_documents = prev.work_environment === 'Onboard' ? [...BASE_REQUIRED_DOCUMENTS] : [];
         newState.teammate_required_skills = [];
       }
       if (name === 'teammate_rank' && !DECK_LICENSE_RANKS.includes(value) && !ENGINEERING_RANKS.includes(value)) {
@@ -907,11 +922,15 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     uses: sanitizedData.uses || null,
     required_licenses: Array.isArray(sanitizedData.required_licenses) ? sanitizedData.required_licenses : [],
     required_engineering_licenses: Array.isArray(sanitizedData.required_engineering_licenses) ? sanitizedData.required_engineering_licenses : [],
-    required_documents: Array.isArray(sanitizedData.required_documents) ? sanitizedData.required_documents : [],
+    required_documents: sanitizedData.work_environment === 'Onboard' && Array.isArray(sanitizedData.required_documents)
+      ? sanitizedData.required_documents
+      : [],
     required_skills: Array.isArray(sanitizedData.required_skills) ? sanitizedData.required_skills : [],
     teammate_required_licenses: isTeamJob && Array.isArray(sanitizedData.teammate_required_licenses) ? sanitizedData.teammate_required_licenses : [],
     teammate_required_engineering_licenses: isTeamJob && Array.isArray(sanitizedData.teammate_required_engineering_licenses) ? sanitizedData.teammate_required_engineering_licenses : [],
-    teammate_required_documents: isTeamJob && Array.isArray(sanitizedData.teammate_required_documents) ? sanitizedData.teammate_required_documents : [],
+    teammate_required_documents: isTeamJob && sanitizedData.work_environment === 'Onboard' && Array.isArray(sanitizedData.teammate_required_documents)
+      ? sanitizedData.teammate_required_documents
+      : [],
     teammate_required_skills: isTeamJob && Array.isArray(sanitizedData.teammate_required_skills) ? sanitizedData.teammate_required_skills : [],
     homeport: sanitizedData.homeport || null,
     liveaboard: sanitizedData.liveaboard || null,

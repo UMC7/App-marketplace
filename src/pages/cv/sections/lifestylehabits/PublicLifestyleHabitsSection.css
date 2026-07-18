@@ -153,6 +153,47 @@
   border: 1px solid rgba(15, 23, 42, .08);
 }
 
+.ppv-digitalCvThemeRoot--dark .ppv-section {
+  background: var(--ppv-cv-card-bg) !important;
+  border-color: var(--ppv-cv-card-border) !important;
+  box-shadow: var(--ppv-cv-card-shadow) !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .ppv-section .ppv-sectionTitleWrap,
+.ppv-digitalCvThemeRoot--dark .ppv-section .ppv-sectionTitle,
+.ppv-digitalCvThemeRoot--dark .ppv-lh-value {
+  color: var(--ppv-cv-text) !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .ppv-lh-meter {
+  background: var(--ppv-cv-card-bg-soft) !important;
+  border-color: var(--ppv-cv-card-border) !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .ppv-lh-head,
+.ppv-digitalCvThemeRoot--dark .ppv-lh-lineLabel {
+  color: var(--ppv-cv-meta-label) !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .vbar {
+  border-color: var(--ppv-cv-text) !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .vbar.active {
+  background: #16c5c1 !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .ppv-lh-iconBig {
+  border-color: var(--ppv-cv-card-border) !important;
+  background: rgba(255,255,255,.02) !important;
+}
+
+.ppv-digitalCvThemeRoot--dark .ppv-lh-pill {
+  background: rgba(111, 194, 189, .18) !important;
+  color: var(--ppv-cv-text) !important;
+  border-color: var(--ppv-cv-card-border) !important;
+}
+
 /* ====== Responsivo ====== */
 @media (max-width: 1080px) {
   /* En tablets, 2 columnas está bien */

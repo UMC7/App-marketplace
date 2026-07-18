@@ -28,6 +28,8 @@ const ALLOWED_CHAT_FILE_MIME_TYPES = new Set([
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]);
+const CHAT_UPLOAD_ERROR_MESSAGE = 'We could not upload your file. Please try again.';
+const CHAT_SEND_ERROR_MESSAGE = 'We could not send your message. Please try again.';
 
 const DISCLAIMER_PARAGRAPHS = [
   'Yacht Daywork connects candidates and employers but is not involved in the hiring process.',
@@ -75,6 +77,7 @@ const formatTime = (date) =>
 
 function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId, adminThreadId, adminUserId }) {
   const [messages, setMessages] = useState([]);
+  const [attachmentUrls, setAttachmentUrls] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
   const [message, setMessage] = useState('');
   const [file, setFile] = useState(null);
@@ -106,6 +109,37 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   const { fetchUnreadMessages } = useUnreadMessages();
   const fetchUnreadRef = useRef(fetchUnreadMessages);
   fetchUnreadRef.current = fetchUnreadMessages;
+
+  const logChatIssue = async ({ stage, errorMessage, fileName = null, fileSize = null, fileType = null, extra = null }) => {
+    try {
+      const context = {
+        tag: 'chat_attachment_error',
+        stage,
+        mode: isAdminThread ? 'admin' : isExternal ? 'external' : (isOfferInternal ? 'offer' : 'direct'),
+        offerId: offerId || null,
+        receiverId: receiverId || null,
+        adminThreadId: actualAdminThreadId || adminThreadId || null,
+        adminUserId: adminUserId || null,
+        currentUserId: currentUser?.id || null,
+        otherUserId: otherUserId || null,
+        fileName,
+        fileSize,
+        fileType,
+        errorMessage,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        timestamp: new Date().toISOString(),
+        extra,
+      };
+
+      await supabase.from('audit_logs').insert([
+        {
+          description: JSON.stringify(context),
+        },
+      ]);
+    } catch (logError) {
+      console.error('Error writing audit log:', logError);
+    }
+  };
 
   const resetFileInput = () => {
     setFile(null);
@@ -151,12 +185,42 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       });
     if (uploadError) throw uploadError;
 
+    return path;
+  };
+
+  const extractChatUploadPath = (storedValue) => {
+    const raw = String(storedValue || '').trim();
+    if (!raw) return null;
+    if (!/^https?:\/\//i.test(raw)) {
+      return raw.replace(/^chat-uploads\//, '');
+    }
+
+    try {
+      const url = new URL(raw);
+      const match = url.pathname.match(/\/storage\/v1\/object\/(?:sign|public|authenticated)\/chat-uploads\/(.+)$/i);
+      if (!match?.[1]) return null;
+      return decodeURIComponent(match[1]);
+    } catch {
+      return null;
+    }
+  };
+
+  const getChatAttachmentUrl = async (storedValue) => {
+    const raw = String(storedValue || '').trim();
+    if (!raw) return null;
+
+    const objectPath = extractChatUploadPath(raw);
+    if (!objectPath) {
+      return /^https?:\/\//i.test(raw) ? raw : null;
+    }
+
     const oneWeekSeconds = 60 * 60 * 24 * 7;
-    const { data, error: signError } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from('chat-uploads')
-      .createSignedUrl(path, oneWeekSeconds);
-    if (signError || !data?.signedUrl) {
-      throw signError || new Error('Failed to sign file.');
+      .createSignedUrl(objectPath, oneWeekSeconds);
+
+    if (error || !data?.signedUrl) {
+      throw error || new Error('Failed to sign file.');
     }
 
     return data.signedUrl;
@@ -189,6 +253,35 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     }, 30);
     return () => clearTimeout(handle);
   }, [messages]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolveAttachmentUrls = async () => {
+      const items = await Promise.all(
+        messages
+          .filter((msg) => !isExternal && msg?.file_url)
+          .map(async (msg) => {
+            try {
+              const signedUrl = await getChatAttachmentUrl(msg.file_url);
+              return [msg.id, signedUrl];
+            } catch (error) {
+              console.error('Error signing chat attachment:', error);
+              return [msg.id, null];
+            }
+          })
+      );
+
+      if (cancelled) return;
+      setAttachmentUrls(Object.fromEntries(items.filter(([id, url]) => id && url)));
+    };
+
+    resolveAttachmentUrls();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [messages, isExternal]);
 
   // Load current user + my avatar
   useEffect(() => {
@@ -524,7 +617,14 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
           fileUrl = await uploadChatAttachment(`admin-chat/${threadId}`, file);
         } catch (uploadError) {
           setUploading(false);
-          setFileError(uploadError?.message || 'Upload failed.');
+          setFileError(CHAT_UPLOAD_ERROR_MESSAGE);
+          logChatIssue({
+            stage: 'admin_upload',
+            errorMessage: uploadError?.message || 'Upload failed.',
+            fileName: file?.name || null,
+            fileSize: file?.size || null,
+            fileType: file?.type || null,
+          });
           console.error('Error uploading file:', uploadError);
           return;
         } finally {
@@ -556,7 +656,14 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
           .order('sent_at', { ascending: true });
         setMessages(updated || []);
       } else {
-        setFileError(error.message || 'Failed to send message.');
+        setFileError(CHAT_SEND_ERROR_MESSAGE);
+        logChatIssue({
+          stage: 'admin_insert_message',
+          errorMessage: error?.message || 'Failed to send message.',
+          fileName: file?.name || null,
+          fileSize: file?.size || null,
+          fileType: file?.type || null,
+        });
         console.error('Error sending message:', error);
       }
       return;
@@ -598,7 +705,14 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         fileUrl = await uploadChatAttachment(uploadPath, file);
       } catch (uploadError) {
         setUploading(false);
-        setFileError(uploadError?.message || 'Upload failed.');
+        setFileError(CHAT_UPLOAD_ERROR_MESSAGE);
+        logChatIssue({
+          stage: 'internal_upload',
+          errorMessage: uploadError?.message || 'Upload failed.',
+          fileName: file?.name || null,
+          fileSize: file?.size || null,
+          fileType: file?.type || null,
+        });
         console.error('Error uploading file:', uploadError);
         return;
       } finally {
@@ -638,7 +752,14 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
       setMessages(updated);
     } else {
-      setFileError(error.message || 'Failed to send message.');
+      setFileError(CHAT_SEND_ERROR_MESSAGE);
+      logChatIssue({
+        stage: 'internal_insert_message',
+        errorMessage: error?.message || 'Failed to send message.',
+        fileName: file?.name || null,
+        fileSize: file?.size || null,
+        fileType: file?.type || null,
+      });
       console.error('Error sending message:', error);
     }
   };
@@ -735,9 +856,9 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
                 {text && extractUrls(text).map((url, idx) => (
                   <LinkPreview key={`link-${msg.id}-${idx}`} url={url} />
                 ))}
-        {!isExternal && msg.file_url && (
+        {!isExternal && msg.file_url && attachmentUrls[msg.id] && (
           <a
-            href={msg.file_url}
+            href={attachmentUrls[msg.id]}
             target="_blank"
             rel="noopener noreferrer"
             className="chat-file-link"
@@ -776,7 +897,19 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
               onChange={(e) => {
                 const nextFile = e.target.files?.[0] || null;
                 setFileError('');
-                if (validateFile(nextFile)) setFile(nextFile);
+                if (validateFile(nextFile)) {
+                  setFile(nextFile);
+                  return;
+                }
+                logChatIssue({
+                  stage: 'local_validation',
+                  errorMessage: nextFile?.size > (MAX_CHAT_FILE_MB * 1024 * 1024)
+                    ? `File too large. Max ${MAX_CHAT_FILE_MB}MB.`
+                    : 'Unsupported file type. Use PDF, JPG, PNG, WEBP, DOC or DOCX.',
+                  fileName: nextFile?.name || null,
+                  fileSize: nextFile?.size || null,
+                  fileType: nextFile?.type || null,
+                });
               }}
               disabled={isChatClosed || uploading}
             />

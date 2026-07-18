@@ -2,8 +2,8 @@
 
 /* ====== Base (light) ====== */
 .edu-section{
-  background:#ffffff;
-  border:1px solid rgba(15,23,42,.08);
+  background:var(--ppv-cv-card-bg, #ffffff);
+  border:1px solid var(--ppv-cv-card-border, rgba(15,23,42,.08));
   border-radius:12px;
   padding:14px 16px;
   margin:14px 0;
@@ -30,15 +30,15 @@
   border:1px solid rgba(15,23,42,.14);
   border-radius:10px;
   padding:6px 10px;                      /* compacto */
-  background:#f8fafc;
-  box-shadow: 0 4px 10px rgba(2,6,23,.05);
+  background:var(--ppv-cv-card-bg-soft, #f8fafc);
+  box-shadow: var(--ppv-cv-card-shadow, 0 4px 10px rgba(2,6,23,.05));
   /* Asegura que NINGUNA regla anterior fije altos mayores */
   min-height:auto !important;
 }
 
 .edu-card-title{
   font-weight:700;
-  color:#0b1220;
+  color:var(--ppv-cv-text, #0b1220);
   line-height:1.2;
   margin:0 0 2px 0;                      /* separa del renglón inferior */
 }
@@ -52,7 +52,7 @@
 }
 .edu-card-meta{
   font-size:12px;
-  color:#64748b;
+  color:var(--ppv-cv-muted, #64748b);
   margin-top:4px;
   display:flex; gap:6px; align-items:center;
 }
@@ -70,7 +70,7 @@
   padding-top:0;
   border-top:0;
   text-align:center;
-  color:#0b1220;
+  color:var(--ppv-cv-title, #0b1220);
 }
 .edu-section .ppv-sectionTitle{
   font-size:18px;
@@ -79,7 +79,7 @@
   margin-bottom:8px;
   text-transform:uppercase;
   text-align:center;
-  color:#0b1220 !important;
+  color:var(--ppv-cv-title, #0b1220) !important;
   opacity:1 !important;
   mix-blend-mode:normal !important;
   text-shadow:none !important;
@@ -89,7 +89,7 @@
 .edu-card-line{
   margin-top:0;                           /* cero para compactar más */
   font-size:14px;
-  color:#334155;
+  color:var(--ppv-cv-muted, #334155);
   line-height:1.2;
   white-space:nowrap;
   overflow:hidden;

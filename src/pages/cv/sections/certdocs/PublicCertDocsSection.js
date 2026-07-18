@@ -225,7 +225,7 @@ export default function PublicCertDocsSection({
         <div className="ppv-sectionTitleWrap">
           <h2
             className="ppv-sectionTitle"
-            style={{ color: '#0b1220', opacity: 1, mixBlendMode: 'normal', textShadow: 'none' }}
+            style={{ color: 'var(--ppv-cv-title, #0b1220)', opacity: 1, mixBlendMode: 'normal', textShadow: 'none' }}
           >
             {title}
           </h2>
@@ -292,7 +292,7 @@ export default function PublicCertDocsSection({
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,.5)',
+            background: 'var(--ppv-cv-modal-overlay, rgba(0,0,0,.5))',
             display: 'grid',
             placeItems: 'center',
             zIndex: 50,
@@ -302,7 +302,7 @@ export default function PublicCertDocsSection({
             className="ppv-docModalCard"
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: '#fff',
+              background: 'var(--ppv-cv-modal-bg, #fff)',
               width: 'min(920px, 96vw)',
               height: 'min(86vh, 920px)',
               borderRadius: 12,
@@ -322,7 +322,7 @@ export default function PublicCertDocsSection({
                 justifyContent: 'space-between',
                 gap: 8,
                 padding: '10px 12px',
-                borderBottom: '1px solid rgba(0,0,0,.12)',
+                borderBottom: '1px solid var(--ppv-cv-divider, rgba(0,0,0,.12))',
               }}
             >
               <div
@@ -332,6 +332,7 @@ export default function PublicCertDocsSection({
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
+                  color: 'var(--ppv-cv-text, #0b1220)',
                 }}
                 title={viewer.title}
               >
@@ -345,7 +346,7 @@ export default function PublicCertDocsSection({
               </button>
             </div>
 
-            <div style={{ flex: 1, background: '#0b122006', display: 'flex' }}>
+            <div style={{ flex: 1, background: 'var(--ppv-cv-modal-surface, #0b122006)', display: 'flex' }}>
               {isPdf(viewer.url) ? (
                 <iframe
                   title="Document"
@@ -366,7 +367,7 @@ export default function PublicCertDocsSection({
                   }}
                 />
               ) : (
-                <div style={{ padding: 16 }}>
+                <div style={{ padding: 16, color: 'var(--ppv-cv-text, #0b1220)' }}>
                   <p>
                     Preview not available.{` `}
                     <a href={viewer.url} target="_blank" rel="noreferrer">Open in new tab</a>.
