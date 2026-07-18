@@ -549,14 +549,19 @@ body:not(.dark-mode) .module-tile {
 }
 
 .feature-promo-modal-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 24px;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  box-sizing: border-box;
 }
 
 .feature-promo-modal {
   width: min(940px, 96vw);
   max-width: 940px;
+  min-width: 0;
   padding: 28px 28px 24px;
   border-radius: 22px;
   border: 1px solid rgba(15, 79, 103, 0.14);
@@ -1019,7 +1024,10 @@ html[data-theme='dark'] .feature-promo-modal-btn--secondary {
 
   .feature-promo-modal {
     width: min(100%, 540px);
-    margin: 0 auto;
+    max-width: calc(100vw - 28px);
+    min-width: 0;
+    margin-inline: auto;
+    align-self: center;
     padding: 22px 16px 18px;
     border-radius: 18px;
   }
