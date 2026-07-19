@@ -981,6 +981,7 @@ html[data-theme='dark'] .feature-promo-modal-btn--secondary {
 @media (max-width: 768px) {
   .landing-page-container {
     padding-top: 8px;
+    padding-bottom: calc(50px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .landing-page-container h1 {
@@ -1007,7 +1008,7 @@ html[data-theme='dark'] .feature-promo-modal-btn--secondary {
   .landing-scroll-band {
     min-height: 64px;
     margin-top: -18px;
-    margin-bottom: 14px;
+    margin-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     position: relative;
     z-index: 3;
     pointer-events: none;
