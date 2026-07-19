@@ -23,6 +23,22 @@ export const getInferredYear = (monthValue) => {
   return month >= currentMonth ? now.getFullYear() : now.getFullYear() + 1;
 };
 
+export const getInferredEndYear = (startMonthValue, endMonthValue) => {
+  const endMonth = Number(endMonthValue);
+  if (!endMonth) return null;
+
+  const baseEndYear = getInferredYear(endMonthValue);
+  const startMonth = Number(startMonthValue);
+  if (!startMonth) return baseEndYear;
+
+  const startYear = getInferredYear(startMonthValue);
+  if (!startYear) return baseEndYear;
+
+  if (baseEndYear < startYear) return startYear;
+  if (baseEndYear === startYear && endMonth < startMonth) return startYear + 1;
+  return baseEndYear;
+};
+
 export const getDaysInMonth = (monthValue) => {
   const month = Number(monthValue);
   if (!month) return 31;

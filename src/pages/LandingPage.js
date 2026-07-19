@@ -118,7 +118,7 @@ function LandingPage() {
 
   return (
     <>
-      <div className="container" style={{ textAlign: 'center' }}>
+      <div className="container landing-page-container" style={{ textAlign: 'center' }}>
         <h1>Welcome to your Yachting Hub</h1>
         <p>Choose your Option to Continue:</p>
 

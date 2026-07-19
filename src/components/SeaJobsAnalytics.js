@@ -22,6 +22,7 @@ const COUNTRY_ISO = {
   'Saint Lucia': 'LC', 'Saint Maarten': 'SX', 'Saint Vincent and the Grenadines': 'VC',
   'Trinidad and Tobago': 'TT', Anguilla: 'AI', 'Saint Kitts and Nevis': 'KN',
   'Saint BarthÃ©lemy': 'BL', 'BVI (UK)': 'VG',
+  'USVI (US)': 'VI',
   Argentina: 'AR', Brazil: 'BR', Chile: 'CL', Colombia: 'CO', Ecuador: 'EC',
   Peru: 'PE', Uruguay: 'UY', Venezuela: 'VE', Paraguay: 'PY',
   Belize: 'BZ', 'Costa Rica': 'CR', 'El Salvador': 'SV', Guatemala: 'GT',

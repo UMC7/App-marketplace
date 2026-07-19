@@ -779,6 +779,6 @@ export const COUNTRIES = [
   'Saint Lucia','Saint Maarten','Saint Vincent and the Grenadines','Samoa','Saudi Arabia','Seychelles',
   'Singapore','Slovenia','Solomon Islands','South Africa','South Korea','Spain','Sweden','Taiwan',
   'Thailand','Trinidad and Tobago','Tunisia','Turkey','United Arab Emirates','United Kingdom',
-  'United States','Uruguay','Vanuatu','Venezuela','Vietnam',
+  'United States','USVI (US)','Uruguay','Vanuatu','Venezuela','Vietnam',
 ];
 

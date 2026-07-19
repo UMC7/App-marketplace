@@ -220,17 +220,20 @@ function YachtOfferFormOnboardFields({
         <select name="language_1" value={formData.language_1} onChange={onChange}>
           <option value="">Language 1...</option>
           <option value="Arabic">Arabic</option>
+          <option value="Croatian">Croatian</option>
           <option value="Dutch">Dutch</option>
           <option value="English">English</option>
           <option value="French">French</option>
           <option value="German">German</option>
           <option value="Greek">Greek</option>
           <option value="Italian">Italian</option>
+          <option value="Japanese">Japanese</option>
           <option value="Mandarin">Mandarin</option>
           <option value="Polish">Polish</option>
           <option value="Portuguese">Portuguese</option>
           <option value="Russian">Russian</option>
           <option value="Spanish">Spanish</option>
+          <option value="Swedish">Swedish</option>
           <option value="Turkish">Turkish</option>
           <option value="Ukrainian">Ukrainian</option>
         </select>
@@ -245,21 +248,52 @@ function YachtOfferFormOnboardFields({
         <select name="language_2" value={formData.language_2} onChange={onChange}>
           <option value="">Language 2...</option>
           <option value="Arabic">Arabic</option>
+          <option value="Croatian">Croatian</option>
           <option value="Dutch">Dutch</option>
           <option value="English">English</option>
           <option value="French">French</option>
           <option value="German">German</option>
           <option value="Greek">Greek</option>
           <option value="Italian">Italian</option>
+          <option value="Japanese">Japanese</option>
           <option value="Mandarin">Mandarin</option>
           <option value="Polish">Polish</option>
           <option value="Portuguese">Portuguese</option>
           <option value="Russian">Russian</option>
           <option value="Spanish">Spanish</option>
+          <option value="Swedish">Swedish</option>
           <option value="Turkish">Turkish</option>
           <option value="Ukrainian">Ukrainian</option>
         </select>
         <select name="language_2_fluency" value={formData.language_2_fluency} onChange={onChange}>
+          <option value="">Fluency...</option>
+          <option value="Native">Native</option>
+          <option value="Fluent">Fluent</option>
+          <option value="Conversational">Conversational</option>
+        </select>
+      </div>
+      <div className="form-inline-group">
+        <select name="language_3" value={formData.language_3} onChange={onChange}>
+          <option value="">Language 3...</option>
+          <option value="Arabic">Arabic</option>
+          <option value="Croatian">Croatian</option>
+          <option value="Dutch">Dutch</option>
+          <option value="English">English</option>
+          <option value="French">French</option>
+          <option value="German">German</option>
+          <option value="Greek">Greek</option>
+          <option value="Italian">Italian</option>
+          <option value="Japanese">Japanese</option>
+          <option value="Mandarin">Mandarin</option>
+          <option value="Polish">Polish</option>
+          <option value="Portuguese">Portuguese</option>
+          <option value="Russian">Russian</option>
+          <option value="Spanish">Spanish</option>
+          <option value="Swedish">Swedish</option>
+          <option value="Turkish">Turkish</option>
+          <option value="Ukrainian">Ukrainian</option>
+        </select>
+        <select name="language_3_fluency" value={formData.language_3_fluency} onChange={onChange}>
           <option value="">Fluency...</option>
           <option value="Native">Native</option>
           <option value="Fluent">Fluent</option>
@@ -425,6 +459,9 @@ function YachtOfferFormOnboardFields({
 
       <label>Posting Duration:</label>
       <select name="posting_duration" value={formData.posting_duration || '1 month'} onChange={onChange}>
+        <option value="1 day">1 day</option>
+        <option value="2 days">2 days</option>
+        <option value="3 days">3 days</option>
         <option value="1 week">1 week</option>
         <option value="2 weeks">2 weeks</option>
         <option value="3 weeks">3 weeks</option>

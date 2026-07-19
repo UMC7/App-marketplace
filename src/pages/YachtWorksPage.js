@@ -22,7 +22,7 @@ const countriesByRegion = {
   'South America': ['Argentina', 'Brazil', 'Chile', 'Colombia', 'Ecuador', 'Paraguay', 'Peru', 'Uruguay', 'Venezuela'],
   'Caribbean': [
     'Anguilla', 'Antigua and Barbuda', 'Aruba', 'Bahamas', 'Barbados', 'Bonaire', 'BVI (UK)',
-    'Cayman Islands (UK)', 'Cuba', 'Curacao', 'Dominica', 'Dominican Republic', 'Grenada', 'Jamaica', 'Puerto Rico',
+    'Cayman Islands (UK)', 'Cuba', 'Curacao', 'Dominica', 'Dominican Republic', 'Grenada', 'Jamaica', 'Puerto Rico', 'USVI (US)',
     'Saint Barthélemy', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Maarten', 'Saint Vincent and the Grenadines',
     'Trinidad and Tobago'
   ],
@@ -840,7 +840,10 @@ function YachtWorksPage() {
 
       if (filters.team && ((filters.team === 'Yes' && !offer.team) || (filters.team === 'No' && offer.team))) return false;
 
-      if (filters.languages.length && !filters.languages.some(lang => [offer.language_1, offer.language_2].includes(lang))) return false;
+      if (
+        filters.languages.length &&
+        !filters.languages.some((lang) => [offer.language_1, offer.language_2, offer.language_3].includes(lang))
+      ) return false;
 
       if (filters.terms.length && !filters.terms.includes(offer.type)) return false;
 

@@ -192,6 +192,7 @@ export const COUNTRY_TO_NATIONALITY = {
   "United Arab Emirates": "Emirati",
   "United Kingdom": "British",
   "United States": "American",
+  "USVI (US)": "American",
   Uruguay: "Uruguayan",
   Uzbekistan: "Uzbek",
   Vanuatu: "Ni-Vanuatu",

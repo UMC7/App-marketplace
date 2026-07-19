@@ -194,7 +194,9 @@ const OfferTimeline = ({
                         offer.language_1 ||
                           offer.language_1_fluency ||
                           offer.language_2 ||
-                          offer.language_2_fluency
+                          offer.language_2_fluency ||
+                          offer.language_3 ||
+                          offer.language_3_fluency
                       ) || (Array.isArray(offer.visas) && offer.visas.length > 0);
                     const renderLanguagesBlock = (className) =>
                       languagesAvailable ? (
@@ -225,6 +227,20 @@ const OfferTimeline = ({
                               <div className="field-group">
                                 <div className="field-label">Fluency</div>
                                 <div className="field-value">{offer.language_2_fluency}</div>
+                              </div>
+                            )}
+
+                            {offer.language_3 && (
+                              <div className="field-group">
+                                <div className="field-label">3rd Language</div>
+                                <div className="field-value">{offer.language_3}</div>
+                              </div>
+                            )}
+
+                            {offer.language_3_fluency && (
+                              <div className="field-group">
+                                <div className="field-label">Fluency</div>
+                                <div className="field-value">{offer.language_3_fluency}</div>
                               </div>
                             )}
 

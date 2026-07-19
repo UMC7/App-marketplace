@@ -32,6 +32,7 @@ import YachtOfferFormOnboardFields from './YachtOfferFormOnboardFields';
 import YachtOfferFormShoreBasedFields from './YachtOfferFormShoreBasedFields';
 import {
   getInferredYear,
+  getInferredEndYear,
   getDaysInMonth,
   isDayRangeValue,
   readJsonResponse,
@@ -108,6 +109,8 @@ const initialState = {
   language_1_fluency: 'Fluent',
   language_2: '',
   language_2_fluency: '',
+  language_3: '',
+  language_3_fluency: '',
   salary_currency: '',
   teammate_salary_currency: '',
   visas: [],
@@ -950,6 +953,8 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     language_1_fluency: sanitizedData.language_1_fluency || null,
     language_2: sanitizedData.language_2 || null,
     language_2_fluency: sanitizedData.language_2_fluency || null,
+    language_3: sanitizedData.language_3 || null,
+    language_3_fluency: sanitizedData.language_3_fluency || null,
     propulsion_type: sanitizedData.propulsion_type || null,
     gender: sanitizedData.gender || null,
     visas: Array.isArray(sanitizedData.visas) ? sanitizedData.visas : [],
@@ -1039,7 +1044,7 @@ const derivedStartDate = (() => {
 })();
 const derivedEndDate = (() => {
   if (!end_month) return null;
-  const year = getInferredYear(end_month);
+  const year = getInferredEndYear(start_month, end_month);
   if (!year) return null;
   const month = String(end_month).padStart(2, '0');
   const day = resolveDayValueForDate(end_day, end_month);

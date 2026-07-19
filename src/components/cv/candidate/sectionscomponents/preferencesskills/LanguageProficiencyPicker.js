@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 
 const LANGUAGES = [
-  'Arabic','Dutch','English','French','German','Greek','Italian',
-  'Mandarin','Portuguese','Russian','Spanish','Turkish','Ukrainian','Japanese','Chinese'
+  'Arabic','Croatian','Dutch','English','French','German','Greek','Italian',
+  'Mandarin','Portuguese','Russian','Spanish','Swedish','Turkish','Ukrainian','Japanese','Chinese'
 ];
 
 const FLUENCY_LEVELS = ['Native', 'Fluent', 'Conversational'];

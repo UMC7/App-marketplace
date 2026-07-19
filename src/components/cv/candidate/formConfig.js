@@ -11,7 +11,7 @@ const formConfig = {
     science: { label: 'Science' },
     shoreside: { label: 'Shoreside' },
   },
-  languages: ['English','Spanish','French','Italian','German','Portuguese','Dutch','Russian','Arabic','Chinese','Japanese'],
+  languages: ['English','Spanish','French','Italian','German','Portuguese','Dutch','Russian','Arabic','Croatian','Chinese','Japanese','Swedish'],
   availability: ['Available now','2 weeks','1 month','Seasonal','Not available'],
 };
 

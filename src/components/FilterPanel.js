@@ -183,7 +183,7 @@ const FilterPanel = React.forwardRef(({
         <details style={{ gridColumn: '1 / -1' }}>
           <summary style={{ fontWeight: 'bold', cursor: 'pointer' }}>Languages</summary>
           <div style={{ marginTop: '8px' }}>
-            {['Arabic', 'Dutch', 'English', 'French', 'German', 'Greek', 'Italian', 'Mandarin', 'Polish', 'Portuguese', 'Russian', 'Spanish', 'Turkish', 'Ukrainian'].map((lang) => (
+            {['Arabic', 'Croatian', 'Dutch', 'English', 'French', 'German', 'Greek', 'Italian', 'Japanese', 'Mandarin', 'Polish', 'Portuguese', 'Russian', 'Spanish', 'Swedish', 'Turkish', 'Ukrainian'].map((lang) => (
               <label key={lang} className="filter-checkbox-label">
                 <input
                   type="checkbox"

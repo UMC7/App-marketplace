@@ -11,8 +11,10 @@ const SUGGESTED = [
   'Dutch',
   'Russian',
   'Arabic',
+  'Croatian',
   'Chinese',
   'Japanese',
+  'Swedish',
 ];
 
 export default function LanguagesPicker({
