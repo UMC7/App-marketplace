@@ -1488,6 +1488,357 @@ body:not(.dark-mode) .filters-panel h3 {
   opacity: 0.9;
 }
 
+/*
+  ----------------------------------------------------------------------------
+  SeaJobs featured promos (desktop)
+  ----------------------------------------------------------------------------
+*/
+.seajobs-promoted-layout {
+  width: 100%;
+}
+
+.seajobs-promoted-layout.has-rail {
+  width: 100%;
+  margin: 0;
+  display: block;
+}
+
+.seajobs-promoted-main {
+  min-width: 0;
+}
+
+.seajobs-feature-rail {
+  --seajobs-rail-width: 280px;
+  --seajobs-feed-width: 870px;
+  --seajobs-rail-top-bound: 118px;
+  --seajobs-rail-bottom-bound: 0px;
+  --seajobs-right-gutter-width: calc((100vw - var(--seajobs-feed-width)) / 2);
+  --seajobs-right-gutter-center-offset: calc((var(--seajobs-right-gutter-width) - var(--seajobs-rail-width)) / 2);
+  position: fixed;
+  top: calc(
+    var(--seajobs-rail-top-bound) +
+    ((100dvh - var(--seajobs-rail-top-bound) - var(--seajobs-rail-bottom-bound)) / 2)
+  );
+  right: max(24px, var(--seajobs-right-gutter-center-offset));
+  transform: translateY(-50%);
+  width: var(--seajobs-rail-width);
+  z-index: 1400;
+}
+
+.seajobs-feature-rail-inner {
+  border-radius: 20px;
+  padding: 14px;
+  background:
+    radial-gradient(circle at top left, rgba(111, 214, 214, 0.09), transparent 34%),
+    linear-gradient(180deg, rgba(248, 252, 254, 0.96), rgba(241, 248, 250, 0.96));
+  border: 1px solid rgba(15, 79, 103, 0.12);
+  box-shadow: 0 10px 28px rgba(8, 26, 59, 0.12);
+}
+
+.seajobs-feature-rail-kicker {
+  margin: 0 0 12px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #0f7b91;
+  text-align: left;
+}
+
+.seajobs-feature-rail-stage {
+  min-height: 0;
+}
+
+.seajobs-feature-promo-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 249, 251, 0.98));
+  border: 1px solid rgba(15, 79, 103, 0.1);
+  box-shadow: 0 12px 28px rgba(8, 26, 59, 0.1);
+}
+
+.seajobs-feature-promo-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.seajobs-feature-promo-card--cv::before {
+  background:
+    linear-gradient(160deg, rgba(123, 231, 223, 0.18), transparent 40%),
+    linear-gradient(0deg, rgba(14, 83, 104, 0.03), rgba(14, 83, 104, 0.03));
+}
+
+.seajobs-feature-promo-card--card::before {
+  background:
+    linear-gradient(160deg, rgba(255, 208, 107, 0.16), transparent 40%),
+    linear-gradient(0deg, rgba(29, 86, 128, 0.03), rgba(29, 86, 128, 0.03));
+}
+
+.seajobs-feature-promo-card--crew::before {
+  background:
+    linear-gradient(160deg, rgba(56, 189, 248, 0.14), transparent 40%),
+    linear-gradient(0deg, rgba(19, 31, 45, 0.03), rgba(19, 31, 45, 0.03));
+}
+
+.seajobs-feature-promo-visual,
+.seajobs-feature-promo-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.seajobs-feature-promo-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  padding: 14px 14px 4px;
+}
+
+.seajobs-feature-promo-card.is-compact .seajobs-feature-promo-visual {
+  min-height: 170px;
+  padding: 10px 10px 2px;
+}
+
+.seajobs-feature-promo-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 182px;
+  object-fit: contain;
+  object-position: center top;
+  filter: drop-shadow(0 14px 24px rgba(8, 18, 28, 0.18));
+  border-radius: 12px;
+}
+
+.seajobs-feature-promo-card.is-inline .seajobs-feature-promo-image {
+  max-height: 300px;
+}
+
+.seajobs-feature-promo-copy {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 18px 18px;
+}
+
+.seajobs-feature-promo-card.is-inline {
+  display: grid;
+  grid-template-columns: minmax(250px, 330px) minmax(0, 1fr);
+  align-items: center;
+}
+
+.seajobs-feature-promo-card.is-inline .seajobs-feature-promo-visual {
+  min-height: 232px;
+  padding: 16px 8px 16px 18px;
+}
+
+.seajobs-feature-promo-card.is-inline .seajobs-feature-promo-copy {
+  padding: 22px 24px 22px 8px;
+  justify-content: center;
+}
+
+.seajobs-feature-promo-eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #0f7b91;
+}
+
+.seajobs-feature-promo-copy h3 {
+  margin: 8px 0 8px;
+  font-size: 1.5rem;
+  line-height: 1.05;
+  color: #0b1f32;
+  text-shadow: none;
+}
+
+.seajobs-feature-promo-card.is-compact .seajobs-feature-promo-copy h3 {
+  font-size: 1.28rem;
+}
+
+.seajobs-feature-promo-copy > p:last-of-type {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.58;
+  color: #355063;
+}
+
+.seajobs-feature-promo-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+  align-self: flex-start;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0d5f7b;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.seajobs-feature-promo-link:hover {
+  color: #0a4459;
+  background: transparent;
+  box-shadow: none;
+}
+
+.seajobs-feature-promo-link:focus,
+.seajobs-feature-promo-link:focus-visible,
+.seajobs-feature-promo-link:active {
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.seajobs-feature-promo-link::after {
+  content: ">";
+  margin-left: 8px;
+  font-size: 0.9em;
+}
+
+.seajobs-feature-rail-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.seajobs-feature-rail-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(13, 95, 123, 0.22);
+  cursor: pointer;
+  padding: 0;
+}
+
+.seajobs-feature-rail-dot.is-active {
+  background: #68ada8;
+  box-shadow: 0 0 0 4px rgba(104, 173, 168, 0.14);
+}
+
+.seajobs-inline-promo-wrap {
+  width: 95%;
+  max-width: 870px;
+  margin: 0 auto 24px;
+}
+
+@media (max-width: 768px) {
+  .seajobs-inline-promo-wrap {
+    width: 92%;
+    margin: 0 auto 18px;
+  }
+
+  .seajobs-feature-promo-card.is-inline {
+    display: block;
+  }
+
+  .seajobs-feature-promo-card.is-inline .seajobs-feature-promo-visual {
+    min-height: auto;
+    padding: 14px 14px 6px;
+  }
+
+  .seajobs-feature-promo-card.is-inline .seajobs-feature-promo-image {
+    max-height: 260px;
+  }
+
+  .seajobs-feature-promo-card.is-inline .seajobs-feature-promo-copy {
+    padding: 10px 18px 18px;
+    justify-content: flex-start;
+  }
+
+  .seajobs-feature-promo-card.is-inline .seajobs-feature-promo-copy h3 {
+    font-size: 1.32rem;
+  }
+
+  .seajobs-feature-promo-card.is-inline .seajobs-feature-promo-copy > p:last-of-type {
+    font-size: 0.92rem;
+    line-height: 1.52;
+  }
+}
+
+body.dark-mode .seajobs-feature-rail-inner,
+html[data-theme='dark'] .seajobs-feature-rail-inner {
+  background:
+    radial-gradient(circle at top left, rgba(111, 214, 214, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(21, 27, 31, 0.98), rgba(29, 32, 34, 0.98));
+  border-color: rgba(111, 214, 214, 0.12);
+  box-shadow: 0 14px 30px rgba(2, 8, 23, 0.24);
+}
+
+body.dark-mode .seajobs-feature-promo-card,
+html[data-theme='dark'] .seajobs-feature-promo-card {
+  background: linear-gradient(180deg, rgba(33, 36, 38, 0.98), rgba(28, 30, 32, 0.98));
+  border-color: rgba(111, 214, 214, 0.12);
+  box-shadow: 0 12px 28px rgba(2, 8, 23, 0.22);
+}
+
+body.dark-mode .seajobs-feature-promo-copy h3,
+html[data-theme='dark'] .seajobs-feature-promo-copy h3 {
+  color: #ffffff;
+  text-shadow: none;
+}
+
+body.dark-mode .seajobs-feature-promo-copy > p:last-of-type,
+html[data-theme='dark'] .seajobs-feature-promo-copy > p:last-of-type {
+  color: #c5d4dd;
+}
+
+body.dark-mode .seajobs-feature-promo-link,
+html[data-theme='dark'] .seajobs-feature-promo-link {
+  color: #7ee1dc !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  text-shadow: none !important;
+  outline: none !important;
+}
+
+body.dark-mode .seajobs-feature-promo-link:hover,
+body.dark-mode .seajobs-feature-promo-link:focus,
+body.dark-mode .seajobs-feature-promo-link:focus-visible,
+body.dark-mode .seajobs-feature-promo-link:active,
+html[data-theme='dark'] .seajobs-feature-promo-link:hover,
+html[data-theme='dark'] .seajobs-feature-promo-link:focus,
+html[data-theme='dark'] .seajobs-feature-promo-link:focus-visible,
+html[data-theme='dark'] .seajobs-feature-promo-link:active {
+  color: #7ee1dc !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  text-shadow: none !important;
+  outline: none !important;
+}
+
+@media (max-width: 1579px) {
+  .seajobs-promoted-layout.has-rail {
+    display: block;
+    width: 100%;
+    margin: 0;
+  }
+
+  .seajobs-feature-rail {
+    display: none;
+  }
+}
+
 .seajobs-analytics-rank-change.seajobs-analytics-rank-down {
   color: #dc2626;
   opacity: 0.9;

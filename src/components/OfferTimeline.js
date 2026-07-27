@@ -3,6 +3,7 @@ import MatchBorder from './MatchBorder';
 import ThemeLogo from './ThemeLogo';
 import Avatar from './Avatar';
 import LoadingSpinner from './LoadingSpinner';
+import { SeaJobsInlinePromo } from './SeaJobsFeaturePromos';
 import {
   formatOfferDate,
   isPrimaryLicenseAllowedForRank,
@@ -114,6 +115,9 @@ const OfferTimeline = ({
   offersLoading,
   currentUser,
   appliedOfferIds,
+  showInlinePromos = false,
+  inlinePromoFrequency = 12,
+  promoCycleCount = 3,
 }) => {
   const iconBarStyle = { display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 };
   const roundBtn = {
@@ -124,6 +128,13 @@ const OfferTimeline = ({
   const waBtn = { ...roundBtn, background: '#25D366', border: 'none' };
   const iconImg = { width: 22, height: 22, display: 'block' };
   const shareIcon = { fontSize: 22, color: '#111' };
+  const totalOffersCount = Object.values(groupedOffers).reduce(
+    (weekTotal, dates) =>
+      weekTotal + Object.values(dates).reduce((dayTotal, offers) => dayTotal + offers.length, 0),
+    0
+  );
+  let renderedOffersCount = 0;
+  let renderedPromoCount = 0;
 
   return (
     <>
@@ -152,7 +163,8 @@ const OfferTimeline = ({
                 </h4>
 
                 {expandedDays[dayGroup] &&
-                  offers.map((offer) => {
+                  offers.flatMap((offer) => {
+                    renderedOffersCount += 1;
                     const isOwner = currentUser?.id === offer.user_id;
                     const isClosed = isOfferClosed(offer);
                     const isExpanded = !isClosed && expandedOfferId === offer.id;
@@ -434,7 +446,7 @@ const OfferTimeline = ({
                         </div>
                       );
                     };
-                    return (
+                    const offerNode = (
                       <div
                         key={offer.id}
                         id={`offer-${offer.id}`}
@@ -1340,6 +1352,26 @@ const OfferTimeline = ({
 )}
 </div>
                     );
+
+                    const nodes = [offerNode];
+
+                    if (
+                      showInlinePromos &&
+                      inlinePromoFrequency > 0 &&
+                      renderedOffersCount % inlinePromoFrequency === 0 &&
+                      renderedOffersCount < totalOffersCount
+                    ) {
+                      nodes.push(
+                        <SeaJobsInlinePromo
+                          key={`promo-${offer.id}-${renderedPromoCount}`}
+                          currentUser={currentUser}
+                          promoIndex={renderedPromoCount % promoCycleCount}
+                        />
+                      );
+                      renderedPromoCount += 1;
+                    }
+
+                    return nodes;
                   })}
               </div>
             ))}

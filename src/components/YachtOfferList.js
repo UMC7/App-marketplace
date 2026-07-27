@@ -6,6 +6,7 @@ import ChatPage from './ChatPage';
 import FilterPanel from './FilterPanel';
 import PreferencesPanel from './PreferencesPanel';
 import OfferTimeline from './OfferTimeline';
+import { SeaJobsFeatureRail, getSeaJobsPromoCycleCount } from './SeaJobsFeaturePromos';
 import '../styles/YachtOfferList.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
@@ -643,11 +644,15 @@ const handleCopy = (text, field) => {
 const [isMobile, setIsMobile] = useState(() =>
   typeof window !== 'undefined' ? window.innerWidth <= 768 : false
 );
+const [isWideDesktop, setIsWideDesktop] = useState(() =>
+  typeof window !== 'undefined' ? window.innerWidth >= 1580 : false
+);
 const [showAvatarMobile, setShowAvatarMobile] = useState(false);
 
 useEffect(() => {
   const handleResize = () => {
     setIsMobile(window.innerWidth <= 768);
+    setIsWideDesktop(window.innerWidth >= 1580);
   };
 
   window.addEventListener('resize', handleResize);
@@ -655,6 +660,10 @@ useEffect(() => {
 
   return () => window.removeEventListener('resize', handleResize);
 }, []);
+
+const showDesktopRail = !isMobile && isWideDesktop;
+const showInlinePromos = !showDesktopRail;
+const inlinePromoFrequency = 10;
 
 useEffect(() => {
   if (!isMobile) return;
@@ -1045,34 +1054,43 @@ const handleDirectApply = async (offerId) => {
       )}
 {/* =================== /Job Preferences =================== */}
 
-      <OfferTimeline
-        groupedOffers={groupedOffers}
-        expandedWeeks={expandedWeeks}
-        expandedDays={expandedDays}
-        toggleWeek={toggleWeek}
-        toggleDay={toggleDay}
-        expandedOfferId={expandedOfferId}
-        toggleExpanded={toggleExpanded}
-        cardRefs={cardRefs}
-        authors={authors}
-        authorAvatars={authorAvatars}
-        isMobile={isMobile}
-        showAvatarMobile={showAvatarMobile}
-        handleCopy={handleCopy}
-        copiedField={copiedField}
-        markedOffers={markedOffers}
-        toggleMark={toggleMark}
-        showNativeShare={showNativeShare}
-        handleShare={handleShare}
-        handleWhatsApp={handleWhatsApp}
-        handleCopyLink={handleCopyLink}
-        handleDirectApply={handleDirectApply}
-        handleRequestChat={handleRequestChat}
-        handleShowChatLoginInfo={handleShowChatLoginInfo}
-        offersLoading={offersLoading}
-        currentUser={currentUser}
-        appliedOfferIds={appliedOfferIds}
-      />
+      <div className={`seajobs-promoted-layout${showDesktopRail ? ' has-rail' : ''}`}>
+        <div className="seajobs-promoted-main">
+          <OfferTimeline
+            groupedOffers={groupedOffers}
+            expandedWeeks={expandedWeeks}
+            expandedDays={expandedDays}
+            toggleWeek={toggleWeek}
+            toggleDay={toggleDay}
+            expandedOfferId={expandedOfferId}
+            toggleExpanded={toggleExpanded}
+            cardRefs={cardRefs}
+            authors={authors}
+            authorAvatars={authorAvatars}
+            isMobile={isMobile}
+            showAvatarMobile={showAvatarMobile}
+            handleCopy={handleCopy}
+            copiedField={copiedField}
+            markedOffers={markedOffers}
+            toggleMark={toggleMark}
+            showNativeShare={showNativeShare}
+            handleShare={handleShare}
+            handleWhatsApp={handleWhatsApp}
+            handleCopyLink={handleCopyLink}
+            handleDirectApply={handleDirectApply}
+            handleRequestChat={handleRequestChat}
+            handleShowChatLoginInfo={handleShowChatLoginInfo}
+            offersLoading={offersLoading}
+            currentUser={currentUser}
+            appliedOfferIds={appliedOfferIds}
+            showInlinePromos={showInlinePromos}
+            inlinePromoFrequency={inlinePromoFrequency}
+            promoCycleCount={getSeaJobsPromoCycleCount()}
+          />
+        </div>
+
+        {showDesktopRail && <SeaJobsFeatureRail currentUser={currentUser} />}
+      </div>
 
       {showChatIntro && (
   <Modal onClose={handleCloseChatIntro}>
