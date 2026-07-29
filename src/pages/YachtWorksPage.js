@@ -6,6 +6,7 @@ import SeaJobsAnalytics from '../components/SeaJobsAnalytics';
 import ChatPage from '../components/ChatPage';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ScrollToTopButton from '../components/ScrollToTopButton';
 import '../yachtworkspage.css';
 import { getOfferDepartment } from '../utils/offerDepartment';
 import { normalizeYachtUse } from '../components/cv/candidate/shared/experienceCatalogs';
@@ -424,6 +425,30 @@ async function fetchSeaCrewProfilesPageWindow({
   };
 }
 
+async function fetchAllSeaCrewProfilesPageWindow() {
+  let offset = 0;
+  let bufferedProfiles = [];
+  let hasMore = true;
+  let allProfiles = [];
+
+  while (hasMore) {
+    const nextPage = await fetchSeaCrewProfilesPageWindow({
+      offset,
+      bufferedProfiles,
+      targetCount: SEACREW_PAGE_SIZE,
+    });
+
+    allProfiles = mergeUniqueSeaCrewProfiles(allProfiles, nextPage.items);
+    offset = nextPage.nextOffset;
+    bufferedProfiles = nextPage.bufferedProfiles;
+    hasMore = nextPage.hasMore;
+
+    if (!nextPage.items.length && !bufferedProfiles.length) break;
+  }
+
+  return allProfiles;
+}
+
 async function fetchSeaCrewFilterOptionsRpc() {
   const { data, error } = await supabase.rpc('rpc_seacrew_filter_options');
   if (error) throw error;
@@ -447,8 +472,6 @@ async function fetchSeaCrewProfiles() {
 const SeaCrewFilterPanel = React.forwardRef(({
   filters,
   setFilters,
-  rankOptions,
-  cityOptions,
   countryOptions,
 }, ref) => {
   return (
@@ -456,27 +479,21 @@ const SeaCrewFilterPanel = React.forwardRef(({
       <div className="filters-container filters-panel show seacrew-filters-panel" style={{ marginBottom: '20px' }}>
         <h3 style={{ gridColumn: '1 / -1' }}>Crew Filters</h3>
 
-        <select
-          className="category-select"
+        <input
+          type="text"
+          className="search-input"
           value={filters.rank}
+          placeholder="Rank"
           onChange={(e) => setFilters((prev) => ({ ...prev, rank: e.target.value }))}
-        >
-          <option value="">Rank</option>
-          {rankOptions.map((rank) => (
-            <option key={rank} value={rank}>{rank}</option>
-          ))}
-        </select>
+        />
 
-        <select
-          className="category-select"
+        <input
+          type="text"
+          className="search-input"
           value={filters.city}
+          placeholder="City"
           onChange={(e) => setFilters((prev) => ({ ...prev, city: e.target.value }))}
-        >
-          <option value="">City</option>
-          {cityOptions.map((city) => (
-            <option key={city} value={city}>{city}</option>
-          ))}
-        </select>
+        />
 
         <select
           className="category-select"
@@ -728,7 +745,7 @@ function YachtWorksPage() {
         if (hasCrewFiltersApplied) {
           crewNextOffsetRef.current = 0;
           crewBufferedProfilesRef.current = [];
-          const readyProfiles = await fetchSeaCrewProfiles();
+          const readyProfiles = await fetchAllSeaCrewProfilesPageWindow();
           if (crewRequestIdRef.current !== requestId) return;
           setCrewProfiles(readyProfiles);
           setCrewHasMore(false);
@@ -914,8 +931,8 @@ function YachtWorksPage() {
       const country = getSeaCrewCountryValue(profile).toLowerCase();
 
       if (selectedOnly && !markedProfiles.includes(profile.id)) return false;
-      if (rankFilter && rank !== rankFilter) return false;
-      if (cityFilter && city !== cityFilter) return false;
+      if (rankFilter && !rank.includes(rankFilter)) return false;
+      if (cityFilter && !city.includes(cityFilter)) return false;
       if (countryFilter && country !== countryFilter) return false;
       return true;
     });
@@ -1330,6 +1347,7 @@ function YachtWorksPage() {
               )}
             </div>
           )}
+          <ScrollToTopButton />
         </>
       )}
     </div>

@@ -47,6 +47,11 @@ const isTodayLocal = (timestamp) => {
   );
 };
 
+const formatDisplayUrl = (value) =>
+  String(value || '')
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/$/, '');
+
 const getRoleImage = (title) => {
   if (!title) return 'others';
 
@@ -442,6 +447,16 @@ const OfferTimeline = ({
                                 </div>
                               </div>
                             )}
+                            {offer.job_link && (
+                              <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+                                <div className="field-label">Job Link</div>
+                                <div className="field-value email" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  <a href={offer.job_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title={offer.job_link}>
+                                    {formatDisplayUrl(offer.job_link)}
+                                  </a>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -819,7 +834,7 @@ const OfferTimeline = ({
   </div>
 )}
 
-    {offer.contact_phone && (
+{offer.contact_phone && (
   <div className="field-group" style={{ gridColumn: '1 / -1' }}>
     <div
       className="field-label"
@@ -872,6 +887,20 @@ const OfferTimeline = ({
       title={offer.contact_phone}
     >
       {offer.contact_phone}
+    </div>
+  </div>
+)}
+    {offer.job_link && (
+  <div className="field-group" style={{ gridColumn: '1 / -1' }}>
+    <div className="field-label">Job Link</div>
+    <div
+      className="field-value email"
+      style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+      title={offer.job_link}
+    >
+      <a href={offer.job_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+        {formatDisplayUrl(offer.job_link)}
+      </a>
     </div>
   </div>
 )}

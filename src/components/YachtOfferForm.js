@@ -84,10 +84,11 @@ const initialState = {
   description: '',
   contact_email: '',
   contact_phone: '',
+  job_link: '',
   link_facebook: '',
   link_instagram: '',
   link_x: '',
-  posting_duration: '1 month',
+  posting_duration: '2 weeks',
   team: 'No',
   teammate_rank: '',
   teammate_required_license: '',
@@ -660,6 +661,33 @@ const renderRequiredDocsSummary = () => null;
 
 const highlightClass = (missing) => (missing ? 'missing-required' : '');
 const autoResizeTextarea = (e) => adjustRemarksTextareaHeight(e.target);
+const hasInvalidLanguagePair = (language, fluency) => (Boolean(language) && !fluency) || (!language && Boolean(fluency));
+const EMAIL_LIKE_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_LIKE_PATTERN = /^[+\d\s().-]{6,}$/;
+const getNormalizedJobLink = (value) => {
+  const trimmed = typeof value === 'string' ? value.trim() : '';
+  if (!trimmed) return null;
+  if (/^(mailto:|tel:)/i.test(trimmed)) return null;
+  if (EMAIL_LIKE_PATTERN.test(trimmed) || PHONE_LIKE_PATTERN.test(trimmed)) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+};
+const isValidJobLink = (value) => {
+  const normalized = getNormalizedJobLink(value);
+  if (!normalized) return !String(value || '').trim();
+
+  try {
+    const parsed = new URL(normalized);
+    const isHttp = parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    const hasValidHost =
+      parsed.hostname === 'localhost' ||
+      parsed.hostname.includes('.') ||
+      /^\d{1,3}(\.\d{1,3}){3}$/.test(parsed.hostname);
+    return isHttp && hasValidHost;
+  } catch {
+    return false;
+  }
+};
 
   const handleRemarksInput = (e) => {
     autoResizeTextarea(e);
@@ -675,6 +703,13 @@ const autoResizeTextarea = (e) => adjustRemarksTextareaHeight(e.target);
 const formReady = (() => {
   if (!formData.work_environment) return false;
 
+  const hasLanguageValidationError = [
+    [formData.language_1, formData.language_1_fluency],
+    [formData.language_2, formData.language_2_fluency],
+    [formData.language_3, formData.language_3_fluency],
+  ].some(([language, fluency]) => hasInvalidLanguagePair(language, fluency));
+  const hasInvalidJobLink = !!formData.job_link && !isValidJobLink(formData.job_link);
+
   if (isOnboard) {
     if (
       !formData.title ||
@@ -685,6 +720,8 @@ const formReady = (() => {
       !formData.yacht_size ||
       (!formData.start_month && !formData.is_asap && !formData.is_flexible) ||
       !formData.country ||
+      hasLanguageValidationError ||
+      hasInvalidJobLink ||
       (formData.team === 'Yes' && (!formData.teammate_rank || (!formData.teammate_salary && !formData.is_doe)))
     ) return false;
   }
@@ -696,6 +733,8 @@ const formReady = (() => {
       (!formData.salary && !formData.is_doe) ||
       (!formData.start_month && !formData.is_asap && !formData.is_flexible) ||
       !formData.work_location ||
+      hasLanguageValidationError ||
+      hasInvalidJobLink ||
       (formData.work_location === 'On - site' && (!formData.city || !formData.country))
     ) return false;
   }
@@ -785,10 +824,27 @@ const formReady = (() => {
         name === 'contact_email' && typeof value === 'string'
           ? value.trim()
           : value;
+      const matchingLanguageField =
+        name === 'language_1_fluency' ? 'language_1'
+          : name === 'language_2_fluency' ? 'language_2'
+          : name === 'language_3_fluency' ? 'language_3'
+          : null;
       const newState = {
         ...prev,
         [name]: type === 'checkbox' ? checked : nextValue,
       };
+      if (name === 'language_1' && !value) {
+        newState.language_1_fluency = '';
+      }
+      if (name === 'language_2' && !value) {
+        newState.language_2_fluency = '';
+      }
+      if (name === 'language_3' && !value) {
+        newState.language_3_fluency = '';
+      }
+      if (matchingLanguageField && !prev[matchingLanguageField]) {
+        newState[name] = '';
+      }
       if (name === 'candidate_location_requirement') {
         newState.local_candidates_only = value === 'local_only';
       }
@@ -911,9 +967,10 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     salary_currency: sanitizedData.is_doe ? null : (sanitizedData.salary_currency || null),
     years_in_rank: sanitizedData.years_in_rank,
     description: sanitizedData.description || null,
-    posting_duration: sanitizedData.posting_duration || '1 month',
+    posting_duration: sanitizedData.posting_duration || '2 weeks',
     contact_email: sanitizedData.contact_email || null,
     contact_phone: sanitizedData.contact_phone || null,
+    job_link: getNormalizedJobLink(sanitizedData.job_link),
     team: isTeamJob,
     teammate_rank: isTeamJob ? (sanitizedData.teammate_rank || null) : null,
     teammate_salary: isTeamJob ? coerceOptionalNumber(sanitizedData.teammate_salary) : null,
@@ -1003,6 +1060,20 @@ if (isShoreBased) {
     toast.error('Fill in all required fields marked with *.');
     return;
   }
+}
+
+if (
+  hasInvalidLanguagePair(formData.language_1, formData.language_1_fluency) ||
+  hasInvalidLanguagePair(formData.language_2, formData.language_2_fluency) ||
+  hasInvalidLanguagePair(formData.language_3, formData.language_3_fluency)
+) {
+  toast.error('If you add a language, fluency is required. Fluency cannot be selected without a language.');
+  return;
+}
+
+if (formData.job_link && !isValidJobLink(formData.job_link)) {
+  toast.error('Job Link must be a valid website or app URL. Email addresses and phone numbers are not allowed.');
+  return;
 }
 
 const {

@@ -237,7 +237,14 @@ function YachtOfferFormOnboardFields({
           <option value="Turkish">Turkish</option>
           <option value="Ukrainian">Ukrainian</option>
         </select>
-        <select name="language_1_fluency" value={formData.language_1_fluency} onChange={onChange}>
+        <select
+          name="language_1_fluency"
+          value={formData.language_1_fluency}
+          onChange={onChange}
+          className={highlightClass(formData.language_1 && !formData.language_1_fluency)}
+          required={!!formData.language_1}
+          disabled={!formData.language_1}
+        >
           <option value="">Fluency...</option>
           <option value="Native">Native</option>
           <option value="Fluent">Fluent</option>
@@ -265,7 +272,14 @@ function YachtOfferFormOnboardFields({
           <option value="Turkish">Turkish</option>
           <option value="Ukrainian">Ukrainian</option>
         </select>
-        <select name="language_2_fluency" value={formData.language_2_fluency} onChange={onChange}>
+        <select
+          name="language_2_fluency"
+          value={formData.language_2_fluency}
+          onChange={onChange}
+          className={highlightClass(formData.language_2 && !formData.language_2_fluency)}
+          required={!!formData.language_2}
+          disabled={!formData.language_2}
+        >
           <option value="">Fluency...</option>
           <option value="Native">Native</option>
           <option value="Fluent">Fluent</option>
@@ -293,7 +307,14 @@ function YachtOfferFormOnboardFields({
           <option value="Turkish">Turkish</option>
           <option value="Ukrainian">Ukrainian</option>
         </select>
-        <select name="language_3_fluency" value={formData.language_3_fluency} onChange={onChange}>
+        <select
+          name="language_3_fluency"
+          value={formData.language_3_fluency}
+          onChange={onChange}
+          className={highlightClass(formData.language_3 && !formData.language_3_fluency)}
+          required={!!formData.language_3}
+          disabled={!formData.language_3}
+        >
           <option value="">Fluency...</option>
           <option value="Native">Native</option>
           <option value="Fluent">Fluent</option>
@@ -453,12 +474,23 @@ function YachtOfferFormOnboardFields({
       <label>Contact Phone:</label>
       <input type="tel" name="contact_phone" value={formData.contact_phone} onChange={onChange} />
 
+      <label>Job Link:</label>
+      <input
+        type="url"
+        name="job_link"
+        value={formData.job_link}
+        onChange={onChange}
+        className={highlightClass(formData.job_link && !/^https?:\/\/|^[^@\s]+\.[^@\s]+/.test(formData.job_link))}
+        placeholder="https://example.com/job-post"
+        inputMode="url"
+      />
+
       {renderRequiredDocsSummary && renderRequiredDocsSummary()}
 
       <RemarksField value={formData.description} onChange={onChange} onInput={handleRemarksInput} onFocus={autoResizeTextarea} textareaRef={remarksRef} previousRemarks={previousRemarks} remarksAiUsed={remarksAiUsed} remarksTyping={remarksTyping} rewriteLoading={rewriteLoading} onUndo={undoRemarks} onImprove={improveRemarks} />
 
       <label>Posting Duration:</label>
-      <select name="posting_duration" value={formData.posting_duration || '1 month'} onChange={onChange}>
+      <select name="posting_duration" value={formData.posting_duration || '2 weeks'} onChange={onChange}>
         <option value="1 day">1 day</option>
         <option value="2 days">2 days</option>
         <option value="3 days">3 days</option>

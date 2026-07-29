@@ -159,6 +159,11 @@ const whatsAppShareBtnStyle = {
 
 const shareIconImgStyle = { width: 22, height: 22, display: 'block' };
 const shareIconStyle = { fontSize: 22, color: '#111' };
+const getScrollOffset = () => {
+  const nav = document.querySelector('.navbar-container');
+  const navHeight = nav ? nav.getBoundingClientRect().height : 0;
+  return navHeight + 8;
+};
 
 export default function SeaCrewList({ profiles, loading, currentUserId, onRequestChat }) {
   const [expandedId, setExpandedId] = useState(null);
@@ -177,6 +182,7 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
   const [visibleProfileIds, setVisibleProfileIds] = useState({});
   const items = useMemo(() => (Array.isArray(profiles) ? profiles : []), [profiles]);
   const cardRefs = useRef(new Map());
+  const collapseTargetRef = useRef(null);
   const mediaUrlCacheRef = useRef(new Map());
   const supportsWebShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   const showNativeShare = supportsWebShare || isInNativeApp();
@@ -421,6 +427,25 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
     };
   }, [expandedId, items, resolvedExpandedImages]);
 
+  useEffect(() => {
+    if (!expandedId) return;
+    const el = cardRefs.current.get(String(expandedId));
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, [expandedId]);
+
+  useEffect(() => {
+    if (expandedId) return;
+    const id = collapseTargetRef.current;
+    if (!id) return;
+    collapseTargetRef.current = null;
+    const el = cardRefs.current.get(String(id)) || document.querySelector(`[data-profile-id="${id}"]`);
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - getScrollOffset();
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, [expandedId]);
+
   if (loading) return <LoadingSpinner message="Loading SeaCrew profiles..." />;
   if (!items.length) {
     return (
@@ -459,7 +484,11 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
 
         const toggle = (e) => {
           if (e && e.target && e.target.closest && e.target.closest('.no-toggle')) return;
-          setExpandedId((p) => (p === profile.id ? null : profile.id));
+          setExpandedId((p) => {
+            const isCollapsing = p === profile.id;
+            collapseTargetRef.current = isCollapsing ? profile.id : null;
+            return isCollapsing ? null : profile.id;
+          });
         };
 
         const handleCoverError = () => {
