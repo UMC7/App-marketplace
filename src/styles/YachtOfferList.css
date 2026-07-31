@@ -76,7 +76,7 @@
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1100px) {
   .top-row {
     display: flex;
     align-items: flex-start;
@@ -360,6 +360,164 @@
 
 body.dark-mode .offer-card.expanded .remarks-disclaimer {
   color: #8FA3B8 !important;
+}
+
+@media (min-width: 1100px) {
+  .offer-card.expanded {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 20px 20px 24px;
+    border-radius: 18px;
+    border: 1px solid rgba(8, 26, 59, 0.10);
+    background:
+      radial-gradient(circle at top right, rgba(104, 173, 168, 0.10), transparent 30%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 249, 252, 0.96));
+    box-shadow: 0 18px 42px rgba(8, 26, 59, 0.08);
+  }
+
+  .offer-card.expanded .offer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .offer-card.expanded .top-row {
+    margin-bottom: 0;
+    padding: 18px 16px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(8, 26, 59, 0.09);
+    background:
+      linear-gradient(180deg, rgba(8, 26, 59, 0.038), rgba(8, 26, 59, 0.012));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 10px 24px rgba(8, 26, 59, 0.04);
+    gap: 22px;
+  }
+
+  .offer-card.expanded .top-row > .expanded-block:not(:last-child)::after {
+    background-color: rgba(188, 169, 135, 0.52);
+  }
+
+  .offer-card.expanded .expanded-block.block6,
+  .offer-card.expanded .expanded-block.block7 {
+    padding: 18px 14px 0;
+    border-top: 1px solid rgba(188, 169, 135, 0.52);
+  }
+
+  .offer-card.expanded .expanded-block.block7 {
+    padding-top: 12px;
+  }
+
+  .offer-card.expanded .field-label {
+    margin-bottom: 7px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(8, 26, 59, 0.68);
+  }
+
+  .offer-card.expanded .field-value {
+    font-size: 1rem;
+    line-height: 1.42;
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+
+  .offer-card.expanded .top-row .field-value {
+    font-size: 1.02rem;
+  }
+
+  .offer-card.expanded .required-docs-rank-label {
+    margin-top: 14px;
+    margin-bottom: 10px;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(8, 26, 59, 0.62);
+  }
+
+  .offer-card.expanded .required-docs-grid {
+    gap: 12px 16px;
+  }
+
+  .offer-card.expanded .required-doc-chip {
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(8, 26, 59, 0.07);
+    background: rgba(8, 26, 59, 0.022);
+    font-size: 0.92rem;
+    line-height: 1.45;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+
+  .offer-card.expanded .expanded-block.block6 .field-label {
+    margin-bottom: 14px;
+  }
+
+  .offer-card.expanded .remarks-content {
+    padding-top: 2px;
+  }
+
+  .offer-card.expanded .remarks-content p {
+    margin-bottom: 14px;
+    line-height: 1.74;
+    font-size: 0.98rem;
+    text-align: left !important;
+    max-width: 84ch;
+  }
+
+  .offer-card.expanded .remarks-disclaimer {
+    margin-top: 34px;
+    font-size: 0.76rem;
+    line-height: 1.62;
+  }
+
+  .offer-card.expanded .job-share-bar {
+    padding-top: 2px;
+  }
+
+  body.dark-mode .offer-card.expanded {
+    border-color: rgba(104, 173, 168, 0.16) !important;
+    background:
+      radial-gradient(circle at top right, rgba(104, 173, 168, 0.12), transparent 30%),
+      linear-gradient(180deg, rgba(34, 34, 34, 0.99), rgba(28, 28, 28, 0.97)) !important;
+    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.28);
+  }
+
+  body.dark-mode .offer-card.expanded .top-row {
+    border-color: rgba(104, 173, 168, 0.14);
+    background:
+      linear-gradient(180deg, rgba(104, 173, 168, 0.09), rgba(255, 255, 255, 0.02));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.03),
+      0 10px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  body.dark-mode .offer-card.expanded .top-row > .expanded-block:not(:last-child)::after,
+  body.dark-mode .offer-card.expanded .expanded-block.block6,
+  body.dark-mode .offer-card.expanded .expanded-block.block7 {
+    border-color: rgba(188, 169, 135, 0.32);
+  }
+
+  body.dark-mode .offer-card.expanded .field-label {
+    color: rgba(240, 240, 240, 0.68) !important;
+  }
+
+  body.dark-mode .offer-card.expanded .field-value {
+    color: #ffffff !important;
+  }
+
+  body.dark-mode .offer-card.expanded .required-docs-rank-label {
+    color: rgba(240, 240, 240, 0.60);
+  }
+
+  body.dark-mode .offer-card.expanded .required-doc-chip {
+    border-color: rgba(104, 173, 168, 0.12);
+    background: rgba(255, 255, 255, 0.024);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    color: #f5f7fb;
+  }
 }
 
 @media (max-width: 820px) {

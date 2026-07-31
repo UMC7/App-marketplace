@@ -1079,7 +1079,7 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
   .offer-card.expanded:not(.team) .expanded-block.block1 .field-group.salary { order: 5; }
   }
 
-@media (min-width: 821px) {
+@media (min-width: 1100px) {
   .offer-card.expanded .top-row {
     display: flex;
     flex-wrap: nowrap;
