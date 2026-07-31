@@ -328,27 +328,36 @@ const ProfileJobsTab = ({
                     {offers.map((offer) => (
                       <div
                         key={offer.id}
-                        className={`profile-card${offersWithNewApps.has(offer.id) ? ' has-new-apps' : ''}`}
+                        className={`profile-card profile-job-card${offersWithNewApps.has(offer.id) ? ' has-new-apps' : ''}`}
                       >
-                        <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-                          {offer.title}
-                        </div>
-                        {offer.teammate_rank && (
-                          <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-                            {offer.teammate_rank}
+                        <div className="profile-job-card-header">
+                          <div className="profile-job-card-title-group">
+                            <div className="profile-job-card-title">
+                              {offer.title}
+                            </div>
+                            {offer.teammate_rank && (
+                              <div className="profile-job-card-rank">
+                                {offer.teammate_rank}
+                              </div>
+                            )}
                           </div>
-                        )}
-                        <p style={{ margin: '4px 0' }}>
+                          <div className="profile-job-card-badges">
+                            {offer.status === 'paused' && (
+                              <span className="profile-job-badge profile-job-badge-paused">
+                                Paused
+                              </span>
+                            )}
+                            {offersWithNewApps.has(offer.id) && (
+                              <span className="profile-job-badge profile-job-badge-fresh">
+                                New applications
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="profile-job-card-location">
                           {formatLocation(offer)}
                         </p>
-                        <div
-                          className="job-card-dates"
-                          style={{
-                            margin: '4px 0',
-                            fontWeight: '500',
-                            fontSize: '0.95rem',
-                          }}
-                        >
+                        <div className="job-card-dates profile-job-card-dates">
                           <div className="job-date-item">
                             <span className="job-date-label">Posted:</span>
                             <span className="job-date-value">
@@ -362,7 +371,7 @@ const ProfileJobsTab = ({
                             </div>
                           )}
                         </div>
-                        <div className="profile-action-buttons">
+                        <div className="profile-action-buttons profile-job-card-actions">
                           <button
                             className="dashboard-btn"
                             onClick={() => setDashboardOffer(offer)}
