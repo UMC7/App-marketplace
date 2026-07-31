@@ -40,7 +40,7 @@ function Navbar() {
   const menuRef = useRef();
 
   const [isMobilePortrait, setIsMobilePortrait] = useState(
-    window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches
+    window.matchMedia('(max-width: 900px)').matches
   );
 
   const [showSocialPanel, setShowSocialPanel] = useState(false);
@@ -73,7 +73,7 @@ function Navbar() {
 
   useEffect(() => {
     const checkOrientation = () => {
-      setIsMobilePortrait(window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches);
+      setIsMobilePortrait(window.matchMedia('(max-width: 900px)').matches);
     };
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
@@ -233,7 +233,7 @@ const handleOpenChat = (offerId, receiverId, options = {}) => {
             <img src={logoSrc} alt="YachtDayWork logo" className="navbar-logo" />
           </Link>
         </div>
-        {!window.matchMedia('(max-width: 900px) and (orientation: landscape)').matches && (
+        {window.matchMedia('(max-width: 900px)').matches && (
           <button className="navbar-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>☰</button>
         )}
       </div>

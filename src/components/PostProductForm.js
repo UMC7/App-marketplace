@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import UnifiedImageUploader from '../components/UnifiedImageUploader';
 
-const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect = null }) => {
+const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect = null, onPosted = null }) => {
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
@@ -111,7 +111,7 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
     // Asegurar coherencia de imágenes (ya no recibimos 'blob:' del uploader)
     const all = Array.from(new Set([mainPhoto, ...photos].filter(Boolean)));
     const cover = all[0] || '';
-    const gallery = all.slice(1);
+    const gallery = all.slice(1).filter((url) => url !== cover);
 
     // UPDATE PRODUCT
     if (mode === 'edit' && initialValues.id) {
@@ -141,6 +141,8 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
           if (onSubmitRedirect) {
             if (typeof onSubmitRedirect === 'function') onSubmitRedirect();
             else navigate(onSubmitRedirect);
+          } else if (typeof onPosted === 'function') {
+            onPosted();
           }
         }
       } catch (error) {
@@ -168,6 +170,7 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
           city,
           country,
           condition,
+          seller_contact_public: true,
         }])
         .select('*');
 
@@ -180,6 +183,8 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
         if (onSubmitRedirect) {
           if (typeof onSubmitRedirect === 'function') onSubmitRedirect();
           else navigate(onSubmitRedirect);
+        } else if (typeof onPosted === 'function') {
+          onPosted();
         }
         // reset
         setName(''); setDescription(''); setPrice(''); setQuantity(1);

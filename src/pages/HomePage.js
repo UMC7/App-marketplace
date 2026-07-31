@@ -143,7 +143,7 @@ function HomePage() {
       </h3>
 
       <button
-        className="navbar-toggle"
+        className="filters-toggle"
         onClick={() => setShowFilters((prev) => !prev)}
       >
         ☰ Filters

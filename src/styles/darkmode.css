@@ -52,6 +52,11 @@ body.dark-mode .navbar-bottom {
   background-color: var(--navbar-bg-color) !important;
 }
 
+body.dark-mode .navbar-bottom .nav-icon-button {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 body.dark-mode .navbar-logo {
   filter: brightness(1) contrast(1.1);
 }

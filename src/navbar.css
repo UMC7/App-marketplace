@@ -206,13 +206,14 @@
 }
 
 /* === RESPONSIVE: PANTALLAS PEQUEÑAS === */
-@media (max-width: 768px) {
-  .navbar-toggle {
-    display: block;
+@media (max-width: 900px) {
+  .navbar-toggle,
+  nav .navbar-toggle {
+    display: none !important;
   }
 
   .navbar-links {
-    display: none;
+    display: none !important;
     flex-direction: column;
     background-color: var(--primary-color);
     width: 100%;
@@ -278,14 +279,14 @@
 }
 
 /* === PANTALLA MÓVIL LANDSCAPE: OCULTAR TOGGLE === */
-@media (max-width: 768px) and (orientation: landscape) {
+@media (max-width: 0px) and (orientation: landscape) {
   nav .navbar-toggle {
     display: none !important;
   }
 }
 
 /* === MOBILE PORTRAIT: NAVBAR Y NAVBAR-BOTTOM === */
-@media (max-width: 768px) and (orientation: portrait) {
+@media (max-width: 900px) {
   .navbar-container {
     position: fixed;
     top: 0;
@@ -563,13 +564,19 @@
   color: var(--primary-color);
 }
 
-@media (max-width: 768px) and (orientation: portrait) {
+@media (max-width: 900px) {
   body.dark-mode .navbar-bottom {
     background-color: #2a2a2a !important;
   }
 
+  [data-theme='dark'] .navbar-bottom {
+    background-color: #2a2a2a !important;
+  }
+
   body.dark-mode .navbar-bottom .material-icons,
-  body.dark-mode .navbar-bottom small {
+  body.dark-mode .navbar-bottom small,
+  [data-theme='dark'] .navbar-bottom .material-icons,
+  [data-theme='dark'] .navbar-bottom small {
     color: #f5f5f5 !important;
   }
 }
@@ -627,7 +634,7 @@
 }
 
 /* En el navbar inferior móvil, que el panel salga hacia arriba */
-@media (max-width: 768px) and (orientation: portrait){
+@media (max-width: 900px){
   .notif-dropdown{
     top: auto;
     bottom: 44px;            /* sobre el botón de la bottom bar */
