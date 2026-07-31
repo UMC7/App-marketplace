@@ -1265,7 +1265,15 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
   }
 }
 
-@media (max-width: 768px) and (orientation: portrait) {
+@media (max-width: 900px) {
+  .tabs-container > .profile-menu-toggle {
+    display: block !important;
+    width: 100%;
+    box-sizing: border-box;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
   .tabs-container .profile-tabs.menu-panel {
     display: none;
     position: relative;
@@ -1342,8 +1350,8 @@ body:not(.dark-mode) .remarks-ai-button[data-typing='true'] {
   }
 }
 
-@media (min-width: 769px) {
-  .tabs-container .navbar-toggle {
+@media (min-width: 901px) {
+  .tabs-container .profile-menu-toggle {
     display: none !important;
   }
   

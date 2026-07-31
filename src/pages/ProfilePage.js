@@ -31,6 +31,22 @@ const ALLOWED_TABS = new Set([
   'compras','ventas','eliminados','valoracion','usuario','cv'
 ]);
 
+const DEFAULT_PROFILE_TAB_PRIORITY = ['empleos', 'servicios', 'productos', 'eventos'];
+
+function getDefaultContentTab({ products, services, jobOffers, events }) {
+  const counts = {
+    productos: Array.isArray(products) ? products.length : 0,
+    servicios: Array.isArray(services) ? services.length : 0,
+    empleos: Array.isArray(jobOffers) ? jobOffers.length : 0,
+    eventos: Array.isArray(events) ? events.length : 0,
+  };
+
+  return DEFAULT_PROFILE_TAB_PRIORITY.reduce((bestTab, currentTab) => {
+    if (!bestTab) return currentTab;
+    return counts[currentTab] > counts[bestTab] ? currentTab : bestTab;
+  }, '');
+}
+
 function ProfilePage() {
   const { currentUser } = useAuth();
   const isAdmin = currentUser?.role === 'admin' || currentUser?.app_metadata?.role === 'admin';
@@ -163,9 +179,32 @@ useEffect(() => {
   const params = new URLSearchParams(location.search);
   if (params.get('tab') || params.get('jobDashboard')) return;
   if (defaultTabSetRef.current) return;
-  setActiveTab(candidateEnabled ? 'cv' : 'productos');
+  if (candidateEnabled) {
+    setActiveTab('cv');
+    defaultTabSetRef.current = true;
+    return;
+  }
+
+  if (loading) return;
+
+  setActiveTab(
+    getDefaultContentTab({
+      products,
+      services,
+      jobOffers,
+      events,
+    })
+  );
   defaultTabSetRef.current = true;
-}, [candidateEnabled, location.search]);
+}, [
+  candidateEnabled,
+  events,
+  jobOffers,
+  loading,
+  location.search,
+  products,
+  services,
+]);
 
 const clearJobDashboardParam = () => {
   const params = new URLSearchParams(location.search);
@@ -505,7 +544,7 @@ useEffect(() => {
 
 <div className="tabs-container" ref={menuRef}>
   <button
-    className="navbar-toggle"
+    className="navbar-toggle profile-menu-toggle"
     onClick={() => setIsMenuOpen(!isMenuOpen)}
     aria-expanded={isMenuOpen ? 'true' : 'false'}
     aria-controls="profile-tabs-panel"
