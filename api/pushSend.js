@@ -1,26 +1,34 @@
-// /api/pushSend.js – Envía push sin insertar en notifications (para webhooks, ej. job match)
+// /api/pushSend.js - Envia push sin insertar en notifications (para webhooks, ej. job match)
 import admin from "firebase-admin";
 import { createClient } from "@supabase/supabase-js";
 
-let serviceAccount;
-try {
-  serviceAccount = JSON.parse(
-    Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, "base64").toString("utf8")
-  );
-} catch (e) {
-  throw new Error("❌ No se pudo decodificar FIREBASE_SERVICE_ACCOUNT_BASE64: " + e.message);
-}
+function getFirebaseAdminApp() {
+  if (admin.apps.length) return admin;
 
-if (!admin.apps.length) {
+  const encoded = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+  if (!encoded) {
+    throw new Error("Falta FIREBASE_SERVICE_ACCOUNT_BASE64.");
+  }
+
+  let serviceAccount;
+  try {
+    serviceAccount = JSON.parse(Buffer.from(encoded, "base64").toString("utf8"));
+  } catch (e) {
+    throw new Error("No se pudo decodificar FIREBASE_SERVICE_ACCOUNT_BASE64: " + e.message);
+  }
+
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  return admin;
 }
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error("❌ Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.");
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error("Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.");
+  }
+  return createClient(supabaseUrl, supabaseServiceRoleKey);
 }
-const sb = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 function toStringMap(obj = {}) {
   const out = {};
@@ -32,11 +40,12 @@ function toStringMap(obj = {}) {
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método no permitido" });
+    return res.status(405).json({ error: "Metodo no permitido" });
   }
 
   try {
-    // Soporta payload directo o formato webhook de Supabase
+    const adminApp = getFirebaseAdminApp();
+    const sb = getSupabaseAdmin();
     const body = req.body || {};
     const record = body.record || body;
     const userId = record.user_id || body.userId;
@@ -83,7 +92,7 @@ export default async function handler(req, res) {
     const invalidTokens = [];
 
     if (fcmTokens.length) {
-      const response = await admin.messaging().sendEachForMulticast({
+      const response = await adminApp.messaging().sendEachForMulticast({
         notification: { title, body: String(bodyText) },
         data: toStringMap({ notification_id: String(notificationId || ""), ...data }),
         tokens: fcmTokens,
@@ -137,7 +146,7 @@ export default async function handler(req, res) {
             }
           }
         });
-      } catch (err) {
+      } catch (_err) {
         failed += expoTokens.length;
       }
     }

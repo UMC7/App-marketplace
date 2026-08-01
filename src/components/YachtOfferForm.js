@@ -47,7 +47,7 @@ import {
   normalizeDeckLicenseValue,
 } from './yachtOfferForm.utils';
 
-const BASE_REQUIRED_DOCUMENTS = ['ENG1 Seafarer Medical Certificate', 'STCW Basic Training (A-VI/1)'];
+const BASE_REQUIRED_DOCUMENTS = ['ENG1 Seafarer Medical Certificate', 'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR'];
 const withBaseRequiredDocuments = (documents) =>
   Array.from(new Set([...(Array.isArray(documents) ? documents : []), ...BASE_REQUIRED_DOCUMENTS]));
 

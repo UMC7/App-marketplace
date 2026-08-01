@@ -2,7 +2,13 @@
 import OpenAI from "openai";
 import { generateRemarks as buildRemarks } from "../server/job-parser/remarks.js";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+  return new OpenAI({ apiKey });
+}
 
 // mismas opciones que tu initialState
 const RANKS = [
@@ -1056,7 +1062,7 @@ ${finalText}
 ---
     `.trim();
 
-    const completion = await client.chat.completions.create({
+    const completion = await getOpenAIClient().chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0.2,
       messages: [

@@ -91,9 +91,9 @@ export const ENGINEERING_LICENSE_OPTIONS = [
   'Second Engineer Unlimited - STCW III/2',
   'Engineering Officer of the Watch (EOOW) - STCW III/1',
   'Y1 - Yacht Engineer (Unlimited)',
-  'Y2 - Yacht Engineer ≤3000 GT',
-  'Y3 - Yacht Engineer ≤500 GT',
-  'Y4 - Yacht Engineer ≤200 GT',
+  'Y2 - Yacht Engineer ≤3000 kW',
+  'Y3 - Yacht Engineer ≤1500 kW',
+  'Y4 - Yacht Engineer ≤750 kW',
   'Small Vessel Chief Engineer - MCA SV',
   'AEC 1 + AEC 2 - Approved Engine Course',
   'AEC 1 - Approved Engine Course 1',
@@ -110,8 +110,8 @@ export const ELECTRICIAN_LICENSE_OPTIONS = [
 export const ENGINEERING_LICENSE_FIELD_RANKS = ['Captain/Engineer','Deck/Engineer','Mate/Engineer'];
 
 export const ENGINEERING_LICENSE_FIELD_OPTIONS = [
-  'Y3 - Yacht Engineer ≤500 GT',
-  'Y4 – Yacht Engineer ≤200 GT',
+  'Y3 - Yacht Engineer ≤1500 kW',
+  'Y4 - Yacht Engineer ≤750 kW',
   'MEO (Yachts) – Marine Engine Operator',
   'AEC 1 + AEC 2 – Approved Engine Course',
   'AEC 1 – Approved Engine Course 1',
@@ -179,6 +179,18 @@ export const WATERSORTS_DIVING_REQUIRED_DOCUMENT_GROUP = {
   ],
 };
 
+const STCW_CERTIFICATES_DOCUMENT_GROUP = {
+  label: 'STCW Certificates',
+  options: [
+    'Proficiency in Survival Craft & Rescue Boats (PSCRB) - A-VI/2-1',
+    'Advanced Fire Fighting - A-VI/3',
+    'Medical First Aid - A-VI/4-1',
+    'Medical Care - A-VI/4-2',
+  ],
+};
+
+const DESIGNATED_SECURITY_DUTIES_DOCUMENT = 'Designated Security Duties (DSD) - A-VI/6-2';
+
 /* Eliminado: Drone Pilot, Video Editing Skills */
 
 const INTERIOR_SERVICE_HOSPITALITY_GROUP = {
@@ -200,7 +212,7 @@ export const REQUIRED_DOCUMENT_GROUPS = [
       'Valid Passport (>=6 months validity)',
       "Seaman's Book",
       'ENG1 Seafarer Medical Certificate',
-      'STCW Basic Training (A-VI/1)',
+      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
       "Driver's License",
     ],
   },
@@ -233,7 +245,8 @@ export const CAPTAIN_REQUIRED_DOCUMENT_GROUPS = [
       'Reference Letter',
       "Seaman's Book",
       'ENG1 Seafarer Medical Certificate',
-      'STCW Basic Training (A-VI/1)',
+      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
+      DESIGNATED_SECURITY_DUTIES_DOCUMENT,
       "Driver's License",
     ],
   },
@@ -249,19 +262,7 @@ export const CAPTAIN_REQUIRED_DOCUMENT_GROUPS = [
     label: 'Radio Certificates',
     options: ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
   },
-  {
-    label: 'STCW Certificates',
-    options: [
-      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
-      'Proficiency in Survival Craft & Rescue Boats (PSCRB) - A-VI/2-1',
-      'Fast Rescue Boats - A-VI/2-2',
-      'Advanced Fire Fighting - A-VI/3',
-      'Medical First Aid - A-VI/4-1',
-      'Medical Care - A-VI/4-2',
-      'Security Awareness - A-VI/6-1',
-      'Designated Security Duties (DSD) - A-VI/6-2',
-    ],
-  },
+  STCW_CERTIFICATES_DOCUMENT_GROUP,
   {
     label: 'STCW Passenger / Management',
     options: [
@@ -301,7 +302,8 @@ export const DECK_COMMAND_REQUIRED_DOCUMENT_GROUPS = [
       'Reference Letter',
       "Seaman's Book",
       'ENG1 Seafarer Medical Certificate',
-      'STCW Basic Training (A-VI/1)',
+      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
+      DESIGNATED_SECURITY_DUTIES_DOCUMENT,
       "Driver's License",
     ],
   },
@@ -317,19 +319,7 @@ export const DECK_COMMAND_REQUIRED_DOCUMENT_GROUPS = [
     label: 'Radio Certificates',
     options: ['GMDSS GOC', 'GMDSS ROC', 'VHF SRC'],
   },
-  {
-    label: 'STCW Certificates',
-    options: [
-      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
-      'Proficiency in Survival Craft & Rescue Boats (PSCRB) - A-VI/2-1',
-      'Fast Rescue Boats - A-VI/2-2',
-      'Advanced Fire Fighting - A-VI/3',
-      'Medical First Aid - A-VI/4-1',
-      'Medical Care - A-VI/4-2',
-      'Security Awareness - A-VI/6-1',
-      'Designated Security Duties (DSD) - A-VI/6-2',
-    ],
-  },
+  STCW_CERTIFICATES_DOCUMENT_GROUP,
   {
     label: 'STCW Passenger / Management',
     options: [
@@ -392,7 +382,8 @@ const COMMON_DECK_HAND_REQUIRED_DOCUMENT_GROUPS = [
       'Reference Letter',
       "Seaman's Book",
       'ENG1 Seafarer Medical Certificate',
-      'STCW Basic Training (A-VI/1)',
+      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
+      DESIGNATED_SECURITY_DUTIES_DOCUMENT,
       "Driver's License",
     ],
   },
@@ -404,6 +395,7 @@ const COMMON_DECK_HAND_REQUIRED_DOCUMENT_GROUPS = [
     label: 'Travel / Health',
     options: ['Vaccination - Yellow Fever', 'Vaccination - COVID'],
   },
+  STCW_CERTIFICATES_DOCUMENT_GROUP,
   {
     label: 'Radio Certificates',
     options: ['VHF SRC'],
@@ -445,7 +437,8 @@ export const DECK_ENGINEER_REQUIRED_DOCUMENT_GROUPS = [
       'Reference Letter',
       "Seaman's Book",
       'ENG1 Seafarer Medical Certificate',
-      'STCW Basic Training (A-VI/1)',
+      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
+      DESIGNATED_SECURITY_DUTIES_DOCUMENT,
       "Driver's License",
     ],
   },
@@ -457,6 +450,7 @@ export const DECK_ENGINEER_REQUIRED_DOCUMENT_GROUPS = [
     label: 'Travel / Health',
     options: ['Vaccination - Yellow Fever', 'Vaccination - COVID'],
   },
+  STCW_CERTIFICATES_DOCUMENT_GROUP,
   {
     label: 'Radio Certificates',
     options: ['VHF SRC'],
@@ -489,10 +483,12 @@ export const DAYWORKER_REQUIRED_DOCUMENT_GROUPS = [
       'Reference Letter',
       "Seaman's Book",
       'ENG1 Seafarer Medical Certificate',
-      'STCW Basic Training (A-VI/1)',
+      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
+      DESIGNATED_SECURITY_DUTIES_DOCUMENT,
       "Driver's License",
     ],
   },
+  STCW_CERTIFICATES_DOCUMENT_GROUP,
 ];
 
 export const ENGINEERING_REQUIRED_DOCUMENT_GROUPS = [
@@ -503,7 +499,8 @@ export const ENGINEERING_REQUIRED_DOCUMENT_GROUPS = [
       'Reference Letter',
       "Seaman's Book",
       'ENG1 Seafarer Medical Certificate',
-      'STCW Basic Training (A-VI/1)',
+      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
+      DESIGNATED_SECURITY_DUTIES_DOCUMENT,
       "Driver's License",
     ],
   },
@@ -515,6 +512,7 @@ export const ENGINEERING_REQUIRED_DOCUMENT_GROUPS = [
     label: 'Travel / Health',
     options: ['Vaccination - Yellow Fever', 'Vaccination - COVID'],
   },
+  STCW_CERTIFICATES_DOCUMENT_GROUP,
   {
     label: 'Tender & PWC',
     options: [
@@ -560,7 +558,7 @@ export const RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS = {
 export const GALLEY_CULINARY_DOCUMENT_GROUP = {
   label: 'Galley (Culinary)',
   options: [
-    "Ship's Cook Certificate",
+    'Culinary Certificate / Diploma',
     'Food Hygiene / HACCP Level 2',
     'Food Hygiene / HACCP Level 3',
     'Menu Portfolio',
@@ -587,7 +585,8 @@ export const GALLEY_REQUIRED_DOCUMENT_GROUPS = [
       'Reference Letter',
       "Seaman's Book",
       'ENG1 Seafarer Medical Certificate',
-      'STCW Basic Training (A-VI/1)',
+      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
+      DESIGNATED_SECURITY_DUTIES_DOCUMENT,
       "Driver's License",
     ],
   },
@@ -599,6 +598,7 @@ export const GALLEY_REQUIRED_DOCUMENT_GROUPS = [
     label: 'Travel / Health',
     options: ['Vaccination - Yellow Fever','Vaccination - COVID'],
   },
+  STCW_CERTIFICATES_DOCUMENT_GROUP,
   GALLEY_CULINARY_DOCUMENT_GROUP,
   {
     label: 'Tender & PWC',
@@ -643,7 +643,8 @@ export const INTERIOR_REQUIRED_DOCUMENT_GROUPS = [
       'Reference Letter',
       "Seaman's Book",
       'ENG1 Seafarer Medical Certificate',
-      'STCW Basic Training (A-VI/1)',
+      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
+      DESIGNATED_SECURITY_DUTIES_DOCUMENT,
       "Driver's License",
     ],
   },
@@ -655,6 +656,7 @@ export const INTERIOR_REQUIRED_DOCUMENT_GROUPS = [
     label: 'Travel / Health',
     options: ['Vaccination - Yellow Fever','Vaccination - COVID'],
   },
+  STCW_CERTIFICATES_DOCUMENT_GROUP,
   {
     label: 'Interior (Service & Hospitality)',
     options: [
@@ -689,7 +691,8 @@ export const OTHERS_REQUIRED_DOCUMENT_GROUPS = [
       'Reference Letter',
       "Seaman's Book",
       'ENG1 Seafarer Medical Certificate',
-      'STCW Basic Training (A-VI/1)',
+      'STCW Basic Training (A-VI/1) - PST, FPFF, EFA, PSSR',
+      DESIGNATED_SECURITY_DUTIES_DOCUMENT,
       "Driver's License",
     ],
   },
@@ -706,7 +709,6 @@ export const OTHERS_REQUIRED_DOCUMENT_GROUPS = [
     options: [
       'Medical First Aid — A-VI/4-1',
       'Medical Care — A-VI/4-2',
-      'Designated Security Duties (DSD) — A-VI/6-2',
     ],
   },
   {
@@ -765,6 +767,8 @@ export const VISA_OPTIONS = [
   'C1/D',
   'Schengen',
   'European Passport',
+  'EU Resident',
+  'Australian Work Rights',
 ];
 
 export const COUNTRIES = [

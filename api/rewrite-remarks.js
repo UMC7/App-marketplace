@@ -1,6 +1,12 @@
 import OpenAI from "openai";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+  return new OpenAI({ apiKey });
+}
 
 const roundNumber = (n) => String(Math.round(n));
 
@@ -144,7 +150,7 @@ export default async function handler(req, res) {
       raw
     ].filter(Boolean).join("\n");
 
-    const completion = await client.chat.completions.create({
+    const completion = await getOpenAIClient().chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0.2,
       messages: [

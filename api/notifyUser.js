@@ -2,31 +2,37 @@
 import admin from "firebase-admin";
 import { createClient } from "@supabase/supabase-js";
 
-// --- Firebase Admin (service account en BASE64) ---
-let serviceAccount;
-try {
-  serviceAccount = JSON.parse(
-    Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, "base64").toString("utf8")
-  );
-} catch (e) {
-  throw new Error("❌ No se pudo decodificar FIREBASE_SERVICE_ACCOUNT_BASE64: " + e.message);
-}
+function getFirebaseAdminApp() {
+  if (admin.apps.length) return admin;
 
-if (!admin.apps.length) {
+  const encoded = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+  if (!encoded) {
+    throw new Error("Falta FIREBASE_SERVICE_ACCOUNT_BASE64.");
+  }
+
+  let serviceAccount;
+  try {
+    serviceAccount = JSON.parse(Buffer.from(encoded, "base64").toString("utf8"));
+  } catch (e) {
+    throw new Error("No se pudo decodificar FIREBASE_SERVICE_ACCOUNT_BASE64: " + e.message);
+  }
+
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
   });
+
+  return admin;
 }
 
-// --- Supabase (Service Role) ---
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error("❌ Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.");
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error("Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.");
+  }
+  return createClient(supabaseUrl, supabaseServiceRoleKey);
 }
-const sb = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-// FCM `data` debe ser string:string
 function toStringMap(obj = {}) {
   const out = {};
   for (const [k, v] of Object.entries(obj)) {
@@ -37,7 +43,7 @@ function toStringMap(obj = {}) {
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método no permitido" });
+    return res.status(405).json({ error: "Metodo no permitido" });
   }
 
   const internalKey = process.env.WEB_API_INTERNAL_KEY;
@@ -46,18 +52,20 @@ export default async function handler(req, res) {
     if (!incoming || incoming !== internalKey) {
       return res.status(401).json({
         error: "No autorizado",
-        hint: "Incluye header x-internal-key (mismo valor que WEB_API_INTERNAL_KEY en tu deploy y en Supabase Edge secrets).",
+        hint: "Incluye header x-internal-key.",
       });
     }
   }
 
   try {
+    const adminApp = getFirebaseAdminApp();
+    const sb = getSupabaseAdmin();
     const { userId, title, body, data } = req.body || {};
+
     if (!userId || !title || !body) {
-      return res.status(400).json({ error: "Faltan parámetros: userId, title, body" });
+      return res.status(400).json({ error: "Faltan parametros: userId, title, body" });
     }
 
-    // 1) Guardar en historial
     const { data: notif, error: insErr } = await sb
       .from("notifications")
       .insert({
@@ -71,10 +79,9 @@ export default async function handler(req, res) {
       .single();
 
     if (insErr) {
-      return res.status(500).json({ error: "No se pudo guardar la notificación." });
+      return res.status(500).json({ error: "No se pudo guardar la notificacion." });
     }
 
-    // 2) Obtener tokens
     const { data: rows, error: tokErr } = await sb
       .from("device_tokens")
       .select("token, platform")
@@ -104,9 +111,8 @@ export default async function handler(req, res) {
     const invalidTokens = [];
     const sendErrors = [];
 
-    // 3a) Envío FCM (web / PWA)
     if (fcmTokens.length) {
-      const response = await admin.messaging().sendEachForMulticast({
+      const response = await adminApp.messaging().sendEachForMulticast({
         notification: { title, body },
         data: toStringMap({ notification_id: notif.id, ...(data || {}) }),
         tokens: fcmTokens,
@@ -135,7 +141,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3b) Envío Expo Push (app móvil)
     if (expoTokens.length) {
       const { count: unreadCount } = await sb
         .from("notifications")
@@ -165,18 +170,10 @@ export default async function handler(req, res) {
         });
 
         const expoJson = await expoRes.json();
-        console.log("Expo push HTTP status:", expoRes.status);
-        console.log("Expo push body:", JSON.stringify(expoJson));
-
         const raw = expoJson?.data;
         const tickets = Array.isArray(raw) ? raw : raw ? [raw] : [];
 
         tickets.forEach((t, i) => {
-          console.log("Expo push ticket", {
-            token: expoTokens[i],
-            status: t?.status,
-            details: t?.details,
-          });
           if (t?.status === "ok") {
             sent += 1;
           } else {
@@ -199,7 +196,6 @@ export default async function handler(req, res) {
           }
         });
       } catch (error) {
-        console.log("Expo push send error:", error);
         failed += expoTokens.length;
         sendErrors.push({
           token: null,
@@ -210,7 +206,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // 4) Invalidar tokens rotos
     if (invalidTokens.length) {
       await sb
         .from("device_tokens")
@@ -224,6 +219,7 @@ export default async function handler(req, res) {
       sent,
       failed,
     };
+
     if (failed > 0 && sendErrors.length > 0) {
       payload.errors = sendErrors.slice(0, 3).map((e) => ({
         token: e.token,
@@ -232,6 +228,7 @@ export default async function handler(req, res) {
         message: e.message,
       }));
     }
+
     return res.status(200).json(payload);
   } catch (err) {
     console.error("notifyUser error:", err?.message || err);

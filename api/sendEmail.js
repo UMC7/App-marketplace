@@ -3,8 +3,13 @@
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const emailInternalKey = process.env.SEND_EMAIL_INTERNAL_KEY;
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY is not configured');
+  }
+  return new Resend(apiKey);
+}
 
 // Throttle: máximo de envíos por IP en una ventana (in-memory; para multi-instance usar Redis).
 const THROTTLE_WINDOW_MS = 15 * 60 * 1000; // 15 min
@@ -67,6 +72,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  const emailInternalKey = process.env.SEND_EMAIL_INTERNAL_KEY;
   if (emailInternalKey) {
     const incomingKey = req.headers['x-internal-key'];
     if (!incomingKey || incomingKey !== emailInternalKey) {
@@ -103,6 +109,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    const resend = getResendClient();
     const data = await resend.emails.send({
       from: 'Yacht Daywork <info@yachtdaywork.com>',
       to: toList,

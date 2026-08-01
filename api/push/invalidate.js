@@ -1,23 +1,22 @@
 // /api/push/invalidate.js
-// Uso único tras cambiar applicationId (ej. com.anonymous.* → com.yachtdaywork.app).
-// Invalida todos los tokens Android para que solo cuenten los registrados por la nueva APK.
+// Invalida todos los tokens Android para forzar re-registro con la app nueva.
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const internalKey = process.env.WEB_API_INTERNAL_KEY;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error("Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.");
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error("Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.");
+  }
+  return createClient(supabaseUrl, supabaseServiceRoleKey);
 }
-
-const sb = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método no permitido" });
+    return res.status(405).json({ error: "Metodo no permitido" });
   }
 
+  const internalKey = process.env.WEB_API_INTERNAL_KEY;
   if (!internalKey) {
     return res.status(500).json({
       error: "WEB_API_INTERNAL_KEY no configurada",
@@ -34,6 +33,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    const sb = getSupabaseAdmin();
     const { error } = await sb
       .from("device_tokens")
       .update({ is_valid: false, updated_at: new Date().toISOString() })
@@ -56,8 +56,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       invalidated_android_tokens: countErr ? null : count,
-      message:
-        "Tokens Android marcados como inválidos. Los usuarios volverán a registrar al abrir la app.",
+      message: "Tokens Android marcados como invalidos. Los usuarios se volveran a registrar al abrir la app.",
     });
   } catch (err) {
     console.error("push/invalidate error:", err);

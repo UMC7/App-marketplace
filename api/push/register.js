@@ -2,41 +2,40 @@
 // Solo acepta registro si el user_id coincide con el usuario autenticado (JWT/Supabase).
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl =
-  process.env.SUPABASE_URL ||
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  process.env.REACT_APP_SUPABASE_URL;
-const supabaseAnonKey =
-  process.env.SUPABASE_ANON_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.REACT_APP_SUPABASE_ANON_KEY;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+function getSupabaseConfig() {
+  const supabaseUrl =
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.REACT_APP_SUPABASE_URL;
+  const supabaseAnonKey =
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.REACT_APP_SUPABASE_ANON_KEY;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error("Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.");
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error("Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.");
+  }
+
+  return { supabaseUrl, supabaseAnonKey, supabaseServiceRoleKey };
 }
 
-if (!supabaseAnonKey) {
-  console.error("[push/register] SUPABASE_ANON_KEY no está definida. El JWT no se puede validar.");
-}
-
-const sbAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
-
-/** Obtiene el user_id del token (Supabase JWT). Si no hay token o es inválido, devuelve null. */
 async function getAuthenticatedUserId(req) {
-  // Priorizar body: algunos proxies/OkHttp eliminan Authorization en redirects
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
   const token =
     (req.body?.access_token || "").trim() ||
     (req.headers["x-access-token"] || "").trim() ||
     (req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
-  if (!token || token.length < 50) return null;
 
+  if (!token || token.length < 50) return null;
   if (!supabaseAnonKey) return null;
+
   const sbAuth = createClient(supabaseUrl, supabaseAnonKey);
   const {
     data: { user },
     error,
   } = await sbAuth.auth.getUser(token);
+
   if (error) {
     console.warn("[push/register] getUser error:", error.message);
     return null;
@@ -46,13 +45,21 @@ async function getAuthenticatedUserId(req) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Metodo no permitido" });
+  }
 
   try {
+    const { supabaseUrl, supabaseAnonKey, supabaseServiceRoleKey } = getSupabaseConfig();
+    if (!supabaseAnonKey) {
+      console.error("[push/register] SUPABASE_ANON_KEY no esta definida. El JWT no se puede validar.");
+    }
+
+    const sbAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
     const { user_id, token, platform } = req.body || {};
 
     if (!user_id || !token || !platform) {
-      return res.status(400).json({ error: "Faltan parámetros: user_id, token, platform" });
+      return res.status(400).json({ error: "Faltan parametros: user_id, token, platform" });
     }
 
     const authenticatedId = await getAuthenticatedUserId(req);
@@ -61,18 +68,18 @@ export default async function handler(req, res) {
       const hint = !supabaseAnonKey
         ? " (SUPABASE_ANON_KEY no configurada en el servidor)"
         : !tokenReceived
-          ? " (No se recibió Authorization ni access_token)"
-          : " (Token inválido o expirado)";
+          ? " (No se recibio Authorization ni access_token)"
+          : " (Token invalido o expirado)";
       return res.status(401).json({
-        error: "No autorizado. Envía Authorization: Bearer <token> o access_token en el body." + hint,
+        error: "No autorizado. Envia Authorization: Bearer <token> o access_token en el body." + hint,
       });
     }
+
     if (authenticatedId !== user_id) {
       return res.status(403).json({ error: "user_id no coincide con el usuario autenticado." });
     }
 
     const now = new Date().toISOString();
-
     const { data, error } = await sbAdmin
       .from("device_tokens")
       .upsert(

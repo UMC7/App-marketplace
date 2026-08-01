@@ -150,7 +150,6 @@ export const adjustRemarksTextareaHeight = (el) => {
 
 const SOLO_ENGINEER_EXCLUSIONS = new Set([
   'Chief Engineer Unlimited - STCW III/2',
-  'Engineering Officer of the Watch (EOOW) - STCW III/1',
   'Y1 - Yacht Engineer (Unlimited)',
   'Second Engineer Unlimited - STCW III/2',
 ]);

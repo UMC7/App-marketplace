@@ -11,15 +11,26 @@
 import { createClient } from '@supabase/supabase-js';
 import { SignJWT } from 'jose';
 
-const SUPABASE_URL = process.env.SUPABASE_URL!;
-const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const EXT_JWT_SECRET = process.env.EXT_JWT_SECRET!; // set it equal to your Supabase JWT secret
-const APP_ORIGIN = (process.env.APP_ORIGIN || '').replace(/\/+$/, '');
-const HCAPTCHA_SECRET = process.env.HCAPTCHA_SECRET!;
+function getRuntimeConfig() {
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const EXT_JWT_SECRET = process.env.EXT_JWT_SECRET;
+  const APP_ORIGIN = (process.env.APP_ORIGIN || '').replace(/\/+$/, '');
+  const HCAPTCHA_SECRET = process.env.HCAPTCHA_SECRET;
 
-const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
-  auth: { persistSession: false },
-});
+  if (!SUPABASE_URL || !SERVICE_ROLE || !EXT_JWT_SECRET || !HCAPTCHA_SECRET) {
+    throw new Error('Missing required env vars for start_contact_anon');
+  }
+
+  return { SUPABASE_URL, SERVICE_ROLE, EXT_JWT_SECRET, APP_ORIGIN, HCAPTCHA_SECRET };
+}
+
+function getSupabase() {
+  const { SUPABASE_URL, SERVICE_ROLE } = getRuntimeConfig();
+  return createClient(SUPABASE_URL, SERVICE_ROLE, {
+    auth: { persistSession: false },
+  });
+}
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -33,6 +44,7 @@ function getIp(req) {
 }
 
 async function verifyHCaptcha(token: string, remoteip: string) {
+  const { HCAPTCHA_SECRET } = getRuntimeConfig();
   const rsp = await fetch('https://hcaptcha.com/siteverify', {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -44,6 +56,7 @@ async function verifyHCaptcha(token: string, remoteip: string) {
 }
 
 async function signThreadToken(threadId: string, ttlSeconds = 2 * 60 * 60) {
+  const { EXT_JWT_SECRET } = getRuntimeConfig();
   const key = new TextEncoder().encode(EXT_JWT_SECRET);
   const now = Math.floor(Date.now() / 1000);
   return await new SignJWT({
@@ -65,6 +78,8 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
+    const supabase = getSupabase();
+    const { APP_ORIGIN } = getRuntimeConfig();
     const ip = getIp(req);
     const {
       handle,
