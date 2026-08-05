@@ -522,6 +522,37 @@ export default function PublicProfileView() {
   }, [digitalCvTheme]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const syncWithSiteTheme = () => {
+      const nextTheme = getActiveSiteTheme();
+      setBusinessCardTheme(nextTheme);
+      setDigitalCvTheme(nextTheme);
+    };
+
+    syncWithSiteTheme();
+
+    const observer =
+      typeof MutationObserver !== 'undefined'
+        ? new MutationObserver(() => {
+            syncWithSiteTheme();
+          })
+        : null;
+
+    if (observer) {
+      observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    }
+
+    window.addEventListener('storage', syncWithSiteTheme);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('storage', syncWithSiteTheme);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!downloadMenuOpen) return undefined;
 
     const handlePointerDown = (event) => {
