@@ -94,6 +94,7 @@ function PublicProfileBusinessCardBody({
 }
 
 export default function PublicProfileBusinessCard({
+  title,
   baseBusinessCardHeight,
   businessCardBodyProps,
   businessCardExportRef,
@@ -115,96 +116,99 @@ export default function PublicProfileBusinessCard({
   return (
     <>
       <header className="ppv-header">
-        <div
-          ref={businessCardStageRef}
-          className="ppv-businessCardStage"
-          style={{ height: `${baseBusinessCardHeight * businessCardScale}px` }}
-        >
+        <div className="ppv-businessCardSection">
+          {title && <div className="ppv-seacrewPreviewHeading">{title}</div>}
           <div
-            className="ppv-businessCardScaler"
-            style={{ transform: `scale(${businessCardScale})` }}
+            ref={businessCardStageRef}
+            className="ppv-businessCardStage"
+            style={{ height: `${baseBusinessCardHeight * businessCardScale}px` }}
           >
             <div
-              ref={businessCardRef}
-              className={businessCardRootClassName}
-              role="region"
-              aria-label="Candidate business card preview"
+              className="ppv-businessCardScaler"
+              style={{ transform: `scale(${businessCardScale})` }}
             >
-              <div className="ppv-businessCardControls">
-                <div className="ppv-businessCardThemeToggle" role="group" aria-label="Business card color">
-                  <button
-                    type="button"
-                    className={`ppv-businessCardThemeOption${businessCardTheme === 'dark' ? ' is-active' : ''}`}
-                    onClick={() => setBusinessCardTheme('dark')}
-                    aria-pressed={businessCardTheme === 'dark'}
-                    disabled={!!cardExportBusy}
-                  >
-                    Dark
-                  </button>
-                  <button
-                    type="button"
-                    className={`ppv-businessCardThemeOption${businessCardTheme === 'light' ? ' is-active' : ''}`}
-                    onClick={() => setBusinessCardTheme('light')}
-                    aria-pressed={businessCardTheme === 'light'}
-                    disabled={!!cardExportBusy}
-                  >
-                    Light
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className="ppv-businessCardAction"
-                  onClick={isMobile ? handleShareBusinessCardImage : handleCopyBusinessCardImage}
-                  disabled={!!cardExportBusy || !canShareDigitalCv}
-                  title={canShareDigitalCv ? '' : 'Complete Lite mode to unlock sharing.'}
-                >
-                  <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--desktop">
-                    {cardExportBusy === 'copy' ? 'Copying...' : 'Copy image'}
-                  </span>
-                  <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--mobile" aria-hidden="true">
-                    {isMobile ? <FaShareAlt /> : <FaCopy />}
-                  </span>
-                </button>
-                <div className="ppv-businessCardDownloadWrap">
+              <div
+                ref={businessCardRef}
+                className={businessCardRootClassName}
+                role="region"
+                aria-label="Candidate business card preview"
+              >
+                <div className="ppv-businessCardControls">
+                  <div className="ppv-businessCardThemeToggle" role="group" aria-label="Business card color">
+                    <button
+                      type="button"
+                      className={`ppv-businessCardThemeOption${businessCardTheme === 'dark' ? ' is-active' : ''}`}
+                      onClick={() => setBusinessCardTheme('dark')}
+                      aria-pressed={businessCardTheme === 'dark'}
+                      disabled={!!cardExportBusy}
+                    >
+                      Dark
+                    </button>
+                    <button
+                      type="button"
+                      className={`ppv-businessCardThemeOption${businessCardTheme === 'light' ? ' is-active' : ''}`}
+                      onClick={() => setBusinessCardTheme('light')}
+                      aria-pressed={businessCardTheme === 'light'}
+                      disabled={!!cardExportBusy}
+                    >
+                      Light
+                    </button>
+                  </div>
                   <button
                     type="button"
                     className="ppv-businessCardAction"
-                    onClick={() => setDownloadMenuOpen((open) => !open)}
+                    onClick={isMobile ? handleShareBusinessCardImage : handleCopyBusinessCardImage}
                     disabled={!!cardExportBusy || !canShareDigitalCv}
-                    title={canShareDigitalCv ? '' : 'Complete Lite mode to unlock downloads.'}
-                    aria-expanded={downloadMenuOpen ? 'true' : 'false'}
+                    title={canShareDigitalCv ? '' : 'Complete Lite mode to unlock sharing.'}
                   >
                     <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--desktop">
-                      {cardExportBusy === 'png' || cardExportBusy === 'pdf' ? 'Preparing...' : 'Download card'}
+                      {cardExportBusy === 'copy' ? 'Copying...' : 'Copy image'}
                     </span>
                     <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--mobile" aria-hidden="true">
-                      <FaDownload />
+                      {isMobile ? <FaShareAlt /> : <FaCopy />}
                     </span>
                   </button>
-                  {downloadMenuOpen && (
-                    <div className="ppv-businessCardDownloadMenu">
-                      <button
-                        type="button"
-                        className="ppv-businessCardDownloadOption"
-                        onClick={() => handleDownloadBusinessCard('pdf')}
-                      >
-                        Download PDF
-                      </button>
-                      <button
-                        type="button"
-                        className="ppv-businessCardDownloadOption"
-                        onClick={() => handleDownloadBusinessCard('png')}
-                      >
-                        Download PNG
-                      </button>
-                    </div>
-                  )}
+                  <div className="ppv-businessCardDownloadWrap">
+                    <button
+                      type="button"
+                      className="ppv-businessCardAction"
+                      onClick={() => setDownloadMenuOpen((open) => !open)}
+                      disabled={!!cardExportBusy || !canShareDigitalCv}
+                      title={canShareDigitalCv ? '' : 'Complete Lite mode to unlock downloads.'}
+                      aria-expanded={downloadMenuOpen ? 'true' : 'false'}
+                    >
+                      <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--desktop">
+                        {cardExportBusy === 'png' || cardExportBusy === 'pdf' ? 'Preparing...' : 'Download card'}
+                      </span>
+                      <span className="ppv-businessCardActionLabel ppv-businessCardActionLabel--mobile" aria-hidden="true">
+                        <FaDownload />
+                      </span>
+                    </button>
+                    {downloadMenuOpen && (
+                      <div className="ppv-businessCardDownloadMenu">
+                        <button
+                          type="button"
+                          className="ppv-businessCardDownloadOption"
+                          onClick={() => handleDownloadBusinessCard('pdf')}
+                        >
+                          Download PDF
+                        </button>
+                        <button
+                          type="button"
+                          className="ppv-businessCardDownloadOption"
+                          onClick={() => handleDownloadBusinessCard('png')}
+                        >
+                          Download PNG
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
+                <PublicProfileBusinessCardBody
+                  {...businessCardBodyProps}
+                  businessCardEnabled={canShareDigitalCv}
+                />
               </div>
-              <PublicProfileBusinessCardBody
-                {...businessCardBodyProps}
-                businessCardEnabled={canShareDigitalCv}
-              />
             </div>
           </div>
         </div>

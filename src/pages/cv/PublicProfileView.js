@@ -41,6 +41,7 @@ const BUCKET = 'cv-docs';
 
 const BASE_A4_WIDTH  = 900;
 const BASE_A4_HEIGHT = Math.round(BASE_A4_WIDTH * (297 / 210));
+const PAGE_VERTICAL_MARGIN = 24;
 const BASE_BUSINESS_CARD_WIDTH = 520;
 const BASE_BUSINESS_CARD_HEIGHT = Math.round(BASE_BUSINESS_CARD_WIDTH * 0.647059);
 const INTRO_BASE_HEIGHT = Math.round(BASE_A4_HEIGHT * 0.10);
@@ -186,6 +187,7 @@ export default function PublicProfileView() {
   const hasLockedMetaTopRef = useRef(false);
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
   const [cardExportBusy, setCardExportBusy] = useState('');
+  const [previewGuideOpen, setPreviewGuideOpen] = useState(false);
   const [businessCardTheme, setBusinessCardTheme] = useState(() => getActiveSiteTheme());
   const [digitalCvTheme, setDigitalCvTheme] = useState(() => getActiveSiteTheme());
   const [seaCrewVisibilityBusy, setSeaCrewVisibilityBusy] = useState(false);
@@ -1486,22 +1488,99 @@ if (!allowPublicView && !isPreview) {
     color: 'var(--ppv-cv-meta-value)',
   };
 
+  const previewGuideContent = canShareDigitalCv ? (
+    <div className="ppv-previewGuideContent">
+      <div className="ppv-previewGuideHero">
+        <p className="ppv-previewGuideKicker">Preview guide</p>
+        <h3 className="ppv-previewGuideHeroTitle">How SeaCrew card, Business Card and Digital CV work</h3>
+        <p className="ppv-previewGuideIntro">
+          Each profile format has a different sharing purpose. This preview helps you understand what recruiters can see and what stays under your control.
+        </p>
+      </div>
+
+      <div className="ppv-previewGuidePanels">
+        <section className="ppv-previewGuidePanel ppv-previewGuidePanel--wide">
+          <h4>Visibility and sharing</h4>
+          <ul>
+            <li><strong>SeaCrew card:</strong> can be visible or hidden depending on whether you enable direct view from the card toggle above.</li>
+            <li><strong>Business Card:</strong> is for download, print and direct sharing. Recruiters do not see it unless you choose to share it.</li>
+            <li><strong>Digital CV:</strong> becomes visible when you share its link or when you apply through Direct Application in SeaJobs.</li>
+          </ul>
+        </section>
+
+        <section className="ppv-previewGuidePanel">
+          <h4>Link control</h4>
+          <p>
+            You can revoke the Digital CV link from your profile. The old link stops working and a new one is created automatically.
+          </p>
+        </section>
+
+        <section className="ppv-previewGuidePanel">
+          <h4>Important</h4>
+          <p>
+            The Business Card always opens your current Digital CV, so it keeps working with the new link even after revocation.
+          </p>
+        </section>
+      </div>
+    </div>
+  ) : (
+    <div className="ppv-previewGuideContent">
+      <div className="ppv-previewGuideHero">
+        <p className="ppv-previewGuideKicker">Preview guide</p>
+        <h3 className="ppv-previewGuideHeroTitle">How SeaCrew card, Business Card and Digital CV work</h3>
+        <p className="ppv-previewGuideIntro">
+          Your preview is already available, but public sharing features unlock only after Lite mode is fully completed.
+        </p>
+      </div>
+
+      <div className="ppv-previewGuidePanels">
+        <section className="ppv-previewGuidePanel ppv-previewGuidePanel--wide">
+          <h4>Unlock sharing</h4>
+          <p>
+            Complete Lite mode to 100% to unlock your public Digital CV link, QR, and Business Card sharing or download actions.
+          </p>
+        </section>
+
+        <section className="ppv-previewGuidePanel">
+          <h4>Preview access</h4>
+          <p>
+            The preview remains available while you finish your profile.
+          </p>
+        </section>
+      </div>
+    </div>
+  );
+
   return (
     <div className={`ppv-wrap ${isPreview ? 'ppv--preview' : 'ppv--public'}`} style={{ paddingTop: isPreview ? 50 : 12 }}>
-      {isPreview && (
-        <div className="ppv-previewRibbon">
-          {canShareDigitalCv
-            ? 'This business card is for personal use only and will not be visible to recruiters. Your Digital CV below remains visible to recruiters. Use the buttons above to download the card for print or copy it for sharing across social media, email, messaging apps, and other platforms.'
-            : 'Complete Lite mode to 100% to unlock your public Digital CV link, QR, and business card sharing or download actions. The preview remains available while you finish your profile.'}
-        </div>
-      )}
-
       {/* Header (solo en modo Preview) */}
       {isPreview && (
         <>
+          {isPreview && isMobile && (
+            <div className="ppv-previewBack">
+              <button
+                type="button"
+                className="ppv-btn ppv-back-btn"
+                onClick={() => navigate('/profile?tab=cv')}
+              >
+                Back to Candidate Profile
+              </button>
+            </div>
+          )}
+          {isPreview && isMobile && (
+            <div className="ppv-previewGuideTrigger">
+              <button
+                type="button"
+                className="ppv-btn ppv-previewGuideBtn"
+                onClick={() => setPreviewGuideOpen(true)}
+              >
+                How it works
+              </button>
+            </div>
+          )}
           <section className="ppv-seacrewPreviewSection" aria-label="SeaCrew card preview">
             <div className="ppv-seacrewPreviewInner">
-              <div className="ppv-seacrewPreviewHeading">SeaCrew card preview</div>
+              <div className="ppv-seacrewPreviewHeading">Seacrew Card</div>
               <div className={`ppv-seacrewPreviewCardWrap ppv-seacrewPreviewCardWrap--${businessCardTheme}`}>
                 <button
                   type="button"
@@ -1525,6 +1604,7 @@ if (!allowPublicView && !isPreview) {
             </div>
           </section>
           <PublicProfileBusinessCard
+            title="Business Card"
             baseBusinessCardHeight={BASE_BUSINESS_CARD_HEIGHT}
             businessCardBodyProps={businessCardBodyProps}
             businessCardExportRef={businessCardExportRef}
@@ -1546,18 +1626,9 @@ if (!allowPublicView && !isPreview) {
         </>
       )}
 
+      {isPreview && <div className="ppv-seacrewPreviewHeading ppv-digitalCvHeading">Digital CV</div>}
+
       {/* Sticky action bar */}
-      {isPreview && isMobile && (
-        <div className="ppv-previewBack">
-          <button
-            type="button"
-            className="ppv-btn ppv-back-btn"
-            onClick={() => navigate('/profile?tab=cv')}
-          >
-            Back to Candidate Profile
-          </button>
-        </div>
-      )}
       <div className="ppv-stickyBar" role="region" aria-label="Actions">
         <div className="ppv-stickyActions">
           <button className="ppv-btn" onClick={() => scrollTo('ppv-summary')}>Summary</button>
@@ -1583,7 +1654,7 @@ if (!allowPublicView && !isPreview) {
           {/* Página 1 */}
           <div
             className="ppv-pageSizer"
-            style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale)}px` }}
+            style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale) + PAGE_VERTICAL_MARGIN}px` }}
           >
             <div
               className="ppv-a4Page"
@@ -1774,7 +1845,7 @@ if (!allowPublicView && !isPreview) {
           {/* Página 2 */}
           <div
             className="ppv-pageSizer"
-            style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale)}px` }}
+            style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale) + PAGE_VERTICAL_MARGIN}px` }}
           >
             <div
               className="ppv-a4Page"
@@ -1816,7 +1887,7 @@ if (!allowPublicView && !isPreview) {
           {/* Página 3: References + Media + Education */}
           <div
             className="ppv-pageSizer"
-            style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale)}px` }}
+            style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale) + PAGE_VERTICAL_MARGIN}px` }}
           >
             <div
               className="ppv-a4Page"
@@ -1870,7 +1941,7 @@ if (!allowPublicView && !isPreview) {
           {coverLetterText && (
             <div
               className="ppv-pageSizer"
-              style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale)}px` }}
+              style={{ height: `${Math.round(BASE_A4_HEIGHT * pageScale) + PAGE_VERTICAL_MARGIN}px` }}
             >
               <div
                 className="ppv-a4Page"
@@ -1901,6 +1972,39 @@ if (!allowPublicView && !isPreview) {
           )}
         </div>
       </main>
+
+      {isPreview && !isMobile && (
+        <div className="ppv-previewRibbon">
+          {previewGuideContent}
+        </div>
+      )}
+
+      {isPreview && isMobile && previewGuideOpen && (
+        <div
+          className="modal-overlay feature-promo-modal-overlay ppv-previewGuideModal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="How it works"
+          onClick={() => setPreviewGuideOpen(false)}
+        >
+          <div
+            className="modal-content-wrapper feature-promo-modal ppv-previewGuideModalCard"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="modal-close-button feature-promo-modal-close ppv-previewGuideClose"
+              onClick={() => setPreviewGuideOpen(false)}
+              aria-label="Close guide"
+            >
+              &times;
+            </button>
+            <div className="ppv-previewGuideModalBody">
+              {previewGuideContent}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

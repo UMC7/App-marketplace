@@ -374,7 +374,7 @@ const autoFillFromText = async () => {
 
       const normalizeTitle = (val) => {
         if (!val) return "";
-        const v = String(val).trim().toLowerCase();
+        const v = String(normalizeLegacyRank(val)).trim().toLowerCase();
         const hit = titles.find(t => t.toLowerCase() === v);
         return hit || "";
       };
@@ -581,13 +581,21 @@ const INTERIOR_OPTIONS_DUPLICATED_BY_GALLEY = new Set([
   'Food Hygiene / Food Safety Level 3',
 ]);
 
+const LEGACY_RANK_ALIASES = {
+  'Stew/Masseur': 'Stew/Massage Therapist',
+  Masseur: 'Massage Therapist',
+};
+
+const normalizeLegacyRank = (rank) => LEGACY_RANK_ALIASES[String(rank || '').trim()] || rank;
+
 const getRequiredDocumentGroupsForRank = (rank) => {
   if (!rank) return [];
-  const specialRequiredDocumentGroups = RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS[rank];
+  const normalizedRank = normalizeLegacyRank(rank);
+  const specialRequiredDocumentGroups = RANK_SPECIFIC_REQUIRED_DOCUMENT_GROUPS[normalizedRank];
   if (specialRequiredDocumentGroups) return specialRequiredDocumentGroups;
-  if (GALLEY_DEPARTMENT_RANKS.includes(rank)) return GALLEY_REQUIRED_DOCUMENT_GROUPS;
-  if (INTERIOR_DEPARTMENT_RANKS.includes(rank)) return INTERIOR_REQUIRED_DOCUMENT_GROUPS;
-  if (OTHERS_DEPARTMENT_RANKS.includes(rank)) return OTHERS_REQUIRED_DOCUMENT_GROUPS;
+  if (GALLEY_DEPARTMENT_RANKS.includes(normalizedRank)) return GALLEY_REQUIRED_DOCUMENT_GROUPS;
+  if (INTERIOR_DEPARTMENT_RANKS.includes(normalizedRank)) return INTERIOR_REQUIRED_DOCUMENT_GROUPS;
+  if (OTHERS_DEPARTMENT_RANKS.includes(normalizedRank)) return OTHERS_REQUIRED_DOCUMENT_GROUPS;
   return REQUIRED_DOCUMENT_GROUPS;
 };
 

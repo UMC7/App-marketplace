@@ -542,7 +542,7 @@ export default function PersonalDetailsSection({ profile, onSaved, mode = 'profe
               <label className="cp-label" htmlFor="pd-nat-select">
                 Nationalities {showRequiredMark ? <span aria-hidden="true">*</span> : null}
               </label>
-              <div className="cp-row-add">
+              <div className="cp-row-add" style={{ marginBottom: 6 }}>
                 <select
                   id="pd-nat-select"
                   className="cp-input"

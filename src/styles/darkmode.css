@@ -243,10 +243,20 @@ body.dark-mode .dropdown-menu {
   }
 }
 
-body.dark-mode .post-dropdown button,
 body.dark-mode .dropdown-menu button {
   background-color: transparent !important;
   color: var(--text-color) !important;
+}
+
+body.dark-mode .post-dropdown .navLink {
+  background-color: #6f6f6f !important;
+  color: var(--text-color) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+body.dark-mode .post-dropdown .navLink:hover {
+  background-color: #858585 !important;
+  color: var(--primary-color) !important;
 }
 
 /* =========================
