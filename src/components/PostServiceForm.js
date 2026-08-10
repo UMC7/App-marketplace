@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react';
 import supabase from '../supabase';
 // Unifica subida de portada + galería (igual que SeaMarket)
 import UnifiedImageUploader from './UnifiedImageUploader';
+import '../styles/float.css';
 
 const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   const [uploading, setUploading] = useState(false);
+  const [showMissing, setShowMissing] = useState(false);
 
   const [companyName, setCompanyName] = useState(initialValues.company_name || '');
   const [description, setDescription] = useState(initialValues.description || '');
@@ -74,11 +76,35 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
     fetchCategories();
   }, []);
 
+  const highlightClass = (missing) => (missing ? 'missing-required' : '');
+  const formReady =
+    !!companyName.trim() &&
+    !!description.trim() &&
+    !!categoryId &&
+    !!city.trim() &&
+    !!country &&
+    (!!mainPhoto || photos.length > 0);
+  const requiredFieldStyle = (missing) =>
+    missing
+      ? {
+          border: '1px solid #e05252',
+          boxShadow: '0 0 0 2px rgba(224, 82, 82, 0.18)',
+        }
+      : undefined;
+  const companyNameMissing = !companyName.trim();
+  const descriptionMissing = !description.trim();
+  const categoryMissing = !categoryId;
+  const cityMissing = !city.trim();
+  const countryMissing = !country;
+  const photosMissing = !mainPhoto && photos.length === 0;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setShowMissing(false);
 
     // Validación básica (no obligamos portada, igual que SeaMarket)
-    if (!categoryId || !city || !country) {
+    if (!formReady) {
+      setShowMissing(true);
       alert('Please fill in all required fields.');
       return;
     }
@@ -150,26 +176,58 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
       <div className="login-form modal-flat-form-card">
         <h2>{mode === 'edit' ? 'Edit Service' : 'Add Service'}</h2>
 
-        <form onSubmit={handleSubmit}>
-          <label>Company Name:</label>
-          <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
+        <form onSubmit={handleSubmit} noValidate>
+          <label>Company Name: <span style={{ color: 'red' }}>*</span></label>
+          <input
+            type="text"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            className={highlightClass(companyNameMissing)}
+            style={requiredFieldStyle(companyNameMissing)}
+            required
+          />
 
-          <label>Description:</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
+          <label>Description: <span style={{ color: 'red' }}>*</span></label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className={highlightClass(descriptionMissing)}
+            style={requiredFieldStyle(descriptionMissing)}
+            required
+          />
 
-          <label>Category:</label>
-          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+          <label>Category: <span style={{ color: 'red' }}>*</span></label>
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className={highlightClass(categoryMissing)}
+            style={requiredFieldStyle(categoryMissing)}
+            required
+          >
             <option value="">Select a category</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
 
-          <label>City:</label>
-          <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
+          <label>City: <span style={{ color: 'red' }}>*</span></label>
+          <input
+            type="text"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className={highlightClass(cityMissing)}
+            style={requiredFieldStyle(cityMissing)}
+            required
+          />
 
-          <label>Country:</label>
-          <select value={country} onChange={(e) => setCountry(e.target.value)} required>
+          <label>Country: <span style={{ color: 'red' }}>*</span></label>
+          <select
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className={highlightClass(countryMissing)}
+            style={requiredFieldStyle(countryMissing)}
+            required
+          >
             <option value="">Select a country</option>
             {countries.map((pais, idx) => (
               <option key={idx} value={pais}>{pais}</option>
@@ -186,14 +244,24 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
           <input type="text" value={altPhone} onChange={(e) => setAltPhone(e.target.value)} />
 
           {/* Uploader unificado (★ = portada) */}
-          <label>Photos (cover + gallery):</label>
-          <UnifiedImageUploader
-            // si tu componente soporta bucket, usamos el de servicios
-            bucket="services"
-            value={{ cover: mainPhoto, gallery: photos }}
-            onChange={({ cover, gallery }) => { setMainPhoto(cover); setPhotos(gallery); }}
-            onBusyChange={setUploading}
-          />
+          <label>Photos (cover + gallery): <span style={{ color: 'red' }}>*</span></label>
+          <div
+            className={highlightClass(photosMissing)}
+            style={{
+              ...(requiredFieldStyle(photosMissing) || {}),
+              borderRadius: 8,
+              padding: 8,
+              marginBottom: 12,
+            }}
+          >
+            <UnifiedImageUploader
+              // si tu componente soporta bucket, usamos el de servicios
+              bucket="services"
+              value={{ cover: mainPhoto, gallery: photos }}
+              onChange={({ cover, gallery }) => { setMainPhoto(cover); setPhotos(gallery); }}
+              onBusyChange={setUploading}
+            />
+          </div>
           <small style={{ display: 'block', margin: '6px 0 12px', color: '#666' }}>
             The image marked with ★ will be the cover.
           </small>
@@ -213,9 +281,29 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
           <label>WhatsApp:</label>
           <input type="text" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
 
-          <button className="landing-button" type="submit" disabled={uploading}>
-            {uploading ? 'Uploading photos...' : mode === 'edit' ? 'Update Service' : 'Save Service'}
-          </button>
+          <p style={{ fontStyle: 'italic', marginTop: '1.5em' }}><span style={{ color: 'red' }}>*</span> Required</p>
+          <div style={{ position: 'relative' }}>
+            <button className="landing-button" type="submit" disabled={uploading || !formReady}>
+              {uploading ? 'Uploading photos...' : mode === 'edit' ? 'Update Service' : 'Save Service'}
+            </button>
+            {!uploading && !formReady && (
+              <div
+                onClick={() => setShowMissing(true)}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  cursor: 'not-allowed',
+                  background: 'transparent',
+                }}
+                aria-hidden="true"
+              />
+            )}
+          </div>
+          {showMissing && !formReady && (
+            <p style={{ marginTop: 8, color: '#b00020' }}>
+              Some required fields are missing. Please complete them to save the service.
+            </p>
+          )}
         </form>
       </div>
     </div>

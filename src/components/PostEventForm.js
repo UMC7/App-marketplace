@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
+import '../styles/float.css';
 
 const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   const [uploading, setUploading] = useState(false);
+  const [showMissing, setShowMissing] = useState(false);
   const [eventName, setEventName] = useState(initialValues.event_name || '');
   const [description, setDescription] = useState(initialValues.description || '');
   const [city, setCity] = useState(initialValues.city || '');
@@ -55,6 +57,28 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
     fetchUser();
   }, []);
 
+  const highlightClass = (missing) => (missing ? 'missing-required' : '');
+  const eventNameMissing = !eventName.trim();
+  const cityMissing = !city.trim();
+  const countryMissing = !country;
+  const mainPhotoMissing = !mainPhoto;
+  const startDateMissing = !startDate;
+  const endDateMissing = !isSingleDay && !endDate;
+  const formReady =
+    !eventNameMissing &&
+    !cityMissing &&
+    !countryMissing &&
+    !mainPhotoMissing &&
+    !startDateMissing &&
+    !endDateMissing;
+  const requiredFieldStyle = (missing) =>
+    missing
+      ? {
+          border: '1px solid #e05252',
+          boxShadow: '0 0 0 2px rgba(224, 82, 82, 0.18)',
+        }
+      : undefined;
+
   const handleMainPhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -85,7 +109,9 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!eventName || !mainPhoto || !city || !country) {
+    setShowMissing(false);
+    if (!formReady) {
+      setShowMissing(true);
       toast.error('Please fill in all required fields.');
       return;
     }
@@ -178,18 +204,41 @@ const checkboxInputStyle = {
     <div className="container modal-flat-form-shell">
       <div className="login-form modal-flat-form-card">
         <h2>{mode === 'edit' ? 'Edit Event' : 'New Event'}</h2>
-        <form onSubmit={handleSubmit}>
-          <label>Event Name:</label>
-          <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} required />
+        <form onSubmit={handleSubmit} noValidate>
+          <label>Event Name: <span style={{ color: 'red' }}>*</span></label>
+          <input
+            type="text"
+            value={eventName}
+            onChange={(e) => setEventName(e.target.value)}
+            className={highlightClass(eventNameMissing)}
+            style={requiredFieldStyle(eventNameMissing)}
+            required
+          />
 
           <label>Description:</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
 
-          <label>City:</label>
-          <input type="text" value={city} onChange={(e) => setCity(e.target.value)} required />
+          <label>City: <span style={{ color: 'red' }}>*</span></label>
+          <input
+            type="text"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className={highlightClass(cityMissing)}
+            style={requiredFieldStyle(cityMissing)}
+            required
+          />
 
-          <label>Country:</label>
-          <select value={country} onChange={(e) => setCountry(e.target.value)} required>
+          <label>Country: <span style={{ color: 'red' }}>*</span></label>
+          <select
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className={highlightClass(countryMissing)}
+            style={requiredFieldStyle(countryMissing)}
+            required
+          >
             <option value="">Select a Country</option>
             {countries.map((pais, idx) => (
               <option key={idx} value={pais}>{pais}</option>
@@ -205,31 +254,42 @@ const checkboxInputStyle = {
           <label>Alternative Phone:</label>
           <input type="text" value={altPhone} onChange={(e) => setAltPhone(e.target.value)} />
 
-          <label>Main Photo:</label>
-          <input type="file" accept="image/*" onChange={handleMainPhotoUpload} />
-          {mainPhoto && (
-            <div style={{ marginTop: '12px', textAlign: 'center' }}>
-              <img
-                src={mainPhoto}
-                alt="Main"
-                style={{
-                  width: '100%',
-                  maxWidth: '300px',
-                  borderRadius: '8px',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                }}
-              />
-            </div>
-          )}
+          <label>Main Photo: <span style={{ color: 'red' }}>*</span></label>
+          <div
+            className={highlightClass(mainPhotoMissing)}
+            style={{
+              ...(requiredFieldStyle(mainPhotoMissing) || {}),
+              borderRadius: 8,
+              padding: 8,
+              marginBottom: 12,
+            }}
+          >
+            <input type="file" accept="image/*" onChange={handleMainPhotoUpload} />
+            {mainPhoto && (
+              <div style={{ marginTop: '12px', textAlign: 'center' }}>
+                <img
+                  src={mainPhoto}
+                  alt="Main"
+                  style={{
+                    width: '100%',
+                    maxWidth: '300px',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                  }}
+                />
+              </div>
+            )}
+          </div>
 
-          <label>Dates:</label>
+          <label>Dates: <span style={{ color: 'red' }}>*</span></label>
           <div className="form-inline-group">
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               required
-              style={{ flex: 1 }}
+              className={highlightClass(startDateMissing)}
+              style={{ ...requiredFieldStyle(startDateMissing), flex: 1 }}
             />
             <input
               type="date"
@@ -237,7 +297,8 @@ const checkboxInputStyle = {
               onChange={(e) => setEndDate(e.target.value)}
               disabled={isSingleDay}
               required={!isSingleDay}
-              style={{ flex: 1, opacity: isSingleDay ? 0.6 : 1 }}
+              className={highlightClass(endDateMissing)}
+              style={{ ...requiredFieldStyle(endDateMissing), flex: 1, opacity: isSingleDay ? 0.6 : 1 }}
               placeholder="End Date"
             />
           </div>
@@ -300,9 +361,29 @@ const checkboxInputStyle = {
           <label>WhatsApp:</label>
           <input type="text" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
 
-          <button type="submit" disabled={uploading} className="landing-button">
-            {uploading ? 'Uploading image...' : mode === 'edit' ? 'Update Event' : 'Save Event'}
-          </button>
+          <p style={{ fontStyle: 'italic', marginTop: '1.5em' }}><span style={{ color: 'red' }}>*</span> Required</p>
+          <div style={{ position: 'relative' }}>
+            <button type="submit" disabled={uploading || !formReady} className="landing-button">
+              {uploading ? 'Uploading image...' : mode === 'edit' ? 'Update Event' : 'Save Event'}
+            </button>
+            {!uploading && !formReady && (
+              <div
+                onClick={() => setShowMissing(true)}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  cursor: 'not-allowed',
+                  background: 'transparent',
+                }}
+                aria-hidden="true"
+              />
+            )}
+          </div>
+          {showMissing && !formReady && (
+            <p style={{ marginTop: 8, color: '#b00020' }}>
+              Some required fields are missing. Please complete them to save the event.
+            </p>
+          )}
         </form>
       </div>
     </div>

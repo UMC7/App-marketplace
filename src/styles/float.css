@@ -25,14 +25,20 @@
   justify-content: center;
 }
 
-.missing-required {
+.missing-required,
+.login-form input.missing-required,
+.login-form select.missing-required,
+.login-form textarea.missing-required {
   border: 1px solid #e05252 !important;
   box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
 }
 body.dark-mode .missing-required,
 body.dark-mode input.missing-required,
 body.dark-mode select.missing-required,
-body.dark-mode textarea.missing-required {
+body.dark-mode textarea.missing-required,
+body.dark-mode .login-form input.missing-required,
+body.dark-mode .login-form select.missing-required,
+body.dark-mode .login-form textarea.missing-required {
   border-color: #e05252 !important;
   box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.18) !important;
 }
