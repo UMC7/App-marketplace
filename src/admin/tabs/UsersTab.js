@@ -11,6 +11,8 @@ import { buildCandidateProfileProgressSections } from '../../components/cv/progr
 
 const DERIVED_COLUMNS = ['lite_progress', 'professional_progress', 'cv_public_status', 'cv_link'];
 const NON_EDITABLE_COLUMNS = new Set(['id', 'created_at', 'is_blocked', ...DERIVED_COLUMNS]);
+const ROWS_PER_PAGE = 50;
+const BULK_PREPARE_CONCURRENCY = 10;
 
 function buildColumnOrder(sampleUser) {
   if (!sampleUser) return [];
@@ -71,6 +73,83 @@ function mapDbVisibilityToUi(v) {
   return 'unlisted';
 }
 
+function unavailableCvData() {
+  return {
+    lite_progress: null,
+    professional_progress: null,
+    cv_public_status: 'Unavailable',
+    cv_link: '',
+  };
+}
+
+async function loadAdminCvData(userId) {
+  try {
+    const { data: profile, error: profileError } = await supabase.rpc('rpc_get_profile_for_admin', {
+      target_user_id: userId,
+    });
+    if (profileError || !profile?.id) return unavailableCvData();
+
+    const [
+      { data: docsRows, error: docsError },
+      educationResult,
+      { count: expCount, error: expError },
+      { count: directRefsCount, error: directRefsError },
+      refsResult,
+    ] = await Promise.all([
+      supabase.rpc('rpc_public_docs_with_exp', { profile_uuid: profile.id }),
+      profile.handle
+        ? supabase.rpc('rpc_public_education_by_handle', { handle_in: profile.handle })
+        : supabase.from('cv_education').select('id', { count: 'exact', head: true }).eq('user_id', profile.user_id),
+      supabase.from('profile_experiences').select('id', { count: 'exact', head: true }).eq('profile_id', profile.id),
+      supabase.from('public_references').select('id', { count: 'exact', head: true }).eq('profile_id', profile.id),
+      profile.handle
+        ? supabase.rpc('rpc_public_references_by_handle', { handle_in: profile.handle })
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    const docs = docsError
+      ? []
+      : (docsRows || []).map((row) => ({
+          id: String(row.id || ''),
+          title: row.title || 'Untitled document',
+          issuedOn: row.issued_on || undefined,
+          expiresOn: row.expires_on || undefined,
+          visibility: mapDbVisibilityToUi(row.visibility),
+        }));
+    const educationCount = Array.isArray(educationResult?.data)
+      ? educationResult.data.length
+      : (educationResult?.count || 0);
+    const rpcRefsCount = refsResult?.error ? null : ((refsResult?.data || []).length);
+    const refsCount = Number.isFinite(rpcRefsCount)
+      ? rpcRefsCount
+      : (directRefsError ? 0 : (directRefsCount || 0));
+    const { liteSections, professionalSections } = buildCandidateProfileProgressSections({
+      profile,
+      docs,
+      educationCount: educationResult?.error ? 0 : (educationCount || 0),
+      expCount: expError ? 0 : (expCount || 0),
+      refsCount,
+      gallery: Array.isArray(profile?.gallery) ? profile.gallery : [],
+    });
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const handle = String(profile?.handle || '').trim();
+    const liteProgress = calculateProfileProgressPercent(liteSections);
+    const professionalProgress = calculateProfileProgressPercent(professionalSections);
+    const hasPublicCv = profile?.share_ready === true && Boolean(handle) && liteProgress === 100;
+
+    return {
+      lite_progress: liteProgress,
+      professional_progress: professionalProgress,
+      cv_public_status: hasPublicCv ? 'Ready' : 'Incomplete',
+      cv_link: hasPublicCv ? `${origin}/cv/${handle}` : '',
+    };
+  } catch (error) {
+    console.warn('UsersTab CV data load failed for user:', userId, error);
+    return unavailableCvData();
+  }
+}
+
 function UsersTab({ currentUser }) {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
@@ -88,7 +167,12 @@ function UsersTab({ currentUser }) {
   const [previewImageUrl, setPreviewImageUrl] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const rowsPerPage = 50;
+  const [bulkFromPage, setBulkFromPage] = useState(1);
+  const [bulkToPage, setBulkToPage] = useState(1);
+  const [bulkCvLinks, setBulkCvLinks] = useState([]);
+  const [bulkPreparing, setBulkPreparing] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState('');
+  const rowsPerPage = ROWS_PER_PAGE;
 
   async function resolveCvLink(user) {
     if (!user?.id) return '';
@@ -294,80 +378,8 @@ function UsersTab({ currentUser }) {
     (async () => {
       const loaded = await Promise.all(
         missingUsers.map(async (u) => {
-          try {
-            const { data: profile, error: profileError } = await supabase.rpc('rpc_get_profile_for_admin', {
-              target_user_id: u.id,
-            });
-            if (profileError || !profile?.id) {
-              return [String(u.id), {
-                lite_progress: null,
-                professional_progress: null,
-                cv_public_status: 'Unavailable',
-                cv_link: '',
-              }];
-            }
-
-            const [{ data: docsRows, error: docsError }, educationResult, { count: expCount, error: expError }, { count: directRefsCount, error: directRefsError }, refsResult] = await Promise.all([
-              supabase.rpc('rpc_public_docs_with_exp', { profile_uuid: profile.id }),
-              profile.handle
-                ? supabase.rpc('rpc_public_education_by_handle', { handle_in: profile.handle })
-                : supabase.from('cv_education').select('id', { count: 'exact', head: true }).eq('user_id', profile.user_id),
-              supabase.from('profile_experiences').select('id', { count: 'exact', head: true }).eq('profile_id', profile.id),
-              supabase.from('public_references').select('id', { count: 'exact', head: true }).eq('profile_id', profile.id),
-              profile.handle
-                ? supabase.rpc('rpc_public_references_by_handle', { handle_in: profile.handle })
-                : Promise.resolve({ data: [], error: null }),
-            ]);
-
-            const docs = docsError
-              ? []
-              : (docsRows || []).map((r) => ({
-                  id: String(r.id || ''),
-                  title: r.title || 'Untitled document',
-                  issuedOn: r.issued_on || undefined,
-                  expiresOn: r.expires_on || undefined,
-                  visibility: mapDbVisibilityToUi(r.visibility),
-                }));
-
-            const educationCount = Array.isArray(educationResult?.data)
-              ? educationResult.data.length
-              : (educationResult?.count || 0);
-            const eduError = educationResult?.error || null;
-            const rpcRefsCount = refsResult?.error ? null : ((refsResult?.data || []).length);
-            const refsCount = Number.isFinite(rpcRefsCount)
-              ? rpcRefsCount
-              : (directRefsError ? 0 : (directRefsCount || 0));
-            const { liteSections, professionalSections } = buildCandidateProfileProgressSections({
-              profile,
-              docs,
-              educationCount: eduError ? 0 : (educationCount || 0),
-              expCount: expError ? 0 : (expCount || 0),
-              refsCount,
-              gallery: Array.isArray(profile?.gallery) ? profile.gallery : [],
-            });
-
-            const origin = typeof window !== 'undefined' ? window.location.origin : '';
-            const handle = String(profile?.handle || '').trim();
-            const shareReady = profile?.share_ready === true;
-            const liteProgress = calculateProfileProgressPercent(liteSections);
-            const professionalProgress = calculateProfileProgressPercent(professionalSections);
-            const hasPublicCv = shareReady && Boolean(handle) && liteProgress === 100;
-
-            return [String(u.id), {
-              lite_progress: liteProgress,
-              professional_progress: professionalProgress,
-              cv_public_status: hasPublicCv ? 'Ready' : 'Incomplete',
-              cv_link: hasPublicCv ? `${origin}/cv/${handle}` : '',
-            }];
-          } catch (e) {
-            console.warn('UsersTab progress load failed for user:', u.id, e);
-            return [String(u.id), {
-              lite_progress: null,
-              professional_progress: null,
-              cv_public_status: 'Unavailable',
-              cv_link: '',
-            }];
-          }
+          const cvData = await loadAdminCvData(u.id);
+          return [String(u.id), cvData];
         })
       );
 
@@ -382,6 +394,102 @@ function UsersTab({ currentUser }) {
       cancelled = true;
     };
   }, [pagedUsers, progressByUserId]);
+
+  const resetBulkResult = () => {
+    setBulkCvLinks([]);
+    setBulkMessage('');
+  };
+
+  async function handlePrepareBulkCvs() {
+    const fromPage = Number(bulkFromPage);
+    const toPage = Number(bulkToPage);
+
+    if (!Number.isInteger(fromPage) || !Number.isInteger(toPage)) {
+      setBulkMessage('Enter whole page numbers.');
+      return;
+    }
+    if (fromPage < 1 || toPage < fromPage || toPage > totalPages) {
+      setBulkMessage(`Choose a valid range between page 1 and page ${totalPages}.`);
+      return;
+    }
+    if (String(search || '').trim()) {
+      setBulkMessage('Clear the user search before preparing a page range.');
+      return;
+    }
+
+    setBulkPreparing(true);
+    setBulkCvLinks([]);
+    setBulkMessage('Loading users in the selected pages...');
+
+    try {
+      const fromRow = (fromPage - 1) * rowsPerPage;
+      const toRow = (toPage * rowsPerPage) - 1;
+      const { data: rangeUsers, error } = await supabase
+        .from('users')
+        .select('id')
+        .order('created_at', { ascending: false })
+        .range(fromRow, toRow);
+      if (error) throw error;
+
+      const candidates = rangeUsers || [];
+      const links = [];
+      for (let offset = 0; offset < candidates.length; offset += BULK_PREPARE_CONCURRENCY) {
+        const chunk = candidates.slice(offset, offset + BULK_PREPARE_CONCURRENCY);
+        const chunkResults = await Promise.all(chunk.map((user) => loadAdminCvData(user.id)));
+        chunkResults.forEach((cvData) => {
+          if (cvData.cv_link) links.push(cvData.cv_link);
+        });
+        setBulkMessage(`Checking Digital CVs... ${Math.min(offset + chunk.length, candidates.length)} of ${candidates.length}`);
+      }
+
+      const uniqueLinks = [...new Set(links)];
+      setBulkCvLinks(uniqueLinks);
+      setBulkMessage(
+        uniqueLinks.length
+          ? `${uniqueLinks.length} Digital CV${uniqueLinks.length === 1 ? '' : 's'} ready to open from pages ${fromPage} to ${toPage}.`
+          : `No available Digital CVs found from pages ${fromPage} to ${toPage}.`
+      );
+    } catch (error) {
+      console.error('Bulk Digital CV preparation failed:', error);
+      setBulkMessage(`Could not prepare the Digital CVs: ${error.message || 'Unknown error'}`);
+    } finally {
+      setBulkPreparing(false);
+    }
+  }
+
+  function handleOpenBulkCvs() {
+    if (!bulkCvLinks.length) return;
+    const totalToOpen = bulkCvLinks.length;
+    let openedCount = 0;
+
+    for (const link of bulkCvLinks) {
+      const openedTab = window.open('', '_blank');
+      if (!openedTab) break;
+
+      try {
+        openedTab.opener = null;
+        openedTab.location.replace(link);
+        openedCount += 1;
+      } catch {
+        openedTab.close();
+        break;
+      }
+    }
+
+    const remainingLinks = bulkCvLinks.slice(openedCount);
+    setBulkCvLinks(remainingLinks);
+
+    if (remainingLinks.length) {
+      setBulkMessage(
+        `Opened ${openedCount} of ${totalToOpen}. ${remainingLinks.length} remain. Allow pop-ups for this site from the browser address bar, then click the Open button again.`
+      );
+      return;
+    }
+
+    setBulkMessage(
+      `Opened all ${openedCount} Digital CV${openedCount === 1 ? '' : 's'}.`
+    );
+  }
 
   function getPaginationNumbers() {
     const numbers = [];
@@ -476,6 +584,77 @@ function UsersTab({ currentUser }) {
           style={{ width: 240, padding: 6 }}
         />
       </div>
+      <section
+        aria-label="Bulk Digital CV opener"
+        style={{
+          marginBottom: 16,
+          padding: 14,
+          border: '1px solid #6fc4c0',
+          borderRadius: 8,
+          maxWidth: 760,
+        }}
+      >
+        <div style={{ fontWeight: 700, marginBottom: 10 }}>Open Digital CVs by page range</div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'end', flexWrap: 'wrap' }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            From page
+            <input
+              type="number"
+              min="1"
+              max={Math.max(1, totalPages)}
+              step="1"
+              value={bulkFromPage}
+              onChange={(e) => {
+                setBulkFromPage(e.target.value);
+                resetBulkResult();
+              }}
+              style={{ width: 100, padding: 6 }}
+            />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            To page
+            <input
+              type="number"
+              min="1"
+              max={Math.max(1, totalPages)}
+              step="1"
+              value={bulkToPage}
+              onChange={(e) => {
+                setBulkToPage(e.target.value);
+                resetBulkResult();
+              }}
+              style={{ width: 100, padding: 6 }}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={handlePrepareBulkCvs}
+            disabled={bulkPreparing || totalPages < 1 || Boolean(String(search || '').trim())}
+            style={{ padding: '7px 12px', cursor: bulkPreparing ? 'wait' : 'pointer' }}
+          >
+            {bulkPreparing ? 'Preparing...' : 'Prepare CVs'}
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenBulkCvs}
+            disabled={bulkPreparing || !bulkCvLinks.length}
+            style={{
+              padding: '7px 12px',
+              border: '1px solid #6fc4c0',
+              borderRadius: 6,
+              background: bulkCvLinks.length ? '#6fc4c0' : '#aaa',
+              color: '#111',
+              fontWeight: 700,
+              cursor: bulkCvLinks.length ? 'pointer' : 'not-allowed',
+            }}
+          >
+            Open {bulkCvLinks.length || ''} Digital CV{bulkCvLinks.length === 1 ? '' : 's'}
+          </button>
+        </div>
+        <div role="status" aria-live="polite" style={{ marginTop: 10, fontSize: 14 }}>
+          {bulkMessage || `${totalPages} user page${totalPages === 1 ? '' : 's'} available. Pop-ups must be allowed for this site.`}
+        </div>
+      </section>
       <div style={{ marginBottom: 12, fontSize: 14 }}>
         Selected user: {selectedUserId || 'None'}
       </div>
