@@ -1476,10 +1476,10 @@ const liteProgressPercent = calculateProfileProgressPercent(liteProgressSections
     if (shareReadyPersistTimer) clearTimeout(shareReadyPersistTimer);
     const t = setTimeout(async () => {
       try {
-        await supabase
-          .from('public_profiles')
-          .update({ share_ready: isShareReady, updated_at: new Date().toISOString() })
-          .eq('id', profile.id);
+        const { error } = await supabase.rpc('rpc_recompute_share_ready', {
+          profile_uuid: profile.id,
+        });
+        if (error) throw error;
       } catch (_e) {
         // silencioso
       }
