@@ -678,8 +678,6 @@ body.dark-mode .navbar-floating-action,
   list-style: none;
   margin: 0;
   padding: 0;
-  max-height: 360px;
-  overflow-y: auto;
 }
 
 .notif-empty{
@@ -763,6 +761,13 @@ body.dark-mode .navbar-floating-action,
   padding: 10px;
   text-align: center;
   border-top: 1px solid var(--notif-border, #e5e7eb);
+  color: var(--notif-muted, #6b7280);
+  font-size: 12px;
+}
+
+.notif-load-more-wrapper:empty{
+  padding: 0;
+  border-top: 0;
 }
 
 .notif-load-more{

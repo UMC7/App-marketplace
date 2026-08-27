@@ -1,5 +1,5 @@
 // src/components/NotificationsPanel.js
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import supabase from "../supabase";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -14,9 +14,12 @@ export default function NotificationsPanel({ onClose, onReadOne }) {
 
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState([]);
-  const [page, setPage] = useState(0);
+  const [nextCursor, setNextCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const listRef = useRef(null);
+  const loadMoreRef = useRef(null);
+  const isLoadingMoreRef = useRef(false);
 
   const parseData = (raw) => {
     if (!raw) return null;
@@ -107,15 +110,22 @@ const handleItemClick = async (n) => {
   }
 };
 
-  const fetchNotificationPage = async (nextPage = 0, append = false) => {
-    const start = nextPage * PAGE_SIZE;
-    const end = start + PAGE_SIZE - 1;
-    const { data: listRows, error } = await supabase
+  const fetchNotificationPage = useCallback(async ({ cursor = null, append = false } = {}) => {
+    if (!userId) return;
+    let query = supabase
       .from("notifications")
       .select("id, title, body, data, is_read, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .range(start, end);
+      .order("id", { ascending: false });
+
+    if (cursor) {
+      query = query.or(
+        `created_at.lt.${cursor.created_at},and(created_at.eq.${cursor.created_at},id.lt.${cursor.id})`
+      );
+    }
+
+    const { data: listRows, error } = await query.limit(PAGE_SIZE);
 
     if (error) {
       console.error("Error fetching notifications page:", error);
@@ -123,9 +133,15 @@ const handleItemClick = async (n) => {
     }
 
     const nextItems = listRows || [];
-    setItems((prev) => (append ? [...prev, ...nextItems] : nextItems));
+    setItems((prev) => {
+      if (!append) return nextItems;
+      const known = new Set(prev.map((item) => item.id));
+      return [...prev, ...nextItems.filter((item) => !known.has(item.id))];
+    });
+    const lastItem = nextItems[nextItems.length - 1];
+    setNextCursor(lastItem ? { created_at: lastItem.created_at, id: lastItem.id } : cursor);
     setHasMore(nextItems.length === PAGE_SIZE);
-  };
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
@@ -137,10 +153,34 @@ const handleItemClick = async (n) => {
         .eq("is_read", false);
 
       setUnread(count ?? 0);
-      setPage(0);
-      await fetchNotificationPage(0, false);
+      setNextCursor(null);
+      await fetchNotificationPage();
     })();
-  }, [userId]);
+  }, [userId, fetchNotificationPage]);
+
+  const loadMoreNotifications = useCallback(async () => {
+    if (!hasMore || isLoadingMoreRef.current || !nextCursor) return;
+    isLoadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    try {
+      await fetchNotificationPage({ cursor: nextCursor, append: true });
+    } finally {
+      isLoadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [fetchNotificationPage, hasMore, nextCursor]);
+
+  useEffect(() => {
+    if (!hasMore || !loadMoreRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMoreNotifications();
+      },
+      { root: listRef.current, rootMargin: "0px 0px 160px" }
+    );
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loadMoreNotifications]);
 
   useEffect(() => {
     if (!userId) return;
@@ -149,8 +189,7 @@ const handleItemClick = async (n) => {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
-        (payload) => {
-          setItems((p) => [payload.new, ...p].slice(0, 100));
+        () => {
           setUnread((c) => c + 1);
         }
       )
@@ -204,7 +243,7 @@ const handleItemClick = async (n) => {
           No notifications yet.
         </div>
       ) : (
-        <div style={{ maxHeight: 420, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+        <div ref={listRef} style={{ maxHeight: 420, overflowY: "auto", display: "flex", flexDirection: "column" }}>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, flex: 1 }}>
             {items.map((n) => (
               <li
@@ -228,30 +267,8 @@ const handleItemClick = async (n) => {
             ))}
           </ul>
           {hasMore && (
-            <div style={{ padding: "12px 8px", textAlign: "center", borderTop: "1px solid var(--notif-border, #e5e7eb)" }}>
-              <button
-                type="button"
-                onClick={async () => {
-                  setIsLoadingMore(true);
-                  const nextPage = page + 1;
-                  await fetchNotificationPage(nextPage, true);
-                  setPage(nextPage);
-                  setIsLoadingMore(false);
-                }}
-                style={{
-                  background: "var(--primary-color, #68ada8)",
-                  border: "none",
-                  color: "#ffffff",
-                  borderRadius: 6,
-                  padding: "8px 16px",
-                  cursor: isLoadingMore ? "default" : "pointer",
-                  fontSize: 13,
-                  fontWeight: 500
-                }}
-                disabled={isLoadingMore}
-              >
-                {isLoadingMore ? "Loading..." : "Load more notifications"}
-              </button>
+            <div ref={loadMoreRef} style={{ padding: "12px 8px", textAlign: "center", borderTop: "1px solid var(--notif-border, #e5e7eb)", fontSize: 13, opacity: 0.7 }} aria-live="polite">
+              {isLoadingMore && "Loading notifications..."}
             </div>
           )}
         </div>

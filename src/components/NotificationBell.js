@@ -13,12 +13,15 @@ export default function NotificationBell() {
   const PAGE_SIZE = 30;
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState([]);
-  const [page, setPage] = useState(0);
+  const [nextCursor, setNextCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const btnRef = useRef(null);
   const popRef = useRef(null);
+  const listRef = useRef(null);
+  const loadMoreRef = useRef(null);
+  const isLoadingMoreRef = useRef(false);
   const navigate = useNavigate();
 
   // Helper: parse n.data (puede venir como objeto o string JSON)
@@ -112,23 +115,35 @@ const handleItemClick = async (e, n) => {
   }
 };
 
-  const fetchNotificationPage = useCallback(async (nextPage = 0, append = false) => {
+  const fetchNotificationPage = useCallback(async ({ cursor = null, append = false } = {}) => {
     if (!userId) return;
-    const start = nextPage * PAGE_SIZE;
-    const end = start + PAGE_SIZE - 1;
-    const { data: listRows, error } = await supabase
+    let query = supabase
       .from("notifications")
       .select("id, title, body, data, is_read, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .range(start, end);
+      .order("id", { ascending: false });
+
+    if (cursor) {
+      query = query.or(
+        `created_at.lt.${cursor.created_at},and(created_at.eq.${cursor.created_at},id.lt.${cursor.id})`
+      );
+    }
+
+    const { data: listRows, error } = await query.limit(PAGE_SIZE);
 
     if (error) {
       console.error("Error fetching notification page:", error);
       return;
     }
     const nextItems = listRows || [];
-    setItems((prev) => (append ? [...prev, ...nextItems] : nextItems));
+    setItems((prev) => {
+      if (!append) return nextItems;
+      const known = new Set(prev.map((item) => item.id));
+      return [...prev, ...nextItems.filter((item) => !known.has(item.id))];
+    });
+    const lastItem = nextItems[nextItems.length - 1];
+    setNextCursor(lastItem ? { created_at: lastItem.created_at, id: lastItem.id } : cursor);
     setHasMore(nextItems.length === PAGE_SIZE);
   }, [userId]);
 
@@ -140,22 +155,41 @@ const handleItemClick = async (e, n) => {
       .eq("user_id", userId)
       .eq("is_read", false);
     setUnread(count ?? 0);
-    setPage(0);
-    await fetchNotificationPage(0, false);
-  }, [userId, fetchNotificationPage]);
+  }, [userId]);
+
+  const reloadNotifications = useCallback(async () => {
+    setNextCursor(null);
+    await Promise.all([recount(), fetchNotificationPage()]);
+  }, [recount, fetchNotificationPage]);
 
   useEffect(() => {
     if (!userId) return;
-    recount();
-  }, [userId, recount]);
+    reloadNotifications();
+  }, [userId, reloadNotifications]);
 
-  const loadMoreNotifications = async () => {
-    const nextPage = page + 1;
+  const loadMoreNotifications = useCallback(async () => {
+    if (!hasMore || isLoadingMoreRef.current || !nextCursor) return;
+    isLoadingMoreRef.current = true;
     setIsLoadingMore(true);
-    await fetchNotificationPage(nextPage, true);
-    setPage(nextPage);
-    setIsLoadingMore(false);
-  };
+    try {
+      await fetchNotificationPage({ cursor: nextCursor, append: true });
+    } finally {
+      isLoadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [fetchNotificationPage, hasMore, nextCursor]);
+
+  useEffect(() => {
+    if (!open || !hasMore || !loadMoreRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMoreNotifications();
+      },
+      { root: listRef.current, rootMargin: "0px 0px 160px" }
+    );
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [open, hasMore, loadMoreNotifications]);
 
   // Realtime + polling de respaldo (por si Realtime falla en desktop)
   useEffect(() => {
@@ -166,10 +200,8 @@ const handleItemClick = async (e, n) => {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
-        (payload) => {
-          setItems((prev) => [payload.new, ...prev].slice(0, 100));
+        () => {
           setUnread((c) => c + 1);
-          setTimeout(recount, 400);
         }
       )
       .on(
@@ -180,7 +212,6 @@ const handleItemClick = async (e, n) => {
           if (payload?.old?.is_read === false && payload?.new?.is_read === true) {
             setUnread((c) => Math.max(0, c - 1));
           }
-          setTimeout(recount, 400);
         }
       )
       .subscribe();
@@ -243,7 +274,10 @@ const handleItemClick = async (e, n) => {
           // Evita burbujeo a contenedores con <Link to="/">
           e.preventDefault();
           e.stopPropagation();
-          setOpen((v) => !v);
+          setOpen((v) => {
+            if (!v) reloadNotifications();
+            return !v;
+          });
         }}
         className="alerts-icon-text"
         aria-label="Alerts"
@@ -291,7 +325,7 @@ const handleItemClick = async (e, n) => {
             </button>
           </div>
 
-          <div className="notif-list-wrapper" style={{ maxHeight: 360, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+          <div ref={listRef} className="notif-list-wrapper" style={{ maxHeight: 360, overflowY: "auto", display: "flex", flexDirection: "column" }}>
             <ul className="notif-list" style={{ flex: 1 }}>
               {items.length === 0 ? (
                 <li className="notif-empty">
@@ -316,15 +350,8 @@ const handleItemClick = async (e, n) => {
               )}
             </ul>
             {hasMore && (
-              <div className="notif-load-more-wrapper">
-                <button
-                  type="button"
-                  onClick={loadMoreNotifications}
-                  disabled={isLoadingMore}
-                  className="notif-load-more"
-                >
-                  {isLoadingMore ? "Loading..." : "Load more notifications"}
-                </button>
+              <div ref={loadMoreRef} className="notif-load-more-wrapper" aria-live="polite">
+                {isLoadingMore && "Loading notifications..."}
               </div>
             )}
           </div>

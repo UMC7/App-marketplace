@@ -214,23 +214,28 @@ body.dark-mode .profile-card.has-new-apps {
   .tabs-container .profile-tabs {
     display: flex;
     gap: 10px;
-    flex-wrap: nowrap; /* una sola fila en claro y oscuro */
-    align-items: center;
+    flex-wrap: nowrap;
+    align-items: stretch;
     justify-content: flex-start;
   }
 
   /* MODO CLARO (y base para oscuro) */
   .tabs-container .profile-tabs button {
-    color: #081a3b;
-    background-color: rgba(8, 26, 59, 0.1);
-    border: 1px solid rgba(8, 26, 59, 0.1);
+    flex: 1 1 0;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    background-color: var(--primary-color);
+    border: 1px solid var(--primary-color);
     /* 🔧 Reset para igualar altura con dark mode */
     font-size: 14px;
     line-height: 1.2;
     padding: 8px 14px;
     box-sizing: border-box;
 
-    border-radius: 9999px;
+    border-radius: 10px;
     font-weight: 600;
     transition: background-color .18s ease, color .18s ease,
                 box-shadow .18s ease, transform .08s ease;
@@ -238,8 +243,8 @@ body.dark-mode .profile-card.has-new-apps {
   }
 
   .tabs-container .profile-tabs button:hover {
-    background-color: rgba(8, 26, 59, 0.16);
-    border-color: rgba(8, 26, 59, 0.16);
+    background-color: #102852;
+    border-color: #102852;
     box-shadow: 0 2px 6px rgba(8,26,59,0.10);
   }
 
@@ -247,18 +252,32 @@ body.dark-mode .profile-card.has-new-apps {
     transform: translateY(1px);
   }
 
+  .tabs-container .profile-tabs button.is-active {
+    background-color: #ffffff;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(8,26,59,0.18);
+  }
+
   /* MODO OSCURO */
   [data-theme="dark"] .tabs-container .profile-tabs button {
-    color: #68ada8;
-    background-color: rgba(104, 173, 168, 0.18);
-    border: 1px solid rgba(104, 173, 168, 0.22);
+    color: var(--text-color, #f5f5f5);
+    background-color: var(--bg-secondary, #1f2937);
+    border: 1px solid var(--border-color, #374151);
     box-shadow: 0 1px 2px rgba(0,0,0,0.20);
   }
 
   [data-theme="dark"] .tabs-container .profile-tabs button:hover {
-    background-color: rgba(104, 173, 168, 0.28);
-    border-color: rgba(104, 173, 168, 0.32);
+    background-color: #374151;
+    border-color: #4b5563;
     box-shadow: 0 2px 8px rgba(0,0,0,0.28);
+  }
+
+  [data-theme="dark"] .tabs-container .profile-tabs button.is-active {
+    background-color: #374151;
+    border: 2px solid var(--accent-color);
+    color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(104, 173, 168, 0.2);
   }
 
   .tabs-container .profile-tabs button:focus-visible {
@@ -433,5 +452,59 @@ body:not([data-theme="dark"]) .tabs-container .profile-tabs > button {
 
   .profile-job-card-dates {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Keep Profile tabs neutral in dark mode; turquoise is reserved for the selected outline. */
+body.dark-mode .tabs-container .profile-tabs .tab-pill,
+[data-theme="dark"] .tabs-container .profile-tabs .tab-pill {
+  background: #1e1e1e !important;
+  border-color: #3a3a3a !important;
+  color: #f5f5f5 !important;
+}
+
+body.dark-mode .tabs-container .profile-tabs .tab-pill:hover:not(.is-active),
+[data-theme="dark"] .tabs-container .profile-tabs .tab-pill:hover:not(.is-active) {
+  background: #2a2a2a !important;
+  border-color: #4a4a4a !important;
+}
+
+body.dark-mode .tabs-container .profile-tabs .tab-pill.is-active,
+[data-theme="dark"] .tabs-container .profile-tabs .tab-pill.is-active {
+  background: #343434 !important;
+  border: 2px solid var(--accent-color) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(104, 173, 168, 0.2) !important;
+}
+
+@media (max-width: 900px) {
+  body.dark-mode .tabs-container .profile-tabs.menu-panel .tab-pill,
+  [data-theme="dark"] .tabs-container .profile-tabs.menu-panel .tab-pill {
+    background: #252525 !important;
+    border-color: #4a4a4a !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.24) !important;
+  }
+
+  body.dark-mode .tabs-container .profile-tabs.menu-panel .tab-pill.is-active,
+  [data-theme="dark"] .tabs-container .profile-tabs.menu-panel .tab-pill.is-active {
+    background: #343434 !important;
+    border: 3px solid var(--accent-color) !important;
+    box-shadow: 0 0 0 2px rgba(104, 173, 168, 0.42) !important;
+  }
+}
+
+@media (min-width: 901px) {
+  body.dark-mode .tabs-container .profile-tabs.menu-panel .tab-pill:not(.is-active),
+  [data-theme="dark"] .tabs-container .profile-tabs.menu-panel .tab-pill:not(.is-active) {
+    background: var(--accent-color) !important;
+    border-color: var(--accent-color) !important;
+    color: #081a3b !important;
+  }
+
+  body.dark-mode .tabs-container .profile-tabs.menu-panel .tab-pill.is-active,
+  [data-theme="dark"] .tabs-container .profile-tabs.menu-panel .tab-pill.is-active {
+    background: #343434 !important;
+    border: 2px solid var(--accent-color) !important;
+    color: #ffffff !important;
   }
 }
