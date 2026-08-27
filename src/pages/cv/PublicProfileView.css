@@ -1196,6 +1196,10 @@ body.dark-mode .ppv-btn {
   }
 }
 
+.ppv-previewBack .ppv-back-btn {
+  font-weight: 400 !important;
+}
+
 .ppv-introInner {
   width: 100%;
   max-width: 100%;

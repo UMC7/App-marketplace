@@ -23,7 +23,7 @@
 /* ---------- Header ---------- */
 .cv-analytics__header {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: var(--cv-ana-gap);
   margin-bottom: 14px;
@@ -48,12 +48,12 @@
 }
 
 .cv-analytics__back {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
   width: fit-content !important;
-  justify-self: end;
   white-space: nowrap;
+  margin-top: 8px;
   min-height: 32px;
   padding: 5px 2px;
   border: 0;
@@ -61,6 +61,10 @@
   color: var(--primary-color, #081a3b);
   font-weight: 700;
   cursor: pointer;
+}
+
+.cv-analytics__mobile-actions {
+  display: none;
 }
 
 /* ---------- Contenido ---------- */
@@ -105,10 +109,6 @@
 
 /* ---------- Responsivo tablet ---------- */
 @media (max-width: 1024px) {
-  .cv-analytics {
-    padding-right: 64px;
-  }
-
   .cv-analytics__row--kpis {
     grid-template-columns: repeat(3, minmax(120px, 1fr));
   }
@@ -139,6 +139,22 @@
   .cv-analytics__back {
     width: fit-content !important;
     justify-self: start;
+  }
+
+  .cv-analytics__mobile-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .cv-analytics__mobile-actions .cv-analytics__back,
+  .cv-analytics__mobile-actions .cv-analytics__refresh {
+    width: 100% !important;
+    min-width: 0;
+    min-height: 32px;
+    margin-top: 0;
+    justify-content: center;
   }
 
   /* Filtros apilados y 100% del contenedor */
@@ -203,7 +219,7 @@
   /* Padding inferior para no chocar con navbar */
   .cv-analytics {
     padding-left: 10px !important;
-    padding-right: 64px !important;
+    padding-right: 10px !important;
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
     margin: 0 auto !important;
   }
@@ -220,6 +236,14 @@
 body:not(.dark-mode) .cv-analytics .ana-filters .ana-btn:not(.ana-back-btn),
 html[data-theme="light"] .cv-analytics .ana-filters .ana-btn:not(.ana-back-btn),
 :root[data-theme="light"] .cv-analytics .ana-filters .ana-btn:not(.ana-back-btn) {
+  background: var(--primary-color, #081a3b);
+  border-color: var(--primary-color, #081a3b);
+  color: #ffffff;
+}
+
+body:not(.dark-mode) .cv-analytics__refresh,
+html[data-theme="light"] .cv-analytics__refresh,
+:root[data-theme="light"] .cv-analytics__refresh {
   background: var(--primary-color, #081a3b);
   border-color: var(--primary-color, #081a3b);
   color: #ffffff;
@@ -261,4 +285,17 @@ body.dark-mode .cv-analytics .ana-back-btn {
   color: #081a3b !important;
   box-shadow: none !important;
   font-weight: 700;
+}
+
+:root[data-theme="dark"] .cv-analytics__refresh,
+html[data-theme="dark"] .cv-analytics__refresh,
+body.dark-mode .cv-analytics__refresh {
+  background: var(--accent-color, #68ada8) !important;
+  border-color: var(--accent-color, #68ada8) !important;
+  color: #081a3b !important;
+}
+
+.cv-analytics__back,
+.cv-analytics .ana-back-btn {
+  font-weight: 400 !important;
 }

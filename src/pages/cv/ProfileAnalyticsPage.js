@@ -35,6 +35,15 @@ export default function ProfileAnalyticsPage() {
   // Filtros UI
   const [rangeKey, setRangeKey] = useState('30d'); // 7d | 30d | 90d | this_month | last_month | ytd
   const [bucket, setBucket] = useState('day');     // day | week | month
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 540px)');
+    const updateMobileState = () => setIsMobile(mediaQuery.matches);
+    updateMobileState();
+    mediaQuery.addEventListener?.('change', updateMobileState);
+    return () => mediaQuery.removeEventListener?.('change', updateMobileState);
+  }, []);
 
   // ===== Detectar móvil (para mover el botón Back junto al Refresh) =====
 
@@ -138,11 +147,11 @@ export default function ProfileAnalyticsPage() {
           <div>
             <div className="cv-analytics__title">Analytics</div>
             <div className="cv-analytics__subtitle">Sign in to view your CV analytics</div>
+            <button className="cv-analytics__back" onClick={handleBack} aria-label="Back to Candidate Profile">
+              <span aria-hidden="true">&larr;</span> Back
+            </button>
           </div>
           <div className="cv-analytics__actions"></div>
-          <button className="cv-analytics__back" onClick={handleBack} aria-label="Back to Candidate Profile">
-            <span aria-hidden="true">&larr;</span> Back
-          </button>
         </header>
 
         <EmptyState
@@ -160,16 +169,26 @@ export default function ProfileAnalyticsPage() {
         <div>
           <div className="cv-analytics__title">Analytics</div>
           <div className="cv-analytics__subtitle">{idLabel}</div>
+          {isMobile ? (
+            <div className="cv-analytics__mobile-actions">
+              <button className="cv-analytics__back" onClick={handleBack} aria-label="Back to Candidate Profile">
+                <span aria-hidden="true">&larr;</span> Back
+              </button>
+              <button className="ana-btn cv-analytics__refresh" onClick={refetch}>
+                Refresh
+              </button>
+            </div>
+          ) : (
+            <button className="cv-analytics__back" onClick={handleBack} aria-label="Back to Candidate Profile">
+              <span aria-hidden="true">&larr;</span> Back
+            </button>
+          )}
         </div>
 
         <div className="cv-analytics__actions">
           {/* (opcional) acciones extra */}
         </div>
 
-        {/* En móvil el botón Back se mostrará junto a Refresh dentro de FiltersBar */}
-        <button className="cv-analytics__back" onClick={handleBack} aria-label="Back to Candidate Profile">
-          <span aria-hidden="true">&larr;</span> Back
-        </button>
       </header>
 
       {/* Filtros */}
@@ -180,6 +199,7 @@ export default function ProfileAnalyticsPage() {
           bucket={bucket}
           onChangeBucket={setBucket}
           onRefresh={refetch}
+          showRefresh={!isMobile}
           /* Para móvil: pedir al FiltersBar que pinte el botón Back a su lado */
         />
 

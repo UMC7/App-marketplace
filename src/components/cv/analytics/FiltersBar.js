@@ -10,6 +10,7 @@ export default function FiltersBar({
   onChangeBucket,
   rangeLabel,
   onRefresh,
+  showRefresh = true,
   rightSlot = null,
   // Cuando es true (móvil), mostramos Back junto a Refresh en una fila aparte.
   showBackInline = false,
@@ -53,7 +54,7 @@ export default function FiltersBar({
         </span>
 
         {/* En desktop, mantenemos Refresh en la misma fila de los selectores */}
-        {!showBackInline && onRefresh && (
+        {!showBackInline && showRefresh && onRefresh && (
           <button
             type="button"
             onClick={onRefresh}
