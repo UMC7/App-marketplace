@@ -148,7 +148,9 @@ export default function ProfileAnalyticsPage() {
             <div className="cv-analytics__subtitle">Sign in to view your CV analytics</div>
           </div>
           <div className="cv-analytics__actions"></div>
-          <button className="cv-analytics__back" onClick={handleBack}>Back</button>
+          <button className="cv-analytics__back" onClick={handleBack} aria-label="Back to Candidate Profile">
+            <span aria-hidden="true">&larr;</span> Back
+          </button>
         </header>
 
         <EmptyState
@@ -174,8 +176,8 @@ export default function ProfileAnalyticsPage() {
 
         {/* En móvil el botón Back se mostrará junto a Refresh dentro de FiltersBar */}
         {!isMobile && (
-          <button className="cv-analytics__back" onClick={handleBack}>
-            Back
+          <button className="cv-analytics__back" onClick={handleBack} aria-label="Back to Candidate Profile">
+            <span aria-hidden="true">&larr;</span> Back
           </button>
         )}
       </header>

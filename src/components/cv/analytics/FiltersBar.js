@@ -82,10 +82,11 @@ export default function FiltersBar({
             <button
               type="button"
               onClick={onBack}
-              className="ana-btn"
+              className="ana-btn ana-back-btn"
               title="Go back"
+              aria-label="Back to Candidate Profile"
             >
-              Back
+              <span aria-hidden="true">&larr;</span> Back
             </button>
           )}
         </div>

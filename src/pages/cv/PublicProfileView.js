@@ -1593,8 +1593,9 @@ if (!allowPublicView && !isPreview) {
                 type="button"
                 className="ppv-btn ppv-back-btn"
                 onClick={() => navigate('/profile?tab=cv')}
+                aria-label="Back to Candidate Profile"
               >
-                Back to Candidate Profile
+                <span aria-hidden="true">&larr;</span> Back
               </button>
             </div>
           )}

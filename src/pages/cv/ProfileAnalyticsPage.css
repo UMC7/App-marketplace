@@ -48,12 +48,15 @@
 }
 
 .cv-analytics__back {
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: var(--ana-card-bg);
-  color: var(--ana-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 5px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--primary-color, #081a3b);
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -99,6 +102,10 @@
 
 /* ---------- Responsivo tablet ---------- */
 @media (max-width: 1024px) {
+  .cv-analytics {
+    padding-right: 64px;
+  }
+
   .cv-analytics__row--kpis {
     grid-template-columns: repeat(3, minmax(120px, 1fr));
   }
@@ -126,7 +133,7 @@
 @media (max-width: 540px) {
   /* Header compacto y botón atrás ancho */
   .cv-analytics__header { grid-template-columns: 1fr !important; text-align: center; }
-  .cv-analytics__back { width: 100%; }
+  .cv-analytics__back { width: auto; }
 
   /* Filtros apilados y 100% del contenedor */
   .cv-analytics .ana-filters {
@@ -151,6 +158,17 @@
   .cv-analytics .ana-filters > div:nth-of-type(2) .ana-btn {
     flex: 1 1 0;            /* dos botones ocupan la misma fila y ancho */
     min-width: 0 !important;
+  }
+
+  .cv-analytics .ana-filters > div:nth-of-type(2) .ana-back-btn {
+    flex: 0 0 auto;
+    min-width: auto !important;
+    padding: 6px 2px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--primary-color, #081a3b);
+    font-weight: 700;
   }
 
   /* KPIs: 2 columnas en móvil (no forzar 1) */
@@ -179,7 +197,7 @@
   /* Padding inferior para no chocar con navbar */
   .cv-analytics {
     padding-left: 10px !important;
-    padding-right: 10px !important;
+    padding-right: 64px !important;
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
     margin: 0 auto !important;
   }
@@ -193,10 +211,48 @@
 }
 
 /* ======================= Dark mode tweaks ======================= */
+body:not(.dark-mode) .cv-analytics .ana-filters .ana-btn:not(.ana-back-btn),
+html[data-theme="light"] .cv-analytics .ana-filters .ana-btn:not(.ana-back-btn),
+:root[data-theme="light"] .cv-analytics .ana-filters .ana-btn:not(.ana-back-btn) {
+  background: var(--primary-color, #081a3b);
+  border-color: var(--primary-color, #081a3b);
+  color: #ffffff;
+}
+
+body:not(.dark-mode) .cv-analytics__back,
+html[data-theme="light"] .cv-analytics__back,
+:root[data-theme="light"] .cv-analytics__back,
+body:not(.dark-mode) .cv-analytics .ana-back-btn,
+html[data-theme="light"] .cv-analytics .ana-back-btn,
+:root[data-theme="light"] .cv-analytics .ana-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--primary-color, #081a3b) !important;
+  border-radius: 10px;
+  background: var(--primary-color, #081a3b) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  font-weight: 700;
+}
+
 :root[data-theme="dark"] .cv-analytics__back,
 html[data-theme="dark"] .cv-analytics__back,
-body.dark-mode .cv-analytics__back {
-  border-color: rgba(148,163,184,0.35);
-  background: #0f172a;
-  color: #e5e7eb;
+body.dark-mode .cv-analytics__back,
+:root[data-theme="dark"] .cv-analytics .ana-back-btn,
+html[data-theme="dark"] .cv-analytics .ana-back-btn,
+body.dark-mode .cv-analytics .ana-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--accent-color, #68ada8) !important;
+  border-radius: 10px;
+  background: var(--accent-color, #68ada8) !important;
+  color: #081a3b !important;
+  box-shadow: none !important;
+  font-weight: 700;
 }

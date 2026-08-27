@@ -1362,6 +1362,9 @@ body.dark-mode .ppv-btn {
   .ppv-previewGuideBtn {
     width: 100%;
     font-weight: 700;
+    background: var(--primary-color, #081a3b);
+    border-color: var(--primary-color, #081a3b);
+    color: #ffffff;
   }
 
   .ppv-previewGuidePanels {
@@ -1425,7 +1428,64 @@ body.dark-mode .ppv-btn {
     line-height: 1.2 !important;
   }
   .ppv-previewBack .ppv-back-btn {
-    width: 100%;
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 2px;
+    border: 0;
+    background: transparent;
+    color: var(--primary-color, #081a3b);
+    box-shadow: none;
+    font-weight: 700;
+  }
+
+  .ppv-previewBack .ppv-back-btn:hover {
+    border: 0;
+    box-shadow: none;
+    text-decoration: underline;
+  }
+}
+
+@media (max-width: 720px) {
+  body:not(.dark-mode) .ppv-previewGuideBtn,
+  html[data-theme='light'] .ppv-previewGuideBtn,
+  :root[data-theme='light'] .ppv-previewGuideBtn {
+    background: var(--primary-color, #081a3b) !important;
+    border-color: var(--primary-color, #081a3b) !important;
+    color: #ffffff !important;
+  }
+
+  body.dark-mode .ppv-previewGuideBtn,
+  html[data-theme='dark'] .ppv-previewGuideBtn,
+  :root[data-theme='dark'] .ppv-previewGuideBtn {
+    background: var(--accent-color, #68ada8) !important;
+    border-color: var(--accent-color, #68ada8) !important;
+    color: #081a3b !important;
+  }
+
+  body.dark-mode .ppv-previewBack .ppv-back-btn,
+  html[data-theme='dark'] .ppv-previewBack .ppv-back-btn,
+  :root[data-theme='dark'] .ppv-previewBack .ppv-back-btn {
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--accent-color, #68ada8) !important;
+    border-radius: 10px;
+    background: var(--accent-color, #68ada8) !important;
+    color: #081a3b !important;
+    box-shadow: none !important;
+  }
+
+  body:not(.dark-mode) .ppv-previewBack .ppv-back-btn,
+  html[data-theme='light'] .ppv-previewBack .ppv-back-btn,
+  :root[data-theme='light'] .ppv-previewBack .ppv-back-btn {
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--primary-color, #081a3b) !important;
+    border-radius: 10px;
+    background: var(--primary-color, #081a3b) !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
   }
 }
 
