@@ -51,6 +51,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  width: fit-content !important;
+  justify-self: end;
+  white-space: nowrap;
   min-height: 32px;
   padding: 5px 2px;
   border: 0;
@@ -133,7 +136,10 @@
 @media (max-width: 540px) {
   /* Header compacto y botón atrás ancho */
   .cv-analytics__header { grid-template-columns: 1fr !important; text-align: center; }
-  .cv-analytics__back { width: auto; }
+  .cv-analytics__back {
+    width: fit-content !important;
+    justify-self: start;
+  }
 
   /* Filtros apilados y 100% del contenedor */
   .cv-analytics .ana-filters {
