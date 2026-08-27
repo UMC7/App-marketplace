@@ -643,6 +643,10 @@ export const DEPT_SPECIALTIES_SUGGESTIONS = {
 
   Others: [
     {
+      group: 'Lifestyle & Pets',
+      items: ['Pet friendly'],
+    },
+    {
       group: 'Medical & Wellness',
       items: [
         'Guest Medical & Mobility Care',

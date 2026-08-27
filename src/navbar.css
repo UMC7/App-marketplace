@@ -14,6 +14,15 @@
   --navbar-bg-color: #8c8c8c;
 }
 
+.navbar-floating-action {
+  background: var(--primary-color, #081a3b);
+}
+
+body.dark-mode .navbar-floating-action,
+[data-theme='dark'] .navbar-floating-action {
+  background: var(--accent-color, #68ada8);
+}
+
 /* Modo oscuro */
 [data-theme='dark'] {
   --navbar-bg-color: #2a2a2a; /* Cambia este valor si tu navbar superior en oscuro usa otro */

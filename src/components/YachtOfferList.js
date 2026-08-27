@@ -8,6 +8,7 @@ import PreferencesPanel from './PreferencesPanel';
 import OfferTimeline from './OfferTimeline';
 import { SeaJobsFeatureRail, getSeaJobsPromoCycleCount } from './SeaJobsFeaturePromos';
 import '../styles/YachtOfferList.css';
+import '../styles/ResponsiveFilterPanel.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 import { toast } from 'react-toastify';

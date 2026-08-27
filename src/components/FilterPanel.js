@@ -13,10 +13,25 @@ const FilterPanel = React.forwardRef(({
   const countryValues = safeFilters.country || [];
   const languageValues = safeFilters.languages || [];
   const termValues = safeFilters.terms || [];
+  const hasActiveFilters = Boolean(
+    safeFilters.rank ||
+    safeFilters.city ||
+    safeFilters.minSalary ||
+    safeFilters.team ||
+    safeFilters.department ||
+    safeFilters.flag ||
+    safeFilters.yachtType ||
+    safeFilters.yachtSize ||
+    safeFilters.use ||
+    countryValues.length ||
+    languageValues.length ||
+    termValues.length ||
+    safeFilters.selectedOnly
+  );
 
   return (
-    <div ref={ref} className="filter-body expanded">
-      <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
+    <div ref={ref} className="filter-body expanded seajobs-filter-body">
+      <div className="filters-container filters-panel show seajobs-filter-panel" style={{ marginBottom: '20px' }}>
         <h3 style={{ gridColumn: '1 / -1' }}>Job Filters</h3>
 
         {/* Team */}
@@ -228,6 +243,8 @@ const FilterPanel = React.forwardRef(({
             city: '',
             minSalary: '',
             team: '',
+            department: '',
+            flag: '',
             yachtType: '',
             yachtSize: '',
             use: '',
@@ -236,6 +253,7 @@ const FilterPanel = React.forwardRef(({
             terms: [],
             selectedOnly: false,
           })}
+          disabled={!hasActiveFilters}
         >
           Clear All Filters
         </button>

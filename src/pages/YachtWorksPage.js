@@ -8,6 +8,7 @@ import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import '../yachtworkspage.css';
+import '../styles/ResponsiveFilterPanel.css';
 import { getOfferDepartment } from '../utils/offerDepartment';
 import { normalizeYachtUse } from '../components/cv/candidate/shared/experienceCatalogs';
 import { isOfferVisibleOnJobBoard } from '../utils/jobOfferVisibility';
@@ -474,8 +475,15 @@ const SeaCrewFilterPanel = React.forwardRef(({
   setFilters,
   countryOptions,
 }, ref) => {
+  const hasActiveFilters = Boolean(
+    filters.rank ||
+    filters.city ||
+    filters.country ||
+    filters.selectedOnly
+  );
+
   return (
-    <div ref={ref} className="filter-body expanded">
+    <div ref={ref} className="filter-body expanded seacrew-filter-body">
       <div className="filters-container filters-panel show seacrew-filters-panel" style={{ marginBottom: '20px' }}>
         <h3 style={{ gridColumn: '1 / -1' }}>Crew Filters</h3>
 
@@ -532,6 +540,7 @@ const SeaCrewFilterPanel = React.forwardRef(({
             fontWeight: 600,
           }}
           onClick={() => setFilters({ rank: '', city: '', country: '', selectedOnly: false })}
+          disabled={!hasActiveFilters}
         >
           Clear All Filters
         </button>

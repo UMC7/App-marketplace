@@ -27,9 +27,19 @@ const PreferencesPanel = React.forwardRef(({
   setPreferences,
   regionOrder,
   countriesByRegion,
-}, ref) => (
-  <div ref={ref} className={`filter-body expanded`}>
-    <div className="filters-container filters-panel show" style={{ marginBottom: '20px' }}>
+}, ref) => {
+  const hasActivePreferences = Boolean(
+    safePrefs.positions.length ||
+    safePrefs.terms.length ||
+    safePrefs.countries.length ||
+    safePrefs.selectedRegion ||
+    safePrefs.flag ||
+    safePrefs.minSalary
+  );
+
+  return (
+  <div ref={ref} className="filter-body expanded seajobs-preferences-body">
+    <div className="filters-container filters-panel show seajobs-preferences-panel" style={{ marginBottom: '20px' }}>
       <h3 style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8 }}>
         Job Preferences
         <span
@@ -196,13 +206,14 @@ const PreferencesPanel = React.forwardRef(({
           fontWeight: 600,
         }}
         onClick={clearPreferences}
-        disabled={prefsDisabled}
+        disabled={prefsDisabled || !hasActivePreferences}
       >
         Clear Preferences
       </button>
     </div>
   </div>
-));
+  );
+});
 
 PreferencesPanel.displayName = 'PreferencesPanel';
 

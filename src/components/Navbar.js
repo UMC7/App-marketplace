@@ -305,12 +305,12 @@ const handleOpenChat = (offerId, receiverId, options = {}) => {
 
       {/* BOTÓN TOU FLOTANTE EXPANDIBLE (TEMA) */}
       <div
+        className="navbar-floating-action"
         style={{
           position: 'absolute',
           top: isMobilePortrait ? '50%' : '50%',
           right: isMobilePortrait ? '0' : '12px',
           transform: 'translateY(-50%)',
-          background: '#68ada8',
           color: '#fff',
           borderRadius: '8px 0 0 8px',
           width: showTouPanel ? '60px' : '14px',
@@ -366,13 +366,13 @@ const handleOpenChat = (offerId, receiverId, options = {}) => {
 
       {/* BOTÓN FLOTANTE DE ACCESO A REDES SOCIALES */}
       <div
+        className="navbar-floating-action"
         style={{
           position: 'absolute',
           top: isMobilePortrait ? '50%' : 'calc(50% + 60px)',
           right: isMobilePortrait ? 'unset' : '12px',
           left: isMobilePortrait ? '0' : 'unset',
           transform: isMobilePortrait ? 'translateY(-50%)' : 'none',
-          background: '#68ada8',
           color: '#fff',
           borderRadius: isMobilePortrait ? '0 8px 8px 0' : '8px 0 0 8px',
           width: isMobilePortrait ? (showSocialPanel ? '60px' : '14px') : (showSocialPanel ? '60px' : '14px'),

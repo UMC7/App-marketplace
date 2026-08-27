@@ -3,6 +3,7 @@ import ProductList from '../components/ProductList';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import './HomePage.css';
+import '../styles/ResponsiveFilterPanel.css';
 import supabase from '../supabase';
 
 function HomePage() {
@@ -122,6 +123,17 @@ function HomePage() {
     setFilteredProducts(products);
   };
 
+  const hasActiveFilters = Boolean(
+    searchTerm ||
+    selectedCategory ||
+    selectedCountry ||
+    selectedCity ||
+    priceRange.min ||
+    priceRange.max ||
+    selectedCondition ||
+    sortOrder
+  );
+
   if (loading) {
     return <LoadingSpinner message="Loading products..." />;
   }
@@ -143,15 +155,15 @@ function HomePage() {
       </h3>
 
       <button
-        className="filters-toggle"
+        className="filters-toggle marketplace-filter-toggle"
         onClick={() => setShowFilters((prev) => !prev)}
       >
         ☰ Filters
       </button>
 
       {showFilters && (
-        <div className="filter-body expanded">
-          <div className="filters-container">
+        <div className="filter-body expanded marketplace-filter-body">
+          <div className="filters-container marketplace-filter-panel">
             <input
               type="text"
               className="search-input"
@@ -240,6 +252,7 @@ function HomePage() {
                 type="button"
                 className="clear-filters-btn"
                 onClick={clearFilters}
+                disabled={!hasActiveFilters}
               >
                 Clear all filters
               </button>
@@ -248,7 +261,9 @@ function HomePage() {
         </div>
       )}
 
-      <ProductList products={filteredProducts} />
+      <div className="marketplace-results-grid">
+        <ProductList products={filteredProducts} />
+      </div>
 
       <ScrollToTopButton />
     </div>

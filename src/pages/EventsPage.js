@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './EventsPage.css';
+import '../styles/ResponsiveFilterPanel.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import supabase from '../supabase';
@@ -318,7 +319,7 @@ function EventsPage() {
       </h3>
 
       <button
-        className="navbar-toggle"
+        className="navbar-toggle marketplace-filter-toggle"
         onClick={() => setShowFilters((prev) => !prev)}
         style={{
           marginBottom: '10px',
@@ -331,8 +332,8 @@ function EventsPage() {
       </button>
 
       {showFilters && (
-        <div className="filter-body expanded">
-          <div className="filters-container filters-panel show">
+        <div className="filter-body expanded marketplace-filter-body">
+          <div className="filters-container filters-panel show marketplace-filter-panel">
             <select
               className="category-select"
               value={searchDate}
@@ -376,13 +377,13 @@ function EventsPage() {
               title="Clear all filters"
               aria-label="Clear all filters"
             >
-              Clear filters
+              Clear all filters
             </button>
           </div>
         </div>
       )}
 
-      <div className="responsive-grid">
+      <div className="responsive-grid marketplace-results-grid">
         {filteredEvents.map((event) => {
           const isExpanded = expandedEventId === event.id;
           const imgRatio = imageRatios[event.id];       // w/h

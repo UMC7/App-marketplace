@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './YachtServicesPage.css';
+import '../styles/ResponsiveFilterPanel.css';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import supabase from '../supabase';
@@ -93,6 +94,15 @@ function YachtServicesPage() {
   useEffect(() => {
     filterServices();
   }, [filterServices]);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('');
+    setSelectedCountry('');
+    setSelectedCity('');
+  };
+
+  const hasActiveFilters = Boolean(searchTerm || selectedCategory || selectedCountry || selectedCity);
 
   useEffect(() => {
     if (loading) return;
@@ -251,7 +261,7 @@ function YachtServicesPage() {
       </h3>
 
       <button
-        className="navbar-toggle"
+        className="navbar-toggle marketplace-filter-toggle"
         onClick={() => setShowFilters((prev) => !prev)}
         style={{
           marginBottom: '10px',
@@ -264,8 +274,8 @@ function YachtServicesPage() {
       </button>
 
       {showFilters && (
-        <div className="filter-body expanded">
-          <div className="filters-container filters-panel show">
+        <div className="filter-body expanded marketplace-filter-body">
+          <div className="filters-container filters-panel show marketplace-filter-panel">
 
             <input
               type="text"
@@ -308,6 +318,15 @@ function YachtServicesPage() {
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
             />
+
+            <button
+              type="button"
+              className="clear-filters-btn"
+              onClick={clearFilters}
+              disabled={!hasActiveFilters}
+            >
+              Clear all filters
+            </button>
           </div>
         </div>
       )}
@@ -315,7 +334,7 @@ function YachtServicesPage() {
       {filteredServices.length === 0 ? (
         <p style={{ padding: '20px' }}>No services match your filters.</p>
       ) : (
-        <div className="responsive-grid">
+        <div className="responsive-grid marketplace-results-grid">
           {filteredServices.map((service) => {
             // Normalizar galería (array o string JSON)
             let gallery = [];
