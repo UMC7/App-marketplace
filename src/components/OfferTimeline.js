@@ -767,7 +767,7 @@ const OfferTimeline = ({
     )}
 
     {(offer.candidate_location_requirement || offer.local_candidates_only) && (
-      <div className="field-group">
+      <div className="field-group location-preference">
         <div className="field-label">Candidate location preference</div>
         <div className="field-value">
           {offer.candidate_location_requirement === 'region_only'
@@ -1365,15 +1365,18 @@ const OfferTimeline = ({
     </div>
   )}
   {!isClosed && (
-    <div
-      className="tick-marker"
+    <button
+      type="button"
+      className={`tick-marker ${markedOffers.includes(offer.id) ? 'active' : ''}`}
+      aria-label={markedOffers.includes(offer.id) ? 'Remove job from preferred cards' : 'Add job to preferred cards'}
+      aria-pressed={markedOffers.includes(offer.id)}
       onClick={(e) => {
         e.stopPropagation();
         toggleMark(offer.id);
       }}
     >
-      {markedOffers.includes(offer.id) ? '✔' : ''}
-    </div>
+      {markedOffers.includes(offer.id) ? '♥' : '♡'}
+    </button>
   )}
 </div>
 </div>

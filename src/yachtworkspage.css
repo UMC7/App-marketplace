@@ -510,8 +510,30 @@ body.dark-mode .required-doc-chip {
   justify-content: center;
   cursor: pointer;
   user-select: none;
+  border: 1px solid rgba(188, 169, 135, 0.72);
+  color: #9b7b45;
+  font-family: inherit;
+  line-height: 1;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
   z-index: 10;
+}
+
+.tick-marker.active {
+  background-color: #f8e5e7;
+  border-color: #c94e62;
+  color: #b8324a;
+}
+
+body.dark-mode .tick-marker {
+  background-color: #d1ffd1 !important;
+  border-color: rgba(188, 169, 135, 0.72) !important;
+  color: #9b7b45 !important;
+}
+
+body.dark-mode .tick-marker.active {
+  background-color: #f8e5e7 !important;
+  border-color: #c94e62 !important;
+  color: #b8324a !important;
 }
 
 .filter-checkbox-label {
@@ -861,6 +883,20 @@ body:not(.dark-mode) .filters-panel h3 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-md) var(--spacing-xl);
+  }
+
+  /* Keep city and country side by side when they fit. The preference uses
+     its own row, so it cannot narrow or clip either location value. */
+  .expanded-block.block5 .field-pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .expanded-block.block5 .field-group {
+    min-width: 0;
+  }
+
+  .expanded-block.block5 .location-preference {
+    grid-column: 1 / -1;
   }
 }
 

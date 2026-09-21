@@ -587,7 +587,7 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
                     toggleMark(profile.id);
                   }}
                 >
-                  {isMarked ? '✔' : ''}
+                  {isMarked ? '♥' : '♡'}
                 </button>
               </div>
               <p className="seacrew-card-title">{rankLabel}</p>
