@@ -8,6 +8,7 @@ import { useCarrito } from '../context/CarritoContext';
 import { useFavorites } from '../context/FavoritesContext';
 import Slider from 'react-slick';
 import RatingModal from '../components/RatingModal';
+import './ProductDetailPage.css';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
@@ -203,58 +204,73 @@ function ProductDetailPage(props) {
   const sliderSettings = { dots: true, infinite: allPhotos.length > 1, speed: 500, slidesToShow: 1, slidesToScroll: 1 };
 
   return (
-    <div className="container">
-      <h1>{product.name}</h1>
-      <Slider {...sliderSettings}>
-        {allPhotos.map((photo, idx) => (
-          <div key={idx}>
-            <img src={photo} alt={`Product ${idx + 1}`} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
-          </div>
-        ))}
-      </Slider>
-      <div className="section-divider" />
+    <div className="market-product-detail">
+      <header className="market-product-detail-hero">
+        <div className="market-product-detail-gallery">
+          <Slider {...sliderSettings}>
+            {allPhotos.map((photo, idx) => (
+              <div key={idx}>
+                <img src={photo} alt={`Product ${idx + 1}`} />
+              </div>
+            ))}
+          </Slider>
+        </div>
+        <div className="market-product-detail-heading">
+          <p className="market-product-detail-kicker">SeaMarket listing</p>
+          <h1>{product.name}</h1>
+          <p className="market-product-detail-price">
+            {product.currency || ''} {Number(product.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+        </div>
+      </header>
 
-      <h3>Product Information</h3>
-      <p><strong>Price:</strong> {product.currency || ''} {Number(product.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-      <p><strong>Condition:</strong> {product.condition}</p>
-      <p><strong>Available Stock:</strong> {availableStock}</p>
-      <p><strong>City:</strong> {product.city}</p>
-      <p><strong>Country:</strong> {product.country}</p>
-      <div className="section-divider" />
+      <section className="market-product-detail-section market-product-detail-facts-section">
+        <h3>Product information</h3>
+        <div className="market-product-detail-facts">
+          <div><span>Condition</span><strong>{product.condition || 'Not specified'}</strong></div>
+          <div><span>Available stock</span><strong>{availableStock}</strong></div>
+          <div><span>City</span><strong>{product.city || 'Not specified'}</strong></div>
+          <div><span>Country</span><strong>{product.country || 'Not specified'}</strong></div>
+        </div>
+      </section>
 
-      <h3>Description</h3>
-      <p className="description-text" style={{ whiteSpace: 'pre-line' }}>{product.description}</p>
-      <div className="section-divider" />
+      <section className="market-product-detail-section">
+        <h3>Description</h3>
+        <p className="description-text market-product-detail-description">{product.description || 'No description provided.'}</p>
+      </section>
 
-      <h3>Rating</h3>
-      {sellerRating
-        ? <p><strong>Seller Rating:</strong> {sellerRating} / 5</p>
-        : <p>This user doesn't have enough ratings to display an average yet.</p>}
-      <button onClick={() => setShowRatingModal(true)} className="landing-button" style={{ marginBottom: '20px' }}>
-        View Seller Ratings
-      </button>
+      <section className="market-product-detail-section market-product-detail-rating">
+        <h3>Seller rating</h3>
+        {sellerRating
+          ? <p><strong>{sellerRating} / 5</strong> based on seller reviews.</p>
+          : <p>This seller does not have enough ratings to display an average yet.</p>}
+        <button type="button" onClick={() => setShowRatingModal(true)} className="market-product-detail-secondary-btn">
+          View seller ratings
+        </button>
+      </section>
       {showRatingModal && <RatingModal sellerId={product.owner} onClose={() => setShowRatingModal(false)} />}
 
-      <div className="section-divider" />
       {!isPaused && !isOwner && currentUser && availableStock > 0 && (
-        <>
-          <h3>Quantity to Purchase</h3>
-          <input type="number" min="1" max={availableStock} value={purchaseQty} onChange={(e) => setPurchaseQty(parseInt(e.target.value, 10))} style={{ maxWidth: 80, textAlign: 'center', marginBottom: 8 }} />
-          <button className="landing-button" onClick={handleAddToCart} disabled={purchaseQty === 0 || product.category_id === 16} style={{ marginLeft: 8 }}>
+        <section className="market-product-detail-section market-product-detail-actions">
+          <h3>Ready to purchase?</h3>
+          <label>
+            Quantity
+            <input type="number" min="1" max={availableStock} value={purchaseQty} onChange={(e) => setPurchaseQty(parseInt(e.target.value, 10))} />
+          </label>
+          <button className="market-product-detail-primary-btn" onClick={handleAddToCart} disabled={purchaseQty === 0 || product.category_id === 16}>
             Add to cart
           </button>
-        </>
+        </section>
       )}
       {!isPaused && !isOwner && currentUser && (
-        <button className="landing-button" onClick={handleAddToFavorites} disabled={isFavorite} style={{ marginLeft: 8 }}>
-          {isFavorite ? 'In favorites' : 'Add to favorites'}
-        </button>
+        <div className="market-product-detail-favorite">
+          <button className="market-product-detail-secondary-btn" onClick={handleAddToFavorites} disabled={isFavorite}>
+            {isFavorite ? 'In favorites' : 'Add to favorites'}
+          </button>
+        </div>
       )}
-      <div style={{ marginTop: '24px' }}>
-        <div className="section-divider" />
-      </div>
 
-      <div className="product-detail-qa" style={{ margin: '40px auto 0', maxWidth: 500, width: '100%' }}>
+      <section className="market-product-detail-section product-detail-qa">
         <h3>Questions and Answers</h3>
         {messages.filter((m) => !m.receiver_id).map((q) => {
           const answer = messages.find((m) => m.receiver_id === q.id);
@@ -287,13 +303,12 @@ function ProductDetailPage(props) {
           </div>
         )}
         {!currentUser && <p>Log in to ask questions.</p>}
-      </div>
+      </section>
 
-      <div className="section-divider" style={{ marginTop: 40, marginBottom: 10 }} />
-      <div style={{ marginTop: 20 }}>
+      <section className="market-product-detail-section market-product-detail-seller">
         <button
           type="button"
-          className="landing-button"
+          className="market-product-detail-secondary-btn"
           disabled={!sellerDetailsAvailable}
           onClick={() => setShowSellerDetails((prev) => !prev)}
         >
@@ -301,16 +316,17 @@ function ProductDetailPage(props) {
             ? (showSellerDetails ? 'Hide Seller Details' : 'View Seller Details')
             : 'Seller details unavailable'}
         </button>
-      </div>
+
 
       {sellerDetailsAvailable && showSellerDetails && (
-        <div ref={sellerDetailsRef} style={{ marginTop: 20 }}>
+        <div ref={sellerDetailsRef} className="market-product-detail-seller-details">
           <h3>Seller Details</h3>
           <p><strong>Name:</strong> {formatSellerFullName(sellerInfo)}</p>
           <p><strong>Nickname:</strong> {sellerInfo.nickname || '-'}</p>
           <p><strong>Phone:</strong> {sellerInfo.phone || '-'}</p>
         </div>
       )}
+      </section>
     </div>
   );
 }

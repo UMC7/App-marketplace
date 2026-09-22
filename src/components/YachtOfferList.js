@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
 import Modal from './Modal';
+import InformationalModal from './InformationalModal';
 import ChatPage from './ChatPage';
 import FilterPanel from './FilterPanel';
 import PreferencesPanel from './PreferencesPanel';
@@ -1094,32 +1095,28 @@ const handleDirectApply = async (offerId) => {
       </div>
 
       {showChatIntro && (
-  <Modal onClose={handleCloseChatIntro}>
-    <div style={{ maxWidth: 520 }}>
-      <h3 style={{ marginTop: 0 }}>🔒 Private Chat – How it works</h3>
-      <p>Use Private Chat to contact employers directly and professionally.</p>
-      <p>💬 Start a private conversation with the person who posted the job.</p>
-      <p>📎 Share your CV, references, and additional information securely.</p>
-      <p>🔐 Your communication stays private inside Yacht Daywork — no phone numbers or personal contact details required.</p>
-      <p>This is the ideal first step to connect with employers before moving to direct communication if requested.</p>
-      <p>👉 Chat safely. Connect professionally.</p>
-      <button className="landing-button" onClick={handleCloseChatIntro}>
-        Got it
-      </button>
-    </div>
-  </Modal>
+  <InformationalModal
+    kicker="SeaJobs"
+    title="Private Chat — How it works"
+    intro="Use Private Chat to contact employers directly and professionally."
+    points={[
+      'Start a private conversation with the person who posted the job.',
+      'Share your CV, references, and additional information securely.',
+      'Communication stays private inside Yacht Daywork without phone numbers or personal contact details.',
+      'Connect with employers before moving to direct communication if requested.',
+    ]}
+    onClose={handleCloseChatIntro}
+  />
 )}
 
       {showChatLoginInfo && (
-  <Modal onClose={handleCloseChatLoginInfo}>
-    <div style={{ maxWidth: 520 }}>
-      <h3 style={{ marginTop: 0 }}>Sign in required</h3>
-      <p>Private Chat is available only for registered users. Please sign in to start a private conversation.</p>
-      <button className="landing-button" onClick={handleCloseChatLoginInfo}>
-        Close
-      </button>
-    </div>
-  </Modal>
+  <InformationalModal
+    kicker="Private Chat"
+    title="Sign in required"
+    intro="Private Chat is available only for registered users. Please sign in to start a private conversation."
+    actionLabel="Close"
+    onClose={handleCloseChatLoginInfo}
+  />
 )}
 
       {showDirectApplyModal && (

@@ -31,7 +31,7 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   line-height: 1;
   color: var(--primary-color, #081a3b) !important; /* visible en light */
   cursor: pointer;
@@ -78,7 +78,7 @@
   .react-responsive-modal-closeButton {
     top: 10px !important;
     right: 10px !important;
-    font-size: 1.6rem !important;
+    font-size: 1.4rem !important;
   }
 }
 
@@ -106,5 +106,188 @@
 .modal-content-wrapper.skill-select-modal {
   max-width: min(420px, 96vw);
   width: fit-content;
+}
+
+/* Informational prompts share the visual language of Featured Tools. */
+.info-promo-modal-overlay {
+  padding: 24px;
+  background: rgba(12, 31, 46, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-sizing: border-box;
+}
+
+.modal-content-wrapper.info-promo-modal {
+  width: min(680px, 96vw);
+  max-width: 680px;
+  max-height: min(90vh, 760px);
+  padding: 28px 28px 24px;
+  border: 1px solid rgba(16, 78, 100, 0.14);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(111, 214, 214, 0.16), transparent 32%),
+    linear-gradient(180deg, rgba(250, 253, 254, 0.98), rgba(241, 248, 250, 0.98));
+  box-shadow: 0 28px 70px rgba(12, 31, 46, 0.26);
+  color: #0d2134;
+}
+
+.info-promo-modal > .close-button {
+  top: 14px !important;
+  right: 16px !important;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(15, 79, 103, 0.12) !important;
+  color: #17314b !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-promo-modal-hero {
+  padding-right: 42px;
+}
+
+.info-promo-modal-kicker {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #0f7b91;
+}
+
+.info-promo-modal-hero h3 {
+  margin: 0;
+  font-size: clamp(1.65rem, 2.2vw, 2.35rem);
+  line-height: 1.08;
+  color: #102842;
+  text-wrap: balance;
+}
+
+.info-promo-modal-intro {
+  margin: 12px 0 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: #4c667a;
+}
+
+.info-promo-modal-points {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.info-promo-modal-points li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 0.98rem;
+  line-height: 1.45;
+  color: #244458;
+}
+
+.info-promo-modal-points li::before {
+  content: "✓";
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(17, 184, 91, 0.12);
+  color: #0b8043;
+  font-weight: 900;
+}
+
+.info-promo-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(16, 78, 100, 0.1);
+}
+
+.info-promo-modal-btn {
+  border: 1px solid rgba(15, 39, 70, 0.28);
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: #0f2746;
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(8, 26, 59, 0.16);
+}
+
+.info-promo-modal-btn:hover {
+  transform: translateY(-1px);
+}
+
+body.dark-mode .modal-content-wrapper.info-promo-modal,
+html[data-theme='dark'] .modal-content-wrapper.info-promo-modal {
+  border-color: rgba(111, 214, 214, 0.12);
+  background:
+    radial-gradient(circle at top left, rgba(111, 214, 214, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(21, 27, 31, 0.98), rgba(29, 32, 34, 0.98));
+  color: #edf6ff;
+}
+
+body.dark-mode .info-promo-modal > .close-button,
+html[data-theme='dark'] .info-promo-modal > .close-button {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(111, 214, 214, 0.14) !important;
+  color: #edf6ff !important;
+}
+
+body.dark-mode .info-promo-modal-hero h3,
+html[data-theme='dark'] .info-promo-modal-hero h3 {
+  color: #ffffff;
+}
+
+body.dark-mode .info-promo-modal-intro,
+body.dark-mode .info-promo-modal-points li,
+html[data-theme='dark'] .info-promo-modal-intro,
+html[data-theme='dark'] .info-promo-modal-points li {
+  color: #bfd0dc;
+}
+
+body.dark-mode .info-promo-modal-footer,
+html[data-theme='dark'] .info-promo-modal-footer {
+  border-top-color: rgba(111, 214, 214, 0.12);
+}
+
+body.dark-mode .info-promo-modal-btn,
+html[data-theme='dark'] .info-promo-modal-btn {
+  border-color: rgba(111, 214, 214, 0.22) !important;
+  background: #0f2746 !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 768px) {
+  .info-promo-modal-overlay {
+    padding: 14px;
+  }
+
+  .modal-content-wrapper.info-promo-modal {
+    width: min(100%, 540px);
+    max-width: calc(100vw - 28px);
+    padding: 22px 16px 18px;
+    border-radius: 18px;
+  }
+
+  .info-promo-modal-hero {
+    padding-right: 30px;
+  }
+
+  .info-promo-modal-footer {
+    margin-top: 18px;
+    padding-top: 16px;
+  }
 }
 

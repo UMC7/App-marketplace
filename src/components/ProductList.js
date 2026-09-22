@@ -33,7 +33,11 @@ function ProductList({ products, onRemoveFavorite }) {
       </div>
 
       {selectedProduct && (
-        <Modal onClose={handleCloseModal}>
+        <Modal
+          onClose={handleCloseModal}
+          overlayClassName="market-product-detail-overlay"
+          contentClassName="market-product-detail-modal"
+        >
           <ProductDetailPage id={selectedProduct.id} />
         </Modal>
       )}

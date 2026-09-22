@@ -137,18 +137,24 @@
   }
 }
 
-:root:not([data-theme='dark']) .marketplace-filter-panel .clear-filters-btn {
-  background: rgba(185, 28, 28, 0.1);
-  color: #b91c1c;
-  border: 1px solid rgba(185, 28, 28, 0.32);
+:root:not([data-theme='dark']) .marketplace-filter-panel .clear-filters-btn,
+:root:not([data-theme='dark']) .seajobs-filter-panel .clear-filters,
+:root:not([data-theme='dark']) .seajobs-preferences-panel .clear-filters,
+:root:not([data-theme='dark']) .seacrew-filters-panel .clear-filters {
+  background: rgba(185, 28, 28, 0.1) !important;
+  color: #b91c1c !important;
+  border: 1px solid rgba(185, 28, 28, 0.32) !important;
   border-radius: 8px;
   font-weight: 600;
 }
 
-:root:not([data-theme='dark']) .marketplace-filter-panel .clear-filters-btn:hover:not(:disabled) {
-  background: rgba(185, 28, 28, 0.16);
-  border-color: rgba(185, 28, 28, 0.48);
-  color: #991b1b;
+:root:not([data-theme='dark']) .marketplace-filter-panel .clear-filters-btn:hover:not(:disabled),
+:root:not([data-theme='dark']) .seajobs-filter-panel .clear-filters:hover:not(:disabled),
+:root:not([data-theme='dark']) .seajobs-preferences-panel .clear-filters:hover:not(:disabled),
+:root:not([data-theme='dark']) .seacrew-filters-panel .clear-filters:hover:not(:disabled) {
+  background: rgba(185, 28, 28, 0.16) !important;
+  border-color: rgba(185, 28, 28, 0.48) !important;
+  color: #991b1b !important;
 }
 
 .marketplace-filter-panel .clear-filters-btn:disabled {
@@ -156,36 +162,10 @@
   opacity: 0.55;
 }
 
-:root:not([data-theme='dark']) .seajobs-filter-panel .clear-filters,
-:root:not([data-theme='dark']) .seajobs-preferences-panel .clear-filters {
-  background: rgba(185, 28, 28, 0.1);
-  color: #b91c1c;
-  border: 1px solid rgba(185, 28, 28, 0.32);
-}
-
-:root:not([data-theme='dark']) .seajobs-filter-panel .clear-filters:hover:not(:disabled),
-:root:not([data-theme='dark']) .seajobs-preferences-panel .clear-filters:hover:not(:disabled) {
-  background: rgba(185, 28, 28, 0.16);
-  border-color: rgba(185, 28, 28, 0.48);
-  color: #991b1b;
-}
-
 .seajobs-filter-panel .clear-filters:disabled,
 .seajobs-preferences-panel .clear-filters:disabled {
   cursor: not-allowed;
   opacity: 0.55;
-}
-
-:root:not([data-theme='dark']) .seacrew-filters-panel .clear-filters {
-  background: rgba(185, 28, 28, 0.1);
-  color: #b91c1c;
-  border: 1px solid rgba(185, 28, 28, 0.32);
-}
-
-:root:not([data-theme='dark']) .seacrew-filters-panel .clear-filters:hover:not(:disabled) {
-  background: rgba(185, 28, 28, 0.16);
-  border-color: rgba(185, 28, 28, 0.48);
-  color: #991b1b;
 }
 
 .seacrew-filters-panel .clear-filters:disabled {

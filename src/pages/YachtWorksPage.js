@@ -5,6 +5,7 @@ import SeaCrewList from '../components/SeaCrewList';
 import SeaJobsAnalytics from '../components/SeaJobsAnalytics';
 import ChatPage from '../components/ChatPage';
 import Modal from '../components/Modal';
+import InformationalModal from '../components/InformationalModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ScrollToTopButton from '../components/ScrollToTopButton';
 import '../yachtworkspage.css';
@@ -1151,46 +1152,40 @@ function YachtWorksPage() {
   return (
     <div className="container">
       {showPrefsIntro && (
-        <Modal onClose={handleClosePrefsIntro}>
-          <div style={{ maxWidth: 520 }}>
-            <h3 style={{ marginTop: 0 }}>🔔 Job Preferences – How it works</h3>
-            <p>Set your Job Preferences to help SeaJobs work for you.</p>
-            <p>📝 Choose the positions, terms, locations, and conditions you’re interested in.</p>
-            <p>✨ Jobs that match your preferences will be highlighted in the list.</p>
-            <p>🔔 You’ll also receive notifications when new opportunities fit what you’re looking for.</p>
-            <p>Unlike filters, Job Preferences stay active and help you discover the best opportunities automatically.</p>
-            <p>👉 Update your preferences anytime.</p>
-            <button className="landing-button" onClick={handleClosePrefsIntro}>
-              Got it
-            </button>
-          </div>
-        </Modal>
+        <InformationalModal
+          kicker="SeaJobs"
+          title="Job Preferences — How it works"
+          intro="Set your Job Preferences to help SeaJobs work for you."
+          points={[
+            'Choose the positions, terms, locations, and conditions you are interested in.',
+            'Jobs matching your preferences are highlighted in the list.',
+            'Receive notifications when new opportunities match what you are looking for.',
+            'Unlike filters, preferences stay active and help you discover opportunities automatically.',
+          ]}
+          onClose={handleClosePrefsIntro}
+        />
       )}
       {showCrewChatIntro && (
-        <Modal onClose={handleCloseCrewChatIntro}>
-          <div style={{ maxWidth: 520 }}>
-            <h3 style={{ marginTop: 0 }}>🔒 Private Chat – How it works</h3>
-            <p>Use Private Chat to contact candidates directly and professionally.</p>
-            <p>💬 Start a private conversation with the candidate behind the SeaCrew card.</p>
-            <p>📎 Share role details, answer questions, and continue the conversation securely inside Yacht Daywork.</p>
-            <p>🔐 Your communication stays private inside the platform without requiring personal contact details.</p>
-            <p>👉 Chat safely. Connect professionally.</p>
-            <button className="landing-button" onClick={handleCloseCrewChatIntro}>
-              Got it
-            </button>
-          </div>
-        </Modal>
+        <InformationalModal
+          kicker="SeaCrew"
+          title="Private Chat — How it works"
+          intro="Use Private Chat to contact candidates directly and professionally."
+          points={[
+            'Start a private conversation with the candidate behind the SeaCrew card.',
+            'Share role details, answer questions, and continue the conversation securely inside Yacht Daywork.',
+            'Communication stays private without requiring personal contact details.',
+          ]}
+          onClose={handleCloseCrewChatIntro}
+        />
       )}
       {showCrewChatLoginInfo && (
-        <Modal onClose={handleCloseCrewChatLoginInfo}>
-          <div style={{ maxWidth: 520 }}>
-            <h3 style={{ marginTop: 0 }}>Sign in required</h3>
-            <p>Private Chat is available only for registered users. Please sign in to start a private conversation.</p>
-            <button className="landing-button" onClick={handleCloseCrewChatLoginInfo}>
-              Close
-            </button>
-          </div>
-        </Modal>
+        <InformationalModal
+          kicker="Private Chat"
+          title="Sign in required"
+          intro="Private Chat is available only for registered users. Please sign in to start a private conversation."
+          actionLabel="Close"
+          onClose={handleCloseCrewChatLoginInfo}
+        />
       )}
       {activeCrewChat && (
         <Modal onClose={() => setActiveCrewChat(null)}>

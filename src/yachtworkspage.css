@@ -2053,9 +2053,6 @@ body.dark-mode .collapsed-offer {
 @media (max-width: 768px) {
   .filters-container button.clear-filters,
   .filters-panel button.clear-filters {
-    background: var(--color-primary);
-    color: var(--color-text-light);
-    border: none;
     border-radius: 12px;
     padding: 12px 16px;
     font-size: 1rem;
@@ -2068,7 +2065,6 @@ body.dark-mode .collapsed-offer {
 
   .filters-container button.clear-filters:hover,
   .filters-panel button.clear-filters:hover {
-    background: #0f2a5f; /* navy más claro en hover */
     transform: translateY(-1px);
   }
 

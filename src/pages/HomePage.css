@@ -40,13 +40,21 @@
 .search-input,
 .category-select,
 .price-input,
-.sort-clear-group select,
-.clear-filters-btn {
+.sort-clear-group select {
   height: 40px;
   padding: 0 12px;
   border: 1px solid #ccc;
   border-radius: 8px;
   background: #fff;
+  font-size: 14px;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+.marketplace-filter-panel .clear-filters-btn {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
   font-size: 14px;
   box-sizing: border-box;
   font-family: 'Inter', sans-serif;
@@ -113,7 +121,7 @@
 }
 
 /* Botón Clear base */
-.clear-filters-btn {
+.marketplace-filter-panel .clear-filters-btn {
   cursor: pointer;
   white-space: nowrap;
   font-weight: 600;
@@ -121,9 +129,8 @@
   transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
-.clear-filters-btn:hover {
-  background-color: var(--accent-color, #68ada8);
-  color: #fff;
+.marketplace-filter-panel .clear-filters-btn:hover {
+  transform: translateY(-1px);
 }
 
 /* Toggle navbar móvil */
@@ -213,10 +220,7 @@
   }
 
   /* Botón Clear en móvil */
-  .clear-filters-btn {
-    background: var(--primary-color, #081a3b);
-    color: #ffffff;
-    border: none;
+  .marketplace-filter-panel .clear-filters-btn {
     border-radius: 12px;
     padding: 12px 16px;
     font-size: 1rem;
@@ -225,12 +229,11 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.08), inset 0 -2px 0 rgba(0,0,0,0.03);
   }
 
-  .clear-filters-btn:hover {
-    background: #0f2a5f;
+  .marketplace-filter-panel .clear-filters-btn:hover {
     transform: translateY(-1px);
   }
 
-  .clear-filters-btn:active {
+  .marketplace-filter-panel .clear-filters-btn:active {
     transform: translateY(0);
     box-shadow: inset 0 2px 0 rgba(0,0,0,0.06);
   }
@@ -262,6 +265,21 @@
 .products-grid > * {
   max-width: 330px; /* Ancho máximo de tarjeta */
   width: 100%;
+}
+
+/* SeaMarket: preserve the compact card layout while giving the surface more depth. */
+.seamarket-page .product-card {
+  background-color: #f4f9fa;
+  background-image:
+    radial-gradient(circle at top right, rgba(104, 173, 168, 0.3), transparent 48%),
+    linear-gradient(135deg, #f8fbfc 0%, #ffffff 56%, #e7f4f2 100%);
+}
+
+body.dark-mode .seamarket-page .product-card,
+html[data-theme='dark'] .seamarket-page .product-card {
+  background-image:
+    radial-gradient(circle at top right, rgba(111, 214, 214, 0.12), transparent 42%),
+    linear-gradient(180deg, rgba(21, 27, 31, 0.98), rgba(29, 32, 34, 0.98)) !important;
 }
 
 /* Cambia antes a 2 columnas en desktop estrecho para evitar cards apiladas */
