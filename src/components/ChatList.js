@@ -376,24 +376,15 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
   });
 
   return (
-    <div>
-      <div style={{ marginBottom: '12px', paddingRight: '40px' }}>
-        <h3 style={{ margin: 0, marginBottom: '8px' }}>Active Chats</h3>
+    <div className="chat-list-panel">
+      <div className="chat-list-heading">
+        <h3>Active Chats</h3>
         {!loading && chatSummaries.length > 0 && (
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
-            <span style={{ color: 'var(--text-secondary, #64748b)' }}>Sort:</span>
+          <label className="chat-list-sort">
+            <span>Sort:</span>
             <select
               value={sortPreference}
               onChange={handleSortChange}
-              style={{
-                padding: '4px 8px',
-                borderRadius: '6px',
-                border: '1px solid rgba(255,255,255,0.12)',
-                background: 'var(--bg-elevated, #1b2430)',
-                color: 'var(--text-primary, #e2e8f0)',
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-              }}
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -409,23 +400,11 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
       ) : chatSummaries.length === 0 ? (
         <p>No chats yet.</p>
       ) : (
-        <div>
+        <div className="chat-list-groups">
           {groups.map((group) => (
-            <div key={group.key} style={{ marginBottom: '12px' }}>
+            <div key={group.key} className="chat-list-group">
               <button
-                style={{
-                  display: 'inline-block',
-                  padding: '4px 10px',
-                  borderRadius: '999px',
-                  background: '#1b2430',
-                  color: '#e2e8f0',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  marginBottom: '8px',
-                  cursor: (group.key === '__external__' || group.key === '__admin__') ? 'default' : 'pointer',
-                  textAlign: 'left',
-                }}
+                className="chat-list-group-label"
                 title={group.title}
                 type="button"
                 onClick={() => {
@@ -436,7 +415,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
               >
                 {group.title}
               </button>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <ul className="chat-list-items">
                 {group.items.map((chat) => {
                   const chatKey = chat.offer_id === '__admin__' ? `__admin__${chat.thread_id}` : getChatKey(chat.offer_id, chat.user_id);
                   const isExternal = chat.offer_id === '__external__';
@@ -445,60 +424,28 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                   const unreadCount = chat.unreadCount || 0;
 
                   return (
-                    <li key={chatKey} style={{ marginBottom: '10px' }}>
+                    <li key={chatKey}>
                       <div
                         className={`chat-card${unreadCount > 0 ? ' chat-card-has-unread' : ''}`}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '6px 8px',
-                        }}
                       >
                         <button
                           className="chat-card-button"
-                          style={{
-                            padding: '4px 6px',
-                            borderRadius: '4px',
-                            width: '100%',
-                            textAlign: 'left',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            flex: '1 1 auto',
-                            minWidth: 0,
-                          }}
                           onClick={() => onOpenChat(chat.offer_id, chat.user_id, { adminThreadId: chat.thread_id })}
                         >
                           <Avatar
                             nickname={chat.nickname || 'User'}
                             srcUrl={chat.avatar_url || null}
-                            size={28}
+                            size={38}
                             shape="circle"
                           />
                           <span
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'flex-start',
-                              gap: '2px',
-                              minWidth: 0,
-                              flex: '1 1 auto',
-                            }}
+                            className="chat-card-identity"
                           >
                             <strong style={{ flex: '0 0 auto' }}>{chat.nickname}</strong>
                           </span>
                         </button>
                         {!isExternal && (
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              flex: '0 0 auto',
-                            }}
-                          >
+                          <div className="chat-card-actions">
                             {unreadCount > 0 && (
                               <span
                                 style={{
@@ -525,13 +472,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                               title={chat.locked ? 'Unlock chat' : 'Lock chat'}
                               onClick={() => handleToggleLock(chat)}
                               disabled={isBusy}
-                              style={{
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: isBusy ? 'not-allowed' : 'pointer',
-                                color: '#0f172a',
-                                padding: '6px',
-                              }}
+                              className="chat-card-action"
                             >
                               {chat.locked ? <LockClosedIcon /> : <LockOpenIcon />}
                             </button>
@@ -540,13 +481,7 @@ function ChatList({ currentUser, onOpenChat, onOpenOffer }) {
                               title={chat.locked ? 'Unlock to delete' : 'Delete chat'}
                               onClick={() => handleDelete(chat)}
                               disabled={isBusy || chat.locked}
-                              style={{
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: isBusy || chat.locked ? 'not-allowed' : 'pointer',
-                                color: chat.locked ? '#6b7280' : '#b91c1c',
-                                padding: '6px',
-                              }}
+                              className={`chat-card-action chat-card-delete${chat.locked ? ' is-disabled' : ''}`}
                             >
                               <TrashIcon />
                             </button>

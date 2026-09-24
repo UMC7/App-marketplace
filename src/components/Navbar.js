@@ -463,7 +463,11 @@ const handleOpenChat = (offerId, receiverId, options = {}) => {
         </Modal>
       )}
       {showChatList && (
-        <Modal onClose={() => { setActiveChat(null); setShowChatList(false); }}>
+        <Modal
+          onClose={() => { setActiveChat(null); setShowChatList(false); }}
+          contentClassName={!activeChat ? 'chat-list-modal' : ''}
+          overlayClassName={!activeChat ? 'chat-list-modal-overlay' : ''}
+        >
           {!activeChat ? (
             <ChatList
               currentUser={currentUser}

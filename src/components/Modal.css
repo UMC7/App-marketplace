@@ -108,6 +108,70 @@
   width: fit-content;
 }
 
+/* Active Chats: a dedicated conversation hub, not a generic dialog. */
+.chat-list-modal-overlay {
+  padding: 24px;
+  background: rgba(7, 20, 39, 0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-sizing: border-box;
+}
+.modal-content-wrapper.chat-list-modal {
+  width: min(640px, 94vw);
+  max-width: 640px;
+  max-height: min(84vh, 760px);
+  padding: 30px;
+  overflow: auto;
+  border: 1px solid rgba(104, 173, 168, 0.26);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(104, 173, 168, 0.28), transparent 34%),
+    linear-gradient(145deg, #fbfdfe 0%, #f1f8f8 55%, #e7f2f1 100%);
+  box-shadow: 0 32px 80px rgba(4, 18, 36, 0.34);
+}
+.chat-list-modal > .close-button {
+  top: 16px !important;
+  right: 18px !important;
+  width: 34px;
+  height: 34px;
+  display: inline-grid !important;
+  place-items: center;
+  border: 1px solid rgba(8, 26, 59, 0.12) !important;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7) !important;
+  color: #081a3b !important;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.chat-list-modal > .close-button:hover {
+  background: #ffffff !important;
+  transform: rotate(90deg);
+}
+
+body.dark-mode .modal-content-wrapper.chat-list-modal,
+[data-theme="dark"] .modal-content-wrapper.chat-list-modal {
+  border-color: rgba(111, 214, 214, 0.2);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(111, 214, 214, 0.14), transparent 34%),
+    linear-gradient(155deg, #172126 0%, #20282b 58%, #182326 100%);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+}
+body.dark-mode .chat-list-modal > .close-button,
+[data-theme="dark"] .chat-list-modal > .close-button {
+  border-color: rgba(111, 214, 214, 0.2) !important;
+  background: rgba(34, 48, 51, 0.82) !important;
+  color: #d5f4f0 !important;
+}
+
+@media (max-width: 768px) {
+  .chat-list-modal-overlay { padding: 12px; }
+  .modal-content-wrapper.chat-list-modal {
+    width: min(100%, 600px);
+    max-height: calc(100dvh - 24px);
+    padding: 24px 18px;
+    border-radius: 20px;
+  }
+}
+
 /* Informational prompts share the visual language of Featured Tools. */
 .info-promo-modal-overlay {
   padding: 24px;
