@@ -1976,6 +1976,119 @@ body.dark-mode .seajobs-analytics-row-label,
   }
 }
 
+/* SeaJobs analytics: differentiated metric and intelligence surfaces. */
+.seajobs-analytics-card {
+  min-height: 146px;
+  border: 1px solid rgba(8, 26, 59, 0.1);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(104, 173, 168, 0.2), transparent 42%),
+    linear-gradient(145deg, #fbfdfe 0%, #ffffff 60%, #edf6f5 100%);
+  box-shadow: 0 12px 28px rgba(8, 26, 59, 0.1);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.seajobs-analytics-card:hover {
+  border-color: rgba(11, 113, 133, 0.28);
+  box-shadow: 0 18px 34px rgba(8, 26, 59, 0.15);
+  transform: translateY(-3px);
+}
+.seajobs-analytics-card::after {
+  display: block;
+  animation: seajobs-analytics-shine 10s infinite;
+}
+body:not(.dark-mode) .seajobs-analytics-card::after,
+:root:not([data-theme="dark"]) .seajobs-analytics-card::after {
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(104, 173, 168, 0.08) 38%,
+    rgba(104, 173, 168, 0.4) 49%,
+    rgba(214, 239, 236, 0.56) 57%,
+    transparent 100%
+  );
+  mix-blend-mode: normal;
+}
+.seajobs-analytics-value {
+  color: #081a3b;
+  font-size: clamp(2.3rem, 3.4vw, 3.1rem);
+  font-weight: 750;
+  line-height: 1;
+}
+.seajobs-analytics-label {
+  color: #53637a;
+  font-size: 0.76rem;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.seajobs-analytics-card-list {
+  align-items: center;
+  padding: 18px 20px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(244, 249, 250, 0.96));
+}
+.seajobs-analytics-card-list .seajobs-analytics-label {
+  margin: 0 0 12px;
+  color: #243c5c;
+  font-size: 0.7rem;
+  letter-spacing: 0.045em;
+  text-align: left;
+  white-space: nowrap;
+}
+.seajobs-analytics-rows {
+  align-items: stretch;
+  max-width: 168px;
+  margin-right: auto;
+  margin-left: auto;
+  gap: 5px;
+}
+.seajobs-analytics-carousel .seajobs-analytics-rows {
+  width: 168px;
+  max-width: calc(100% - 16px);
+  margin-right: auto;
+  margin-left: auto;
+}
+.seajobs-analytics-row {
+  gap: 7px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  background: rgba(236, 243, 245, 0.72);
+  font-size: 0.85rem;
+}
+.seajobs-analytics-icon { font-size: 1rem; }
+.seajobs-analytics-row-label { color: #213650; font-weight: 600; }
+.seajobs-analytics-row-value { color: #0b7185; }
+
+body.dark-mode .seajobs-analytics-card,
+[data-theme="dark"] .seajobs-analytics-card {
+  border-color: rgba(174, 199, 204, 0.14);
+  background:
+    radial-gradient(circle at top right, rgba(113, 143, 155, 0.16), transparent 42%),
+    linear-gradient(155deg, #1b2529 0%, #222a2d 62%, #182125 100%);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+}
+body.dark-mode .seajobs-analytics-card:hover,
+[data-theme="dark"] .seajobs-analytics-card:hover {
+  border-color: rgba(154, 181, 188, 0.32);
+  box-shadow: 0 20px 38px rgba(0, 0, 0, 0.38);
+}
+body.dark-mode .seajobs-analytics-value,
+[data-theme="dark"] .seajobs-analytics-value { color: #eef6f6; }
+body.dark-mode .seajobs-analytics-label,
+[data-theme="dark"] .seajobs-analytics-label { color: #aebfc2; }
+body.dark-mode .seajobs-analytics-card-list,
+[data-theme="dark"] .seajobs-analytics-card-list {
+  background: linear-gradient(155deg, #1d282c, #20292c);
+}
+body.dark-mode .seajobs-analytics-card-list .seajobs-analytics-label,
+[data-theme="dark"] .seajobs-analytics-card-list .seajobs-analytics-label { color: #d6e2e3; }
+body.dark-mode .seajobs-analytics-row,
+[data-theme="dark"] .seajobs-analytics-row { background: rgba(42, 53, 57, 0.78); }
+body.dark-mode .seajobs-analytics-row-label,
+[data-theme="dark"] .seajobs-analytics-row-label { color: #e1ebec; }
+body.dark-mode .seajobs-analytics-row-value,
+[data-theme="dark"] .seajobs-analytics-row-value { color: #b4c8ce; }
+
 /*
   ----------------------------------------------------------------------------
   Module Header
