@@ -1,6 +1,7 @@
 // /api/notifyUser.js
 import admin from "firebase-admin";
 import { createClient } from "@supabase/supabase-js";
+import { requireInternalKey } from "./_lib/requireInternalKey.js";
 
 function getFirebaseAdminApp() {
   if (admin.apps.length) return admin;
@@ -46,16 +47,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Metodo no permitido" });
   }
 
-  const internalKey = process.env.WEB_API_INTERNAL_KEY;
-  if (internalKey) {
-    const incoming = req.headers["x-internal-key"];
-    if (!incoming || incoming !== internalKey) {
-      return res.status(401).json({
-        error: "No autorizado",
-        hint: "Incluye header x-internal-key.",
-      });
-    }
-  }
+  if (!requireInternalKey(req, res)) return;
 
   try {
     const adminApp = getFirebaseAdminApp();
@@ -109,7 +101,6 @@ export default async function handler(req, res) {
     let sent = 0;
     let failed = 0;
     const invalidTokens = [];
-    const sendErrors = [];
 
     if (fcmTokens.length) {
       const response = await adminApp.messaging().sendEachForMulticast({
@@ -131,12 +122,7 @@ export default async function handler(req, res) {
           ) {
             invalidTokens.push(fcmTokens[i]);
           }
-          sendErrors.push({
-            token: fcmTokens[i],
-            provider: "fcm",
-            code: code || undefined,
-            message: message || undefined,
-          });
+          console.warn("[notifyUser] FCM delivery failed", { code: code || undefined, message: message || undefined });
         }
       });
     }
@@ -187,9 +173,7 @@ export default async function handler(req, res) {
             ) {
               if (expoTokens[i]) invalidTokens.push(expoTokens[i]);
             }
-            sendErrors.push({
-              token: expoTokens[i],
-              provider: "expo",
+            console.warn("[notifyUser] Expo delivery failed", {
               code: t?.details?.error || undefined,
               message: t?.message || undefined,
             });
@@ -197,12 +181,7 @@ export default async function handler(req, res) {
         });
       } catch (error) {
         failed += expoTokens.length;
-        sendErrors.push({
-          token: null,
-          provider: "expo",
-          code: "request_failed",
-          message: error?.message || String(error),
-        });
+        console.warn("[notifyUser] Expo delivery request failed", error?.message || String(error));
       }
     }
 
@@ -220,21 +199,9 @@ export default async function handler(req, res) {
       failed,
     };
 
-    if (failed > 0 && sendErrors.length > 0) {
-      payload.errors = sendErrors.slice(0, 3).map((e) => ({
-        token: e.token,
-        provider: e.provider,
-        code: e.code,
-        message: e.message,
-      }));
-    }
-
     return res.status(200).json(payload);
   } catch (err) {
     console.error("notifyUser error:", err?.message || err);
-    return res.status(500).json({
-      error: "Error interno al notificar",
-      message: err?.message || String(err),
-    });
+    return res.status(500).json({ error: "Error interno al notificar" });
   }
 }
