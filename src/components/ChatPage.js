@@ -9,6 +9,7 @@ import Avatar from './Avatar';
 import { LinkPreview, extractUrls } from './LinkPreview';
 import { markNotificationsForChatAsRead } from '../utils/notificationRoutes';
 import { parseServerDate } from '../utils/dateUtils';
+import { fetchPublicUserSummaries } from '../services/publicUserDirectory';
 
 const MAX_CHAT_FILE_MB = 50;
 const CHAT_FILE_ACCEPT = [
@@ -309,11 +310,8 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         return;
       }
       if (!otherUserId) return;
-      const { data, error } = await supabase
-        .from('users')
-        .select('nickname, avatar_url')
-        .eq('id', otherUserId)
-        .single();
+      const { data: userRows, error } = await fetchPublicUserSummaries([otherUserId]);
+      const data = userRows?.[0] || null;
       if (!error && data) {
         setOtherNickname(data.nickname || 'User');
         setOtherAvatar(data.avatar_url || null);

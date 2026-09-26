@@ -14,6 +14,7 @@ import { getOfferDepartment } from '../utils/offerDepartment';
 import { normalizeYachtUse } from '../components/cv/candidate/shared/experienceCatalogs';
 import { isOfferVisibleOnJobBoard } from '../utils/jobOfferVisibility';
 import { inferTypeByName } from './cv/publicProfileView.utils';
+import { fetchPublicUserSummaries } from '../services/publicUserDirectory';
 import { useLocation } from 'react-router-dom';
 
 const SEACREW_PAGE_SIZE = 18;
@@ -252,10 +253,7 @@ async function fetchSeaCrewProfilesLegacy() {
   const nicknameMap = new Map();
   for (const idChunk of chunkArray(nicknameIds)) {
     try {
-      const { data: userRows, error: usersError } = await supabase
-        .from('users')
-        .select('id, nickname')
-        .in('id', idChunk);
+      const { data: userRows, error: usersError } = await fetchPublicUserSummaries(idChunk);
 
       if (usersError) {
         console.warn('SeaCrew nickname batch lookup failed:', usersError);

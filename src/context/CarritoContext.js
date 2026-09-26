@@ -45,26 +45,18 @@ export function CarritoProvider({ children }) {
       console.error('Error al obtener el carrito:', error.message);
     } else {
       const productsData = data || [];
-      const ownerIds = [
-        ...new Set(
-          productsData
-            .map((item) => item.products?.owner)
-            .filter(Boolean)
-        ),
-      ];
+      const productIds = [...new Set(productsData.map((item) => item.product_id).filter(Boolean))];
 
-      let ownersMap = {};
-      if (ownerIds.length > 0) {
-        const { data: ownerRows, error: ownerError } = await supabase
-          .from('users')
-          .select('id, first_name, last_name, email, phone')
-          .in('id', ownerIds);
+      let sellerContactsByProduct = {};
+      if (productIds.length > 0) {
+        const { data: contactRows, error: ownerError } = await supabase
+          .rpc('rpc_cart_public_seller_contacts', { p_product_ids: productIds });
 
         if (ownerError) {
           console.error('Error al obtener propietarios del carrito:', ownerError.message);
         } else {
-          ownersMap = Object.fromEntries(
-            (ownerRows || []).map((owner) => [owner.id, owner])
+          sellerContactsByProduct = Object.fromEntries(
+            (contactRows || []).map((owner) => [owner.product_id, owner])
           );
         }
       }
@@ -78,8 +70,8 @@ export function CarritoProvider({ children }) {
         stock: item.products?.quantity,
         mainphoto: item.products?.mainphoto,
         status: item.products?.status,
-        owner: item.products?.owner,
-        ownerInfo: ownersMap[item.products?.owner] || null,
+        owner: sellerContactsByProduct[item.product_id]?.id || null,
+        ownerInfo: sellerContactsByProduct[item.product_id] || null,
       }));
       setCartItems(formattedCart);
     }

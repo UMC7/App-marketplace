@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+import { requireSupabaseUser } from "./_lib/requireSupabaseUser.js";
+import { allowRequest } from "./_lib/rateLimit.js";
 
 function getOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -136,12 +138,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  const user = await requireSupabaseUser(req, res);
+  if (!user) return;
+
+  if (!allowRequest(`rewrite-remarks:${user.id}`, { limit: 20, windowMs: 15 * 60 * 1000 })) {
+    return res.status(429).json({ error: "Too many requests. Please try again shortly." });
+  }
+
   try {
     const { text, context } = req.body || {};
     const raw = String(text || "").trim();
 
     if (!raw) return res.status(400).json({ error: "Text is required" });
     if (raw.length > 5000) return res.status(400).json({ error: "Text is too long" });
+    if (context && String(context).length > 1500) {
+      return res.status(400).json({ error: "Context is too long" });
+    }
 
     const userContent = [
       context ? `Context: ${String(context).trim()}` : "",

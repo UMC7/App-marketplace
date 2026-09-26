@@ -18,6 +18,7 @@ import PublicProfileSeaCrewCard from './PublicProfileSeaCrewCard';
 import useEmitProfileView from '../../hooks/useEmitProfileView';
 import { formatAvailability, hasValidAvailability } from '../../utils/availability';
 import { toast } from 'react-toastify';
+import { fetchPublicUserSummaries } from '../../services/publicUserDirectory';
 import {
   allDocFlagsSelected,
   blobToDataUrl,
@@ -472,10 +473,7 @@ export default function PublicProfileView() {
       if (!userIds.length) return;
 
       try {
-        const { data: userRows, error: usersError } = await supabase
-          .from('users')
-          .select('id, nickname')
-          .in('id', userIds);
+        const { data: userRows, error: usersError } = await fetchPublicUserSummaries(userIds);
 
         if (usersError) {
           console.warn('SeaCrew preview nickname lookup failed:', usersError);

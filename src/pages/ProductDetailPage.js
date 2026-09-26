@@ -62,16 +62,14 @@ function ProductDetailPage(props) {
 
       if (productData?.owner) {
         const { data: sellerData, error: sellerError } = await supabase
-          .from('users')
-          .select('nickname, phone, first_name, last_name')
-          .eq('id', productData.owner)
-          .single();
-        if (!sellerError && sellerData) {
+          .rpc('rpc_public_product_seller', { p_product_id: Number(id) });
+        const seller = Array.isArray(sellerData) ? sellerData[0] : sellerData;
+        if (!sellerError && seller) {
           setSellerInfo({
-            nickname: sellerData.nickname || '',
-            phone: sellerData.phone || '',
-            first_name: sellerData.first_name || '',
-            last_name: sellerData.last_name || '',
+            nickname: seller.nickname || '',
+            phone: seller.phone || '',
+            first_name: seller.first_name || '',
+            last_name: seller.last_name || '',
           });
         } else {
           console.error('Error fetching seller info:', sellerError);

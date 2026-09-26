@@ -98,8 +98,7 @@
 
 .offer-card.is-closed .tick-marker {
   cursor: not-allowed;
-  background-color: #e5e7eb;
-  color: #6b7280;
+  opacity: 0.55;
 }
 
 .job-closed-badge {
@@ -496,44 +495,14 @@ body.dark-mode .required-doc-chip {
   display: none;
 }
 
+/* Visual style shared with SeaCrew (.seacrew-mark-toggle in SeaCrewList.css). */
 .tick-marker {
   position: absolute;
   top: var(--spacing-xxxl);
   right: var(--spacing-xxxl);
-  font-size: var(--spacing-xxxl);
-  background-color: var(--color-background-green);
-  border-radius: var(--border-radius-round);
-  width: var(--spacing-xxxxl);
-  height: var(--spacing-xxxxl);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  user-select: none;
-  border: 1px solid rgba(188, 169, 135, 0.72);
-  color: #9b7b45;
-  font-family: inherit;
-  line-height: 1;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
   z-index: 10;
-}
-
-.tick-marker.active {
-  background-color: #f8e5e7;
-  border-color: #c94e62;
-  color: #b8324a;
-}
-
-body.dark-mode .tick-marker {
-  background-color: #d1ffd1 !important;
-  border-color: rgba(188, 169, 135, 0.72) !important;
-  color: #9b7b45 !important;
-}
-
-body.dark-mode .tick-marker.active {
-  background-color: #f8e5e7 !important;
-  border-color: #c94e62 !important;
-  color: #b8324a !important;
+  user-select: none;
+  font-family: inherit;
 }
 
 .filter-checkbox-label {
@@ -2202,4 +2171,33 @@ body.dark-mode .collapsed-offer {
     padding: 12px 10px;
     text-align: center;
   }
+}
+
+/* SeaJobs collapsed cards: match the SeaMarket surface treatment without changing layout. */
+.offer-card:not(.expanded) {
+  background-color: #f4f9fa;
+  background-image:
+    radial-gradient(circle at top right, rgba(104, 173, 168, 0.22), transparent 46%),
+    linear-gradient(135deg, #f8fbfc 0%, #ffffff 56%, #e7f4f2 100%);
+  border-color: rgba(8, 26, 59, 0.12);
+}
+
+.offer-card:not(.expanded):not(.marked):hover {
+  border-color: rgba(11, 113, 133, 0.24);
+  box-shadow: 0 14px 30px rgba(8, 26, 59, 0.13);
+}
+
+/* Inner collapsed row (mobile App.css sets a white nested surface); show parent gradient. */
+.offer-card:not(.expanded) .collapsed-offer {
+  background-color: transparent !important;
+  box-shadow: none;
+}
+
+body.dark-mode .offer-card:not(.expanded),
+html[data-theme='dark'] .offer-card:not(.expanded) {
+  background-color: #1d282c;
+  background-image:
+    radial-gradient(circle at top right, rgba(111, 214, 214, 0.1), transparent 42%),
+    linear-gradient(180deg, rgba(21, 27, 31, 0.98), rgba(29, 32, 34, 0.98));
+  border-color: rgba(174, 199, 204, 0.16);
 }

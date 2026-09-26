@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import supabase from '../supabase';
 import Modal from './Modal';
 import Avatar from '../components/Avatar';
+import { fetchPublicUserSummaries } from '../services/publicUserDirectory';
 
 function RatingModal({ sellerId, onClose }) {
   const [reviews, setReviews] = useState([]);
@@ -57,11 +58,8 @@ function RatingModal({ sellerId, onClose }) {
     if (!sellerId) return;
 
     const fetchSeller = async () => {
-      const { data, error } = await supabase
-        .from('users')
-        .select('nickname, avatar_url')
-        .eq('id', sellerId)
-        .single();
+      const { data: userRows, error } = await fetchPublicUserSummaries([sellerId]);
+      const data = userRows?.[0] || null;
 
       if (!error) setSellerProfile(data || null);
       else console.error('Error fetching seller profile:', error.message);

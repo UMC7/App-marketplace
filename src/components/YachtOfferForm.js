@@ -361,9 +361,13 @@ const autoFillFromText = async () => {
   setLoading(true);
 
   try {
+    const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch('/api/parse-job', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
       body: JSON.stringify({ text: jobText }),
     });
     const data = await readJsonResponse(res);
@@ -506,9 +510,13 @@ const improveRemarks = async () => {
 
   setRewriteLoading(true);
   try {
+    const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch('/api/rewrite-remarks', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
       body: JSON.stringify({ text: current, context }),
     });
     const data = await readJsonResponse(res);

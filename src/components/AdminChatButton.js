@@ -40,13 +40,8 @@ const AdminChatButton = () => {
   const ensureAdminUser = async () => {
     if (adminUserId) return adminUserId;
 
-    const { data, error } = await supabase
-      .from('users')
-      .select('id')
-      .eq('role', 'admin')
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
+    const { data: adminRows, error } = await supabase.rpc('rpc_support_admin');
+    const data = adminRows?.[0] || null;
 
     if (error || !data?.id) {
       console.error('Unable to load admin user.', error);

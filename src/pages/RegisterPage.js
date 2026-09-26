@@ -107,18 +107,15 @@ const handleNicknameChange = (e) => {
     const checkId = ++nicknameCheckId.current;
     const t = setTimeout(async () => {
       try {
-        const { data: existingNickname, error: nickErr } = await supabase
-          .from('users')
-          .select('id')
-          .ilike('nickname', nick)
-          .maybeSingle();
+        const { data: nicknameAvailable, error: nickErr } = await supabase
+          .rpc('rpc_nickname_is_available', { p_nickname: nick });
 
         if (checkId !== nicknameCheckId.current) return;
         if (nickErr) {
           setNicknameStatus('invalid');
           return;
         }
-        setNicknameStatus(existingNickname ? 'taken' : 'available');
+        setNicknameStatus(nicknameAvailable ? 'available' : 'taken');
       } catch {
         if (checkId === nicknameCheckId.current) setNicknameStatus('invalid');
       }
@@ -251,17 +248,14 @@ const clearAvatar = () => {
       return;
     }
 
-    const { data: existingNickname, error: nickErr } = await supabase
-      .from('users')
-      .select('id')
-      .ilike('nickname', form.nickname) // sin comodines → igualdad case-insensitive
-      .maybeSingle();
+    const { data: nicknameAvailable, error: nickErr } = await supabase
+      .rpc('rpc_nickname_is_available', { p_nickname: form.nickname });
 
     if (nickErr) {
       console.error('Error checking nickname:', nickErr.message);
     }
 
-    if (existingNickname) {
+    if (!nicknameAvailable) {
       setError('Nickname already taken. Please choose another.');
       return;
     }

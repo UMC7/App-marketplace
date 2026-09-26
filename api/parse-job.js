@@ -1,6 +1,8 @@
 // pages/api/parse-job.js
 import OpenAI from "openai";
 import { generateRemarks as buildRemarks } from "../server/job-parser/remarks.js";
+import { requireSupabaseUser } from "./_lib/requireSupabaseUser.js";
+import { allowRequest } from "./_lib/rateLimit.js";
 
 function getOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -905,6 +907,13 @@ export const config = {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Only POST allowed" });
 
+  const user = await requireSupabaseUser(req, res);
+  if (!user) return;
+
+  if (!allowRequest(`parse-job:${user.id}`, { limit: 20, windowMs: 15 * 60 * 1000 })) {
+    return res.status(429).json({ error: "Too many requests. Please try again shortly." });
+  }
+
   try {
     let text = "";
     if (req.headers["content-type"]?.includes("application/json")) {
@@ -913,6 +922,9 @@ export default async function handler(req, res) {
       text = req.body;
     }
     if (!text) return res.status(400).json({ error: "Missing job text in { text }" });
+    if (typeof text !== "string" || text.length > 12000) {
+      return res.status(400).json({ error: "Job text must be 12,000 characters or fewer" });
+    }
 
 let processedText = text;
 
@@ -1392,7 +1404,7 @@ return res.status(200).json(out);
 
   } catch (err) {
     console.error("parse-job error:", err);
-    return res.status(500).json({ error: err.message || "Parse error" });
+    return res.status(500).json({ error: "Unable to parse the job post. Please try again." });
   }
 }
 

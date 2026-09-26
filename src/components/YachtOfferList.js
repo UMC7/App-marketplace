@@ -14,6 +14,7 @@ import ScrollToTopButton from '../components/ScrollToTopButton';
 import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 import { toast } from 'react-toastify';
 import { getOfferBoardDate, isOfferClosed, isOfferVisibleOnJobBoard } from '../utils/jobOfferVisibility';
+import { fetchPublicUserSummaries } from '../services/publicUserDirectory';
 import {
   buildProfessionalProgressSections,
   calculateProfileProgressPercent,
@@ -853,10 +854,7 @@ const handleDirectApply = async (offerId) => {
       const userIds = [...new Set(offers.map((o) => o.user_id))];
       if (userIds.length === 0) return;
 
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, nickname, avatar_url')
-        .in('id', userIds);
+      const { data, error } = await fetchPublicUserSummaries(userIds);
 
       if (error) {
         console.error('Error al obtener usuarios:', error);

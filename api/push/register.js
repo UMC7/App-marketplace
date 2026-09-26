@@ -98,11 +98,13 @@ export default async function handler(req, res) {
       .single();
 
     if (error) {
-      return res.status(500).json({ error: "No se pudo registrar el token", details: error.message });
+      console.error("[push/register] token registration failed:", error.message);
+      return res.status(500).json({ error: "No se pudo registrar el token" });
     }
 
     return res.status(200).json({ success: true, data });
   } catch (err) {
-    return res.status(500).json({ error: "Error interno", details: err?.message });
+    console.error("[push/register] unexpected error:", err?.message || err);
+    return res.status(500).json({ error: "Error interno" });
   }
 }

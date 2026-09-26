@@ -1367,7 +1367,7 @@ const OfferTimeline = ({
   {!isClosed && (
     <button
       type="button"
-      className={`tick-marker ${markedOffers.includes(offer.id) ? 'active' : ''}`}
+      className={`seacrew-mark-toggle tick-marker ${markedOffers.includes(offer.id) ? 'active' : ''}`}
       aria-label={markedOffers.includes(offer.id) ? 'Remove job from preferred cards' : 'Add job to preferred cards'}
       aria-pressed={markedOffers.includes(offer.id)}
       onClick={(e) => {
