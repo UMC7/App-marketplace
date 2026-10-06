@@ -1,7 +1,8 @@
 // src/pages/cv/sections/certdocs/PublicCertDocsSection.js
-import React, { useMemo, useState, useCallback, useRef, useLayoutEffect, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useLayoutEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import supabase from '../../../../supabase';
+import { useAuth } from '../../../../context/AuthContext';
 import BasicDocsSummary from './BasicDocsSummary';
 import { emitCvDownload } from '../../../../services/analytics/emitEvent';
 
@@ -82,26 +83,12 @@ export default function PublicCertDocsSection({
   docFlags = {},
   nationalities = [],
 }) {
-  const [isAdminViewer, setIsAdminViewer] = useState(false);
+  const { currentUser } = useAuth();
+  const isAdminViewer =
+    currentUser?.role === 'admin' ||
+    currentUser?.app_metadata?.role === 'admin' ||
+    currentUser?.user_metadata?.app_metadata?.role === 'admin';
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        const role =
-          data?.user?.user_metadata?.app_metadata?.role ||
-          data?.user?.app_metadata?.role ||
-          null;
-        if (!cancelled) setIsAdminViewer(role === 'admin');
-      } catch {
-        if (!cancelled) setIsAdminViewer(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
   // Modal viewer
   const [viewer, setViewer] = useState({ open: false, url: '', title: '' });
 
