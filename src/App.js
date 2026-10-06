@@ -84,6 +84,17 @@ function AuthRedirectHandler() {
   return null;
 }
 
+function GoogleAuthRoute({ currentUser }) {
+  const location = useLocation();
+  const isLocalPreview =
+    process.env.NODE_ENV !== 'production' &&
+    new URLSearchParams(location.search).get('preview') === '1';
+
+  if (isLocalPreview) return <GoogleAuthCompletePage />;
+
+  return currentUser ? <GoogleAuthCompletePage /> : <Navigate to="/login" replace />;
+}
+
 function AppRoutes({ currentUser }) {
   const location = useLocation();
 
@@ -179,14 +190,7 @@ function AppRoutes({ currentUser }) {
           <Route path="/legal" element={<LegalPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route
-            path="/auth/google/callback"
-            element={
-              <ProtectedRoute>
-                <GoogleAuthCompletePage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/auth/google/callback" element={<GoogleAuthRoute currentUser={currentUser} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
