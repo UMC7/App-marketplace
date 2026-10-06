@@ -1,0 +1,250 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import supabase from '../supabase';
+import '../styles/login.css';
+
+function GoogleAuthCompletePage() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [nicknameStatus, setNicknameStatus] = useState('idle');
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    birthYear: '',
+    nickname: '',
+    phoneCode: '',
+    phoneNumber: '',
+    isCandidate: true,
+    acceptedTerms: false,
+  });
+
+  const birthYears = useMemo(() => Array.from({ length: 80 }, (_, i) => 2008 - i), []);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (!active) return;
+      if (userError || !user) {
+        setError('Google authentication could not be completed.');
+        setLoading(false);
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('users')
+        .select('first_name,last_name,birth_year,nickname,phone_code,phone_number,is_candidate,accepted_terms')
+        .eq('id', user.id)
+        .single();
+
+      if (!active) return;
+      if (profileError) {
+        setError('Your YachtDayWork profile could not be loaded.');
+        setLoading(false);
+        return;
+      }
+
+      const complete =
+        profile?.first_name &&
+        profile?.last_name &&
+        profile?.birth_year &&
+        profile?.nickname &&
+        profile?.phone_code &&
+        profile?.phone_number &&
+        profile?.accepted_terms === true;
+
+      if (complete) {
+        navigate('/', { replace: true });
+        return;
+      }
+
+      const meta = user.user_metadata || {};
+      const fullName = (meta.full_name || meta.name || '').trim().split(/\s+/);
+      setForm({
+        firstName: profile?.first_name || meta.first_name || meta.given_name || fullName[0] || '',
+        lastName:
+          profile?.last_name ||
+          meta.last_name ||
+          meta.family_name ||
+          (fullName.length > 1 ? fullName.slice(1).join(' ') : ''),
+        birthYear: profile?.birth_year ? String(profile.birth_year) : '',
+        nickname: profile?.nickname || '',
+        phoneCode: profile?.phone_code || '',
+        phoneNumber: profile?.phone_number || '',
+        isCandidate: profile?.is_candidate ?? true,
+        acceptedTerms: profile?.accepted_terms === true,
+      });
+      setLoading(false);
+    };
+    load();
+    return () => { active = false; };
+  }, [navigate]);
+
+  useEffect(() => {
+    const nick = form.nickname.trim();
+    if (!/^[A-Za-z0-9]{3,7}$/.test(nick) ||
+        (nick.match(/[A-Za-z]/g) || []).length < 3 ||
+        (nick.match(/\d/g) || []).length > 3) {
+      setNicknameStatus(nick ? 'invalid' : 'idle');
+      return;
+    }
+    let active = true;
+    setNicknameStatus('checking');
+    const timer = setTimeout(async () => {
+      const { data, error: nickError } = await supabase.rpc('rpc_nickname_is_available', {
+        p_nickname: nick,
+      });
+      if (active) setNicknameStatus(nickError ? 'invalid' : data ? 'available' : 'taken');
+    }, 350);
+    return () => { active = false; clearTimeout(timer); };
+  }, [form.nickname]);
+
+  const change = (name, value) => {
+    if (name === 'nickname') value = value.replace(/[^A-Za-z0-9]/g, '').slice(0, 7);
+    if (name === 'phoneCode') value = value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 3);
+    if (name === 'phoneNumber') value = value.replace(/\D/g, '');
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const canSave =
+    form.firstName.trim() &&
+    form.lastName.trim() &&
+    form.birthYear &&
+    nicknameStatus === 'available' &&
+    form.phoneCode &&
+    form.phoneNumber &&
+    form.acceptedTerms;
+
+  const save = async () => {
+    if (!canSave || saving) return;
+    setSaving(true);
+    setError('');
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw userError || new Error('No authenticated user.');
+
+      const payload = {
+        email: user.email,
+        first_name: form.firstName.trim(),
+        last_name: form.lastName.trim(),
+        birth_year: Number(form.birthYear),
+        nickname: form.nickname.trim(),
+        phone_code: form.phoneCode,
+        phone_number: form.phoneNumber,
+        phone: `+${form.phoneCode}${form.phoneNumber}`,
+        is_candidate: form.isCandidate,
+        accepted_terms: true,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: updateError } = await supabase.from('users').update(payload).eq('id', user.id);
+      if (updateError) throw updateError;
+
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: {
+          first_name: payload.first_name,
+          last_name: payload.last_name,
+          birth_year: payload.birth_year,
+          nickname: payload.nickname,
+          phone_code: payload.phone_code,
+          phone_number: payload.phone_number,
+          is_candidate: payload.is_candidate,
+          accepted_terms: true,
+        },
+      });
+      if (metadataError) console.warn('Profile saved but auth metadata was not updated:', metadataError.message);
+
+      toast.success('Registration completed.');
+      navigate('/profile', { replace: true });
+    } catch (e) {
+      console.error('Google registration completion failed:', e);
+      setError(e?.message || 'Registration could not be completed.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="login-page-wrapper"><div className="login-form"><p>Loading...</p></div></div>;
+
+  return (
+    <div className="login-page-wrapper">
+      <div className="login-form">
+        <h2>Complete your registration</h2>
+        <p>Google has verified your account. Please complete the required YachtDayWork details.</p>
+
+        <label>Name *</label>
+        <input value={form.firstName} onChange={(e) => change('firstName', e.target.value)} />
+
+        <label>Last Name *</label>
+        <input value={form.lastName} onChange={(e) => change('lastName', e.target.value)} />
+
+        <label>Year of Birth *</label>
+        <select value={form.birthYear} onChange={(e) => change('birthYear', e.target.value)}>
+          <option value="">Year of Birth</option>
+          {birthYears.map((year) => <option key={year} value={year}>{year}</option>)}
+        </select>
+
+        <label>Nickname *</label>
+        <input value={form.nickname} maxLength={7} onChange={(e) => change('nickname', e.target.value)} />
+        <p style={{ fontSize: '0.85rem', marginTop: -8 }}>
+          {nicknameStatus === 'checking' && 'Checking availability...'}
+          {nicknameStatus === 'available' && 'Nickname available.'}
+          {nicknameStatus === 'taken' && 'Nickname already taken.'}
+          {nicknameStatus === 'invalid' && '3-7 characters, at least 3 letters, maximum 3 digits.'}
+        </p>
+
+        <label>Primary Phone *</label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value="+" disabled style={{ width: 40, textAlign: 'center' }} />
+          <input
+            value={form.phoneCode}
+            placeholder="Code"
+            inputMode="numeric"
+            onChange={(e) => change('phoneCode', e.target.value)}
+            style={{ width: 70 }}
+          />
+          <input
+            value={form.phoneNumber}
+            placeholder="Primary Phone"
+            inputMode="numeric"
+            onChange={(e) => change('phoneNumber', e.target.value)}
+            style={{ flex: 1 }}
+          />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '20px auto', gap: 10, margin: '16px 0' }}>
+          <input
+            type="checkbox"
+            id="googleCandidate"
+            checked={form.isCandidate}
+            onChange={(e) => change('isCandidate', e.target.checked)}
+          />
+          <label htmlFor="googleCandidate">Enable Candidate Profile</label>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '20px auto', gap: 10, margin: '16px 0' }}>
+          <input
+            type="checkbox"
+            id="googleTerms"
+            checked={form.acceptedTerms}
+            onChange={(e) => change('acceptedTerms', e.target.checked)}
+          />
+          <label htmlFor="googleTerms">
+            I accept the <a href="/legal" target="_blank" rel="noopener noreferrer">Terms of Use</a> and{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+          </label>
+        </div>
+
+        <button type="button" onClick={save} disabled={!canSave || saving}>
+          {saving ? 'Saving...' : 'Complete Registration'}
+        </button>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+      </div>
+    </div>
+  );
+}
+
+export default GoogleAuthCompletePage;
