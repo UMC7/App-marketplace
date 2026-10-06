@@ -5,9 +5,7 @@ import { registerFCM } from '../notifications/registerFCM';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
 
 const isRegistrationComplete = (profileData) => Boolean(
   profileData?.first_name &&
@@ -37,10 +35,27 @@ const buildExtendedUser = (user, profileData) => {
   return {
     ...user,
     role: resolvedRole,
-    registration_complete: isRegistrationComplete(profileData),
+    registration_complete: true,
     app_metadata: mergedAppMetadata,
   };
 };
+
+async function getProfileForUser(user) {
+  if (!user?.id) return null;
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.warn('No se pudo obtener el perfil extendido:', error.message);
+    return null;
+  }
+
+  return data;
+}
 
 async function uploadPendingAvatarIfAny(user) {
   try {
@@ -82,6 +97,8 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const sessionRef = useRef(null);
   const currentUserIdRef = useRef(null);
+  const discardingIncompleteSessionRef = useRef(false);
+
   const postAuthToWebView = useCallback((session) => {
     if (typeof window === 'undefined' || !window.ReactNativeWebView || !session?.user) return;
     const accessToken = (session.access_token || '').trim();
@@ -97,30 +114,42 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let authListener;
+    let mounted = true;
 
-    const hydrateSessionUser = async (user) => {
-      if (!user?.id) return null;
-
+    const clearIncompleteSession = async () => {
+      if (discardingIncompleteSessionRef.current) return;
+      discardingIncompleteSessionRef.current = true;
+      sessionRef.current = null;
+      if (mounted) setCurrentUser(null);
       try {
-        const { data: userProfile, error: profileError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          console.warn('No se pudo obtener el perfil extendido:', profileError.message);
-          return buildExtendedUser(user, null);
-        }
-
-        return buildExtendedUser(user, userProfile);
+        await supabase.auth.signOut({ scope: 'local' });
       } catch (err) {
-        console.error('Error al obtener el perfil extendido:', err.message);
-        return buildExtendedUser(user, null);
+        console.warn('No se pudo cerrar la sesión incompleta:', err?.message || err);
+      } finally {
+        discardingIncompleteSessionRef.current = false;
       }
     };
 
-    const getSession = async () => {
+    const resolveSession = async (session) => {
+      if (!session?.user) {
+        sessionRef.current = null;
+        if (mounted) setCurrentUser(null);
+        return;
+      }
+
+      const profile = await getProfileForUser(session.user);
+      const complete = isRegistrationComplete(profile);
+
+      if (!complete) {
+        await clearIncompleteSession();
+        return;
+      }
+
+      sessionRef.current = session;
+      if (mounted) setCurrentUser(buildExtendedUser(session.user, profile));
+    };
+
+    const bootstrap = async () => {
       try {
         const {
           data: { session },
@@ -129,138 +158,29 @@ export function AuthProvider({ children }) {
 
         if (error) {
           console.error('Error al obtener la sesión:', error.message);
-          setCurrentUser(null);
-          return;
-        }
-
-        if (!session?.user) {
-          setCurrentUser(null);
-          sessionRef.current = null;
-          return;
-        }
-
-        sessionRef.current = session;
-
-        const user = session.user;
-        const metadata = user.user_metadata || {};
-
-        const { data: existingUser, error: selectError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (selectError && selectError.code === 'PGRST116') {
-          const insertPayload = {
-            id: user.id,
-            email: user.email,
-            first_name: metadata.first_name || null,
-            last_name: metadata.last_name || null,
-            birth_year: metadata.birth_year || null,
-            nickname: metadata.nickname || null,
-            phone: metadata.phone || null,
-            alt_phone: metadata.alt_phone || null,
-            alt_email: metadata.alt_email || null,
-            accepted_terms: metadata.accepted_terms === true,
-            role: 'user',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-
-          const { error: insertError } = await supabase.from('users').insert(insertPayload);
-          if (insertError) {
-            console.warn('No se pudo insertar el perfil del usuario:', insertError.message);
-          }
-        } else if (existingUser) {
-          const fieldsToUpdate = {};
-          const fields = [
-            'first_name',
-            'last_name',
-            'birth_year',
-            'nickname',
-            'phone',
-            'alt_phone',
-            'alt_email',
-            'accepted_terms',
-          ];
-
-          for (const field of fields) {
-            const dbValue = existingUser[field];
-            const metaValue = metadata[field];
-            const isEmpty =
-              dbValue === null ||
-              dbValue === undefined ||
-              dbValue === '' ||
-              (field === 'accepted_terms' && dbValue === false);
-
-            if (isEmpty && metaValue !== undefined && metaValue !== null && metaValue !== '') {
-              fieldsToUpdate[field] =
-                field === 'birth_year' ? parseInt(metaValue) :
-                field === 'accepted_terms' ? metaValue === true :
-                metaValue;
-            }
-          }
-
-          if (Object.keys(fieldsToUpdate).length > 0) {
-            fieldsToUpdate.updated_at = new Date().toISOString();
-            const { error: updateError } = await supabase
-              .from('users')
-              .update(fieldsToUpdate)
-              .eq('id', user.id);
-
-            if (updateError) {
-              console.warn('No se pudieron actualizar los campos vacíos:', updateError.message);
-            }
-          }
-        }
-
-        const { data: userProfile, error: profileError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          console.warn('No se pudo obtener el perfil extendido:', profileError.message);
-          setCurrentUser(buildExtendedUser(user, null));
+          if (mounted) setCurrentUser(null);
         } else {
-          setCurrentUser(buildExtendedUser(user, userProfile));
+          await resolveSession(session);
         }
       } catch (err) {
         console.error('Error inesperado al obtener sesión:', err.message);
-        setCurrentUser(null);
+        if (mounted) setCurrentUser(null);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
-    };
-
-    const bootstrap = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (session?.user) {
-          sessionRef.current = session;
-        }
-      } catch (err) {
-        console.error('Error inesperado al obtener sesión inicial:', err.message);
-        setCurrentUser(null);
-      }
-
-      await getSession();
 
       authListener = supabase.auth.onAuthStateChange((event, session) => {
-        if (!session?.user) {
+        if (event === 'SIGNED_OUT' || !session?.user) {
           sessionRef.current = null;
-          setCurrentUser(null);
+          if (mounted) setCurrentUser(null);
           return;
         }
 
-        sessionRef.current = session;
+        if (discardingIncompleteSessionRef.current) return;
 
-        hydrateSessionUser(session.user).then((extendedUser) => {
-          if (extendedUser) setCurrentUser(extendedUser);
+        resolveSession(session).catch((err) => {
+          console.error('Error al resolver sesión:', err?.message || err);
+          if (mounted) setCurrentUser(null);
         });
       });
     };
@@ -268,6 +188,7 @@ export function AuthProvider({ children }) {
     bootstrap();
 
     return () => {
+      mounted = false;
       authListener?.subscription?.unsubscribe();
     };
   }, []);
@@ -278,30 +199,29 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const u = currentUser;
-    if (!u?.id || u.registration_complete !== true) return;
+    if (!u?.id) return;
     uploadPendingAvatarIfAny(u);
-  }, [currentUser?.id, currentUser?.registration_complete]);
+  }, [currentUser?.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!currentUser?.id || currentUser.registration_complete !== true) return;
+    if (!currentUser?.id) return;
     if (window.ReactNativeWebView) return;
     registerFCM(currentUser);
-  }, [currentUser?.id, currentUser?.registration_complete]);
+  }, [currentUser?.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const userId = currentUser?.id;
-    if (!userId || currentUser.registration_complete !== true) return;
+    if (!userId) return;
     if (sessionRef.current) postAuthToWebView(sessionRef.current);
-  }, [currentUser?.id, currentUser?.registration_complete, postAuthToWebView]);
+  }, [currentUser?.id, postAuthToWebView]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     let retryTimeout;
     let resendTimeouts = [];
     const handler = () => {
-      if (currentUser?.registration_complete !== true) return;
       if (sessionRef.current) {
         postAuthToWebView(sessionRef.current);
         resendTimeouts.push(setTimeout(() => {
@@ -323,14 +243,14 @@ export function AuthProvider({ children }) {
       if (retryTimeout) clearTimeout(retryTimeout);
       resendTimeouts.forEach((t) => clearTimeout(t));
     };
-  }, [postAuthToWebView, currentUser?.registration_complete]);
+  }, [postAuthToWebView]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     let mounted = true;
     const registerFromWeb = async (expoToken) => {
       const session = sessionRef.current;
-      if (!mounted || currentUser?.registration_complete !== true) return;
+      if (!mounted) return;
       if (!session?.user?.id || !expoToken) return;
       const accessToken = (session.access_token || '').trim();
       if (!accessToken || accessToken.length < 50) return;
@@ -358,7 +278,7 @@ export function AuthProvider({ children }) {
       mounted = false;
       window.removeEventListener('expo:pushToken', handler);
     };
-  }, [currentUser?.registration_complete]);
+  }, []);
 
   useEffect(() => {
     const userId = currentUser?.id;
@@ -373,12 +293,19 @@ export function AuthProvider({ children }) {
           const row = payload.new || payload.old;
           if (!row) return;
 
+          if (!isRegistrationComplete(row)) {
+            supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+            setCurrentUser(null);
+            sessionRef.current = null;
+            return;
+          }
+
           setCurrentUser((prev) => {
             if (!prev) return prev;
             return {
               ...prev,
               role: row.role ?? prev.role,
-              registration_complete: isRegistrationComplete(row),
+              registration_complete: true,
               app_metadata: {
                 ...prev.app_metadata,
                 ...row,
