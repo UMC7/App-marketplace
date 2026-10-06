@@ -97,7 +97,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const sessionRef = useRef(null);
   const currentUserIdRef = useRef(null);
-  const discardingIncompleteSessionRef = useRef(false);
 
   const postAuthToWebView = useCallback((session) => {
     if (typeof window === 'undefined' || !window.ReactNativeWebView || !session?.user) return;
@@ -116,20 +115,6 @@ export function AuthProvider({ children }) {
     let authListener;
     let mounted = true;
 
-    const clearIncompleteSession = async () => {
-      if (discardingIncompleteSessionRef.current) return;
-      discardingIncompleteSessionRef.current = true;
-      sessionRef.current = null;
-      if (mounted) setCurrentUser(null);
-      try {
-        await supabase.auth.signOut({ scope: 'local' });
-      } catch (err) {
-        console.warn('No se pudo cerrar la sesión incompleta:', err?.message || err);
-      } finally {
-        discardingIncompleteSessionRef.current = false;
-      }
-    };
-
     const resolveSession = async (session) => {
       if (!session?.user) {
         sessionRef.current = null;
@@ -141,7 +126,12 @@ export function AuthProvider({ children }) {
       const complete = isRegistrationComplete(profile);
 
       if (!complete) {
-        await clearIncompleteSession();
+        // OAuth needs a temporary Supabase session so the completion page can
+        // identify the Google user and save the missing registration fields.
+        // Keep that temporary session internal, but never expose it as an
+        // authenticated YachtDayWork user until registration is complete.
+        sessionRef.current = null;
+        if (mounted) setCurrentUser(null);
         return;
       }
 
@@ -175,8 +165,6 @@ export function AuthProvider({ children }) {
           if (mounted) setCurrentUser(null);
           return;
         }
-
-        if (discardingIncompleteSessionRef.current) return;
 
         resolveSession(session).catch((err) => {
           console.error('Error al resolver sesión:', err?.message || err);
@@ -294,7 +282,6 @@ export function AuthProvider({ children }) {
           if (!row) return;
 
           if (!isRegistrationComplete(row)) {
-            supabase.auth.signOut({ scope: 'local' }).catch(() => {});
             setCurrentUser(null);
             sessionRef.current = null;
             return;
