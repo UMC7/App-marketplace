@@ -295,6 +295,78 @@ function Navbar({ forcedCurrentUser }) {
       {showChatList && <Modal onClose={() => { setShowChatList(false); setActiveChat(null); }}>{activeChat ? <ChatPage offerId={activeChat.offerId} receiverId={activeChat.receiverId} external={activeChat.external} threadId={activeChat.threadId} admin={activeChat.admin} adminThreadId={activeChat.threadId} adminUserId={activeChat.adminUserId} onBack={() => setActiveChat(null)} /> : <ChatList onOpenChat={handleOpenChat} />}</Modal>}
       {showLegalModal && <Modal onClose={() => setShowLegalModal(false)}><div style={{ padding: 16 }}><h3>Legal</h3><p><Link to="/legal" onClick={() => setShowLegalModal(false)}>Terms of Use</Link></p><p><Link to="/privacy" onClick={() => setShowLegalModal(false)}>Privacy Policy</Link></p></div></Modal>}
       {showNotifications && <NotificationsPanel onClose={() => setShowNotifications(false)} />}
+
+      {isMobilePortrait && (
+        <div className="navbar-bottom">
+          {currentUser ? (
+            <>
+              <button className="nav-icon-button" onClick={() => navigate('/profile')}>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">account_circle</span>
+                <small>Profile</small>
+              </button>
+              {currentUser?.app_metadata?.role === 'admin' && (
+                <button className="nav-icon-button" onClick={() => navigate('/admin')}>
+                  <span className="material-icons notranslate" translate="no" aria-hidden="true">admin_panel_settings</span>
+                  <small>Admin</small>
+                </button>
+              )}
+              <button className="nav-icon-button" onClick={() => setShowPostOptions(true)}>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">add_circle_outline</span>
+                <small>Post</small>
+              </button>
+              <button className="nav-icon-button" onClick={() => setShowChatList(true)}>
+                {unreadCount > 0 && <span className="chat-badge">{unreadCount}</span>}
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">chat_bubble_outline</span>
+                <small>Chats</small>
+              </button>
+              <button className="nav-icon-button" onClick={() => setShowNotifications(true)}>
+                {notifUnread > 0 && (
+                  <span className="chat-badge">{notifUnread > 99 ? '99+' : notifUnread}</span>
+                )}
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">notifications_none</span>
+                <small>Alerts</small>
+              </button>
+              <button className="nav-icon-button" onClick={() => navigate('/favorites')}>
+                {favorites.length > 0 && <span className="favorites-badge">{favorites.length}</span>}
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">favorite_border</span>
+                <small>Favorites</small>
+              </button>
+              <button className="nav-icon-button" onClick={() => navigate('/cart')}>
+                {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">shopping_cart</span>
+                <small>Cart</small>
+              </button>
+              <button className="nav-icon-button" onClick={handleLogout}>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">logout</span>
+                <small>Logout</small>
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="nav-icon-button" onClick={() => navigate('/login')}>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">person_outline</span>
+                <small>Login</small>
+              </button>
+              <button className="nav-icon-button" onClick={() => navigate('/register')}>
+                <span className="material-icons notranslate" translate="no" aria-hidden="true">person_add</span>
+                <small>Register</small>
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {showPostOptions && (
+        <div className="post-options-modal" onClick={() => setShowPostOptions(false)}>
+          <div className="post-options-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Select what you want to post</h3>
+            <button className="navLink" onClick={() => { setShowProductModal(true); setShowPostOptions(false); }}>Post Product</button>
+            <button className="navLink" onClick={() => { setShowServiceModal(true); setShowPostOptions(false); }}>Post Service</button>
+            <button className="navLink" onClick={() => { setShowOfferModal(true); setShowPostOptions(false); }}>Post Job</button>
+            <button className="navLink" onClick={() => { setShowEventModal(true); setShowPostOptions(false); }}>Post Event</button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
