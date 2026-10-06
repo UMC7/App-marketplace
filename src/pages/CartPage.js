@@ -42,10 +42,19 @@ function CartPage() {
   };
 
   const handleConfirmPurchase = () => {
+    if (!currentUser?.id) {
+      toast.error('Please log in first.');
+      return;
+    }
     setShowConfirmModal(true);
   };
 
   const handleProceedPurchase = async () => {
+    if (!currentUser?.id) {
+      toast.error('Please log in first.');
+      return;
+    }
+
     setShowConfirmModal(false);
     setProcessing(true);
 
@@ -87,37 +96,37 @@ function CartPage() {
           .eq('id', item.id);
       }
 
-        const sellerMap = {};
-        availableItems.forEach(item => {
-          const ownerInfo = item.ownerInfo;
-          const id = ownerInfo?.id;
-          if (!id || sellerMap[id]) return;
-          sellerMap[id] = {
-            email: ownerInfo?.email,
-            name: formatSellerDisplayName(ownerInfo),
-            phone: formatSellerPhone(ownerInfo),
-          };
-        });
+      const sellerMap = {};
+      availableItems.forEach(item => {
+        const ownerInfo = item.ownerInfo;
+        const id = ownerInfo?.id;
+        if (!id || sellerMap[id]) return;
+        sellerMap[id] = {
+          email: ownerInfo?.email,
+          name: formatSellerDisplayName(ownerInfo),
+          phone: formatSellerPhone(ownerInfo),
+        };
+      });
 
       setSellerInfo(Object.values(sellerMap));
       setShowSellerModal(true);
       clearCart();
 
-      const buyerName = `${currentUser.user_metadata?.first_name || ''} ${currentUser.user_metadata?.last_name || ''}`.trim();
+      const buyerName = `${currentUser.user_metadata?.first_name || currentUser.first_name || ''} ${currentUser.user_metadata?.last_name || currentUser.last_name || ''}`.trim();
       const buyerEmail = currentUser.email;
-      const buyerPhone = currentUser.user_metadata?.phone || 'Not available';
+      const buyerPhone = currentUser.user_metadata?.phone || currentUser.phone || 'Not available';
 
-        const productsBySeller = {};
-        availableItems.forEach(item => {
-          const sellerId = item.owner ?? '__unknown__';
-          if (!productsBySeller[sellerId]) {
-            productsBySeller[sellerId] = {
-              seller: item.ownerInfo || null,
-              products: []
-            };
-          }
-          productsBySeller[sellerId].products.push(item);
-        });
+      const productsBySeller = {};
+      availableItems.forEach(item => {
+        const sellerId = item.owner ?? '__unknown__';
+        if (!productsBySeller[sellerId]) {
+          productsBySeller[sellerId] = {
+            seller: item.ownerInfo || null,
+            products: []
+          };
+        }
+        productsBySeller[sellerId].products.push(item);
+      });
 
       let htmlToBuyer = `<h2>Thank you for your purchase, ${buyerName}!</h2>`;
       htmlToBuyer += `<p>You have purchased the following items:</p>`;
@@ -135,7 +144,9 @@ function CartPage() {
 
       const { data: { session } } = await supabase.auth.getSession();
       const authHeaders = { 'Content-Type': 'application/json' };
-      if (session?.access_token) authHeaders.Authorization = `Bearer ${session.access_token}`;
+      if (currentUser?.id && session?.user?.id === currentUser.id && session?.access_token) {
+        authHeaders.Authorization = `Bearer ${session.access_token}`;
+      }
 
       await fetch('/api/sendEmail', {
         method: 'POST',
