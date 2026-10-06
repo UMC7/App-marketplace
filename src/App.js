@@ -8,6 +8,7 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 
 import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -91,99 +92,102 @@ function GoogleAuthRoute() {
 }
 
 function AppRoutes({ currentUser }) {
+  const location = useLocation();
   const registrationPending =
     Boolean(currentUser) && currentUser.registration_complete !== true;
   const effectiveUser = registrationPending ? null : currentUser;
 
   return (
-    <Routes>
-      <Route element={<AnimatedLayout />}>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/marketplace" element={<HomePage />} />
-        <Route path="/cv/:handle/chat/:threadId" element={<ExternalChatPage />} />
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route element={<AnimatedLayout />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/marketplace" element={<HomePage />} />
+          <Route path="/cv/:handle/chat/:threadId" element={<ExternalChatPage />} />
 
-        <Route
-          path="/login"
-          element={!effectiveUser ? <LoginPage /> : <Navigate to="/" replace />}
-        />
-        <Route
-          path="/register"
-          element={!effectiveUser ? <RegisterPage /> : <Navigate to="/profile" replace />}
-        />
+          <Route
+            path="/login"
+            element={!effectiveUser ? <LoginPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/register"
+            element={!effectiveUser ? <RegisterPage /> : <Navigate to="/profile" replace />}
+          />
 
-        <Route path="/product/:id" element={<ProductDetailPage />} />
-        <Route path="/yacht-services" element={<YachtServicesPage />} />
-        <Route path="/yacht-services/post-product" element={<PostProduct />} />
-        <Route path="/yacht-works" element={<YachtWorksPage />} />
-        <Route path="/events" element={<EventsPage />} />
-        <Route path="/event/:id" element={<EventDetail />} />
-        <Route path="/events/:id" element={<EventDetail />} />
-        <Route path="/cv/qr/:qrId" element={<PublicProfileQrRedirect />} />
-        <Route path="/cv/:handle" element={<PublicProfileView />} />
+          <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/yacht-services" element={<YachtServicesPage />} />
+          <Route path="/yacht-services/post-product" element={<PostProduct />} />
+          <Route path="/yacht-works" element={<YachtWorksPage />} />
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/event/:id" element={<EventDetail />} />
+          <Route path="/events/:id" element={<EventDetail />} />
+          <Route path="/cv/qr/:qrId" element={<PublicProfileQrRedirect />} />
+          <Route path="/cv/:handle" element={<PublicProfileView />} />
 
-        <Route
-          path="/cv/analytics"
-          element={
-            <ProtectedRoute>
-              <ProfileAnalyticsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/post-product"
-          element={
-            <ProtectedRoute>
-              <PostProduct />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/favorites"
-          element={
-            <ProtectedRoute>
-              <FavoritesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <CartPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute adminOnly>
-              <AdminPanel />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/candidate/:userId"
-          element={
-            <ProtectedRoute adminOnly>
-              <AdminCandidateProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/legal" element={<LegalPage />} />
-        <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/auth/google/callback" element={<GoogleAuthRoute />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+          <Route
+            path="/cv/analytics"
+            element={
+              <ProtectedRoute>
+                <ProfileAnalyticsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/post-product"
+            element={
+              <ProtectedRoute>
+                <PostProduct />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/favorites"
+            element={
+              <ProtectedRoute>
+                <FavoritesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <CartPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminPanel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/candidate/:userId"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminCandidateProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/legal" element={<LegalPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/auth/google/callback" element={<GoogleAuthRoute />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </AnimatePresence>
   );
 }
 
