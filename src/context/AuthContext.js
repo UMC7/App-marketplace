@@ -9,6 +9,16 @@ export const useAuth = () => {
   return useContext(AuthContext);
 };
 
+const isRegistrationComplete = (profileData) => Boolean(
+  profileData?.first_name &&
+  profileData?.last_name &&
+  profileData?.birth_year &&
+  profileData?.nickname &&
+  profileData?.phone_code &&
+  profileData?.phone_number &&
+  profileData?.accepted_terms === true
+);
+
 const buildExtendedUser = (user, profileData) => {
   if (!user) return null;
 
@@ -27,6 +37,7 @@ const buildExtendedUser = (user, profileData) => {
   return {
     ...user,
     role: resolvedRole,
+    registration_complete: isRegistrationComplete(profileData),
     app_metadata: mergedAppMetadata,
   };
 };
@@ -240,14 +251,11 @@ export function AuthProvider({ children }) {
         } = await supabase.auth.getSession();
 
         if (session?.user) {
-          setCurrentUser(session.user);
           sessionRef.current = session;
         }
       } catch (err) {
         console.error('Error inesperado al obtener sesión inicial:', err.message);
         setCurrentUser(null);
-      } finally {
-        setLoading(false);
       }
 
       await getSession();
@@ -288,7 +296,7 @@ export function AuthProvider({ children }) {
     return () => {
       authListener?.subscription?.unsubscribe();
     };
-  }, []);
+  }, [postAuthToWebView]);
 
   useEffect(() => {
     currentUserIdRef.current = currentUser?.id ?? null;
@@ -297,31 +305,32 @@ export function AuthProvider({ children }) {
   // Subir "pending avatar" al tener usuario con id (una vez por sesión)
   useEffect(() => {
     const u = currentUser;
-    if (!u?.id) return;
+    if (!u?.id || u.registration_complete !== true) return;
     uploadPendingAvatarIfAny(u);
-  }, [currentUser?.id]);
+  }, [currentUser?.id, currentUser?.registration_complete]);
 
   // === FCM: registrar/actualizar token cuando hay usuario autenticado (solo web; en app usamos Expo) ===
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!currentUser?.id) return;
+    if (!currentUser?.id || currentUser.registration_complete !== true) return;
     if (window.ReactNativeWebView) return;
     registerFCM(currentUser);
-  }, [currentUser?.id]);
+  }, [currentUser?.id, currentUser?.registration_complete]);
 
   // WebView: enviar user_id + access_token para que la app registre push con autenticación
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const userId = currentUser?.id;
-    if (!userId) return;
+    if (!userId || currentUser.registration_complete !== true) return;
     if (sessionRef.current) postAuthToWebView(sessionRef.current);
-  }, [currentUser?.id, postAuthToWebView]);
+  }, [currentUser?.id, currentUser?.registration_complete, postAuthToWebView]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     let retryTimeout;
     let resendTimeouts = [];
     const handler = () => {
+      if (currentUser?.registration_complete !== true) return;
       if (sessionRef.current) {
         postAuthToWebView(sessionRef.current);
         // Re-enviar AUTH 2s y 5s después por si la primera se perdió
@@ -344,13 +353,15 @@ export function AuthProvider({ children }) {
       if (retryTimeout) clearTimeout(retryTimeout);
       resendTimeouts.forEach((t) => clearTimeout(t));
     };
-  }, [postAuthToWebView]);
+  }, [postAuthToWebView, currentUser?.registration_complete]);
 
   // Fallback: cuando la app nativa inyecta el Expo push token, la web registra directamente
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    let mounted = true;
     const registerFromWeb = async (expoToken) => {
       const session = sessionRef.current;
+      if (!mounted || currentUser?.registration_complete !== true) return;
       if (!session?.user?.id || !expoToken) return;
       const accessToken = (session.access_token || '').trim();
       if (!accessToken || accessToken.length < 50) return;
@@ -374,8 +385,11 @@ export function AuthProvider({ children }) {
     };
     window.addEventListener('expo:pushToken', handler);
     if (window.__expoPushToken) handler({ detail: window.__expoPushToken });
-    return () => window.removeEventListener('expo:pushToken', handler);
-  }, []);
+    return () => {
+      mounted = false;
+      window.removeEventListener('expo:pushToken', handler);
+    };
+  }, [currentUser?.registration_complete]);
 
   // 🔄 Escucha en tiempo real cambios en la fila del usuario (incluye avatar_url)
   // y actualiza currentUser.app_metadata sin recargar.
@@ -397,11 +411,12 @@ export function AuthProvider({ children }) {
             if (!prev) return prev;
             return {
               ...prev,
-            role: row.role ?? prev.role,
-            app_metadata: {
-              ...prev.app_metadata,
-              ...row,
-            },
+              role: row.role ?? prev.role,
+              registration_complete: isRegistrationComplete(row),
+              app_metadata: {
+                ...prev.app_metadata,
+                ...row,
+              },
             };
           });
         }
