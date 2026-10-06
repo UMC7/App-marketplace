@@ -1,11 +1,13 @@
 // src/components/PostServiceForm.js
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabase';
+import { useAuth } from '../context/AuthContext';
 // Unifica subida de portada + galería (igual que SeaMarket)
 import UnifiedImageUploader from './UnifiedImageUploader';
 import '../styles/float.css';
 
 const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
+  const { currentUser } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [showMissing, setShowMissing] = useState(false);
 
@@ -20,7 +22,7 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   const [photos, setPhotos] = useState(Array.isArray(initialValues.photos) ? initialValues.photos : []);
   const [mainPhoto, setMainPhoto] = useState(initialValues.mainphoto || initialValues.mainPhoto || '');
 
-  const [ownerId, setOwnerId] = useState(null);
+  const ownerId = currentUser?.id || null;
 
   const [contactEmail, setContactEmail] = useState(initialValues.contact_email || '');
   const [phone, setPhone] = useState(initialValues.contact_phone || '');
@@ -48,16 +50,6 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   ];
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError || !authData?.user) {
-        console.error('Error fetching user:', authError?.message || 'Not authenticated');
-        alert('You must be logged in.');
-        return;
-      }
-      setOwnerId(authData.user.id);
-    };
-
     const fetchCategories = async () => {
       const { data, error } = await supabase
         .from('categories')
@@ -72,7 +64,6 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
       }
     };
 
-    fetchUser();
     fetchCategories();
   }, []);
 
@@ -101,6 +92,11 @@ const PostServiceForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setShowMissing(false);
+
+    if (!currentUser?.id) {
+      alert('You must be logged in.');
+      return;
+    }
 
     // Validación básica (no obligamos portada, igual que SeaMarket)
     if (!formReady) {
