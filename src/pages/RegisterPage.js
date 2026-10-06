@@ -66,7 +66,7 @@ function RegisterPage() {
       /[A-Z]/.test(password) &&
       /[a-z]/.test(password) &&
       /[0-9]/.test(password) &&
-      /[!@#$%^&*(),.?":{}|<>]/.test(password)
+      /[!@#$%^&*(),.?\":{}|<>]/.test(password)
     );
   };
 
@@ -233,7 +233,7 @@ const clearAvatar = () => {
     if (!/[0-9]/.test(password)) {
       passwordRequirements.push('one number');
     }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password)) {
       passwordRequirements.push('one special character');
     }
 
@@ -424,7 +424,6 @@ try {
     minHeight: 18,
     margin: 0,
     padding: 0,
-    alignSelf: 'start',
     boxSizing: 'border-box',
   };
 
