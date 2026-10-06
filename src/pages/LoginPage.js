@@ -39,6 +39,9 @@ function LoginPage() {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/google/callback`,
+          queryParams: {
+            prompt: 'select_account',
+          },
         },
       });
       if (oauthError) setError(oauthError.message);
@@ -49,26 +52,26 @@ function LoginPage() {
   };
 
   const handlePasswordRecovery = async () => {
-  setRecoveryMessage('');
-  if (!email) {
-    setRecoveryMessage('Please enter your email address.');
-    return;
-  }
-
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/profile?tab=usuario`
-    });
-    if (error) {
-      setRecoveryMessage(error.message);
-    } else {
-      setRecoveryMessage('We sent you a reset link. Please check your Inbox (and Spam/Promotions).');
+    setRecoveryMessage('');
+    if (!email) {
+      setRecoveryMessage('Please enter your email address.');
+      return;
     }
-  } catch (err) {
-    console.error('Failed to send recovery link:', err.message);
-    setRecoveryMessage('An unexpected error occurred while sending the link.');
-  }
-};
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/profile?tab=usuario`
+      });
+      if (error) {
+        setRecoveryMessage(error.message);
+      } else {
+        setRecoveryMessage('We sent you a reset link. Please check your Inbox (and Spam/Promotions).');
+      }
+    } catch (err) {
+      console.error('Failed to send recovery link:', err.message);
+      setRecoveryMessage('An unexpected error occurred while sending the link.');
+    }
+  };
 
   const isLoginFormComplete = () => {
     return email.trim() !== '' && password !== '';
