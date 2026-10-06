@@ -174,6 +174,22 @@ const clearAvatar = () => {
   if (input) input.value = '';
 };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/google/callback`,
+        },
+      });
+      if (oauthError) setError(oauthError.message);
+    } catch (err) {
+      console.error('Google sign-up failed:', err.message);
+      setError('Google sign-up failed. Please try again.');
+    }
+  };
+
   const handleRegister = async () => {
     setError('');
 
@@ -402,6 +418,15 @@ try {
     <div className="container">
       <div className="login-form" ref={formRef} style={{ position: 'relative' }}>
         <h2>User Registration</h2>
+
+        <button type="button" onClick={handleGoogleSignIn} style={{ width: '100%', marginBottom: 12 }}>
+          Continue with Google
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+          <div style={{ height: 1, background: '#777', flex: 1 }} />
+          <span style={{ fontSize: '0.85rem' }}>or register with email</span>
+          <div style={{ height: 1, background: '#777', flex: 1 }} />
+        </div>
 
     <div
       style={{
