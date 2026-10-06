@@ -1,22 +1,26 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import supabase from '../supabase';
 import '../styles/login.css';
 
 function GoogleAuthCompletePage() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
+  const isLocalPreview =
+    process.env.NODE_ENV !== 'production' && searchParams.get('preview') === '1';
+
+  const [loading, setLoading] = useState(!isLocalPreview);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [nicknameStatus, setNicknameStatus] = useState('idle');
+  const [nicknameStatus, setNicknameStatus] = useState(isLocalPreview ? 'available' : 'idle');
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    birthYear: '',
-    nickname: '',
-    phoneCode: '',
-    phoneNumber: '',
+    firstName: isLocalPreview ? 'Google' : '',
+    lastName: isLocalPreview ? 'User' : '',
+    birthYear: isLocalPreview ? '1990' : '',
+    nickname: isLocalPreview ? 'Google1' : '',
+    phoneCode: isLocalPreview ? '34' : '',
+    phoneNumber: isLocalPreview ? '600000000' : '',
     isCandidate: true,
     acceptedTerms: false,
   });
@@ -24,6 +28,8 @@ function GoogleAuthCompletePage() {
   const birthYears = useMemo(() => Array.from({ length: 80 }, (_, i) => 2008 - i), []);
 
   useEffect(() => {
+    if (isLocalPreview) return undefined;
+
     let active = true;
     const load = async () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -81,7 +87,7 @@ function GoogleAuthCompletePage() {
     };
     load();
     return () => { active = false; };
-  }, [navigate]);
+  }, [isLocalPreview, navigate]);
 
   useEffect(() => {
     const nick = form.nickname.trim();
@@ -91,6 +97,12 @@ function GoogleAuthCompletePage() {
       setNicknameStatus(nick ? 'invalid' : 'idle');
       return;
     }
+
+    if (isLocalPreview) {
+      setNicknameStatus('available');
+      return;
+    }
+
     let active = true;
     setNicknameStatus('checking');
     const timer = setTimeout(async () => {
@@ -100,7 +112,7 @@ function GoogleAuthCompletePage() {
       if (active) setNicknameStatus(nickError ? 'invalid' : data ? 'available' : 'taken');
     }, 350);
     return () => { active = false; clearTimeout(timer); };
-  }, [form.nickname]);
+  }, [form.nickname, isLocalPreview]);
 
   const change = (name, value) => {
     if (name === 'nickname') value = value.replace(/[^A-Za-z0-9]/g, '').slice(0, 7);
@@ -120,6 +132,12 @@ function GoogleAuthCompletePage() {
 
   const save = async () => {
     if (!canSave || saving) return;
+
+    if (isLocalPreview) {
+      toast.success('Local preview completed. No data was saved.');
+      return;
+    }
+
     setSaving(true);
     setError('');
     try {
@@ -173,7 +191,11 @@ function GoogleAuthCompletePage() {
     <div className="login-page-wrapper">
       <div className="login-form">
         <h2>Complete your registration</h2>
-        <p>Google has verified your account. Please complete the required YachtDayWork details.</p>
+        {isLocalPreview ? (
+          <p>Local preview mode. No Google login is required and no data will be saved.</p>
+        ) : (
+          <p>Google has verified your account. Please complete the required YachtDayWork details.</p>
+        )}
 
         <label>Name *</label>
         <input value={form.firstName} onChange={(e) => change('firstName', e.target.value)} />
@@ -239,7 +261,7 @@ function GoogleAuthCompletePage() {
         </div>
 
         <button type="button" onClick={save} disabled={!canSave || saving}>
-          {saving ? 'Saving...' : 'Complete Registration'}
+          {saving ? 'Saving...' : isLocalPreview ? 'Test Complete Registration' : 'Complete Registration'}
         </button>
         {error && <p style={{ color: 'red' }}>{error}</p>}
       </div>
