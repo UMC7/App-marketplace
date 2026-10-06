@@ -31,6 +31,7 @@ import YachtServicesPage from './pages/YachtServicesPage';
 import YachtWorksPage from './pages/YachtWorksPage';
 import EventsPage from './pages/EventsPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import GoogleAuthCompletePage from './pages/GoogleAuthCompletePage';
 import AdminPanel from './admin/AdminPanel';
 import AdminCandidateProfilePage from './admin/AdminCandidateProfilePage';
 import LegalPage from './pages/legal/LegalPage';
@@ -178,6 +179,14 @@ function AppRoutes({ currentUser }) {
           <Route path="/legal" element={<LegalPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route
+            path="/auth/google/callback"
+            element={
+              <ProtectedRoute>
+                <GoogleAuthCompletePage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
