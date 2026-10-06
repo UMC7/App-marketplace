@@ -162,9 +162,21 @@ function Navbar({ forcedCurrentUser }) {
         { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
         (payload) => {
           if (payload?.old?.is_read === false && payload?.new?.is_read === true) {
-            setNotifUnread((c) => Math.max(0, c - 1));
+            setNotifUnread((c) => {
+              const next = Math.max(0, c - 1);
+              if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'NOTIF_BADGE', count: next }));
+              }
+              return next;
+            });
           } else if (payload?.old?.is_read === true && payload?.new?.is_read === false) {
-            setNotifUnread((c) => c + 1);
+            setNotifUnread((c) => {
+              const next = c + 1;
+              if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'NOTIF_BADGE', count: next }));
+              }
+              return next;
+            });
           }
           setTimeout(recount, 400);
         }
@@ -280,21 +292,159 @@ function Navbar({ forcedCurrentUser }) {
         )}
       </div>
 
-      <div className="navbar-floating-action" style={{ position: 'absolute', top: '50%', right: isMobilePortrait ? '0' : '12px', transform: 'translateY(-50%)', color: '#fff', borderRadius: '8px 0 0 8px', width: showTouPanel ? '60px' : '14px', height: showTouPanel ? '100px' : '44px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: showTouPanel ? 'flex-start' : 'center', boxShadow: '0 2px 8px rgba(8,26,59,0.10)', cursor: 'pointer', opacity: 0.95, paddingTop: showTouPanel ? (isMobilePortrait ? '24px' : '6px') : '0', paddingBottom: showTouPanel ? '6px' : '0', transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)', zIndex: 1000 }} onClick={(e) => { e.stopPropagation(); setShowTouPanel((s) => !s); }}>
-        {showTouPanel ? <><div style={{ transform: 'scale(0.85)', marginBottom: '6px' }}><ThemeToggle /></div><span className="material-icons notranslate" translate="no" aria-hidden="true" style={{ fontSize: 26, cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setShowLegalModal(true); setShowTouPanel(false); }}>library_books</span></> : <div style={{ width: '3px', height: '26px', background: '#fff', borderRadius: '2px', marginLeft: '3px' }} />}
+      <div
+        className="navbar-floating-action"
+        style={{
+          position: 'absolute', top: '50%', right: isMobilePortrait ? '0' : '12px',
+          transform: 'translateY(-50%)', color: '#fff', borderRadius: '8px 0 0 8px',
+          width: showTouPanel ? '60px' : '14px', height: showTouPanel ? '100px' : '44px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: showTouPanel ? 'flex-start' : 'center',
+          boxShadow: '0 2px 8px rgba(8,26,59,0.10)', cursor: 'pointer', opacity: 0.95,
+          paddingTop: showTouPanel ? (isMobilePortrait ? '24px' : '6px') : '0',
+          paddingBottom: showTouPanel ? '6px' : '0', transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)',
+          zIndex: 1000,
+        }}
+        onClick={(e) => { e.stopPropagation(); setShowTouPanel((s) => !s); }}
+      >
+        {showTouPanel ? (
+          <>
+            <div style={{ transform: 'scale(0.85)', marginBottom: '6px' }}><ThemeToggle /></div>
+            <span
+              className="material-icons notranslate" translate="no" aria-hidden="true"
+              style={{ fontSize: 26, cursor: 'pointer' }}
+              onClick={(e) => { e.stopPropagation(); setShowLegalModal(true); setShowTouPanel(false); }}
+            >library_books</span>
+          </>
+        ) : (
+          <div style={{ width: '3px', height: '26px', background: '#fff', borderRadius: '2px', marginLeft: '3px' }} />
+        )}
       </div>
 
-      <div className="navbar-floating-action" style={{ position: 'absolute', top: isMobilePortrait ? '50%' : 'calc(50% + 60px)', right: isMobilePortrait ? 'unset' : '12px', left: isMobilePortrait ? '0' : 'unset', transform: isMobilePortrait ? 'translateY(-50%)' : 'none', color: '#fff', borderRadius: isMobilePortrait ? '0 8px 8px 0' : '8px 0 0 8px', width: showSocialPanel ? '60px' : '14px', height: showSocialPanel ? '100px' : '44px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: showSocialPanel ? 'flex-start' : 'center', boxShadow: '0 2px 8px rgba(8,26,59,0.10)', cursor: 'pointer', opacity: 0.95, paddingTop: showSocialPanel ? (isMobilePortrait ? '24px' : '6px') : '0', paddingBottom: showSocialPanel ? '6px' : '0', transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)', zIndex: 1000 }} onClick={(e) => { e.stopPropagation(); setShowSocialPanel((s) => !s); }}>
-        {showSocialPanel ? <><a href="https://www.instagram.com/yachtdaywork" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}><i className="fa-brands fa-instagram" /></a><a href="https://www.facebook.com/yachtdaywork" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}><i className="fa-brands fa-facebook" /></a></> : <div style={{ width: '3px', height: '26px', background: '#fff', borderRadius: '2px', marginRight: isMobilePortrait ? '3px' : '0', marginLeft: isMobilePortrait ? '0' : '3px' }} />}
+      <div
+        className="navbar-floating-action"
+        style={{
+          position: 'absolute', top: isMobilePortrait ? '50%' : 'calc(50% + 60px)',
+          right: isMobilePortrait ? 'unset' : '12px', left: isMobilePortrait ? '0' : 'unset',
+          transform: isMobilePortrait ? 'translateY(-50%)' : 'none', color: '#fff',
+          borderRadius: isMobilePortrait ? '0 8px 8px 0' : '8px 0 0 8px',
+          width: showSocialPanel ? '60px' : '14px', height: showSocialPanel ? '100px' : '44px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: showSocialPanel ? 'space-evenly' : 'center',
+          boxShadow: '0 2px 8px rgba(8,26,59,0.10)', cursor: 'pointer', opacity: 0.95,
+          paddingTop: showSocialPanel ? (isMobilePortrait ? '16px' : '10px') : '0',
+          paddingBottom: showSocialPanel ? '6px' : '0', transition: 'all 0.2s cubic-bezier(.4,2.4,.7,.9)',
+          zIndex: 1000,
+        }}
+        onClick={(e) => { e.stopPropagation(); setShowSocialPanel((s) => !s); }}
+      >
+        {showSocialPanel ? (
+          <>
+            <a href="https://www.instagram.com/yachtdaywork" target="_blank" rel="noopener noreferrer">
+              <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram" style={{ width: '30px', height: '30px', filter: 'invert(100%)', display: 'block' }} />
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61579224787364" target="_blank" rel="noopener noreferrer">
+              <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" alt="Facebook" style={{ width: '30px', height: '30px', filter: 'invert(100%)', display: 'block' }} />
+            </a>
+          </>
+        ) : (
+          <div style={{ width: '3px', height: '26px', background: '#fff', borderRadius: '2px' }} />
+        )}
       </div>
 
-      {showProductModal && <Modal onClose={() => setShowProductModal(false)}><PostProductForm onPosted={() => setShowProductModal(false)} /></Modal>}
-      {showServiceModal && <Modal onClose={() => setShowServiceModal(false)}><PostServiceForm onPosted={() => setShowServiceModal(false)} /></Modal>}
-      {showOfferModal && <Modal onClose={() => setShowOfferModal(false)}><YachtOfferForm onPosted={() => setShowOfferModal(false)} /></Modal>}
-      {showEventModal && <Modal onClose={() => setShowEventModal(false)}><PostEventForm onPosted={() => setShowEventModal(false)} /></Modal>}
-      {showChatList && <Modal onClose={() => { setShowChatList(false); setActiveChat(null); }}>{activeChat ? <ChatPage offerId={activeChat.offerId} receiverId={activeChat.receiverId} external={activeChat.external} threadId={activeChat.threadId} admin={activeChat.admin} adminThreadId={activeChat.threadId} adminUserId={activeChat.adminUserId} onBack={() => setActiveChat(null)} /> : <ChatList onOpenChat={handleOpenChat} />}</Modal>}
-      {showLegalModal && <Modal onClose={() => setShowLegalModal(false)}><div style={{ padding: 16 }}><h3>Legal</h3><p><Link to="/legal" onClick={() => setShowLegalModal(false)}>Terms of Use</Link></p><p><Link to="/privacy" onClick={() => setShowLegalModal(false)}>Privacy Policy</Link></p></div></Modal>}
-      {showNotifications && <NotificationsPanel onClose={() => setShowNotifications(false)} />}
+      {showOfferModal && (
+        <Modal onClose={() => setShowOfferModal(false)}>
+          <YachtOfferForm user={currentUser} onOfferPosted={() => window.location.reload()} />
+        </Modal>
+      )}
+      {showProductModal && (
+        <Modal onClose={() => setShowProductModal(false)}>
+          <PostProductForm onPosted={() => window.location.reload()} />
+        </Modal>
+      )}
+      {showServiceModal && (
+        <Modal onClose={() => setShowServiceModal(false)}>
+          <PostServiceForm onPosted={() => window.location.reload()} />
+        </Modal>
+      )}
+      {showEventModal && (
+        <Modal onClose={() => setShowEventModal(false)}>
+          <PostEventForm />
+        </Modal>
+      )}
+      {showChatList && (
+        <Modal
+          onClose={() => { setActiveChat(null); setShowChatList(false); }}
+          contentClassName={!activeChat ? 'chat-list-modal' : ''}
+          overlayClassName={!activeChat ? 'chat-list-modal-overlay' : ''}
+        >
+          {!activeChat ? (
+            <ChatList
+              currentUser={currentUser}
+              onOpenChat={handleOpenChat}
+              onOpenOffer={() => {
+                setActiveChat(null);
+                setShowChatList(false);
+              }}
+            />
+          ) : activeChat.external ? (
+            <ChatPage
+              mode="external"
+              externalThreadId={activeChat.threadId}
+              onBack={() => { setActiveChat(null); setShowChatList(true); }}
+              onClose={() => { setActiveChat(null); setShowChatList(false); }}
+            />
+          ) : activeChat.admin ? (
+            <ChatPage
+              mode="admin"
+              adminThreadId={activeChat.threadId}
+              adminUserId={activeChat.adminUserId}
+              onBack={() => { setActiveChat(null); setShowChatList(true); }}
+              onClose={() => { setActiveChat(null); setShowChatList(false); }}
+            />
+          ) : (
+            <ChatPage
+              offerId={activeChat.offerId}
+              receiverId={activeChat.receiverId}
+              onBack={() => { setActiveChat(null); setShowChatList(true); }}
+              onClose={() => {
+                navigate('/yacht-works');
+                setActiveChat(null);
+                setShowChatList(false);
+              }}
+            />
+          )}
+        </Modal>
+      )}
+      {showLegalModal && (
+        <Modal onClose={() => setShowLegalModal(false)}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '32px 10px 20px 10px' }}>
+            <button
+              className="legal-modal-link"
+              onClick={() => { setShowLegalModal(false); navigate('/legal'); }}
+              style={{ background: '#68ada8', color: '#fff', border: 'none', borderRadius: '7px', padding: '12px 24px', fontSize: '1.15rem', marginBottom: '8px', width: '100%', maxWidth: 220, cursor: 'pointer' }}
+            >
+              Terms of Use
+            </button>
+            <button
+              className="legal-modal-link"
+              onClick={() => { setShowLegalModal(false); navigate('/privacy'); }}
+              style={{ background: '#bca987', color: '#081a3b', border: 'none', borderRadius: '7px', padding: '12px 24px', fontSize: '1.15rem', width: '100%', maxWidth: 220, cursor: 'pointer' }}
+            >
+              Privacy Policy
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {showNotifications && (
+        <Modal onClose={() => setShowNotifications(false)}>
+          <NotificationsPanel
+            onClose={() => setShowNotifications(false)}
+            onReadOne={() => setNotifUnread((c) => Math.max(0, c - 1))}
+          />
+        </Modal>
+      )}
 
       {isMobilePortrait && (
         <div className="navbar-bottom">
