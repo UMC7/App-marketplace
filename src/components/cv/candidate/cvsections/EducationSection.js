@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import supabase from '../../../../supabase';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../../../context/AuthContext';
 
 import EducationItemCard from '../sectionscomponents/education/EducationItemCard';
 import EducationItemForm from '../sectionscomponents/education/EducationItemForm';
@@ -14,7 +15,8 @@ export default function EducationSection({
   readOnly = false,
   onCountChange,
 }) {
-  const [userId, setUserId] = useState(userIdProp || null);
+  const { currentUser } = useAuth();
+  const [userId, setUserId] = useState(userIdProp || currentUser?.id || null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,22 +35,12 @@ export default function EducationSection({
   );
 
   useEffect(() => {
-    let mounted = true;
-    async function resolveUser() {
-      if (userIdProp) return;
-      const { data, error } = await supabase.auth.getUser();
-      if (!mounted) return;
-      if (error) {
-        toast.error('Unable to resolve current user.');
-        return;
-      }
-      setUserId(data?.user?.id || null);
+    if (userIdProp) {
+      setUserId(userIdProp);
+      return;
     }
-    resolveUser();
-    return () => {
-      mounted = false;
-    };
-  }, [userIdProp]);
+    setUserId(currentUser?.id || null);
+  }, [userIdProp, currentUser?.id]);
 
   // cargar items: por handle (admin, mismo RPC que el CV) o por user_id
   useEffect(() => {
@@ -100,7 +92,7 @@ export default function EducationSection({
   }, [items, onCountChange]);
 
   async function createItem(payload) {
-    if (readOnly) return;
+    if (readOnly || !userId) return;
     const insert = {
       user_id: userId,
       institution: payload.institution,
@@ -131,7 +123,7 @@ export default function EducationSection({
   }
 
   async function updateItem(id, payload) {
-    if (readOnly) return;
+    if (readOnly || !userId) return;
     const update = {
       institution: payload.institution,
       program: payload.program,
@@ -163,7 +155,7 @@ export default function EducationSection({
   }
 
   async function deleteItem(id) {
-    if (readOnly) return;
+    if (readOnly || !userId) return;
     const { error } = await supabase
       .from('cv_education')
       .delete()
@@ -180,7 +172,6 @@ export default function EducationSection({
 
   return (
     <>
-      {/* Barra de acción superior */}
       <div className="cp-actions" style={{ marginBottom: 8 }}>
         {!creating && !editing && !readOnly && (
           <>
@@ -196,7 +187,6 @@ export default function EducationSection({
         )}
       </div>
 
-      {/* Crear (sin título interno) */}
       {!readOnly && creating && (
         <div style={formWrapperStyle}>
           <EducationItemForm
@@ -207,7 +197,6 @@ export default function EducationSection({
         </div>
       )}
 
-      {/* Editar (sin título interno) */}
       {!readOnly && editing && (
         <div style={formWrapperStyle}>
           <EducationItemForm
