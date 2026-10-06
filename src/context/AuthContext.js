@@ -42,7 +42,6 @@ const buildExtendedUser = (user, profileData) => {
   };
 };
 
-// Sube el "pending_avatar" guardado en localStorage y actualiza users.avatar_url
 async function uploadPendingAvatarIfAny(user) {
   try {
     const raw = localStorage.getItem('pending_avatar');
@@ -51,11 +50,8 @@ async function uploadPendingAvatarIfAny(user) {
     const parsed = JSON.parse(raw);
     if (!parsed?.dataUrl) return;
 
-    // DataURL -> Blob
     const res = await fetch(parsed.dataUrl);
     const blob = await res.blob();
-
-    // Ruta debe empezar con {auth.uid} para cumplir las policies
     const fileName = `avatar_${Date.now()}.webp`;
     const path = `${user.id}/${fileName}`;
 
@@ -69,7 +65,6 @@ async function uploadPendingAvatarIfAny(user) {
     const avatarUrl = pub?.publicUrl;
     if (!avatarUrl) throw new Error('No public URL from storage');
 
-    // Guarda en tu tabla public.users
     const { error: dbErr } = await supabase
       .from('users')
       .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
@@ -87,6 +82,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const sessionRef = useRef(null);
   const currentUserIdRef = useRef(null);
+
   const postAuthToWebView = useCallback((session) => {
     if (typeof window === 'undefined' || !window.ReactNativeWebView || !session?.user) return;
     const accessToken = (session.access_token || '').trim();
@@ -102,6 +98,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let authListener;
+
     const hydrateSessionUser = async (user) => {
       if (!user?.id) return null;
 
@@ -144,7 +141,6 @@ export function AuthProvider({ children }) {
         }
 
         sessionRef.current = session;
-        postAuthToWebView(session);
 
         const user = session.user;
         const metadata = user.user_metadata || {};
@@ -156,7 +152,6 @@ export function AuthProvider({ children }) {
           .single();
 
         if (selectError && selectError.code === 'PGRST116') {
-          // Usuario no existe aún, insertamos
           const insertPayload = {
             id: user.id,
             email: user.email,
@@ -178,9 +173,7 @@ export function AuthProvider({ children }) {
             console.warn('No se pudo insertar el perfil del usuario:', insertError.message);
           }
         } else if (existingUser) {
-          // Usuario ya existe, actualizamos si hay campos vacíos
           const fieldsToUpdate = {};
-
           const fields = [
             'first_name',
             'last_name',
@@ -195,7 +188,6 @@ export function AuthProvider({ children }) {
           for (const field of fields) {
             const dbValue = existingUser[field];
             const metaValue = metadata[field];
-
             const isEmpty =
               dbValue === null ||
               dbValue === undefined ||
@@ -223,7 +215,6 @@ export function AuthProvider({ children }) {
           }
         }
 
-        // Obtener perfil actualizado
         const { data: userProfile, error: profileError } = await supabase
           .from('users')
           .select('*')
@@ -245,19 +236,6 @@ export function AuthProvider({ children }) {
     };
 
     const bootstrap = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (session?.user) {
-          sessionRef.current = session;
-        }
-      } catch (err) {
-        console.error('Error inesperado al obtener sesión inicial:', err.message);
-        setCurrentUser(null);
-      }
-
       await getSession();
 
       authListener = supabase.auth.onAuthStateChange((event, session) => {
@@ -269,25 +247,12 @@ export function AuthProvider({ children }) {
         }
 
         sessionRef.current = session;
-        postAuthToWebView(session);
 
-        // Mismo usuario (refresh de token) o TOKEN_REFRESHED: no desmontar la app
-        const isSameUserRefresh =
-          event === 'TOKEN_REFRESHED' ||
-          (currentUserIdRef.current && currentUserIdRef.current === session.user.id);
-        if (!isSameUserRefresh) {
-          setLoading(true);
-        }
-
-        hydrateSessionUser(session.user)
-          .then((extendedUser) => {
-            if (extendedUser) {
-              setCurrentUser(extendedUser);
-            }
-          })
-          .finally(() => {
-            setLoading(false);
-          });
+        hydrateSessionUser(session.user).then((extendedUser) => {
+          if (extendedUser) {
+            setCurrentUser(extendedUser);
+          }
+        });
       });
     };
 
@@ -296,20 +261,18 @@ export function AuthProvider({ children }) {
     return () => {
       authListener?.subscription?.unsubscribe();
     };
-  }, [postAuthToWebView]);
+  }, []);
 
   useEffect(() => {
     currentUserIdRef.current = currentUser?.id ?? null;
   }, [currentUser?.id]);
 
-  // Subir "pending avatar" al tener usuario con id (una vez por sesión)
   useEffect(() => {
     const u = currentUser;
     if (!u?.id || u.registration_complete !== true) return;
     uploadPendingAvatarIfAny(u);
   }, [currentUser?.id, currentUser?.registration_complete]);
 
-  // === FCM: registrar/actualizar token cuando hay usuario autenticado (solo web; en app usamos Expo) ===
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!currentUser?.id || currentUser.registration_complete !== true) return;
@@ -317,7 +280,6 @@ export function AuthProvider({ children }) {
     registerFCM(currentUser);
   }, [currentUser?.id, currentUser?.registration_complete]);
 
-  // WebView: enviar user_id + access_token para que la app registre push con autenticación
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const userId = currentUser?.id;
@@ -333,7 +295,6 @@ export function AuthProvider({ children }) {
       if (currentUser?.registration_complete !== true) return;
       if (sessionRef.current) {
         postAuthToWebView(sessionRef.current);
-        // Re-enviar AUTH 2s y 5s después por si la primera se perdió
         resendTimeouts.push(setTimeout(() => {
           if (sessionRef.current) postAuthToWebView(sessionRef.current);
         }, 2000));
@@ -355,7 +316,6 @@ export function AuthProvider({ children }) {
     };
   }, [postAuthToWebView, currentUser?.registration_complete]);
 
-  // Fallback: cuando la app nativa inyecta el Expo push token, la web registra directamente
   useEffect(() => {
     if (typeof window === 'undefined') return;
     let mounted = true;
@@ -391,8 +351,6 @@ export function AuthProvider({ children }) {
     };
   }, [currentUser?.registration_complete]);
 
-  // 🔄 Escucha en tiempo real cambios en la fila del usuario (incluye avatar_url)
-  // y actualiza currentUser.app_metadata sin recargar.
   useEffect(() => {
     const userId = currentUser?.id;
     if (!userId) return;
@@ -406,7 +364,6 @@ export function AuthProvider({ children }) {
           const row = payload.new || payload.old;
           if (!row) return;
 
-          // Merge de los campos del perfil dentro de app_metadata
           setCurrentUser((prev) => {
             if (!prev) return prev;
             return {
