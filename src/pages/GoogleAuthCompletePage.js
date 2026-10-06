@@ -248,8 +248,13 @@ function GoogleAuthCompletePage() {
   const checkboxStyle = {
     width: 18,
     height: 18,
+    minWidth: 18,
+    minHeight: 18,
     margin: 0,
+    padding: 0,
     flex: '0 0 18px',
+    alignSelf: 'flex-start',
+    boxSizing: 'border-box',
   };
 
   const checkboxLabelStyle = {
