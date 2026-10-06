@@ -16,6 +16,7 @@ import { isOfferVisibleOnJobBoard } from '../utils/jobOfferVisibility';
 import { inferTypeByName } from './cv/publicProfileView.utils';
 import { fetchPublicUserSummaries } from '../services/publicUserDirectory';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const SEACREW_PAGE_SIZE = 18;
 const SEACREW_MAX_PAGE_BATCHES = 6;
@@ -259,101 +260,33 @@ async function fetchSeaCrewProfilesLegacy() {
         console.warn('SeaCrew nickname batch lookup failed:', usersError);
         continue;
       }
-
       (userRows || []).forEach((row) => {
-        const nickname = String(row?.nickname || '').trim();
-        if (nickname) nicknameMap.set(String(row.id), nickname);
+        nicknameMap.set(row.id, row.nickname || '');
       });
-    } catch (nicknameError) {
-      console.warn('SeaCrew nickname batch lookup failed:', nicknameError);
+    } catch (error) {
+      console.warn('SeaCrew nickname batch lookup threw:', error);
     }
   }
 
-  if (nicknameIds.length && nicknameMap.size === 0 && window.location.hostname !== 'localhost') {
-    try {
-      const response = await fetch('/api/seacrew-nicknames', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userIds: nicknameIds }),
-      });
-      const payload = await response.json();
-      if (response.ok && payload?.nicknames && typeof payload.nicknames === 'object') {
-        Object.entries(payload.nicknames).forEach(([id, nickname]) => {
-          const safeNickname = String(nickname || '').trim();
-          if (safeNickname) nicknameMap.set(id, safeNickname);
-        });
-      }
-    } catch (nicknameError) {
-      console.warn('Error loading SeaCrew nicknames from API:', nicknameError);
-    }
-  }
+  const { data: exposureRows, error: exposureError } = await supabase
+    .rpc('rpc_public_profile_exposed', { p_profile_ids: profileIds });
 
-  const experienceMap = new Map();
-  for (const profileIdChunk of chunkArray(profileIds)) {
-    try {
-      const { data: experienceRows, error: experiencesError } = await supabase
-        .from('profile_experiences')
-        .select('profile_id, start_year, start_month, end_year, end_month, is_current')
-        .in('profile_id', profileIdChunk);
+  if (exposureError) throw exposureError;
 
-      if (experiencesError) {
-        console.warn('SeaCrew experience batch lookup failed:', experiencesError);
-        continue;
-      }
-
-      (experienceRows || []).forEach((row) => {
-        const key = String(row.profile_id || '').trim();
-        if (!key) return;
-        const current = experienceMap.get(key) || [];
-        current.push(row);
-        experienceMap.set(key, current);
-      });
-    } catch (experiencesError) {
-      console.warn('SeaCrew experience batch lookup failed:', experiencesError);
-    }
-  }
-
-  const yachtingMonthsMap = new Map();
-  for (const profileIdChunk of chunkArray(profileIds, 25)) {
-    try {
-      const yachtingEntries = await Promise.all(
-        profileIdChunk.map(async (profileId) => {
-          const { data: monthsData, error: monthsError } = await supabase.rpc('rpc_yachting_months', {
-            profile_uuid: profileId,
-          });
-          if (monthsError) {
-            console.warn('SeaCrew yachting months lookup failed for', profileId, monthsError);
-            return [profileId, null];
-          }
-          return [profileId, typeof monthsData === 'number' ? monthsData : null];
-        })
-      );
-
-      yachtingEntries.forEach(([profileId, months]) => {
-        yachtingMonthsMap.set(profileId, months);
-      });
-    } catch (monthsError) {
-      console.warn('SeaCrew yachting months batch lookup failed:', monthsError);
-    }
-  }
+  const exposureMap = new Map(
+    (exposureRows || []).map((row) => [row.profile_id, row])
+  );
 
   const enrichedProfiles = normalizedProfiles.map((profile) => {
-    const nicknameLookupKeys = getSeaCrewUserLookupKeys(profile).filter(isUuidLike);
-    const userNickname =
-      nicknameLookupKeys
-        .map((id) => nicknameMap.get(id) || '')
-        .find((value) => String(value || '').trim()) || '';
-
-    const profileExperiences = isUuidLike(profile.id)
-      ? experienceMap.get(profile.id) || []
+    const exposure = exposureMap.get(profile.id) || {};
+    const lookupId = getSeaCrewUserLookupKeys(profile).find((id) => nicknameMap.has(id));
+    const userNickname = lookupId ? nicknameMap.get(lookupId) : '';
+    const profileExperiences = Array.isArray(exposure.profile_experiences)
+      ? exposure.profile_experiences
       : [];
-    const yachtingMonths = isUuidLike(profile.id)
-      ? yachtingMonthsMap.get(profile.id) ?? null
-      : null;
-    const chatReceiverId =
-      nicknameLookupKeys.find((value) => value !== String(profile.id || '').trim()) ||
-      nicknameLookupKeys[0] ||
-      '';
+    const rawMonths = Number(exposure.yachting_months);
+    const yachtingMonths = Number.isFinite(rawMonths) ? rawMonths : null;
+    const chatReceiverId = String(exposure.chat_receiver_id || '').trim();
 
     return {
       ...profile,
@@ -552,10 +485,10 @@ SeaCrewFilterPanel.displayName = 'SeaCrewFilterPanel';
 
 function YachtWorksPage() {
   const location = useLocation();
+  const { currentUser: user, loading: authLoading } = useAuth();
   const requestedTab = new URLSearchParams(location.search).get('tab');
   const [offers, setOffers] = useState([]);
-  const [user, setUser] = useState(null);
-  const [userLoaded, setUserLoaded] = useState(false);
+  const userLoaded = !authLoading;
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 820);
   const [offersLoading, setOffersLoading] = useState(true);
   const [crewProfiles, setCrewProfiles] = useState(null);
@@ -599,7 +532,6 @@ function YachtWorksPage() {
   const isFiltersOpen = openPanel === 'filters';
   const isPrefsOpen  = openPanel === 'prefs';
 
-  // Compatibilidad para hijos que esperaban booleano/actualizador de filtros
   const setShowFilters = (next) => {
     if (typeof next === 'function') {
       const resolved = next(isFiltersOpen);
@@ -609,7 +541,6 @@ function YachtWorksPage() {
     }
   };
 
-  // country como array
   const [filters, setFilters] = useState({
     rank: '',
     department: '',
@@ -643,15 +574,6 @@ function YachtWorksPage() {
     selectedRegion: null,
     flag: '',
   });
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setUserLoaded(true);
-    };
-    getUser();
-  }, []);
 
   useEffect(() => {
     try {
@@ -782,12 +704,12 @@ function YachtWorksPage() {
       } catch (error) {
         const message = error.message || 'Failed to load SeaCrew profiles.';
         console.error('Error fetching SeaCrew profiles:', error);
-      setCrewError(message);
-      crewNextOffsetRef.current = 0;
-      crewBufferedProfilesRef.current = [];
-      setCrewProfiles([]);
-      setCrewHasMore(false);
-    } finally {
+        setCrewError(message);
+        crewNextOffsetRef.current = 0;
+        crewBufferedProfilesRef.current = [];
+        setCrewProfiles([]);
+        setCrewHasMore(false);
+      } finally {
         if (crewRequestIdRef.current === requestId) {
           setCrewLoading(false);
         }
@@ -1036,13 +958,13 @@ function YachtWorksPage() {
         );
       const pCountry = pct(offerMatchesCountry);
 
-      const pTerm = pct((preferences.terms || []).includes(String(o.type || ''))); // 20%
+      const pTerm = pct((preferences.terms || []).includes(String(o.type || '')));
 
       const wantsMin = preferences.minSalary !== '' && preferences.minSalary !== null && preferences.minSalary !== undefined;
       const isDOE = !!o.is_doe;
       const isTips = !!o.is_tips;
       const salaryNum = Number(o.salary || 0);
-      const pPay = pct(wantsMin ? (isDOE || isTips || salaryNum >= Number(preferences.minSalary)) : false); // 10%
+      const pPay = pct(wantsMin ? (isDOE || isTips || salaryNum >= Number(preferences.minSalary)) : false);
 
       const offerFlag = String(o.flag || '');
       const isUSFlag = ['United States', 'US Flag', 'USA'].includes(offerFlag);
@@ -1105,7 +1027,7 @@ function YachtWorksPage() {
   };
 
   const handleStartCrewChat = (receiverId) => {
-    if (!receiverId) return;
+    if (!receiverId || !user?.id) return;
     setActiveCrewChat({ offerId: null, receiverId });
   };
 
@@ -1130,7 +1052,7 @@ function YachtWorksPage() {
     } catch {}
     setCrewChatIntroSeen(true);
     setShowCrewChatIntro(false);
-    if (pendingCrewChat?.receiverId) {
+    if (pendingCrewChat?.receiverId && user?.id) {
       const nextReceiverId = pendingCrewChat.receiverId;
       setPendingCrewChat(null);
       handleStartCrewChat(nextReceiverId);
@@ -1185,7 +1107,7 @@ function YachtWorksPage() {
           onClose={handleCloseCrewChatLoginInfo}
         />
       )}
-      {activeCrewChat && (
+      {activeCrewChat && user?.id && (
         <Modal onClose={() => setActiveCrewChat(null)}>
           <ChatPage
             offerId={activeCrewChat.offerId}
@@ -1308,50 +1230,38 @@ function YachtWorksPage() {
           setFilters={setFilters}
           setShowFilters={setShowFilters}
           showFilters={isFiltersOpen}
-          openPanel={openPanel}
-          setOpenPanel={setOpenPanel}
           toggleMultiSelect={toggleMultiSelect}
           toggleRegionCountries={toggleRegionCountries}
           regionOrder={regionOrder}
           countriesByRegion={countriesByRegion}
           preferences={preferences}
           setPreferences={setPreferences}
-          isMobile={isMobile}
+          openPanel={openPanel}
+          setOpenPanel={setOpenPanel}
         />
       ) : (
         <>
-          {isFiltersOpen && (
+          {openPanel === 'filters' && (
             <SeaCrewFilterPanel
               ref={crewFiltersRef}
               filters={crewFilters}
               setFilters={setCrewFilters}
-              rankOptions={crewRankOptions}
-              cityOptions={crewCityOptions}
               countryOptions={crewCountryOptions}
             />
           )}
           <SeaCrewList
             profiles={visibleCrewProfiles}
             loading={crewLoading && !Array.isArray(crewProfiles)}
-            currentUserId={user?.id || ''}
-            onRequestChat={handleRequestCrewChat}
+            currentUser={user}
+            onRequestPrivateChat={handleRequestCrewChat}
           />
-          {hasMoreCrewProfiles && (
-            <div
-              ref={crewLoadMoreSentinelRef}
-              className="seacrew-loadmore-sentinel"
-              aria-hidden="true"
-            >
-              {crewLoading && (
-                <div className="seacrew-inline-loader" aria-label="Loading more crew">
-                  <div className="seacrew-inline-loader-spinner" />
-                </div>
-              )}
-            </div>
+          {!hasCrewFiltersApplied && hasMoreCrewProfiles && (
+            <div ref={crewLoadMoreSentinelRef} style={{ minHeight: 1 }} />
           )}
-          <ScrollToTopButton />
         </>
       )}
+
+      <ScrollToTopButton />
     </div>
   );
 }
