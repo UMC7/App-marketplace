@@ -17,6 +17,12 @@ const isRegistrationComplete = (profileData) => Boolean(
   profileData?.accepted_terms === true
 );
 
+const isGoogleUser = (user) => {
+  const provider = user?.app_metadata?.provider;
+  const providers = user?.app_metadata?.providers;
+  return provider === 'google' || (Array.isArray(providers) && providers.includes('google'));
+};
+
 const buildExtendedUser = (user, profileData) => {
   if (!user) return null;
 
@@ -123,13 +129,13 @@ export function AuthProvider({ children }) {
       }
 
       const profile = await getProfileForUser(session.user);
-      const complete = isRegistrationComplete(profile);
+      const requiresGoogleCompletion = isGoogleUser(session.user);
+      const complete = !requiresGoogleCompletion || isRegistrationComplete(profile);
 
       if (!complete) {
-        // OAuth needs a temporary Supabase session so the completion page can
-        // identify the Google user and save the missing registration fields.
-        // Keep that temporary session internal, but never expose it as an
-        // authenticated YachtDayWork user until registration is complete.
+        // Google OAuth may temporarily own a Supabase session while the
+        // registration-completion form is being finished. Do not expose that
+        // temporary session as an authenticated YachtDayWork user.
         sessionRef.current = null;
         if (mounted) setCurrentUser(null);
         return;
@@ -281,14 +287,14 @@ export function AuthProvider({ children }) {
           const row = payload.new || payload.old;
           if (!row) return;
 
-          if (!isRegistrationComplete(row)) {
-            setCurrentUser(null);
-            sessionRef.current = null;
-            return;
-          }
-
           setCurrentUser((prev) => {
             if (!prev) return prev;
+
+            if (isGoogleUser(prev) && !isRegistrationComplete(row)) {
+              sessionRef.current = null;
+              return null;
+            }
+
             return {
               ...prev,
               role: row.role ?? prev.role,
