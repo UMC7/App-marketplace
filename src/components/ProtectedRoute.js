@@ -12,11 +12,14 @@ function ProtectedRoute({ children, adminOnly = false }) {
     return <div>Cargando...</div>;
   }
 
-  if (!currentUser) {
+  const authenticatedUser =
+    currentUser?.registration_complete === true ? currentUser : null;
+
+  if (!authenticatedUser) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (adminOnly && currentUser?.role !== 'admin') {
+  if (adminOnly && authenticatedUser?.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
 
