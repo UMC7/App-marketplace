@@ -146,13 +146,28 @@ function GoogleAuthCompletePage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const requiredFieldStyle = (missing) =>
+    missing
+      ? {
+          border: '1px solid #e05252',
+          boxShadow: '0 0 0 2px rgba(224, 82, 82, 0.18)',
+        }
+      : undefined;
+
+  const firstNameMissing = !form.firstName.trim();
+  const lastNameMissing = !form.lastName.trim();
+  const birthYearMissing = !form.birthYear;
+  const nicknameMissing = nicknameStatus !== 'available';
+  const phoneCodeMissing = !form.phoneCode;
+  const phoneNumberMissing = !form.phoneNumber;
+
   const canSave =
-    form.firstName.trim() &&
-    form.lastName.trim() &&
-    form.birthYear &&
-    nicknameStatus === 'available' &&
-    form.phoneCode &&
-    form.phoneNumber &&
+    !firstNameMissing &&
+    !lastNameMissing &&
+    !birthYearMissing &&
+    !nicknameMissing &&
+    !phoneCodeMissing &&
+    !phoneNumberMissing &&
     form.acceptedTerms;
 
   const withTimeout = (promise, ms, message) =>
@@ -203,7 +218,6 @@ function GoogleAuthCompletePage() {
       toast.success('Registration completed.');
       navigate('/profile', { replace: true });
 
-      // Keep auth metadata aligned, but never block registration completion on it.
       supabase.auth.updateUser({
         data: {
           first_name: payload.first_name,
@@ -261,19 +275,36 @@ function GoogleAuthCompletePage() {
         )}
 
         <label>Name *</label>
-        <input value={form.firstName} onChange={(e) => change('firstName', e.target.value)} />
+        <input
+          value={form.firstName}
+          onChange={(e) => change('firstName', e.target.value)}
+          style={requiredFieldStyle(firstNameMissing)}
+        />
 
         <label>Last Name *</label>
-        <input value={form.lastName} onChange={(e) => change('lastName', e.target.value)} />
+        <input
+          value={form.lastName}
+          onChange={(e) => change('lastName', e.target.value)}
+          style={requiredFieldStyle(lastNameMissing)}
+        />
 
         <label>Year of Birth *</label>
-        <select value={form.birthYear} onChange={(e) => change('birthYear', e.target.value)}>
+        <select
+          value={form.birthYear}
+          onChange={(e) => change('birthYear', e.target.value)}
+          style={requiredFieldStyle(birthYearMissing)}
+        >
           <option value="">Year of Birth</option>
           {birthYears.map((year) => <option key={year} value={year}>{year}</option>)}
         </select>
 
         <label>Nickname *</label>
-        <input value={form.nickname} maxLength={7} onChange={(e) => change('nickname', e.target.value)} />
+        <input
+          value={form.nickname}
+          maxLength={7}
+          onChange={(e) => change('nickname', e.target.value)}
+          style={requiredFieldStyle(nicknameMissing)}
+        />
         <p style={{ fontSize: '0.85rem', marginTop: -8 }}>
           {nicknameStatus === 'checking' && 'Checking availability...'}
           {nicknameStatus === 'available' && 'Nickname available.'}
@@ -289,14 +320,14 @@ function GoogleAuthCompletePage() {
             placeholder="Code"
             inputMode="numeric"
             onChange={(e) => change('phoneCode', e.target.value)}
-            style={{ width: 70 }}
+            style={{ width: 70, ...(requiredFieldStyle(phoneCodeMissing) || {}) }}
           />
           <input
             value={form.phoneNumber}
             placeholder="Primary Phone"
             inputMode="numeric"
             onChange={(e) => change('phoneNumber', e.target.value)}
-            style={{ flex: 1 }}
+            style={{ flex: 1, ...(requiredFieldStyle(phoneNumberMissing) || {}) }}
           />
         </div>
 
@@ -317,7 +348,10 @@ function GoogleAuthCompletePage() {
             id="googleTerms"
             checked={form.acceptedTerms}
             onChange={(e) => change('acceptedTerms', e.target.checked)}
-            style={checkboxStyle}
+            style={{
+              ...checkboxStyle,
+              ...(requiredFieldStyle(!form.acceptedTerms) || {}),
+            }}
           />
           <label htmlFor="googleTerms" style={checkboxLabelStyle}>
             I accept the <a href="/legal" target="_blank" rel="noopener noreferrer">Terms of Use</a> and{' '}
