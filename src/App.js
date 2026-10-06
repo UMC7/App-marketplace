@@ -92,18 +92,13 @@ function GoogleAuthRoute() {
 }
 
 function AppRoutes({ currentUser }) {
-  const location = useLocation();
   const registrationPending =
     Boolean(currentUser) && currentUser.registration_complete !== true;
-  const isGoogleCompletionRoute = location.pathname === '/auth/google/callback';
-
-  if (registrationPending && !isGoogleCompletionRoute) {
-    return <Navigate to="/auth/google/callback" replace />;
-  }
+  const effectiveUser = registrationPending ? null : currentUser;
 
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      <Routes>
         <Route element={<AnimatedLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/marketplace" element={<HomePage />} />
@@ -111,11 +106,11 @@ function AppRoutes({ currentUser }) {
 
           <Route
             path="/login"
-            element={!currentUser ? <LoginPage /> : <Navigate to="/" replace />}
+            element={!effectiveUser ? <LoginPage /> : <Navigate to="/" replace />}
           />
           <Route
             path="/register"
-            element={!currentUser ? <RegisterPage /> : <Navigate to="/profile" replace />}
+            element={!effectiveUser ? <RegisterPage /> : <Navigate to="/profile" replace />}
           />
 
           <Route path="/product/:id" element={<ProductDetailPage />} />
@@ -224,15 +219,16 @@ function App() {
 
   const registrationPending =
     Boolean(currentUser) && currentUser.registration_complete !== true;
+  const effectiveUser = registrationPending ? null : currentUser;
 
   return (
     <Router>
-      {!registrationPending && <Navbar />}
+      <Navbar forcedCurrentUser={effectiveUser} />
       <ScrollToTopOnRouteChange />
       <AuthRedirectHandler />
       <ToastContainer autoClose={1500} />
       <CookieBanner />
-      {!registrationPending && <AdminChatButton />}
+      {effectiveUser && <AdminChatButton />}
 
       <div className="main-content">
         <AppRoutes currentUser={currentUser} />
