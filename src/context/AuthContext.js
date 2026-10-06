@@ -82,7 +82,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const sessionRef = useRef(null);
   const currentUserIdRef = useRef(null);
-
   const postAuthToWebView = useCallback((session) => {
     if (typeof window === 'undefined' || !window.ReactNativeWebView || !session?.user) return;
     const accessToken = (session.access_token || '').trim();
@@ -236,22 +235,32 @@ export function AuthProvider({ children }) {
     };
 
     const bootstrap = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session?.user) {
+          sessionRef.current = session;
+        }
+      } catch (err) {
+        console.error('Error inesperado al obtener sesión inicial:', err.message);
+        setCurrentUser(null);
+      }
+
       await getSession();
 
       authListener = supabase.auth.onAuthStateChange((event, session) => {
         if (!session?.user) {
           sessionRef.current = null;
           setCurrentUser(null);
-          setLoading(false);
           return;
         }
 
         sessionRef.current = session;
 
         hydrateSessionUser(session.user).then((extendedUser) => {
-          if (extendedUser) {
-            setCurrentUser(extendedUser);
-          }
+          if (extendedUser) setCurrentUser(extendedUser);
         });
       });
     };
