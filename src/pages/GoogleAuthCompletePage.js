@@ -231,6 +231,25 @@ function GoogleAuthCompletePage() {
 
   if (loading) return <div className="login-page-wrapper"><div className="login-form"><p>Loading...</p></div></div>;
 
+  const checkboxRowStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    margin: '16px 0',
+  };
+
+  const checkboxStyle = {
+    width: 18,
+    height: 18,
+    margin: 0,
+    flex: '0 0 18px',
+  };
+
+  const checkboxLabelStyle = {
+    margin: 0,
+    lineHeight: 1.35,
+  };
+
   return (
     <div className="login-page-wrapper">
       <div className="login-form">
@@ -281,24 +300,26 @@ function GoogleAuthCompletePage() {
           />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '20px auto', gap: 10, margin: '16px 0' }}>
+        <div style={checkboxRowStyle}>
           <input
             type="checkbox"
             id="googleCandidate"
             checked={form.isCandidate}
             onChange={(e) => change('isCandidate', e.target.checked)}
+            style={checkboxStyle}
           />
-          <label htmlFor="googleCandidate">Enable Candidate Profile</label>
+          <label htmlFor="googleCandidate" style={checkboxLabelStyle}>Enable Candidate Profile</label>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '20px auto', gap: 10, margin: '16px 0' }}>
+        <div style={checkboxRowStyle}>
           <input
             type="checkbox"
             id="googleTerms"
             checked={form.acceptedTerms}
             onChange={(e) => change('acceptedTerms', e.target.checked)}
+            style={checkboxStyle}
           />
-          <label htmlFor="googleTerms">
+          <label htmlFor="googleTerms" style={checkboxLabelStyle}>
             I accept the <a href="/legal" target="_blank" rel="noopener noreferrer">Terms of Use</a> and{' '}
             <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
           </label>
