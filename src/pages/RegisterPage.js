@@ -417,16 +417,6 @@ try {
     fontWeight: 'bold',
   };
 
-  const termsCheckboxStyle = {
-    width: 18,
-    height: 18,
-    minWidth: 18,
-    minHeight: 18,
-    margin: 0,
-    padding: 0,
-    boxSizing: 'border-box',
-  };
-
   return (
     <div className="container">
       <div className="login-form" ref={formRef} style={{ position: 'relative' }}>
@@ -729,7 +719,6 @@ try {
             checked={acceptedTerms}
             onChange={(e) => setAcceptedTerms(e.target.checked)}
             className={highlightClass('acceptedTerms')}
-            style={termsCheckboxStyle}
             required
           />
           <label
