@@ -45,10 +45,7 @@ import AnimatedLayout from './layouts/AnimatedLayout';
 import LoadingSpinner from './components/LoadingSpinner';
 import AdminChatButton from './components/AdminChatButton';
 
-// ✅ NUEVO: detalle de evento (para deep links o uso futuro)
 import EventDetail from './pages/EventDetail';
-
-// ✅ NUEVO: vista pública del CV
 import PublicProfileView from './pages/cv/PublicProfileView';
 import PublicProfileQrRedirect from './pages/cv/PublicProfileQrRedirect';
 import ProfileAnalyticsPage from './pages/cv/ProfileAnalyticsPage';
@@ -91,16 +88,18 @@ function GoogleAuthRoute() {
     new URLSearchParams(location.search).get('preview') === '1';
 
   if (isLocalPreview) return <GoogleAuthCompletePage />;
-
-  // Do not gate the OAuth callback on currentUser here. Supabase restores the
-  // session asynchronously after returning from Google, and the completion
-  // page already waits for supabase.auth.getUser() before deciding whether the
-  // authentication succeeded.
   return <GoogleAuthCompletePage />;
 }
 
 function AppRoutes({ currentUser }) {
   const location = useLocation();
+  const registrationPending =
+    Boolean(currentUser) && currentUser.registration_complete !== true;
+  const isGoogleCompletionRoute = location.pathname === '/auth/google/callback';
+
+  if (registrationPending && !isGoogleCompletionRoute) {
+    return <Navigate to="/auth/google/callback" replace />;
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -123,15 +122,9 @@ function AppRoutes({ currentUser }) {
           <Route path="/yacht-services" element={<YachtServicesPage />} />
           <Route path="/yacht-services/post-product" element={<PostProduct />} />
           <Route path="/yacht-works" element={<YachtWorksPage />} />
-
-          {/* Listado de eventos */}
           <Route path="/events" element={<EventsPage />} />
-
-          {/* ✅ NUEVO: rutas de detalle por ID o slug, por si quieres usarlas/compartir */}
           <Route path="/event/:id" element={<EventDetail />} />
           <Route path="/events/:id" element={<EventDetail />} />
-
-          {/* ✅ NUEVO: ruta pública del CV */}
           <Route path="/cv/qr/:qrId" element={<PublicProfileQrRedirect />} />
           <Route path="/cv/:handle" element={<PublicProfileView />} />
 
@@ -229,14 +222,17 @@ function App() {
     return <LoadingSpinner message="Loading application..." />;
   }
 
+  const registrationPending =
+    Boolean(currentUser) && currentUser.registration_complete !== true;
+
   return (
     <Router>
-      <Navbar />
+      {!registrationPending && <Navbar />}
       <ScrollToTopOnRouteChange />
       <AuthRedirectHandler />
       <ToastContainer autoClose={1500} />
       <CookieBanner />
-      <AdminChatButton />
+      {!registrationPending && <AdminChatButton />}
 
       <div className="main-content">
         <AppRoutes currentUser={currentUser} />
