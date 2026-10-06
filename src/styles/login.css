@@ -82,6 +82,12 @@
   line-height: 1;
 }
 
+.login-form #googleTerms.missing-required {
+  outline: 2px solid #e05252;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.38) !important;
+}
+
 body.dark-mode .login-form button.google-signin-btn {
   background: #3a3a3a !important;
   background-color: #3a3a3a !important;
@@ -94,6 +100,11 @@ body.dark-mode .login-form button.google-signin-btn:hover {
   background: #454545 !important;
   background-color: #454545 !important;
   border-color: #666 !important;
+}
+
+body.dark-mode .login-form #googleTerms.missing-required {
+  outline-color: #ff6b6b;
+  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.45) !important;
 }
 
 .dark-mode .login-divider {
