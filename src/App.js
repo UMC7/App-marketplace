@@ -84,7 +84,7 @@ function AuthRedirectHandler() {
   return null;
 }
 
-function GoogleAuthRoute({ currentUser }) {
+function GoogleAuthRoute() {
   const location = useLocation();
   const isLocalPreview =
     process.env.NODE_ENV !== 'production' &&
@@ -92,7 +92,11 @@ function GoogleAuthRoute({ currentUser }) {
 
   if (isLocalPreview) return <GoogleAuthCompletePage />;
 
-  return currentUser ? <GoogleAuthCompletePage /> : <Navigate to="/login" replace />;
+  // Do not gate the OAuth callback on currentUser here. Supabase restores the
+  // session asynchronously after returning from Google, and the completion
+  // page already waits for supabase.auth.getUser() before deciding whether the
+  // authentication succeeded.
+  return <GoogleAuthCompletePage />;
 }
 
 function AppRoutes({ currentUser }) {
@@ -190,7 +194,7 @@ function AppRoutes({ currentUser }) {
           <Route path="/legal" element={<LegalPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/auth/google/callback" element={<GoogleAuthRoute currentUser={currentUser} />} />
+          <Route path="/auth/google/callback" element={<GoogleAuthRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
