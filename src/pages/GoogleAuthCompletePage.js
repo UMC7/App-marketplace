@@ -13,6 +13,7 @@ function GoogleAuthCompletePage() {
   const [loading, setLoading] = useState(!isLocalPreview);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [authUser, setAuthUser] = useState(null);
   const [nicknameStatus, setNicknameStatus] = useState(isLocalPreview ? 'available' : 'idle');
   const [form, setForm] = useState({
     firstName: isLocalPreview ? 'Google' : '',
@@ -31,25 +32,13 @@ function GoogleAuthCompletePage() {
     if (isLocalPreview) return undefined;
 
     let active = true;
+    let timeoutId;
 
-    const waitForUser = async () => {
-      for (let attempt = 0; attempt < 20; attempt += 1) {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (user) return { user, error: null };
-        if (userError && attempt === 19) return { user: null, error: userError };
-        await new Promise((resolve) => setTimeout(resolve, 250));
-      }
-      return { user: null, error: null };
-    };
+    const finishWithSession = async (session) => {
+      const user = session?.user;
+      if (!active || !user) return false;
 
-    const load = async () => {
-      const { user, error: userError } = await waitForUser();
-      if (!active) return;
-      if (userError || !user) {
-        setError('Google authentication could not be completed.');
-        setLoading(false);
-        return;
-      }
+      setAuthUser(user);
 
       const { data: profile, error: profileError } = await supabase
         .from('users')
@@ -57,11 +46,11 @@ function GoogleAuthCompletePage() {
         .eq('id', user.id)
         .single();
 
-      if (!active) return;
+      if (!active) return true;
       if (profileError) {
         setError('Your YachtDayWork profile could not be loaded.');
         setLoading(false);
-        return;
+        return true;
       }
 
       const complete =
@@ -75,7 +64,7 @@ function GoogleAuthCompletePage() {
 
       if (complete) {
         navigate('/', { replace: true });
-        return;
+        return true;
       }
 
       const meta = user.user_metadata || {};
@@ -94,10 +83,35 @@ function GoogleAuthCompletePage() {
         isCandidate: profile?.is_candidate ?? true,
         acceptedTerms: profile?.accepted_terms === true,
       });
+      setError('');
       setLoading(false);
+      return true;
     };
-    load();
-    return () => { active = false; };
+
+    const bootstrap = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (await finishWithSession(session)) return;
+
+      timeoutId = setTimeout(() => {
+        if (!active) return;
+        setError('Google authentication could not be completed.');
+        setLoading(false);
+      }, 8000);
+    };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session?.user) return;
+      if (timeoutId) clearTimeout(timeoutId);
+      await finishWithSession(session);
+    });
+
+    bootstrap();
+
+    return () => {
+      active = false;
+      if (timeoutId) clearTimeout(timeoutId);
+      authListener?.subscription?.unsubscribe();
+    };
   }, [isLocalPreview, navigate]);
 
   useEffect(() => {
@@ -152,8 +166,8 @@ function GoogleAuthCompletePage() {
     setSaving(true);
     setError('');
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw userError || new Error('No authenticated user.');
+      const user = authUser || (await supabase.auth.getUser()).data?.user;
+      if (!user) throw new Error('No authenticated user.');
 
       const payload = {
         email: user.email,
