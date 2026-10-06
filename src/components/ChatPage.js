@@ -60,6 +60,7 @@ const renderMessageText = (text) => {
 };
 
 const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
 const getDateLabel = (date) => {
   const today = startOfDay(new Date());
   const target = startOfDay(date);
@@ -68,7 +69,9 @@ const getDateLabel = (date) => {
   if (diffDays === 1) return 'Yesterday';
   return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 };
-const formatTime = (date) => date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+const formatTime = (date) =>
+  date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
 function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId, adminThreadId, adminUserId }) {
   const { currentUser } = useAuth();
@@ -98,6 +101,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   const otherUserId = isAdminThread ? adminUserId : receiverId;
 
   const [actualAdminThreadId, setActualAdminThreadId] = useState(adminThreadId);
+
   const { fetchUnreadMessages } = useUnreadMessages();
   const fetchUnreadRef = useRef(fetchUnreadMessages);
   fetchUnreadRef.current = fetchUnreadMessages;
@@ -122,7 +126,12 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         timestamp: new Date().toISOString(),
         extra,
       };
-      await supabase.from('audit_logs').insert([{ description: JSON.stringify(context) }]);
+
+      await supabase.from('audit_logs').insert([
+        {
+          description: JSON.stringify(context),
+        },
+      ]);
     } catch (logError) {
       console.error('Error writing audit log:', logError);
     }
@@ -154,22 +163,34 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   };
 
   const sanitizeChatFileName = (name) => {
-    const cleaned = String(name || 'upload').normalize('NFC').replace(/[^\w.\-]+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+    const cleaned = String(name || 'upload')
+      .normalize('NFC')
+      .replace(/[^\w.\-]+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_+|_+$/g, '');
     return cleaned || 'upload';
   };
 
   const uploadChatAttachment = async (storagePrefix, nextFile) => {
     const safeName = sanitizeChatFileName(nextFile?.name);
     const path = `${storagePrefix}/${Date.now()}_${safeName}`;
-    const { error: uploadError } = await supabase.storage.from('chat-uploads').upload(path, nextFile, { contentType: nextFile?.type || undefined });
+    const { error: uploadError } = await supabase.storage
+      .from('chat-uploads')
+      .upload(path, nextFile, {
+        contentType: nextFile?.type || undefined,
+      });
     if (uploadError) throw uploadError;
+
     return path;
   };
 
   const extractChatUploadPath = (storedValue) => {
     const raw = String(storedValue || '').trim();
     if (!raw) return null;
-    if (!/^https?:\/\//i.test(raw)) return raw.replace(/^chat-uploads\//, '');
+    if (!/^https?:\/\//i.test(raw)) {
+      return raw.replace(/^chat-uploads\//, '');
+    }
+
     try {
       const url = new URL(raw);
       const match = url.pathname.match(/\/storage\/v1\/object\/(?:sign|public|authenticated)\/chat-uploads\/(.+)$/i);
@@ -183,15 +204,29 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   const getChatAttachmentUrl = async (storedValue) => {
     const raw = String(storedValue || '').trim();
     if (!raw) return null;
+
     const objectPath = extractChatUploadPath(raw);
-    if (!objectPath) return /^https?:\/\//i.test(raw) ? raw : null;
+    if (!objectPath) {
+      return /^https?:\/\//i.test(raw) ? raw : null;
+    }
+
     const oneWeekSeconds = 60 * 60 * 24 * 7;
-    const { data, error } = await supabase.storage.from('chat-uploads').createSignedUrl(objectPath, oneWeekSeconds);
-    if (error || !data?.signedUrl) throw error || new Error('Failed to sign file.');
+    const { data, error } = await supabase.storage
+      .from('chat-uploads')
+      .createSignedUrl(objectPath, oneWeekSeconds);
+
+    if (error || !data?.signedUrl) {
+      throw error || new Error('Failed to sign file.');
+    }
+
     return data.signedUrl;
   };
 
-  const openAvatarPreview = (url, name) => { if (url) setAvatarPreview({ url, name }); };
+  const openAvatarPreview = (url, name) => {
+    if (!url) return;
+    setAvatarPreview({ url, name });
+  };
+
   const closeAvatarPreview = () => setAvatarPreview(null);
 
   useEffect(() => {
@@ -209,114 +244,781 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
 
   useEffect(() => {
     if (!messages.length) return;
-    const handle = setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'auto' }), 30);
+    const handle = setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+    }, 30);
     return () => clearTimeout(handle);
   }, [messages]);
 
   useEffect(() => {
     let cancelled = false;
+
     const resolveAttachmentUrls = async () => {
-      const items = await Promise.all(messages.filter((msg) => !isExternal && msg?.file_url).map(async (msg) => {
-        try { return [msg.id, await getChatAttachmentUrl(msg.file_url)]; }
-        catch (error) { console.error('Error signing chat attachment:', error); return [msg.id, null]; }
-      }));
-      if (!cancelled) setAttachmentUrls(Object.fromEntries(items.filter(([id, url]) => id && url)));
+      const items = await Promise.all(
+        messages
+          .filter((msg) => !isExternal && msg?.file_url)
+          .map(async (msg) => {
+            try {
+              const signedUrl = await getChatAttachmentUrl(msg.file_url);
+              return [msg.id, signedUrl];
+            } catch (error) {
+              console.error('Error signing chat attachment:', error);
+              return [msg.id, null];
+            }
+          })
+      );
+
+      if (cancelled) return;
+      setAttachmentUrls(Object.fromEntries(items.filter(([id, url]) => id && url)));
     };
+
     resolveAttachmentUrls();
-    return () => { cancelled = true; };
+
+    return () => {
+      cancelled = true;
+    };
   }, [messages, isExternal]);
 
   useEffect(() => {
     let cancelled = false;
+
     const loadMyAvatar = async () => {
       if (!currentUser?.id) {
-        setMyAvatar(null);
+        if (!cancelled) setMyAvatar(null);
         return;
       }
-      const { data: me } = await supabase.from('users').select('avatar_url').eq('id', currentUser.id).single();
+
+      const { data: me } = await supabase
+        .from('users')
+        .select('avatar_url')
+        .eq('id', currentUser.id)
+        .single();
+
       if (!cancelled) setMyAvatar(me?.avatar_url || null);
     };
+
     loadMyAvatar();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [currentUser?.id]);
 
   useEffect(() => {
     const loadOther = async () => {
-      if (isExternal) { setOtherNickname('Anonymous'); setOtherAvatar(null); return; }
+      if (isExternal) {
+        setOtherNickname('Anonymous');
+        setOtherAvatar(null);
+        return;
+      }
       if (!otherUserId) return;
       const { data: userRows, error } = await fetchPublicUserSummaries([otherUserId]);
       const data = userRows?.[0] || null;
-      if (!error && data) { setOtherNickname(data.nickname || 'User'); setOtherAvatar(data.avatar_url || null); }
+      if (!error && data) {
+        setOtherNickname(data.nickname || 'User');
+        setOtherAvatar(data.avatar_url || null);
+      }
     };
     loadOther();
   }, [isExternal, otherUserId]);
 
   useEffect(() => {
     const loadOffer = async () => {
-      if (!isOfferInternal) { setOfferMeta(null); return; }
-      const { data, error } = await supabase.from('yacht_work_offers').select('id, title, teammate_rank').eq('id', offerId).single();
-      if (!error && data) setOfferMeta(data);
+      if (!isOfferInternal) {
+        setOfferMeta(null);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('yacht_work_offers')
+        .select('id, title, teammate_rank')
+        .eq('id', offerId)
+        .single();
+      if (!error && data) {
+        setOfferMeta(data);
+      }
     };
     loadOffer();
   }, [isOfferInternal, offerId]);
 
   useEffect(() => {
-    if (!currentUser?.id || isExternal) return;
+    if (!currentUser?.id) return;
+    if (isExternal) return;
     if (isAdminThread && actualAdminThreadId && otherUserId) {
       markNotificationsForChatAsRead(supabase, currentUser.id, '__admin__', otherUserId, actualAdminThreadId);
       return;
     }
-    if (isOfferInternal) markNotificationsForChatAsRead(supabase, currentUser.id, offerId, receiverId);
+    if (!isOfferInternal) return;
+    markNotificationsForChatAsRead(supabase, currentUser.id, offerId, receiverId);
   }, [isExternal, isAdminThread, isOfferInternal, currentUser?.id, offerId, receiverId, adminThreadId, otherUserId, actualAdminThreadId]);
 
   useEffect(() => {
     if (!currentUser) return;
+
     const fetchMessages = async () => {
       if (isExternal) {
         setIsChatClosed(false);
-        const { data, error } = await supabase.from('external_messages').select('*').eq('thread_id', externalThreadId).order('created_at', { ascending: true });
-        if (!error) setMessages(data || []);
-        return;
-      }
-      if (isAdminThread) {
-        if (!actualAdminThreadId) { setMessages([]); setIsChatClosed(false); return; }
-        setIsChatClosed(false);
-        const { data, error } = await supabase.from('admin_messages').select('*').eq('thread_id', actualAdminThreadId).order('sent_at', { ascending: true });
+        const { data, error } = await supabase
+          .from('external_messages')
+          .select('*')
+          .eq('thread_id', externalThreadId)
+          .order('created_at', { ascending: true });
+
         if (!error) {
           setMessages(data || []);
-          const unreadIds = (data || []).filter((msg) => msg.receiver_id === currentUser.id && !msg.read).map((msg) => msg.id);
-          if (unreadIds.length > 0) { await supabase.from('admin_messages').update({ read: true }).in('id', unreadIds); fetchUnreadMessages(); }
         }
         return;
       }
-      if (!receiverId) return;
-      let messageQuery = supabase.from('yacht_work_messages').select('id, sender_id, receiver_id, message, file_url, sent_at, read').or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${currentUser.id})`).order('sent_at', { ascending: true });
-      messageQuery = isOfferInternal ? messageQuery.eq('offer_id', offerId) : messageQuery.is('offer_id', null);
-      const { data, error } = await messageQuery;
-      if (!error) {
-        setMessages(data || []);
-        const unreadIds = (data || []).filter((msg) => msg.receiver_id === currentUser.id && !msg.read).map((msg) => msg.id);
-        if (unreadIds.length > 0) { await supabase.from('yacht_work_messages').update({ read: true }).in('id', unreadIds); fetchUnreadMessages(); }
+
+      if (isAdminThread) {
+        if (!actualAdminThreadId) {
+          setMessages([]);
+          setIsChatClosed(false);
+          return;
+        }
+        setIsChatClosed(false);
+        const { data, error } = await supabase
+          .from('admin_messages')
+          .select('*')
+          .eq('thread_id', actualAdminThreadId)
+          .order('sent_at', { ascending: true });
+
+        if (!error) {
+          setMessages(data || []);
+
+          const unreadIds = (data || [])
+            .filter((msg) => msg.receiver_id === currentUser.id && !msg.read)
+            .map((msg) => msg.id);
+
+          if (unreadIds.length > 0) {
+            await supabase
+              .from('admin_messages')
+              .update({ read: true })
+              .in('id', unreadIds);
+
+            fetchUnreadMessages();
+          }
+        }
+        return;
       }
-      let otherStateQuery = supabase.from('yacht_work_chat_state').select('deleted_at').eq('user_id', receiverId).eq('other_user_id', currentUser.id);
-      otherStateQuery = isOfferInternal ? otherStateQuery.eq('offer_id', offerId) : otherStateQuery.is('offer_id', null);
+
+      if (!receiverId) return;
+      let messageQuery = supabase
+        .from('yacht_work_messages')
+        .select('id, sender_id, receiver_id, message, file_url, sent_at, read')
+        .or(
+          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId}),` +
+          `and(sender_id.eq.${receiverId},receiver_id.eq.${currentUser.id})`
+        )
+        .order('sent_at', { ascending: true });
+
+      messageQuery = isOfferInternal
+        ? messageQuery.eq('offer_id', offerId)
+        : messageQuery.is('offer_id', null);
+
+      const { data, error } = await messageQuery;
+
+      if (!error) {
+        setMessages(data);
+
+        const unreadIds = data
+          .filter((msg) => msg.receiver_id === currentUser.id && !msg.read)
+          .map((msg) => msg.id);
+
+        if (unreadIds.length > 0) {
+          await supabase
+            .from('yacht_work_messages')
+            .update({ read: true })
+            .in('id', unreadIds);
+
+          fetchUnreadMessages();
+        }
+      }
+
+      let otherStateQuery = supabase
+        .from('yacht_work_chat_state')
+        .select('deleted_at')
+        .eq('user_id', receiverId)
+        .eq('other_user_id', currentUser.id);
+
+      otherStateQuery = isOfferInternal
+        ? otherStateQuery.eq('offer_id', offerId)
+        : otherStateQuery.is('offer_id', null);
+
       const { data: otherState, error: otherStateError } = await otherStateQuery.maybeSingle();
-      if (otherStateError) console.error('Error checking chat closed state:', otherStateError);
-      const hasDeleteNotice = Array.isArray(data) && data.some((msg) => typeof msg?.message === 'string' && (msg.message.startsWith('[system] ') || msg.message === 'The other user has deleted this conversation.'));
+
+      if (otherStateError) {
+        console.error('Error checking chat closed state:', otherStateError);
+      }
+
+      const hasDeleteNotice = Array.isArray(data)
+        && data.some((msg) => {
+          const text = msg?.message;
+          return typeof text === 'string'
+            && (text.startsWith('[system] ') || text === 'The other user has deleted this conversation.');
+        });
+
       setIsChatClosed(!!otherState?.deleted_at || hasDeleteNotice);
     };
+
     fetchMessages();
   }, [isExternal, isAdminThread, isOfferInternal, isDirectInternal, externalThreadId, actualAdminThreadId, offerId, receiverId, currentUser, fetchUnreadMessages, refreshKey]);
 
   useEffect(() => {
-    const onVisibilityChange = () => { if (document.visibilityState === 'visible' && !isExternal) setRefreshKey((k) => k + 1); };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !isExternal) setRefreshKey((k) => k + 1);
+    };
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, [isExternal]);
 
-  if (!isExternal && !currentUser) return null;
+  useEffect(() => {
+    if (isExternal || isAdminThread) return;
+    if (!currentUser || !receiverId) return;
 
-  return <div className="chat-container">Chat authentication updated.</div>;
+    const channel = supabase
+      .channel(`yacht-work-chat-${offerId || 'direct'}-${receiverId}-${currentUser.id}`, {
+        config: { private: true },
+      })
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'yacht_work_messages',
+          ...(isOfferInternal ? { filter: `offer_id=eq.${offerId}` } : {}),
+        },
+        async (ev) => {
+          const payload = ev?.new ?? ev?.record ?? ev;
+          if (!payload?.id) return;
+          const isRelevant =
+            (payload.sender_id === currentUser.id && payload.receiver_id === receiverId) ||
+            (payload.sender_id === receiverId && payload.receiver_id === currentUser.id);
+          const isMatchingThread = isOfferInternal
+            ? payload.offer_id === offerId
+            : payload.offer_id == null;
+          if (!isRelevant || !isMatchingThread) return;
+
+          setMessages((prev) => {
+            if (prev.some((msg) => msg.id === payload.id)) return prev;
+            const next = [...prev, payload];
+            next.sort((a, b) => new Date(a.sent_at || 0) - new Date(b.sent_at || 0));
+            return next;
+          });
+
+          if (payload.receiver_id === currentUser.id && !payload.read) {
+            await supabase
+              .from('yacht_work_messages')
+              .update({ read: true })
+              .eq('id', payload.id);
+            fetchUnreadRef.current?.();
+          }
+        }
+      );
+
+    channel.subscribe((status, err) => {
+      if (status === 'CHANNEL_ERROR' && err) console.error('[Chat Realtime]', err);
+    });
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser, offerId, receiverId, isExternal, isAdminThread, isOfferInternal]);
+
+  useEffect(() => {
+    if (!isExternal || !externalThreadId) return;
+
+    const channel = supabase
+      .channel(`external-chat-${externalThreadId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'external_messages',
+          filter: `thread_id=eq.${externalThreadId}`,
+        },
+        ({ new: payload }) => {
+          if (!payload) return;
+          setMessages((prev) => (prev.some((msg) => msg.id === payload.id) ? prev : [...prev, payload]));
+        }
+      );
+
+    channel.subscribe();
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [externalThreadId, isExternal]);
+
+  useEffect(() => {
+    if (!isAdminThread || !actualAdminThreadId || !currentUser) return;
+
+    const channel = supabase
+      .channel(`admin-chat-${actualAdminThreadId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'admin_messages',
+          filter: `thread_id=eq.${actualAdminThreadId}`,
+        },
+        async ({ new: payload }) => {
+          if (!payload?.id) return;
+          setMessages((prev) => (prev.some((msg) => msg.id === payload.id) ? prev : [...prev, payload]));
+          if (payload.receiver_id === currentUser.id && !payload.read) {
+            await supabase
+              .from('admin_messages')
+              .update({ read: true })
+              .eq('id', payload.id);
+            fetchUnreadRef.current?.();
+          }
+        }
+      );
+
+    channel.subscribe();
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [isAdminThread, adminThreadId, currentUser]);
+
+  const handleSend = async () => {
+    if (!currentUser?.id) return;
+    if (isChatClosed) return;
+    if (!message && !file) return;
+
+    if (isAdminThread) {
+      let threadId = actualAdminThreadId;
+      if (!threadId) {
+        const { data: created, error: createError } = await supabase
+          .from('admin_threads')
+          .insert({ admin_id: otherUserId, user_id: currentUser.id })
+          .select('id')
+          .single();
+        if (createError) {
+          setFileError('Failed to create chat thread.');
+          console.error('Error creating admin thread:', createError);
+          return;
+        }
+        threadId = created?.id;
+        setActualAdminThreadId(threadId);
+      }
+
+      if (!threadId || !otherUserId) return;
+
+      let fileUrl = null;
+      if (file) {
+        if (!validateFile(file)) return;
+        setUploading(true);
+        try {
+          fileUrl = await uploadChatAttachment(`admin-chat/${threadId}`, file);
+        } catch (uploadError) {
+          setUploading(false);
+          setFileError(CHAT_UPLOAD_ERROR_MESSAGE);
+          logChatIssue({
+            stage: 'admin_upload',
+            errorMessage: uploadError?.message || 'Upload failed.',
+            fileName: file?.name || null,
+            fileSize: file?.size || null,
+            fileType: file?.type || null,
+          });
+          console.error('Error uploading file:', uploadError);
+          return;
+        } finally {
+          setUploading(false);
+        }
+      }
+
+      const text = message.trim();
+      const payload = {
+        thread_id: threadId,
+        sender_id: currentUser.id,
+        receiver_id: otherUserId,
+        message: text || '',
+        file_url: fileUrl || null,
+        sent_at: new Date().toISOString(),
+        read: false,
+      };
+
+      const { error } = await supabase.from('admin_messages').insert([payload]);
+      if (!error) {
+        setMessage('');
+        resetFileInput();
+        setFileError('');
+
+        const { data: updated } = await supabase
+          .from('admin_messages')
+          .select('*')
+          .eq('thread_id', threadId)
+          .order('sent_at', { ascending: true });
+        setMessages(updated || []);
+      } else {
+        setFileError(CHAT_SEND_ERROR_MESSAGE);
+        logChatIssue({
+          stage: 'admin_insert_message',
+          errorMessage: error?.message || 'Failed to send message.',
+          fileName: file?.name || null,
+          fileSize: file?.size || null,
+          fileType: file?.type || null,
+        });
+        console.error('Error sending message:', error);
+      }
+      return;
+    }
+
+    if (isExternal) {
+      if (!externalThreadId || !message.trim()) return;
+
+      const payload = {
+        thread_id: externalThreadId,
+        sender_role: 'candidate',
+        content: message.trim(),
+        attachments: [],
+      };
+
+      const { error } = await supabase.from('external_messages').insert([payload]);
+      if (!error) {
+        setMessage('');
+        resetFileInput();
+
+        const { data: updated } = await supabase
+          .from('external_messages')
+          .select('*')
+          .eq('thread_id', externalThreadId)
+          .order('created_at', { ascending: true });
+        setMessages(updated || []);
+      }
+      return;
+    }
+
+    let fileUrl = null;
+    if (file) {
+      if (!validateFile(file)) return;
+      setUploading(true);
+      try {
+        const uploadPath = offerId ? `chat/${offerId}` : `chat/direct/${receiverId}`;
+        fileUrl = await uploadChatAttachment(uploadPath, file);
+      } catch (uploadError) {
+        setUploading(false);
+        setFileError(CHAT_UPLOAD_ERROR_MESSAGE);
+        logChatIssue({
+          stage: 'internal_upload',
+          errorMessage: uploadError?.message || 'Upload failed.',
+          fileName: file?.name || null,
+          fileSize: file?.size || null,
+          fileType: file?.type || null,
+        });
+        console.error('Error uploading file:', uploadError);
+        return;
+      } finally {
+        setUploading(false);
+      }
+    }
+
+    const { error } = await supabase.from('yacht_work_messages').insert({
+      offer_id: offerId || null,
+      sender_id: currentUser.id,
+      receiver_id: receiverId,
+      message: message || null,
+      file_url: fileUrl || null,
+      sent_at: new Date().toISOString(),
+      read: false,
+    });
+
+    if (!error) {
+      setMessage('');
+      resetFileInput();
+      setFileError('');
+
+      let updatedQuery = supabase
+        .from('yacht_work_messages')
+        .select('id, sender_id, receiver_id, message, file_url, sent_at, read')
+        .or(
+          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId}),` +
+          `and(sender_id.eq.${receiverId},receiver_id.eq.${currentUser.id})`
+        )
+        .order('sent_at', { ascending: true });
+
+      updatedQuery = isOfferInternal
+        ? updatedQuery.eq('offer_id', offerId)
+        : updatedQuery.is('offer_id', null);
+
+      const { data: updated } = await updatedQuery;
+
+      setMessages(updated);
+    } else {
+      setFileError(CHAT_SEND_ERROR_MESSAGE);
+      logChatIssue({
+        stage: 'internal_insert_message',
+        errorMessage: error?.message || 'Failed to send message.',
+        fileName: file?.name || null,
+        fileSize: file?.size || null,
+        fileType: file?.type || null,
+      });
+      console.error('Error sending message:', error);
+    }
+  };
+
+  if (!currentUser) return null;
+
+  const renderMessages = () => (
+    <div className="chat-messages">
+      {!isExternal && !isAdminThread && (
+        <div className="safety-notice" role="note">
+          <h4 className="safety-notice-title">⚠️ Safety Notice</h4>
+          {DISCLAIMER_PARAGRAPHS.map((paragraph, idx) => (
+            <p key={`${paragraph}-${idx}`}>{paragraph}</p>
+          ))}
+        </div>
+      )}
+      {(() => {
+        let lastDateKey = null;
+        const rows = [];
+        messages.forEach((msg) => {
+          const isOwnMessage = isExternal
+            ? msg.sender_role === 'candidate'
+            : msg.sender_id === currentUser.id;
+
+          const text = isExternal ? msg.content : msg.message;
+          const isSystemMessage = !isExternal && !isAdminThread && typeof text === 'string'
+            && (text.startsWith('[system] ') || text === 'The other user has deleted this conversation.');
+          const systemText = isSystemMessage
+            ? text.replace(/^\[system\]\s*/, '')
+            : null;
+
+          const timestamp = isExternal
+            ? parseServerDate(msg.created_at)
+            : parseServerDate(msg.sent_at);
+          const dateKey = startOfDay(timestamp).toISOString();
+          if (dateKey !== lastDateKey) {
+            rows.push(
+              <div key={`date-${dateKey}`} className="chat-date-separator">
+                <span>{getDateLabel(timestamp)}</span>
+              </div>
+            );
+            lastDateKey = dateKey;
+          }
+
+          const time = formatTime(timestamp);
+          const avatarUrl = isOwnMessage ? myAvatar : (isExternal ? null : otherAvatar);
+          const avatarName = isOwnMessage
+            ? 'You'
+            : (isExternal ? 'Anonymous' : (otherNickname || 'User'));
+
+          if (isSystemMessage) {
+            rows.push(
+              <div key={msg.id} className="chat-message-row system">
+                <div className="chat-message system">
+                  {systemText && renderMessageText(systemText)}
+                  <div className="chat-message-time">{time}</div>
+                </div>
+              </div>
+            );
+            return;
+          }
+
+          const avatar = (
+            <Avatar
+              nickname={avatarName}
+              srcUrl={avatarUrl || null}
+              size={32}
+              shape="circle"
+            />
+          );
+
+          rows.push(
+            <div key={msg.id} className={`chat-message-row ${isOwnMessage ? 'own' : 'other'}`}>
+              <div className="chat-message-avatar">
+                {avatarUrl ? (
+                  <button
+                    type="button"
+                    className="chat-avatar-button"
+                    onClick={() => openAvatarPreview(avatarUrl, avatarName)}
+                    aria-label={`View avatar for ${avatarName}`}
+                  >
+                    {avatar}
+                  </button>
+                ) : (
+                  avatar
+                )}
+              </div>
+
+              <div className={`chat-message ${isOwnMessage ? 'own' : 'other'}`}>
+                <div className="chat-message-sender">
+                  {isOwnMessage ? 'You' : (isExternal ? 'Anonymous' : otherNickname)}
+                </div>
+                {text && renderMessageText(text)}
+                {text && extractUrls(text).map((url, idx) => (
+                  <LinkPreview key={`link-${msg.id}-${idx}`} url={url} />
+                ))}
+                {!isExternal && msg.file_url && attachmentUrls[msg.id] && (
+                  <a
+                    href={attachmentUrls[msg.id]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="chat-file-link"
+                  >
+                    📎 View file
+                  </a>
+                )}
+                <div className="chat-message-time">{time}</div>
+              </div>
+            </div>
+          );
+        });
+
+        return rows;
+      })()}
+      <div ref={bottomRef} />
+    </div>
+  );
+
+  const renderInput = () => (
+    <div className="chat-input">
+      {isChatClosed && (
+        <div className="chat-closed-note">
+          This chat was closed. Open a new private chat to send messages.
+        </div>
+      )}
+      <div className="chat-input-row">
+        {!isExternal && (
+          <>
+            <label className="file-clip" htmlFor="file-input" title="Attach file">📎</label>
+            <input
+              id="file-input"
+              type="file"
+              accept={CHAT_FILE_ACCEPT}
+              ref={fileInputRef}
+              onChange={(e) => {
+                const nextFile = e.target.files?.[0] || null;
+                setFileError('');
+                if (validateFile(nextFile)) {
+                  setFile(nextFile);
+                  return;
+                }
+                logChatIssue({
+                  stage: 'local_validation',
+                  errorMessage: nextFile?.size > (MAX_CHAT_FILE_MB * 1024 * 1024)
+                    ? `File too large. Max ${MAX_CHAT_FILE_MB}MB.`
+                    : 'Unsupported file type. Use PDF, JPG, PNG, WEBP, DOC or DOCX.',
+                  fileName: nextFile?.name || null,
+                  fileSize: nextFile?.size || null,
+                  fileType: nextFile?.type || null,
+                });
+              }}
+              disabled={isChatClosed || uploading}
+            />
+          </>
+        )}
+        <textarea
+          placeholder="Type your message..."
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={2}
+          disabled={isChatClosed || uploading}
+        />
+        <button onClick={handleSend} disabled={isChatClosed || uploading}>
+          {uploading ? 'Uploading...' : 'Send'}
+        </button>
+      </div>
+      {!isExternal && file && (
+        <div className="chat-input-meta">
+          <span className="chat-file-pill" title={file.name}>
+            {file.name} ({Math.round(file.size / 1024)} KB)
+          </span>
+          <button type="button" className="chat-file-remove" onClick={resetFileInput}>
+            Remove
+          </button>
+        </div>
+      )}
+      {fileError && <div className="chat-file-error">{fileError}</div>}
+    </div>
+  );
+
+  const renderAvatarModal = () => {
+    if (!avatarPreview?.url) return null;
+    return (
+      <div className="chat-avatar-modal" onClick={closeAvatarPreview}>
+        <div
+          className="chat-avatar-modal-dialog"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="chat-avatar-modal-close"
+            onClick={closeAvatarPreview}
+            aria-label="Close"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              boxShadow: 'none',
+              padding: 0,
+              color: '#fff',
+            }}
+          >
+            ✕
+          </button>
+          <img
+            src={avatarPreview.url}
+            alt={`Avatar of ${avatarPreview.name || 'user'}`}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const headerLabel = isExternal
+    ? 'Anonymous chat'
+    : isAdminThread
+      ? `Admin chat – ${otherNickname}`
+      : isDirectInternal
+        ? `Private chat – ${otherNickname}`
+        : `Offer private chat – ${otherNickname}`;
+  const offerLabel = offerMeta?.teammate_rank || offerMeta?.title;
+  const handleOpenOffer = () => {
+    if (!offerId) return;
+    if (onClose) {
+      onClose();
+    } else if (onBack) {
+      onBack();
+    }
+    navigate(`/yacht-works?open=${offerId}`);
+  };
+
+  if (isMobile) {
+    return (
+      <div className="chat-container chat-mobile-fullscreen">
+        <div className="chat-back-bar">
+          <button className="chat-back-btn" onClick={onBack}>⬅ Back</button>
+        </div>
+        {!isExternal && !isAdminThread && offerLabel && (
+          <button className="chat-offer-link" type="button" onClick={handleOpenOffer}>
+            Position: {offerLabel} · View job
+          </button>
+        )}
+        <div className="chat-header">{headerLabel}</div>
+        {renderMessages()}
+        {renderInput()}
+        {renderAvatarModal()}
+      </div>
+    );
+  }
+
+  return (
+    <div className="chat-container">
+      {onBack && (
+        <div className="chat-back-bar">
+          <button className="chat-back-btn" onClick={onBack}>⬅ Back</button>
+        </div>
+      )}
+      {!isExternal && !isAdminThread && offerLabel && (
+        <button className="chat-offer-link" type="button" onClick={handleOpenOffer}>
+          Position: {offerLabel} · View job
+        </button>
+      )}
+      <div className="chat-header">{headerLabel}</div>
+      {renderMessages()}
+      {renderInput()}
+      {renderAvatarModal()}
+    </div>
+  );
 }
 
 export default ChatPage;
