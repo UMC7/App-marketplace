@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import supabase from '../../supabase';
+import { useAuth } from '../../context/AuthContext';
 
 import './ProfileAnalyticsPage.css';
 import '../../styles/analytics/analytics-widgets.css';
@@ -26,15 +27,15 @@ function useQuery() {
 export default function ProfileAnalyticsPage() {
   const navigate = useNavigate();
   const qs = useQuery();
+  const { currentUser, loading: authLoading } = useAuth();
   const handleFromQuery = qs.get('handle');
 
   const [resolvedHandle, setResolvedHandle] = useState(handleFromQuery || '');
   const [ownerUserId, setOwnerUserId] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Filtros UI
-  const [rangeKey, setRangeKey] = useState('30d'); // 7d | 30d | 90d | this_month | last_month | ytd
-  const [bucket, setBucket] = useState('day');     // day | week | month
+  const [rangeKey, setRangeKey] = useState('30d');
+  const [bucket, setBucket] = useState('day');
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -45,26 +46,20 @@ export default function ProfileAnalyticsPage() {
     return () => mediaQuery.removeEventListener?.('change', updateMobileState);
   }, []);
 
-  // ===== Detectar móvil (para mover el botón Back junto al Refresh) =====
-
-  // 1) Resolver handle del dueño si no viene por query
   useEffect(() => {
     let cancelled = false;
 
     async function resolve() {
+      if (authLoading) return;
       try {
-        // Si ya vino por query, no buscamos nada
         if (handleFromQuery) {
           setResolvedHandle(handleFromQuery);
           setAuthChecked(true);
           return;
         }
 
-        // Obtener usuario autenticado
-        const { data: auth } = await supabase.auth.getUser();
-        const uid = auth?.user?.id || null;
+        const uid = currentUser?.id || null;
         if (!uid) {
-          // No autenticado → no mostrará datos
           if (!cancelled) {
             setOwnerUserId(null);
             setResolvedHandle('');
@@ -74,7 +69,6 @@ export default function ProfileAnalyticsPage() {
         }
         if (!cancelled) setOwnerUserId(uid);
 
-        // Buscar handle principal del perfil público del usuario
         const { data: pr } = await supabase
           .from('public_profiles')
           .select('handle')
@@ -98,10 +92,8 @@ export default function ProfileAnalyticsPage() {
 
     resolve();
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleFromQuery]);
+  }, [handleFromQuery, currentUser?.id, authLoading]);
 
-  // 2) Hook de datos (fault-tolerant)
   const {
     loading,
     error,
@@ -119,15 +111,12 @@ export default function ProfileAnalyticsPage() {
     bucket,
   });
 
-  // Mostrar subtítulo dinámico con el identificador
   const idLabel = useMemo(() => {
     if (resolvedHandle) return `Handle: ${resolvedHandle}`;
     if (ownerUserId) return `User ID: ${ownerUserId.slice(0, 6)}…`;
     return 'Not signed in';
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedHandle, ownerUserId]);
 
-  // Estados base para empty/guard
   const handleBack = () => {
     navigate('/profile?tab=cv');
   };
@@ -164,7 +153,6 @@ export default function ProfileAnalyticsPage() {
 
   return (
     <div className="cv-analytics">
-      {/* Header */}
       <header className="cv-analytics__header">
         <div>
           <div className="cv-analytics__title">Analytics</div>
@@ -185,13 +173,9 @@ export default function ProfileAnalyticsPage() {
           )}
         </div>
 
-        <div className="cv-analytics__actions">
-          {/* (opcional) acciones extra */}
-        </div>
-
+        <div className="cv-analytics__actions"></div>
       </header>
 
-      {/* Filtros */}
       <div className="cv-analytics__content">
         <FiltersBar
           rangeKey={rangeKey}
@@ -200,10 +184,8 @@ export default function ProfileAnalyticsPage() {
           onChangeBucket={setBucket}
           onRefresh={refetch}
           showRefresh={!isMobile}
-          /* Para móvil: pedir al FiltersBar que pinte el botón Back a su lado */
         />
 
-        {/* KPIs */}
         <div className="cv-analytics__row cv-analytics__row--kpis">
           {loading ? (
             <LoadingState title="Overview" rows={2} height={110} />
@@ -212,7 +194,6 @@ export default function ProfileAnalyticsPage() {
           )}
         </div>
 
-        {/* Trends */}
         <div className="cv-analytics__row cv-analytics__row--1">
           {loading ? (
             <LoadingState title="Traffic trends" rows={4} height={240} />
@@ -226,7 +207,6 @@ export default function ProfileAnalyticsPage() {
           )}
         </div>
 
-        {/* Referrers + Funnel */}
         <div className="cv-analytics__row cv-analytics__row--2">
           {loading ? (
             <LoadingState title="Top referrers" rows={6} height={220} />
@@ -241,7 +221,6 @@ export default function ProfileAnalyticsPage() {
           )}
         </div>
 
-        {/* Geography */}
         <div className="cv-analytics__row cv-analytics__row--1">
           {loading ? (
             <LoadingState title="Geography" rows={6} height={220} />
@@ -250,7 +229,6 @@ export default function ProfileAnalyticsPage() {
           )}
         </div>
 
-        {/* Devices & Browsers */}
         <div className="cv-analytics__row cv-analytics__row--1">
           {loading ? (
             <LoadingState title="Devices & Browsers" rows={6} height={220} />
@@ -259,7 +237,6 @@ export default function ProfileAnalyticsPage() {
           )}
         </div>
 
-        {/* Error (no bloquea el render) */}
         {error && (
           <div className="ana-card" role="alert" style={{ padding: 12, borderRadius: 12 }}>
             <strong>Warning:</strong>{' '}
@@ -267,7 +244,6 @@ export default function ProfileAnalyticsPage() {
           </div>
         )}
 
-        {/* Sin datos en todo el rango */}
         {!loading &&
           !error &&
           overview?.views === 0 &&
