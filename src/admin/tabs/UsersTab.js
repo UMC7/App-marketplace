@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabase';
 import Modal from '../../components/Modal';
 import ChatPage from '../../components/ChatPage';
+import { useAuth } from '../../context/AuthContext';
 import {
   calculateProfileProgressPercent,
 } from '../../components/cv/progress/profileProgress';
@@ -151,6 +152,7 @@ async function loadAdminCvData(userId) {
 }
 
 function UsersTab({ currentUser }) {
+  const { currentUser: contextCurrentUser } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [progressByUserId, setProgressByUserId] = useState({});
@@ -159,7 +161,10 @@ function UsersTab({ currentUser }) {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({});
-  const adminUser = currentUser?.registration_complete === true ? currentUser : null;
+  const resolvedCurrentUser = currentUser || contextCurrentUser;
+  const adminUser = resolvedCurrentUser?.registration_complete === true
+    ? resolvedCurrentUser
+    : null;
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [chatThreadId, setChatThreadId] = useState(null);
   const [chatUserId, setChatUserId] = useState(null);
@@ -693,9 +698,9 @@ function UsersTab({ currentUser }) {
                     );
                   }
 
-                  if (col === 'cv_link') {
-                    return (
-                      <td key={col}>
+                if (col === 'cv_link') {
+                  return (
+                    <td key={col}>
                         {user[col] ? (
                           <a href={user[col]} target="_blank" rel="noreferrer">
                             Open CV
@@ -703,63 +708,63 @@ function UsersTab({ currentUser }) {
                         ) : (
                           '—'
                         )}
-                      </td>
-                    );
-                  }
+                    </td>
+                  );
+                }
 
-                  if (col === 'avatar_url') {
-                    const avatarUrl = String(user[col] || '').trim();
-                    return (
-                      <td key={col}>
-                        {avatarUrl ? (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPreviewImageUrl(avatarUrl);
-                            }}
-                            style={{
-                              padding: 0,
-                              border: 'none',
-                              background: 'transparent',
-                              color: '#6fc4c0',
-                              textDecoration: 'underline',
-                              cursor: 'pointer',
-                              font: 'inherit',
-                            }}
-                          >
-                            View avatar
-                          </button>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                    );
-                  }
-
-                  if (col === 'lite_progress' || col === 'professional_progress') {
-                    const badge = buildProgressBadge(user[col]);
-                    return (
-                      <td key={col}>
-                        <span style={badge.style}>{badge.label}</span>
-                      </td>
-                    );
-                  }
-
-                  if (col === 'cv_public_status') {
-                    return (
-                      <td key={col}>
-                        <span
+                if (col === 'avatar_url') {
+                  const avatarUrl = String(user[col] || '').trim();
+                  return (
+                    <td key={col}>
+                      {avatarUrl ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewImageUrl(avatarUrl);
+                          }}
                           style={{
-                            fontWeight: 700,
-                            color: user[col] === 'Ready' ? '#237b23' : '#b26a00',
+                            padding: 0,
+                            border: 'none',
+                            background: 'transparent',
+                            color: '#6fc4c0',
+                            textDecoration: 'underline',
+                            cursor: 'pointer',
+                            font: 'inherit',
                           }}
                         >
-                          {user[col]}
-                        </span>
-                      </td>
-                    );
-                  }
+                          View avatar
+                        </button>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                  );
+                }
+
+                if (col === 'lite_progress' || col === 'professional_progress') {
+                  const badge = buildProgressBadge(user[col]);
+                  return (
+                    <td key={col}>
+                      <span style={badge.style}>{badge.label}</span>
+                    </td>
+                  );
+                }
+
+                if (col === 'cv_public_status') {
+                  return (
+                    <td key={col}>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color: user[col] === 'Ready' ? '#237b23' : '#b26a00',
+                        }}
+                      >
+                        {user[col]}
+                      </span>
+                    </td>
+                  );
+                }
 
                   return <td key={col}>{String(user[col])}</td>;
                 })}

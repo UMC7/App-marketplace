@@ -142,6 +142,7 @@ export function AuthProvider({ children }) {
       }
 
       sessionRef.current = session;
+      postAuthToWebView(session);
       if (mounted) setCurrentUser(buildExtendedUser(session.user, profile));
     };
 

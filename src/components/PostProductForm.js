@@ -224,41 +224,89 @@ const PostProductForm = ({ initialValues = {}, mode = 'create', onSubmitRedirect
         <form onSubmit={handleSubmit} noValidate>
           <label>Product Name: <span style={{ color: 'red' }}>*</span></label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={highlightClass(nameMissing)} style={requiredFieldStyle(nameMissing)} required />
+
           <label>Description:</label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+
           <label>Currency: <span style={{ color: 'red' }}>*</span></label>
           <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={highlightClass(currencyMissing)} style={requiredFieldStyle(currencyMissing)} required>
-            <option value="">Select a currency</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="AUD">AUD</option><option value="GBP">GBP</option>
+            <option value="">Select a currency</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="AUD">AUD</option>
+            <option value="GBP">GBP</option>
           </select>
+
           <label>Price: <span style={{ color: 'red' }}>*</span></label>
           <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className={highlightClass(priceMissing)} style={requiredFieldStyle(priceMissing)} required min="0" />
+
           <label>Quantity: <span style={{ color: 'red' }}>*</span></label>
           <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} required min="1" />
+
           <label>Category: <span style={{ color: 'red' }}>*</span></label>
           <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={highlightClass(categoryMissing)} style={requiredFieldStyle(categoryMissing)} required>
-            <option value="">Select a category</option>{categories.map((c) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+            <option value="">Select a category</option>
+            {categories.map((c) => (
+              <option key={c.id} value={String(c.id)}>
+                {c.name}
+              </option>
+            ))}
           </select>
+
           <label>City: <span style={{ color: 'red' }}>*</span></label>
           <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className={highlightClass(cityMissing)} style={requiredFieldStyle(cityMissing)} required />
+
           <label>Country: <span style={{ color: 'red' }}>*</span></label>
           <select value={country} onChange={(e) => setCountry(e.target.value)} className={highlightClass(countryMissing)} style={requiredFieldStyle(countryMissing)} required>
-            <option value="">Select a country</option>{countries.map((pais, idx) => <option key={idx} value={pais}>{pais}</option>)}
+            <option value="">Select a country</option>
+            {countries.map((pais, idx) => (
+              <option key={idx} value={pais}>{pais}</option>
+            ))}
           </select>
+
           <label>Condition: <span style={{ color: 'red' }}>*</span></label>
           <select value={condition} onChange={(e) => setCondition(e.target.value)} className={highlightClass(conditionMissing)} style={requiredFieldStyle(conditionMissing)} required>
-            <option value="">Select a condition</option>{conditions.map((c, idx) => <option key={idx} value={c}>{c}</option>)}
+            <option value="">Select a condition</option>
+            {conditions.map((c, idx) => (
+              <option key={idx} value={c}>{c}</option>
+            ))}
           </select>
+
           <label>Photos (cover + gallery): <span style={{ color: 'red' }}>*</span></label>
           <div className={highlightClass(photosMissing)} style={{ ...(requiredFieldStyle(photosMissing) || {}), borderRadius: 8, padding: 8, marginBottom: 12 }}>
-            <UnifiedImageUploader value={{ cover: mainPhoto, gallery: photos }} onChange={({ cover, gallery }) => { setMainPhoto(cover); setPhotos(gallery); }} onBusyChange={setUploading} />
+            <UnifiedImageUploader
+              value={{ cover: mainPhoto, gallery: photos }}
+              onChange={({ cover, gallery }) => { setMainPhoto(cover); setPhotos(gallery); }}
+              onBusyChange={setUploading}
+            />
           </div>
-          <small style={{ display: 'block', margin: '6px 0 12px', color: '#666' }}>The image marked with ★ will be the cover.</small>
+          <small style={{ display: 'block', margin: '6px 0 12px', color: '#666' }}>
+            The image marked with ★ will be the cover.
+          </small>
+
           <p style={{ fontStyle: 'italic', marginTop: '1.5em' }}><span style={{ color: 'red' }}>*</span> Required</p>
           <div style={{ position: 'relative' }}>
-            <button type="submit" className="landing-button" disabled={uploading || !formReady}>{uploading ? 'Uploading photos...' : mode === 'edit' ? 'Update Product' : 'Save Product'}</button>
-            {!uploading && !formReady && <div onClick={() => setShowMissing(true)} style={{ position: 'absolute', inset: 0, cursor: 'not-allowed', background: 'transparent' }} aria-hidden="true" />}
+            <button type="submit" className="landing-button" disabled={uploading || !formReady}>
+              {uploading ? 'Uploading photos...' : mode === 'edit' ? 'Update Product' : 'Save Product'}
+            </button>
+            {!uploading && !formReady && (
+              <div
+                onClick={() => setShowMissing(true)}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  cursor: 'not-allowed',
+                  background: 'transparent',
+                }}
+                aria-hidden="true"
+              />
+            )}
           </div>
-          {showMissing && !formReady && <p style={{ marginTop: 8, color: '#b00020' }}>Some required fields are missing. Please complete them to save the product.</p>}
+          {showMissing && !formReady && (
+            <p style={{ marginTop: 8, color: '#b00020' }}>
+              Some required fields are missing. Please complete them to save the product.
+            </p>
+          )}
         </form>
       </div>
     </div>
