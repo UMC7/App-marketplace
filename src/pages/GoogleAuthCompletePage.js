@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import supabase from '../supabase';
 import '../styles/login.css';
+import '../styles/float.css';
 
 function GoogleAuthCompletePage() {
   const navigate = useNavigate();
@@ -146,14 +147,6 @@ function GoogleAuthCompletePage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const requiredFieldStyle = (missing) =>
-    missing
-      ? {
-          border: '1px solid #e05252',
-          boxShadow: '0 0 0 2px rgba(224, 82, 82, 0.18)',
-        }
-      : undefined;
-
   const firstNameMissing = !form.firstName.trim();
   const lastNameMissing = !form.lastName.trim();
   const birthYearMissing = !form.birthYear;
@@ -278,21 +271,21 @@ function GoogleAuthCompletePage() {
         <input
           value={form.firstName}
           onChange={(e) => change('firstName', e.target.value)}
-          style={requiredFieldStyle(firstNameMissing)}
+          className={firstNameMissing ? 'missing-required' : ''}
         />
 
         <label>Last Name *</label>
         <input
           value={form.lastName}
           onChange={(e) => change('lastName', e.target.value)}
-          style={requiredFieldStyle(lastNameMissing)}
+          className={lastNameMissing ? 'missing-required' : ''}
         />
 
         <label>Year of Birth *</label>
         <select
           value={form.birthYear}
           onChange={(e) => change('birthYear', e.target.value)}
-          style={requiredFieldStyle(birthYearMissing)}
+          className={birthYearMissing ? 'missing-required' : ''}
         >
           <option value="">Year of Birth</option>
           {birthYears.map((year) => <option key={year} value={year}>{year}</option>)}
@@ -303,7 +296,7 @@ function GoogleAuthCompletePage() {
           value={form.nickname}
           maxLength={7}
           onChange={(e) => change('nickname', e.target.value)}
-          style={requiredFieldStyle(nicknameMissing)}
+          className={nicknameMissing ? 'missing-required' : ''}
         />
         <p style={{ fontSize: '0.85rem', marginTop: -8 }}>
           {nicknameStatus === 'checking' && 'Checking availability...'}
@@ -320,14 +313,16 @@ function GoogleAuthCompletePage() {
             placeholder="Code"
             inputMode="numeric"
             onChange={(e) => change('phoneCode', e.target.value)}
-            style={{ width: 70, ...(requiredFieldStyle(phoneCodeMissing) || {}) }}
+            className={phoneCodeMissing ? 'missing-required' : ''}
+            style={{ width: 70 }}
           />
           <input
             value={form.phoneNumber}
             placeholder="Primary Phone"
             inputMode="numeric"
             onChange={(e) => change('phoneNumber', e.target.value)}
-            style={{ flex: 1, ...(requiredFieldStyle(phoneNumberMissing) || {}) }}
+            className={phoneNumberMissing ? 'missing-required' : ''}
+            style={{ flex: 1 }}
           />
         </div>
 
@@ -348,10 +343,8 @@ function GoogleAuthCompletePage() {
             id="googleTerms"
             checked={form.acceptedTerms}
             onChange={(e) => change('acceptedTerms', e.target.checked)}
-            style={{
-              ...checkboxStyle,
-              ...(requiredFieldStyle(!form.acceptedTerms) || {}),
-            }}
+            className={!form.acceptedTerms ? 'missing-required' : ''}
+            style={checkboxStyle}
           />
           <label htmlFor="googleTerms" style={checkboxLabelStyle}>
             I accept the <a href="/legal" target="_blank" rel="noopener noreferrer">Terms of Use</a> and{' '}
