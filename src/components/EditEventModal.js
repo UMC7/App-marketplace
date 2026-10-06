@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
 import Modal from './Modal';
 import PostEventForm from './PostEventForm';
 
 function EditEventModal({ eventId, onClose, onUpdate }) {
+  const { currentUser } = useAuth();
   const [initialData, setInitialData] = useState(null);
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-      setUser({ id: userId });
+      if (!currentUser?.id) {
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('events')
@@ -33,9 +35,10 @@ function EditEventModal({ eventId, onClose, onUpdate }) {
     };
 
     fetchData();
-  }, [eventId, onClose]);
+  }, [eventId, currentUser?.id, onClose]);
 
   const handleUpdate = async (updatedData) => {
+    if (!currentUser?.id) return;
     const { created_at, ...dataToUpdate } = updatedData;
 
     const { error } = await supabase
@@ -52,12 +55,12 @@ function EditEventModal({ eventId, onClose, onUpdate }) {
     }
   };
 
-  if (loading || !initialData || !user) return null;
+  if (loading || !initialData || !currentUser?.id) return null;
 
   return (
     <Modal onClose={onClose}>
       <PostEventForm
-        user={user}
+        user={currentUser}
         onSubmit={handleUpdate}
         initialValues={initialData}
         mode="edit"
