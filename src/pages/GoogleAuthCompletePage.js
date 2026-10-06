@@ -63,7 +63,7 @@ function GoogleAuthCompletePage() {
         profile?.accepted_terms === true;
 
       if (complete) {
-        navigate('/', { replace: true });
+        navigate('/profile', { replace: true });
         return true;
       }
 
@@ -155,6 +155,12 @@ function GoogleAuthCompletePage() {
     form.phoneNumber &&
     form.acceptedTerms;
 
+  const withTimeout = (promise, ms, message) =>
+    Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms)),
+    ]);
+
   const save = async () => {
     if (!canSave || saving) return;
 
@@ -166,7 +172,11 @@ function GoogleAuthCompletePage() {
     setSaving(true);
     setError('');
     try {
-      const user = authUser || (await supabase.auth.getUser()).data?.user;
+      const user = authUser || (await withTimeout(
+        supabase.auth.getUser(),
+        8000,
+        'Authentication timed out. Please try again.'
+      )).data?.user;
       if (!user) throw new Error('No authenticated user.');
 
       const payload = {
@@ -183,10 +193,18 @@ function GoogleAuthCompletePage() {
         updated_at: new Date().toISOString(),
       };
 
-      const { error: updateError } = await supabase.from('users').update(payload).eq('id', user.id);
+      const { error: updateError } = await withTimeout(
+        supabase.from('users').update(payload).eq('id', user.id),
+        10000,
+        'Profile save timed out. Please try again.'
+      );
       if (updateError) throw updateError;
 
-      const { error: metadataError } = await supabase.auth.updateUser({
+      toast.success('Registration completed.');
+      navigate('/profile', { replace: true });
+
+      // Keep auth metadata aligned, but never block registration completion on it.
+      supabase.auth.updateUser({
         data: {
           first_name: payload.first_name,
           last_name: payload.last_name,
@@ -197,15 +215,16 @@ function GoogleAuthCompletePage() {
           is_candidate: payload.is_candidate,
           accepted_terms: true,
         },
+      }).then(({ error: metadataError }) => {
+        if (metadataError) {
+          console.warn('Profile saved but auth metadata was not updated:', metadataError.message);
+        }
+      }).catch((metadataError) => {
+        console.warn('Profile saved but auth metadata update failed:', metadataError?.message || metadataError);
       });
-      if (metadataError) console.warn('Profile saved but auth metadata was not updated:', metadataError.message);
-
-      toast.success('Registration completed.');
-      navigate('/profile', { replace: true });
     } catch (e) {
       console.error('Google registration completion failed:', e);
       setError(e?.message || 'Registration could not be completed.');
-    } finally {
       setSaving(false);
     }
   };
