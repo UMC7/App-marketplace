@@ -41,6 +41,11 @@ function RegisterPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    setShowEmailConfirmModal(false);
+    setError('');
+  }, []);
+
+  useEffect(() => {
     const updateRect = () => {
       const formEl = formRef.current;
       const btnEl = signUpButtonRef.current;
@@ -66,7 +71,7 @@ function RegisterPage() {
       /[A-Z]/.test(password) &&
       /[a-z]/.test(password) &&
       /[0-9]/.test(password) &&
-      /[!@#$%^&*(),.?":{}|<>]/.test(password)
+      /[!@#$%^&*(),.?\":{}|<>]/.test(password)
     );
   };
 
@@ -225,7 +230,7 @@ const clearAvatar = () => {
     if (!/[A-Z]/.test(password)) passwordRequirements.push('one uppercase letter');
     if (!/[a-z]/.test(password)) passwordRequirements.push('one lowercase letter');
     if (!/[0-9]/.test(password)) passwordRequirements.push('one number');
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) passwordRequirements.push('one special character');
+    if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password)) passwordRequirements.push('one special character');
 
     if (passwordRequirements.length > 0) {
       setError(`Password must contain ${passwordRequirements.join(', ')}.`);
