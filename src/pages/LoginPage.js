@@ -32,6 +32,22 @@ function LoginPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/google/callback`,
+        },
+      });
+      if (oauthError) setError(oauthError.message);
+    } catch (err) {
+      console.error('Google sign-in failed:', err.message);
+      setError('Google sign-in failed. Please try again.');
+    }
+  };
+
   const handlePasswordRecovery = async () => {
   setRecoveryMessage('');
   if (!email) {
@@ -89,6 +105,15 @@ function LoginPage() {
           Sign In
         </button>
         {error && <p style={{ color: 'red' }}>{error}</p>}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0' }}>
+          <div style={{ height: 1, background: '#777', flex: 1 }} />
+          <span style={{ fontSize: '0.85rem' }}>or</span>
+          <div style={{ height: 1, background: '#777', flex: 1 }} />
+        </div>
+        <button type="button" onClick={handleGoogleSignIn}>
+          Continue with Google
+        </button>
 
         <div style={{ marginTop: '12px' }}>
           <button
