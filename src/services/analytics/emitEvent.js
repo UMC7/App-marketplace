@@ -263,20 +263,6 @@ async function _shouldEmitAnalytics({ handle, ownerUserId }) {
   return !!ready;
 }
 
-/**
- * Emits a single analytics event into public.cv_analytics_events.
- * Tries Edge Function first (better geo/referrer/IP), then falls back to direct insert.
- * @param {Object} opts
- * @param {string} opts.type
- * @param {string} [opts.ownerUserId]
- * @param {string} [opts.handle]
- * @param {string} [opts.referrer]
- * @param {string} [opts.country]
- * @param {string} [opts.city]
- * @param {string} [opts.ipHash]
- * @param {Object} [opts.extra]
- * @returns {Promise<{ok: boolean}>}
- */
 export async function emitEvent({
   type,
   ownerUserId = null,
@@ -289,18 +275,6 @@ export async function emitEvent({
 } = {}) {
   try {
     if (!type) return { ok: false };
-
-    if (ownerUserId) {
-      try {
-        const { data } = await supabase.auth.getUser();
-        const currentUserId = data?.user?.id || null;
-        if (currentUserId && currentUserId === ownerUserId) {
-          return { ok: true };
-        }
-      } catch {
-        /* no-op */
-      }
-    }
 
     const allowPublic = await _shouldEmitAnalytics({ handle, ownerUserId });
     if (!allowPublic) {
