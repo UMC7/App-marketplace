@@ -31,8 +31,19 @@ function GoogleAuthCompletePage() {
     if (isLocalPreview) return undefined;
 
     let active = true;
+
+    const waitForUser = async () => {
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (user) return { user, error: null };
+        if (userError && attempt === 19) return { user: null, error: userError };
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+      return { user: null, error: null };
+    };
+
     const load = async () => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { user, error: userError } = await waitForUser();
       if (!active) return;
       if (userError || !user) {
         setError('Google authentication could not be completed.');
