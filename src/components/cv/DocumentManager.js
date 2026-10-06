@@ -1,6 +1,7 @@
 // src/components/cv/DocumentManager.js
 import React, { useEffect, useState } from 'react';
 import supabase from '../../supabase';
+import { useAuth } from '../../context/AuthContext';
 
 const BUCKET = 'cv-docs';              // bucket privado
 const MAX_MB = 10;
@@ -15,6 +16,7 @@ const VIS = [
 ];
 
 export default function DocumentManager({ profileId }) {
+  const { currentUser } = useAuth();
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -46,6 +48,10 @@ export default function DocumentManager({ profileId }) {
   async function handleUpload(e) {
     e.preventDefault();
     if (!profileId || !file) return;
+    if (!currentUser?.id) {
+      alert('No session');
+      return;
+    }
     if (file.size > MAX_MB * 1024 * 1024) {
       alert(`Max ${MAX_MB}MB`);
       return;
@@ -53,11 +59,8 @@ export default function DocumentManager({ profileId }) {
 
     setUploading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No session');
-
       const ext = file.name.split('.').pop()?.toLowerCase() || 'pdf';
-      const path = `${user.id}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+      const path = `${currentUser.id}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
 
       const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
         upsert: false,
