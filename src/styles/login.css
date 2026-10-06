@@ -102,7 +102,8 @@ body.dark-mode .login-form button.google-signin-btn:hover {
   border-color: #666 !important;
 }
 
-body.dark-mode .login-form #googleTerms.missing-required {
+body.dark-mode .login-form #googleTerms.missing-required,
+body.dark-mode .login-form #terms.missing-required {
   outline-color: #ff6b6b;
   box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.45) !important;
 }
