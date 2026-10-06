@@ -31,6 +31,7 @@ import YachtServicesPage from './pages/YachtServicesPage';
 import YachtWorksPage from './pages/YachtWorksPage';
 import EventsPage from './pages/EventsPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import GoogleAuthCompletePage from './pages/GoogleAuthCompletePage';
 import AdminPanel from './admin/AdminPanel';
 import AdminCandidateProfilePage from './admin/AdminCandidateProfilePage';
 import LegalPage from './pages/legal/LegalPage';
@@ -44,10 +45,7 @@ import AnimatedLayout from './layouts/AnimatedLayout';
 import LoadingSpinner from './components/LoadingSpinner';
 import AdminChatButton from './components/AdminChatButton';
 
-// ✅ NUEVO: detalle de evento (para deep links o uso futuro)
 import EventDetail from './pages/EventDetail';
-
-// ✅ NUEVO: vista pública del CV
 import PublicProfileView from './pages/cv/PublicProfileView';
 import PublicProfileQrRedirect from './pages/cv/PublicProfileQrRedirect';
 import ProfileAnalyticsPage from './pages/cv/ProfileAnalyticsPage';
@@ -83,8 +81,21 @@ function AuthRedirectHandler() {
   return null;
 }
 
+function GoogleAuthRoute() {
+  const location = useLocation();
+  const isLocalPreview =
+    process.env.NODE_ENV !== 'production' &&
+    new URLSearchParams(location.search).get('preview') === '1';
+
+  if (isLocalPreview) return <GoogleAuthCompletePage />;
+  return <GoogleAuthCompletePage />;
+}
+
 function AppRoutes({ currentUser }) {
   const location = useLocation();
+  const registrationPending =
+    Boolean(currentUser) && currentUser.registration_complete !== true;
+  const effectiveUser = registrationPending ? null : currentUser;
 
   return (
     <AnimatePresence mode="wait">
@@ -96,26 +107,20 @@ function AppRoutes({ currentUser }) {
 
           <Route
             path="/login"
-            element={!currentUser ? <LoginPage /> : <Navigate to="/" replace />}
+            element={!effectiveUser ? <LoginPage /> : <Navigate to="/" replace />}
           />
           <Route
             path="/register"
-            element={!currentUser ? <RegisterPage /> : <Navigate to="/profile" replace />}
+            element={!effectiveUser ? <RegisterPage /> : <Navigate to="/profile" replace />}
           />
 
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/yacht-services" element={<YachtServicesPage />} />
           <Route path="/yacht-services/post-product" element={<PostProduct />} />
           <Route path="/yacht-works" element={<YachtWorksPage />} />
-
-          {/* Listado de eventos */}
           <Route path="/events" element={<EventsPage />} />
-
-          {/* ✅ NUEVO: rutas de detalle por ID o slug, por si quieres usarlas/compartir */}
           <Route path="/event/:id" element={<EventDetail />} />
           <Route path="/events/:id" element={<EventDetail />} />
-
-          {/* ✅ NUEVO: ruta pública del CV */}
           <Route path="/cv/qr/:qrId" element={<PublicProfileQrRedirect />} />
           <Route path="/cv/:handle" element={<PublicProfileView />} />
 
@@ -178,6 +183,7 @@ function AppRoutes({ currentUser }) {
           <Route path="/legal" element={<LegalPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/auth/google/callback" element={<GoogleAuthRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
@@ -212,14 +218,18 @@ function App() {
     return <LoadingSpinner message="Loading application..." />;
   }
 
+  const registrationPending =
+    Boolean(currentUser) && currentUser.registration_complete !== true;
+  const effectiveUser = registrationPending ? null : currentUser;
+
   return (
     <Router>
-      <Navbar />
+      <Navbar forcedCurrentUser={effectiveUser} />
       <ScrollToTopOnRouteChange />
       <AuthRedirectHandler />
       <ToastContainer autoClose={1500} />
       <CookieBanner />
-      <AdminChatButton />
+      {effectiveUser && <AdminChatButton />}
 
       <div className="main-content">
         <AppRoutes currentUser={currentUser} />

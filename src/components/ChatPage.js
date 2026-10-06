@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabase';
+import { useAuth } from '../context/AuthContext';
 import { useUnreadMessages } from '../context/UnreadMessagesContext';
 import './chat.css';
 import './link-preview.css';
@@ -46,11 +47,7 @@ const renderMessageText = (text) => {
   return paragraphs.map((para, idx) => {
     const lines = para.split('\n');
     return (
-      <p
-        key={idx}
-        className="chat-message-text"
-        style={idx ? { marginTop: 8 } : undefined}
-      >
+      <p key={idx} className="chat-message-text" style={idx ? { marginTop: 8 } : undefined}>
         {lines.map((line, i) => (
           <React.Fragment key={i}>
             {line}
@@ -77,9 +74,9 @@ const formatTime = (date) =>
   date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
 function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId, adminThreadId, adminUserId }) {
+  const { currentUser } = useAuth();
   const [messages, setMessages] = useState([]);
   const [attachmentUrls, setAttachmentUrls] = useState({});
-  const [currentUser, setCurrentUser] = useState(null);
   const [message, setMessage] = useState('');
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -91,14 +88,12 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   const bottomRef = useRef(null);
   const navigate = useNavigate();
 
-  // Avatars
   const [otherAvatar, setOtherAvatar] = useState(null);
   const [myAvatar, setMyAvatar] = useState(null);
   const [offerMeta, setOfferMeta] = useState(null);
   const [isChatClosed, setIsChatClosed] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // External/anonymous mode flag
   const isExternal = mode === 'external' && !!externalThreadId;
   const isAdminThread = mode === 'admin';
   const isDirectInternal = !isExternal && !isAdminThread && !offerId && !!receiverId;
@@ -284,24 +279,30 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     };
   }, [messages, isExternal]);
 
-  // Load current user + my avatar
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUser(user);
-        const { data: me } = await supabase
-          .from('users')
-          .select('avatar_url')
-          .eq('id', user.id)
-          .single();
-        setMyAvatar(me?.avatar_url || null);
-      }
-    };
-    fetchUser();
-  }, []);
+    let cancelled = false;
 
-  // Load counterpart profile (internal/admin) or set Anonymous (external)
+    const loadMyAvatar = async () => {
+      if (!currentUser?.id) {
+        if (!cancelled) setMyAvatar(null);
+        return;
+      }
+
+      const { data: me } = await supabase
+        .from('users')
+        .select('avatar_url')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (!cancelled) setMyAvatar(me?.avatar_url || null);
+    };
+
+    loadMyAvatar();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.id]);
+
   useEffect(() => {
     const loadOther = async () => {
       if (isExternal) {
@@ -338,7 +339,6 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     loadOffer();
   }, [isOfferInternal, offerId]);
 
-  // Marcar como leídas las notificaciones de este chat al abrir la conversación
   useEffect(() => {
     if (!currentUser?.id) return;
     if (isExternal) return;
@@ -350,7 +350,6 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     markNotificationsForChatAsRead(supabase, currentUser.id, offerId, receiverId);
   }, [isExternal, isAdminThread, isOfferInternal, currentUser?.id, offerId, receiverId, adminThreadId, otherUserId, actualAdminThreadId]);
 
-  // Load messages (internal vs external)
   useEffect(() => {
     if (!currentUser) return;
 
@@ -401,7 +400,6 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
         return;
       }
 
-      // Internal (offer-based or direct)
       if (!receiverId) return;
       let messageQuery = supabase
         .from('yacht_work_messages')
@@ -421,7 +419,6 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       if (!error) {
         setMessages(data);
 
-        // Mark as read (internal only)
         const unreadIds = data
           .filter((msg) => msg.receiver_id === currentUser.id && !msg.read)
           .map((msg) => msg.id);
@@ -465,7 +462,6 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     fetchMessages();
   }, [isExternal, isAdminThread, isOfferInternal, isDirectInternal, externalThreadId, actualAdminThreadId, offerId, receiverId, currentUser, fetchUnreadMessages, refreshKey]);
 
-  // Refetch mensajes al volver a la app (fallback cuando Realtime se desconecta en segundo plano)
   useEffect(() => {
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible' && !isExternal) setRefreshKey((k) => k + 1);
@@ -584,13 +580,13 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
   }, [isAdminThread, adminThreadId, currentUser]);
 
   const handleSend = async () => {
+    if (!currentUser?.id) return;
     if (isChatClosed) return;
     if (!message && !file) return;
 
     if (isAdminThread) {
       let threadId = actualAdminThreadId;
       if (!threadId) {
-        // Create thread on first message
         const { data: created, error: createError } = await supabase
           .from('admin_threads')
           .insert({ admin_id: otherUserId, user_id: currentUser.id })
@@ -667,7 +663,6 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       return;
     }
 
-    // External (anonymous) chat: text only (MVP)
     if (isExternal) {
       if (!externalThreadId || !message.trim()) return;
 
@@ -693,7 +688,6 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
       return;
     }
 
-    // Internal (existing flow)
     let fileUrl = null;
     if (file) {
       if (!validateFile(file)) return;
@@ -762,7 +756,7 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
     }
   };
 
-  if (!currentUser) return <div>Loading user...</div>;
+  if (!currentUser) return null;
 
   const renderMessages = () => (
     <div className="chat-messages">
@@ -854,12 +848,12 @@ function ChatPage({ offerId, receiverId, onBack, onClose, mode, externalThreadId
                 {text && extractUrls(text).map((url, idx) => (
                   <LinkPreview key={`link-${msg.id}-${idx}`} url={url} />
                 ))}
-        {!isExternal && msg.file_url && attachmentUrls[msg.id] && (
-          <a
-            href={attachmentUrls[msg.id]}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="chat-file-link"
+                {!isExternal && msg.file_url && attachmentUrls[msg.id] && (
+                  <a
+                    href={attachmentUrls[msg.id]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="chat-file-link"
                   >
                     📎 View file
                   </a>

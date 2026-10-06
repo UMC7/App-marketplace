@@ -5,8 +5,22 @@ import { registerFCM } from '../notifications/registerFCM';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  return useContext(AuthContext);
+export const useAuth = () => useContext(AuthContext);
+
+const isRegistrationComplete = (profileData) => Boolean(
+  profileData?.first_name &&
+  profileData?.last_name &&
+  profileData?.birth_year &&
+  profileData?.nickname &&
+  profileData?.phone_code &&
+  profileData?.phone_number &&
+  profileData?.accepted_terms === true
+);
+
+const isGoogleUser = (user) => {
+  const provider = user?.app_metadata?.provider;
+  const providers = user?.app_metadata?.providers;
+  return provider === 'google' || (Array.isArray(providers) && providers.includes('google'));
 };
 
 const buildExtendedUser = (user, profileData) => {
@@ -27,11 +41,28 @@ const buildExtendedUser = (user, profileData) => {
   return {
     ...user,
     role: resolvedRole,
+    registration_complete: true,
     app_metadata: mergedAppMetadata,
   };
 };
 
-// Sube el "pending_avatar" guardado en localStorage y actualiza users.avatar_url
+async function getProfileForUser(user) {
+  if (!user?.id) return null;
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.warn('No se pudo obtener el perfil extendido:', error.message);
+    return null;
+  }
+
+  return data;
+}
+
 async function uploadPendingAvatarIfAny(user) {
   try {
     const raw = localStorage.getItem('pending_avatar');
@@ -40,11 +71,8 @@ async function uploadPendingAvatarIfAny(user) {
     const parsed = JSON.parse(raw);
     if (!parsed?.dataUrl) return;
 
-    // DataURL -> Blob
     const res = await fetch(parsed.dataUrl);
     const blob = await res.blob();
-
-    // Ruta debe empezar con {auth.uid} para cumplir las policies
     const fileName = `avatar_${Date.now()}.webp`;
     const path = `${user.id}/${fileName}`;
 
@@ -58,7 +86,6 @@ async function uploadPendingAvatarIfAny(user) {
     const avatarUrl = pub?.publicUrl;
     if (!avatarUrl) throw new Error('No public URL from storage');
 
-    // Guarda en tu tabla public.users
     const { error: dbErr } = await supabase
       .from('users')
       .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
@@ -76,6 +103,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const sessionRef = useRef(null);
   const currentUserIdRef = useRef(null);
+
   const postAuthToWebView = useCallback((session) => {
     if (typeof window === 'undefined' || !window.ReactNativeWebView || !session?.user) return;
     const accessToken = (session.access_token || '').trim();
@@ -91,29 +119,33 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let authListener;
-    const hydrateSessionUser = async (user) => {
-      if (!user?.id) return null;
+    let mounted = true;
 
-      try {
-        const { data: userProfile, error: profileError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          console.warn('No se pudo obtener el perfil extendido:', profileError.message);
-          return buildExtendedUser(user, null);
-        }
-
-        return buildExtendedUser(user, userProfile);
-      } catch (err) {
-        console.error('Error al obtener el perfil extendido:', err.message);
-        return buildExtendedUser(user, null);
+    const resolveSession = async (session) => {
+      if (!session?.user) {
+        sessionRef.current = null;
+        if (mounted) setCurrentUser(null);
+        return;
       }
+
+      const profile = await getProfileForUser(session.user);
+      const requiresGoogleCompletion = isGoogleUser(session.user);
+      const complete = !requiresGoogleCompletion || isRegistrationComplete(profile);
+
+      if (!complete) {
+        // Google OAuth may temporarily own a Supabase session while the
+        // registration-completion form is being finished. Do not expose that
+        // temporary session as an authenticated YachtDayWork user.
+        sessionRef.current = null;
+        if (mounted) setCurrentUser(null);
+        return;
+      }
+
+      sessionRef.current = session;
+      if (mounted) setCurrentUser(buildExtendedUser(session.user, profile));
     };
 
-    const getSession = async () => {
+    const bootstrap = async () => {
       try {
         const {
           data: { session },
@@ -122,170 +154,35 @@ export function AuthProvider({ children }) {
 
         if (error) {
           console.error('Error al obtener la sesión:', error.message);
-          setCurrentUser(null);
-          return;
-        }
-
-        if (!session?.user) {
-          setCurrentUser(null);
-          sessionRef.current = null;
-          return;
-        }
-
-        sessionRef.current = session;
-        postAuthToWebView(session);
-
-        const user = session.user;
-        const metadata = user.user_metadata || {};
-
-        const { data: existingUser, error: selectError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (selectError && selectError.code === 'PGRST116') {
-          // Usuario no existe aún, insertamos
-          const insertPayload = {
-            id: user.id,
-            email: user.email,
-            first_name: metadata.first_name || null,
-            last_name: metadata.last_name || null,
-            birth_year: metadata.birth_year || null,
-            nickname: metadata.nickname || null,
-            phone: metadata.phone || null,
-            alt_phone: metadata.alt_phone || null,
-            alt_email: metadata.alt_email || null,
-            accepted_terms: metadata.accepted_terms === true,
-            role: 'user',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-
-          const { error: insertError } = await supabase.from('users').insert(insertPayload);
-          if (insertError) {
-            console.warn('No se pudo insertar el perfil del usuario:', insertError.message);
-          }
-        } else if (existingUser) {
-          // Usuario ya existe, actualizamos si hay campos vacíos
-          const fieldsToUpdate = {};
-
-          const fields = [
-            'first_name',
-            'last_name',
-            'birth_year',
-            'nickname',
-            'phone',
-            'alt_phone',
-            'alt_email',
-            'accepted_terms',
-          ];
-
-          for (const field of fields) {
-            const dbValue = existingUser[field];
-            const metaValue = metadata[field];
-
-            const isEmpty =
-              dbValue === null ||
-              dbValue === undefined ||
-              dbValue === '' ||
-              (field === 'accepted_terms' && dbValue === false);
-
-            if (isEmpty && metaValue !== undefined && metaValue !== null && metaValue !== '') {
-              fieldsToUpdate[field] =
-                field === 'birth_year' ? parseInt(metaValue) :
-                field === 'accepted_terms' ? metaValue === true :
-                metaValue;
-            }
-          }
-
-          if (Object.keys(fieldsToUpdate).length > 0) {
-            fieldsToUpdate.updated_at = new Date().toISOString();
-            const { error: updateError } = await supabase
-              .from('users')
-              .update(fieldsToUpdate)
-              .eq('id', user.id);
-
-            if (updateError) {
-              console.warn('No se pudieron actualizar los campos vacíos:', updateError.message);
-            }
-          }
-        }
-
-        // Obtener perfil actualizado
-        const { data: userProfile, error: profileError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          console.warn('No se pudo obtener el perfil extendido:', profileError.message);
-          setCurrentUser(buildExtendedUser(user, null));
+          if (mounted) setCurrentUser(null);
         } else {
-          setCurrentUser(buildExtendedUser(user, userProfile));
+          await resolveSession(session);
         }
       } catch (err) {
         console.error('Error inesperado al obtener sesión:', err.message);
-        setCurrentUser(null);
+        if (mounted) setCurrentUser(null);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
-    };
-
-    const bootstrap = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (session?.user) {
-          setCurrentUser(session.user);
-          sessionRef.current = session;
-        }
-      } catch (err) {
-        console.error('Error inesperado al obtener sesión inicial:', err.message);
-        setCurrentUser(null);
-      } finally {
-        setLoading(false);
-      }
-
-      await getSession();
 
       authListener = supabase.auth.onAuthStateChange((event, session) => {
-        if (!session?.user) {
+        if (event === 'SIGNED_OUT' || !session?.user) {
           sessionRef.current = null;
-          setCurrentUser(null);
-          setLoading(false);
+          if (mounted) setCurrentUser(null);
           return;
         }
 
-        sessionRef.current = session;
-        postAuthToWebView(session);
-
-        // Mismo usuario (refresh de token) o TOKEN_REFRESHED: no desmontar la app
-        const isSameUserRefresh =
-          event === 'TOKEN_REFRESHED' ||
-          (currentUserIdRef.current && currentUserIdRef.current === session.user.id);
-        if (!isSameUserRefresh) {
-          setLoading(true);
-        }
-
-        hydrateSessionUser(session.user)
-          .then((extendedUser) => {
-            if (extendedUser) {
-              setCurrentUser(extendedUser);
-            }
-          })
-          .finally(() => {
-            setLoading(false);
-          });
+        resolveSession(session).catch((err) => {
+          console.error('Error al resolver sesión:', err?.message || err);
+          if (mounted) setCurrentUser(null);
+        });
       });
     };
 
     bootstrap();
 
     return () => {
+      mounted = false;
       authListener?.subscription?.unsubscribe();
     };
   }, []);
@@ -294,14 +191,12 @@ export function AuthProvider({ children }) {
     currentUserIdRef.current = currentUser?.id ?? null;
   }, [currentUser?.id]);
 
-  // Subir "pending avatar" al tener usuario con id (una vez por sesión)
   useEffect(() => {
     const u = currentUser;
     if (!u?.id) return;
     uploadPendingAvatarIfAny(u);
   }, [currentUser?.id]);
 
-  // === FCM: registrar/actualizar token cuando hay usuario autenticado (solo web; en app usamos Expo) ===
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!currentUser?.id) return;
@@ -309,7 +204,6 @@ export function AuthProvider({ children }) {
     registerFCM(currentUser);
   }, [currentUser?.id]);
 
-  // WebView: enviar user_id + access_token para que la app registre push con autenticación
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const userId = currentUser?.id;
@@ -324,7 +218,6 @@ export function AuthProvider({ children }) {
     const handler = () => {
       if (sessionRef.current) {
         postAuthToWebView(sessionRef.current);
-        // Re-enviar AUTH 2s y 5s después por si la primera se perdió
         resendTimeouts.push(setTimeout(() => {
           if (sessionRef.current) postAuthToWebView(sessionRef.current);
         }, 2000));
@@ -346,11 +239,12 @@ export function AuthProvider({ children }) {
     };
   }, [postAuthToWebView]);
 
-  // Fallback: cuando la app nativa inyecta el Expo push token, la web registra directamente
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    let mounted = true;
     const registerFromWeb = async (expoToken) => {
       const session = sessionRef.current;
+      if (!mounted) return;
       if (!session?.user?.id || !expoToken) return;
       const accessToken = (session.access_token || '').trim();
       if (!accessToken || accessToken.length < 50) return;
@@ -374,11 +268,12 @@ export function AuthProvider({ children }) {
     };
     window.addEventListener('expo:pushToken', handler);
     if (window.__expoPushToken) handler({ detail: window.__expoPushToken });
-    return () => window.removeEventListener('expo:pushToken', handler);
+    return () => {
+      mounted = false;
+      window.removeEventListener('expo:pushToken', handler);
+    };
   }, []);
 
-  // 🔄 Escucha en tiempo real cambios en la fila del usuario (incluye avatar_url)
-  // y actualiza currentUser.app_metadata sin recargar.
   useEffect(() => {
     const userId = currentUser?.id;
     if (!userId) return;
@@ -392,16 +287,22 @@ export function AuthProvider({ children }) {
           const row = payload.new || payload.old;
           if (!row) return;
 
-          // Merge de los campos del perfil dentro de app_metadata
           setCurrentUser((prev) => {
             if (!prev) return prev;
+
+            if (isGoogleUser(prev) && !isRegistrationComplete(row)) {
+              sessionRef.current = null;
+              return null;
+            }
+
             return {
               ...prev,
-            role: row.role ?? prev.role,
-            app_metadata: {
-              ...prev.app_metadata,
-              ...row,
-            },
+              role: row.role ?? prev.role,
+              registration_complete: true,
+              app_metadata: {
+                ...prev.app_metadata,
+                ...row,
+              },
             };
           });
         }

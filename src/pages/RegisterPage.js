@@ -174,6 +174,25 @@ const clearAvatar = () => {
   if (input) input.value = '';
 };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/google/callback`,
+          queryParams: {
+            prompt: 'select_account',
+          },
+        },
+      });
+      if (oauthError) setError(oauthError.message);
+    } catch (err) {
+      console.error('Google sign-up failed:', err.message);
+      setError('Google sign-up failed. Please try again.');
+    }
+  };
+
   const handleRegister = async () => {
     setError('');
 
@@ -402,6 +421,21 @@ try {
     <div className="container">
       <div className="login-form" ref={formRef} style={{ position: 'relative' }}>
         <h2>User Registration</h2>
+
+        <button type="button" onClick={handleGoogleSignIn} className="google-signin-btn">
+          <span className="google-signin-icon" aria-hidden="true">
+            <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#4285F4" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.703-1.568 2.684-3.88 2.684-6.614Z" />
+              <path fill="#34A853" d="M9 18c2.43 0 4.468-.806 5.956-2.181l-2.909-2.258c-.806.54-1.836.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.956v2.332A9 9 0 0 0 9 18Z" />
+              <path fill="#FBBC05" d="M3.963 10.706A5.41 5.41 0 0 1 3.682 9c0-.592.102-1.168.281-1.706V4.962H.956A9 9 0 0 0 0 9c0 1.45.347 2.824.956 4.038l3.007-2.332Z" />
+              <path fill="#EA4335" d="M9 3.58c1.321 0 2.507.454 3.441 1.346l2.581-2.581C13.464.892 11.426 0 9 0A9 9 0 0 0 .956 4.962l3.007 2.332C4.672 5.165 6.656 3.58 9 3.58Z" />
+            </svg>
+          </span>
+          <span className="google-signin-label">Continue with Google</span>
+        </button>
+        <div className="login-divider">
+          <span>or register with email</span>
+        </div>
 
     <div
       style={{
@@ -741,26 +775,24 @@ try {
         </p>
       </div>
 
-      {showEmailConfirmModal && (
-        <Modal onClose={handleCloseEmailModal}>
-          <h3 style={{ marginTop: 0 }}>🎉 You’re almost there!</h3>
-          <p>
-            We have sent a confirmation email to <strong>{form.email || 'your email'}</strong>.
-          </p>
-          <ul style={{ margin: '8px 0 12px 18px' }}>
-            <li>Please check your <strong>Inbox</strong>.</li>
-            <li>If it is not there, look in <strong>Spam/Junk</strong> or <strong>Promotions</strong>.</li>
-            <li>Open the link to activate your account.</li>
-          </ul>
-          <button
-            className="landing-button"
-            onClick={handleCloseEmailModal}
-            style={{ width: '100%' }}
-          >
-            I will check my email
-          </button>
-        </Modal>
-      )}
+      <Modal isOpen={showEmailConfirmModal} onClose={handleCloseEmailModal}>
+        <h3 style={{ marginTop: 0 }}>🎉 You’re almost there!</h3>
+        <p>
+          We have sent a confirmation email to <strong>{form.email || 'your email'}</strong>.
+        </p>
+        <ul style={{ margin: '8px 0 12px 18px' }}>
+          <li>Please check your <strong>Inbox</strong>.</li>
+          <li>If it is not there, look in <strong>Spam/Junk</strong> or <strong>Promotions</strong>.</li>
+          <li>Open the link to activate your account.</li>
+        </ul>
+        <button
+          className="landing-button"
+          onClick={handleCloseEmailModal}
+          style={{ width: '100%' }}
+        >
+          I will check my email
+        </button>
+      </Modal>
     </div>
   );
 }

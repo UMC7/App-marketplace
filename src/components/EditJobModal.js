@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
 import YachtOfferForm from './YachtOfferForm';
 import Modal from './Modal'; // Asegúrate que la ruta sea correcta según tu estructura
 
 function EditJobModal({ jobId, onClose, onUpdate }) {
+  const { currentUser } = useAuth();
   const [initialData, setInitialData] = useState(null);
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-      setUser({ id: userId });
+      if (!currentUser?.id) {
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('yacht_work_offers')
@@ -31,9 +33,10 @@ function EditJobModal({ jobId, onClose, onUpdate }) {
     };
 
     fetchData();
-  }, [jobId]);
+  }, [jobId, currentUser?.id, onClose]);
 
   const handleUpdate = async (updatedData) => {
+    if (!currentUser?.id) return;
     const { id, created_at, user_id, ...dataToUpdate } = updatedData;
 
     const { error } = await supabase
@@ -42,20 +45,20 @@ function EditJobModal({ jobId, onClose, onUpdate }) {
       .eq('id', jobId);
 
     if (error) {
-  toast.error('Error updating the offer');
-} else {
-  toast.success('Offer updated successfully');
-  if (onUpdate) await onUpdate();
-  onClose();
-}
+      toast.error('Error updating the offer');
+    } else {
+      toast.success('Offer updated successfully');
+      if (onUpdate) await onUpdate();
+      onClose();
+    }
   };
 
-  if (loading || !initialData || !user) return null;
+  if (loading || !initialData || !currentUser?.id) return null;
 
   return (
     <Modal onClose={onClose}>
       <YachtOfferForm
-        user={user}
+        user={currentUser}
         onOfferPosted={handleUpdate}
         initialValues={initialData}
         mode="edit"

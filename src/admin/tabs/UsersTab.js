@@ -159,7 +159,7 @@ function UsersTab({ currentUser }) {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({});
-  const [adminUser, setAdminUser] = useState(null);
+  const adminUser = currentUser?.registration_complete === true ? currentUser : null;
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [chatThreadId, setChatThreadId] = useState(null);
   const [chatUserId, setChatUserId] = useState(null);
@@ -212,14 +212,6 @@ function UsersTab({ currentUser }) {
     fetchUsers();
     // eslint-disable-next-line
   }, [page, search]);
-
-  useEffect(() => {
-    const loadAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) setAdminUser(user);
-    };
-    loadAdmin();
-  }, []);
 
   async function fetchUsers() {
     setLoading(true);
@@ -523,12 +515,7 @@ function UsersTab({ currentUser }) {
 
   const openAdminChat = async (userId) => {
     if (!userId) return;
-    let admin = adminUser;
-    if (!admin) {
-      const { data: { user } } = await supabase.auth.getUser();
-      admin = user || null;
-      setAdminUser(admin);
-    }
+    const admin = adminUser;
     if (!admin?.id) {
       alert('Unable to load admin user.');
       return;
@@ -706,9 +693,9 @@ function UsersTab({ currentUser }) {
                     );
                   }
 
-                if (col === 'cv_link') {
-                  return (
-                    <td key={col}>
+                  if (col === 'cv_link') {
+                    return (
+                      <td key={col}>
                         {user[col] ? (
                           <a href={user[col]} target="_blank" rel="noreferrer">
                             Open CV
@@ -716,63 +703,63 @@ function UsersTab({ currentUser }) {
                         ) : (
                           '—'
                         )}
-                    </td>
-                  );
-                }
+                      </td>
+                    );
+                  }
 
-                if (col === 'avatar_url') {
-                  const avatarUrl = String(user[col] || '').trim();
-                  return (
-                    <td key={col}>
-                      {avatarUrl ? (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewImageUrl(avatarUrl);
-                          }}
+                  if (col === 'avatar_url') {
+                    const avatarUrl = String(user[col] || '').trim();
+                    return (
+                      <td key={col}>
+                        {avatarUrl ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewImageUrl(avatarUrl);
+                            }}
+                            style={{
+                              padding: 0,
+                              border: 'none',
+                              background: 'transparent',
+                              color: '#6fc4c0',
+                              textDecoration: 'underline',
+                              cursor: 'pointer',
+                              font: 'inherit',
+                            }}
+                          >
+                            View avatar
+                          </button>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                    );
+                  }
+
+                  if (col === 'lite_progress' || col === 'professional_progress') {
+                    const badge = buildProgressBadge(user[col]);
+                    return (
+                      <td key={col}>
+                        <span style={badge.style}>{badge.label}</span>
+                      </td>
+                    );
+                  }
+
+                  if (col === 'cv_public_status') {
+                    return (
+                      <td key={col}>
+                        <span
                           style={{
-                            padding: 0,
-                            border: 'none',
-                            background: 'transparent',
-                            color: '#6fc4c0',
-                            textDecoration: 'underline',
-                            cursor: 'pointer',
-                            font: 'inherit',
+                            fontWeight: 700,
+                            color: user[col] === 'Ready' ? '#237b23' : '#b26a00',
                           }}
                         >
-                          View avatar
-                        </button>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                  );
-                }
-
-                if (col === 'lite_progress' || col === 'professional_progress') {
-                  const badge = buildProgressBadge(user[col]);
-                  return (
-                    <td key={col}>
-                      <span style={badge.style}>{badge.label}</span>
-                    </td>
-                  );
-                }
-
-                if (col === 'cv_public_status') {
-                  return (
-                    <td key={col}>
-                      <span
-                        style={{
-                          fontWeight: 700,
-                          color: user[col] === 'Ready' ? '#237b23' : '#b26a00',
-                        }}
-                      >
-                        {user[col]}
-                      </span>
-                    </td>
-                  );
-                }
+                          {user[col]}
+                        </span>
+                      </td>
+                    );
+                  }
 
                   return <td key={col}>{String(user[col])}</td>;
                 })}

@@ -1,17 +1,11 @@
 // src/components/cv/candidate/sectionscomponents/references/referencesApi.js
 import supabase from "../../../../../supabase";
 
-export async function uploadReferenceFile(file, { refFolderId } = {}) {
+export async function uploadReferenceFile(file, { refFolderId, authenticatedUserId } = {}) {
   if (!(file instanceof File)) {
     throw new Error("uploadReferenceFile: 'file' debe ser un File válido.");
   }
-
-  const {
-    data: { user },
-    error: userErr,
-  } = await supabase.auth.getUser();
-  if (userErr) throw userErr;
-  if (!user?.id) throw new Error("No hay sesión activa.");
+  if (!authenticatedUserId) throw new Error("No hay sesión activa.");
 
   const safeId =
     refFolderId ||
@@ -20,7 +14,7 @@ export async function uploadReferenceFile(file, { refFolderId } = {}) {
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
 
   const cleanName = sanitizeFilename(file.name || "attachment");
-  const objectPath = `${user.id}/refs/${safeId}/${cleanName}`;
+  const objectPath = `${authenticatedUserId}/refs/${safeId}/${cleanName}`;
 
   const { error: uploadErr } = await supabase.storage
     .from("cv-docs")
@@ -44,22 +38,15 @@ export async function upsertReference(refInput = {}) {
     phone = null,
     email = null,
     file,
+    authenticatedUserId,
   } = refInput;
 
   if (!profile_id) throw new Error("profile_id es requerido.");
   if (!name || !role || !vessel_company) {
     throw new Error("name, role y vessel_company son requeridos.");
   }
+  if (!authenticatedUserId) throw new Error("No hay sesión activa.");
 
-  // Verifica sesión (necesaria para rutas de storage)
-  const {
-    data: { user },
-    error: userErr,
-  } = await supabase.auth.getUser();
-  if (userErr) throw userErr;
-  if (!user?.id) throw new Error("No hay sesión activa.");
-
-  // Si hay archivo, súbelo primero
   let attachment_path = null;
   let attachment_name = null;
 
@@ -70,8 +57,11 @@ export async function upsertReference(refInput = {}) {
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
 
-    const uploaded = await uploadReferenceFile(file, { refFolderId: folderId });
-    attachment_path = uploaded.path; // "<uid>/refs/<folderId>/<filename>"
+    const uploaded = await uploadReferenceFile(file, {
+      refFolderId: folderId,
+      authenticatedUserId,
+    });
+    attachment_path = uploaded.path;
     attachment_name = uploaded.name;
   }
 
@@ -90,7 +80,6 @@ export async function upsertReference(refInput = {}) {
   }
 
   if (!id) {
-    // INSERT
     const { data, error } = await supabase
       .from("public_references")
       .insert([payload])
@@ -98,25 +87,21 @@ export async function upsertReference(refInput = {}) {
       .single();
     if (error) throw error;
     return data;
-  } else {
-    // UPDATE
-    const { data, error } = await supabase
-      .from("public_references")
-      .update({
-        ...payload,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .select("*")
-      .single();
-    if (error) throw error;
-    return data;
   }
+
+  const { data, error } = await supabase
+    .from("public_references")
+    .update({
+      ...payload,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data;
 }
 
-/**
- * Lista referencias por profile_id.
- */
 export async function listReferencesByProfile(profileId) {
   if (!profileId) throw new Error("profileId requerido.");
   const { data, error } = await supabase
@@ -128,9 +113,6 @@ export async function listReferencesByProfile(profileId) {
   return data || [];
 }
 
-/**
- * Elimina una referencia por id (NO borra el archivo del storage).
- */
 export async function deleteReference(id) {
   if (!id) throw new Error("id requerido.");
   const { data, error } = await supabase
@@ -143,10 +125,6 @@ export async function deleteReference(id) {
   return data;
 }
 
-/**
- * Obtiene una URL firmada temporal para descargar/ver el adjunto privado.
- * `path` es el storage.objects.name (sin el bucket), p.ej.: "<uid>/refs/<folderId>/<filename>"
- */
 export async function getAttachmentSignedUrl(path, expiresInSec = 60) {
   if (!path) throw new Error("path requerido.");
   const { data, error } = await supabase.storage
@@ -156,7 +134,6 @@ export async function getAttachmentSignedUrl(path, expiresInSec = 60) {
   return data?.signedUrl || null;
 }
 
-// Helpers
 function sanitizeFilename(name) {
   return String(name)
     .replace(/[^\w.\-]+/g, "_")

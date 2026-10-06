@@ -1,16 +1,117 @@
 /* login.css */
-/* Solo cambiamos el color del botón "Forgot your password?" */
 
 .login-form .forgot-password-btn {
-  background-color: #ccc; /* Gris claro como en dark mode */
+  background-color: #ccc;
   color: #000;
 }
 
 .login-form .forgot-password-btn:hover {
-  background-color: #b3b3b3; /* Un poco más oscuro al pasar el mouse */
+  background-color: #b3b3b3;
 }
 
 .dark-mode .login-form .forgot-password-btn {
-  background-color: #ccc; /* Mantener mismo gris en dark mode */
+  background-color: #ccc;
   color: #000;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #d1d5db;
+}
+
+.login-form .google-signin-btn {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  background: #fff;
+  color: #3c4043;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.login-form .google-signin-btn:hover {
+  background: #f8fafd;
+  border-color: #c8ccd0;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.18);
+}
+
+.login-form .google-signin-btn:focus-visible {
+  outline: 2px solid #4285f4;
+  outline-offset: 2px;
+}
+
+.google-signin-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+}
+
+.google-signin-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.google-signin-label {
+  line-height: 1;
+}
+
+.login-form #googleTerms.missing-required {
+  outline: 2px solid #e05252;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(224, 82, 82, 0.38) !important;
+}
+
+body.dark-mode .login-form button.google-signin-btn {
+  background: #3a3a3a !important;
+  background-color: #3a3a3a !important;
+  color: #f2f2f2 !important;
+  border: 1px solid #5a5a5a !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+body.dark-mode .login-form button.google-signin-btn:hover {
+  background: #454545 !important;
+  background-color: #454545 !important;
+  border-color: #666 !important;
+}
+
+body.dark-mode .login-form #googleTerms.missing-required {
+  outline-color: #ff6b6b;
+  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.45) !important;
+}
+
+.dark-mode .login-divider {
+  color: #b7bcc3;
+}
+
+.dark-mode .login-divider::before,
+.dark-mode .login-divider::after {
+  background: #4b5563;
 }

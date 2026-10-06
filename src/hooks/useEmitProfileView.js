@@ -1,7 +1,7 @@
 // src/hooks/useEmitProfileView.js
 import { useEffect } from 'react';
 import { emitView } from '../services/analytics/emitEvent';
-import supabase from '../supabase';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Hook que emite automáticamente un evento de "view"
@@ -11,6 +11,8 @@ import supabase from '../supabase';
  * Debe incluir al menos { handle, user_id, owner_user_id }.
  */
 export default function useEmitProfileView(profile) {
+  const { currentUser } = useAuth();
+
   useEffect(() => {
     let cancelled = false;
     if (!profile) return () => {};
@@ -26,12 +28,8 @@ export default function useEmitProfileView(profile) {
         const isPreview = /\bpreview(=|%3D)?(1|true)?/i.test(search);
         if (isPreview) return;
 
-        const { data } = await supabase.auth.getUser();
-        const currentUserId = data?.user?.id || null;
-        const role =
-          data?.user?.user_metadata?.app_metadata?.role ||
-          data?.user?.app_metadata?.role ||
-          null;
+        const currentUserId = currentUser?.id || null;
+        const role = currentUser?.role || currentUser?.app_metadata?.role || null;
         if (role === 'admin') return;
         if (currentUserId && ownerUserId && currentUserId === ownerUserId) return;
         if (cancelled) return;
@@ -54,5 +52,5 @@ export default function useEmitProfileView(profile) {
     return () => {
       cancelled = true;
     };
-  }, [profile]);
+  }, [profile, currentUser]);
 }
