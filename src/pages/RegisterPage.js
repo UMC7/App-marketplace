@@ -181,6 +181,9 @@ const clearAvatar = () => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/google/callback`,
+          queryParams: {
+            prompt: 'select_account',
+          },
         },
       });
       if (oauthError) setError(oauthError.message);
@@ -218,44 +221,14 @@ const clearAvatar = () => {
     const password = form.password;
     const passwordRequirements = [];
 
-    if (password.length < 8) {
-      passwordRequirements.push('at least 8 characters');
-    }
-    if (!/[A-Z]/.test(password)) {
-      passwordRequirements.push('one uppercase letter');
-    }
-    if (!/[a-z]/.test(password)) {
-      passwordRequirements.push('one lowercase letter');
-    }
-    if (!/[0-9]/.test(password)) {
-      passwordRequirements.push('one number');
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      passwordRequirements.push('one special character');
-    }
+    if (password.length < 8) passwordRequirements.push('at least 8 characters');
+    if (!/[A-Z]/.test(password)) passwordRequirements.push('one uppercase letter');
+    if (!/[a-z]/.test(password)) passwordRequirements.push('one lowercase letter');
+    if (!/[0-9]/.test(password)) passwordRequirements.push('one number');
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) passwordRequirements.push('one special character');
 
     if (passwordRequirements.length > 0) {
       setError(`Password must contain ${passwordRequirements.join(', ')}.`);
-      return;
-    }
-
-    if (!isNumeric(form.phoneCode)) {
-      setError('Country code must contain only numbers.');
-      return;
-    }
-
-    if (form.altPhoneCode && !isNumeric(form.altPhoneCode)) {
-      setError('Alternative country code must contain only numbers.');
-      return;
-    }
-
-    if (altPhoneValue && primaryPhoneValue && altPhoneValue === primaryPhoneValue) {
-      setError('Alternative phone must be different from primary phone.');
-      return;
-    }
-
-    if (altEmailValue && primaryEmailValue && altEmailValue === primaryEmailValue) {
-      setError('Alternative email must be different from primary email.');
       return;
     }
 
@@ -264,39 +237,30 @@ const clearAvatar = () => {
       return;
     }
 
-    const { data: nicknameAvailable, error: nickErr } = await supabase
-      .rpc('rpc_nickname_is_available', { p_nickname: form.nickname });
-
-    if (nickErr) {
-      console.error('Error checking nickname:', nickErr.message);
-    }
-
-    if (!nicknameAvailable) {
-      setError('Nickname already taken. Please choose another.');
+    if (!form.firstName || !form.lastName || !form.birthYear || !form.phoneCode || !form.phone) {
+      setShowMissing(true);
+      setError('Please complete all required fields.');
       return;
     }
 
-    // Persist pending avatar locally (to upload after email confirmation)
-try {
-  if (avatarFile) {
-    const fr = new FileReader();
-    fr.onload = () => {
-      try {
-        localStorage.setItem(
-          'pending_avatar',
-          JSON.stringify({ type: 'dataurl', dataUrl: fr.result, ts: Date.now() })
-        );
-      } catch {}
-    };
-    fr.readAsDataURL(avatarFile);
-  } else {
-    localStorage.removeItem('pending_avatar');
-  }
-} catch {}
+    if (!isNumeric(form.birthYear) || Number(form.birthYear) < 1900 || Number(form.birthYear) > 2008) {
+      setError('Please enter a valid year of birth.');
+      return;
+    }
 
     try {
-      const fullAltPhone =
-        form.altPhone && form.altPhoneCode ? `+${form.altPhoneCode}${form.altPhone}` : null;
+      const { data: nicknameAvailable, error: nickCheckError } = await supabase
+        .rpc('rpc_nickname_is_available', { p_nickname: form.nickname });
+
+      if (nickCheckError) {
+        setError('Could not validate nickname availability.');
+        return;
+      }
+      if (!nicknameAvailable) {
+        setNicknameStatus('taken');
+        setError('Nickname is already taken.');
+        return;
+      }
 
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: form.email,
@@ -305,487 +269,220 @@ try {
           data: {
             first_name: form.firstName,
             last_name: form.lastName,
-            birth_year: parseInt(form.birthYear),
+            birth_year: Number(form.birthYear),
             nickname: form.nickname,
             phone_code: form.phoneCode,
             phone_number: form.phone,
-            alt_phone: fullAltPhone,
+            phone: `+${form.phoneCode}${form.phone}`,
+            alt_phone: form.altPhoneCode && form.altPhone ? `+${form.altPhoneCode}${form.altPhone}` : null,
             alt_email: form.altEmail || null,
             is_candidate: isCandidate,
-            accepted_terms: true,
-            updated_at: new Date().toISOString(),
+            accepted_terms: acceptedTerms,
           },
         },
       });
 
-      if (signUpError || !data?.user) {
-        toast.error('Registration failed. Please check your information.');
+      if (signUpError) {
+        setError(signUpError.message);
         return;
       }
 
-      toast.success('Registration successful! Please check your email to confirm your account.');
-      setShowEmailConfirmModal(true);
+      if (data?.user) {
+        if (avatarFile) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            localStorage.setItem('pending_avatar', JSON.stringify({ dataUrl: reader.result }));
+          };
+          reader.readAsDataURL(avatarFile);
+        }
+        setShowEmailConfirmModal(true);
+      }
     } catch (err) {
-      setError('Something went wrong.');
+      console.error('Registration failed:', err.message);
+      setError('Registration failed. Please try again.');
     }
   };
 
-  const birthYears = Array.from({ length: 80 }, (_, i) => 2008 - i);
-
-  const highlightClass = (key) => (missing[key] ? 'missing-required' : '');
-
-  const normalizeEmail = (email) => (email || '').trim().toLowerCase();
-
-  const nicknameOk =
-    /^[A-Za-z0-9]{3,7}$/.test(form.nickname || '') &&
-    ((form.nickname || '').match(/[A-Za-z]/g) || []).length >= 3 &&
-    ((form.nickname || '').match(/\d/g) || []).length <= 3 &&
-    !nicknameError &&
-    nicknameStatus !== 'taken';
-
-  const primaryEmailValue = normalizeEmail(form.email);
-  const altEmailValue = normalizeEmail(form.altEmail);
-  const primaryPhoneValue =
-    form.phoneCode && form.phone ? `${form.phoneCode}${form.phone}` : '';
-  const altPhoneValue =
-    form.altPhoneCode && form.altPhone ? `${form.altPhoneCode}${form.altPhone}` : '';
-
-  const isAltEmailDuplicate =
-    !!form.altEmail.trim() && !!primaryEmailValue && altEmailValue === primaryEmailValue;
-  const isAltPhoneDuplicate =
-    !!altPhoneValue && !!primaryPhoneValue && altPhoneValue === primaryPhoneValue;
-
   const missing = {
+    email: !form.email.trim(),
+    password: !form.password,
+    confirmPassword: !form.confirmPassword,
     firstName: !form.firstName.trim(),
     lastName: !form.lastName.trim(),
     birthYear: !form.birthYear,
-    nickname: !nicknameOk,
-    phoneCode: !form.phoneCode.trim() || !isNumeric(form.phoneCode),
-    phone: !form.phone.trim(),
-    email: !form.email.trim(),
-    password: !form.password || !isPasswordValid(form.password),
-    confirmPassword: !form.confirmPassword || form.password !== form.confirmPassword,
+    nickname: nicknameStatus !== 'available',
+    phoneCode: !form.phoneCode,
+    phone: !form.phone,
     acceptedTerms: !acceptedTerms,
   };
 
-  const isFormComplete = () => {
-    const {
-      firstName,
-      lastName,
-      birthYear,
-      phoneCode,
-      phone,
-      email,
-      password,
-      confirmPassword,
-    } = form;
-
-    return (
-      firstName.trim() &&
-      lastName.trim() &&
-      birthYear &&
-      nicknameOk &&
-      phoneCode.trim() &&
-      isNumeric(phoneCode) &&
-      phone.trim() &&
-      email.trim() &&
-      password &&
-      confirmPassword &&
-      password === confirmPassword &&
-      acceptedTerms &&
-      !isAltPhoneDuplicate &&
-      !isAltEmailDuplicate
-    );
-  };
-  const isComplete = isFormComplete();
-
-  const handleCloseEmailModal = () => {
-    setShowEmailConfirmModal(false);
-    navigate('/');
-  };
-
-  const plusInputStyle = {
-    width: '40px',
-    textAlign: 'center',
-    background: '#1e1e1e',
-    border: '1px solid #555',
-    borderRadius: '4px',
-    color: '#fff',
-    fontWeight: 'bold',
-  };
+  const highlightClass = (key) => missing[key] ? 'missing-required' : '';
 
   return (
-    <div className="container">
+    <div className="login-page-wrapper">
       <div className="login-form" ref={formRef} style={{ position: 'relative' }}>
-        <h2>User Registration</h2>
+        <h2>Create Account</h2>
 
-        <button type="button" onClick={handleGoogleSignIn} style={{ width: '100%', marginBottom: 12 }}>
+        <button type="button" onClick={handleGoogleSignIn}>
           Continue with Google
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0' }}>
           <div style={{ height: 1, background: '#777', flex: 1 }} />
-          <span style={{ fontSize: '0.85rem' }}>or register with email</span>
+          <span style={{ fontSize: '0.85rem' }}>or</span>
           <div style={{ height: 1, background: '#777', flex: 1 }} />
         </div>
 
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 12,
-        marginBottom: 16,
-      }}
-    >
-      <Avatar
-        nickname={form.nickname || 'User'}
-        srcUrl={avatarPreviewUrl}
-        size="xl"
-      />
-
-      <div style={{ width: '100%', maxWidth: 360 }}>
         <input
-          id="avatar-input"
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          onChange={handleAvatarChange}
-          style={{ width: '100%' }}
+          name="email"
+          type="email"
+          placeholder="Email *"
+          value={form.email}
+          onChange={handleChange}
+          className={highlightClass('email')}
         />
-        {avatarPreviewUrl ? (
-          <div style={{ marginTop: 6, textAlign: 'center' }}>
-            <button type="button" onClick={clearAvatar}>Remove photo</button>
-          </div>
-        ) : (
-          <p style={{ fontSize: '0.85rem', margin: '6px 0 0 0', textAlign: 'center' }}>
-            If you don’t add a photo, we’ll use your nickname inside a circle.
-          </p>
-        )}
-      </div>
-    </div>
-
-        <label>
-          Name <span style={{ color: 'red' }}>*</span>
-        </label>
+        <input
+          name="password"
+          type="password"
+          placeholder="Password *"
+          value={form.password}
+          onChange={handleChange}
+          className={highlightClass('password')}
+        />
+        <input
+          name="confirmPassword"
+          type="password"
+          placeholder="Confirm Password *"
+          value={form.confirmPassword}
+          onChange={handleChange}
+          className={highlightClass('confirmPassword')}
+        />
         <input
           name="firstName"
-          placeholder="Name"
+          placeholder="First Name *"
+          value={form.firstName}
           onChange={handleChange}
-          required
           className={highlightClass('firstName')}
         />
-
-        <label>
-          Last Name <span style={{ color: 'red' }}>*</span>
-        </label>
         <input
           name="lastName"
-          placeholder="Last Name"
+          placeholder="Last Name *"
+          value={form.lastName}
           onChange={handleChange}
-          required
           className={highlightClass('lastName')}
         />
-
-        <label>
-          Year of Birth <span style={{ color: 'red' }}>*</span>
-        </label>
-        <select
+        <input
           name="birthYear"
+          placeholder="Year of Birth *"
+          value={form.birthYear}
           onChange={handleChange}
-          required
           className={highlightClass('birthYear')}
-        >
-          <option value="">Year of Birth</option>
-          {birthYears.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
-
-        <label>
-          Nickname <span style={{ color: 'red' }}>*</span>
-        </label>
+        />
         <input
           name="nickname"
-          placeholder="Nickname"
+          placeholder="Nickname *"
           value={form.nickname}
           onChange={handleNicknameChange}
           maxLength={7}
-          required
           className={highlightClass('nickname')}
         />
-        {!nicknameError && form.nickname && (
-          <p
-            style={{
-              color:
-                nicknameStatus === 'available'
-                  ? '#1f7a1f'
-                  : nicknameStatus === 'taken'
-                  ? '#c00000'
-                  : '#666',
-              marginTop: -8,
-              marginBottom: 8,
-              fontSize: '0.9rem',
-            }}
-          >
-            {nicknameStatus === 'checking' && 'Checking availability...'}
-            {nicknameStatus === 'available' && 'Nickname available.'}
-            {nicknameStatus === 'taken' && 'Nickname already taken.'}
-            {nicknameStatus === 'invalid' && 'Nickname not valid.'}
-          </p>
-        )}
-        {nicknameError ? (
-          <p style={{ color: 'red', marginTop: -8, marginBottom: 8, fontSize: '0.9rem' }}>{nicknameError}</p>
-        ) : (
-          <p style={{ color: '#666', marginTop: -8, marginBottom: 8, fontSize: '0.9rem' }}>
-            3-7 characters. At least 3 letters. Max 3 digits.
-          </p>
-        )}
+        {nicknameStatus === 'checking' && <p>Checking nickname...</p>}
+        {nicknameStatus === 'available' && <p>Nickname available.</p>}
+        {nicknameStatus === 'taken' && <p>Nickname already taken.</p>}
+        {nicknameError && <p>{nicknameError}</p>}
 
-        <label>
-          Primary Phone <span style={{ color: 'red' }}>*</span>
-        </label>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input type="text" value="+" disabled style={plusInputStyle} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value="+" disabled style={{ width: 40, textAlign: 'center' }} />
           <input
             name="phoneCode"
-            placeholder="Code"
-            onChange={handleChange}
+            placeholder="Code *"
             value={form.phoneCode}
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={3}
-            style={{ width: '70px' }}
+            onChange={handleChange}
+            style={{ width: 70 }}
             className={highlightClass('phoneCode')}
-            required
           />
           <input
             name="phone"
-            placeholder="Primary Phone"
-            onChange={handleChange}
+            placeholder="Primary Phone *"
             value={form.phone}
-            inputMode="numeric"
-            pattern="[0-9]*"
+            onChange={handleChange}
             style={{ flex: 1 }}
             className={highlightClass('phone')}
-            required
           />
         </div>
 
-        <label>Alternative Phone (optional)</label>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input type="text" value="+" disabled style={plusInputStyle} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value="+" disabled style={{ width: 40, textAlign: 'center' }} />
           <input
             name="altPhoneCode"
             placeholder="Code"
-            onChange={handleChange}
             value={form.altPhoneCode}
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={3}
-            style={{ width: '70px' }}
-            className={isAltPhoneDuplicate ? 'missing-required' : ''}
+            onChange={handleChange}
+            style={{ width: 70 }}
           />
           <input
             name="altPhone"
             placeholder="Alternative Phone"
-            onChange={handleChange}
             value={form.altPhone}
-            inputMode="numeric"
-            pattern="[0-9]*"
+            onChange={handleChange}
             style={{ flex: 1 }}
-            className={isAltPhoneDuplicate ? 'missing-required' : ''}
           />
         </div>
-        {isAltPhoneDuplicate && (
-          <p style={{ color: 'red', marginTop: 6, marginBottom: 8, fontSize: '0.9rem' }}>
-            Alternative phone must be different from primary phone.
-          </p>
-        )}
 
-        <label>
-          Primary Email <span style={{ color: 'red' }}>*</span>
-        </label>
-        <input
-          name="email"
-          placeholder="Primary Email"
-          onChange={handleChange}
-          required
-          className={highlightClass('email')}
-        />
-
-        <label>Alternative Email (optional)</label>
         <input
           name="altEmail"
+          type="email"
           placeholder="Alternative Email"
+          value={form.altEmail}
           onChange={handleChange}
-          className={isAltEmailDuplicate ? 'missing-required' : ''}
         />
-        {isAltEmailDuplicate && (
-          <p style={{ color: 'red', marginTop: 6, marginBottom: 8, fontSize: '0.9rem' }}>
-            Alternative email must be different from primary email.
-          </p>
-        )}
+
+        <Avatar src={avatarPreviewUrl} />
+        <input id="avatar-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarChange} />
+        {avatarPreviewUrl && <button type="button" onClick={clearAvatar}>Remove image</button>}
 
         <label>
-          Password <span style={{ color: 'red' }}>*</span>
-        </label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            onChange={handleChange}
-            value={form.password}
-            required
-            style={{ flex: 1 }}
-            className={highlightClass('password')}
-          />
-          {form.password && isPasswordValid(form.password) && (
-            <span style={{ color: 'green', fontSize: '1.2rem' }}>✔️</span>
-          )}
-        </div>
-        <p style={{ fontSize: '0.85rem', marginBottom: '8px' }}>
-          Password must be at least 8 characters and include one uppercase letter, one lowercase letter,
-          one number, and one special character.
-        </p>
-
-        <label>
-          Confirm Password <span style={{ color: 'red' }}>*</span>
-        </label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            onChange={handleChange}
-            value={form.confirmPassword}
-            required
-            style={{ flex: 1 }}
-            className={highlightClass('confirmPassword')}
-          />
-          {form.confirmPassword &&
-            form.confirmPassword === form.password && (
-              <span style={{ color: 'green', fontSize: '1.2rem' }}>✔️</span>
-            )}
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '20px auto',
-            columnGap: '10px',
-            margin: '16px 0',
-          }}
-        >
           <input
             type="checkbox"
-            id="isCandidate"
             checked={isCandidate}
             onChange={(e) => setIsCandidate(e.target.checked)}
           />
-          <label
-            htmlFor="isCandidate"
-            style={{
-              fontSize: '0.92rem',
-              lineHeight: 1.4,
-              transform: 'translateY(-4px)',
-            }}
-          >
-            Enable Candidate Profile
-          </label>
-        </div>
-        
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '20px auto',
-            columnGap: '10px',
-            margin: '16px 0',
-          }}
-        >
+          Enable Candidate Profile
+        </label>
+
+        <label>
           <input
             type="checkbox"
-            id="terms"
             checked={acceptedTerms}
             onChange={(e) => setAcceptedTerms(e.target.checked)}
             className={highlightClass('acceptedTerms')}
-            required
           />
-          <label
-            htmlFor="terms"
-            style={{
-              fontSize: '0.92rem',
-              lineHeight: 1.4,
-              transform: 'translateY(-4px)',
-            }}
-          >
-            I accept the{' '}
-            <a href="/legal" target="_blank" rel="noopener noreferrer">
-              Terms of Use
-            </a>{' '}
-            and{' '}
-            <a href="/privacy" target="_blank" rel="noopener noreferrer">
-              Privacy Policy
-            </a>.
-          </label>
-        </div>
+          I accept the Terms of Use and Privacy Policy
+        </label>
 
-        <button
-          onClick={handleRegister}
-          disabled={!isComplete}
-          style={{
-            opacity: isComplete ? 1 : 0.5,
-            cursor: isComplete ? 'pointer' : 'not-allowed',
-          }}
-          ref={signUpButtonRef}
-        >
+        <button ref={signUpButtonRef} type="button" onClick={handleRegister}>
           Sign Up
         </button>
-        {!isComplete && signUpOverlayRect && (
+
+        {signUpOverlayRect && (
           <div
-            onClick={() => setShowMissing(true)}
             style={{
               position: 'absolute',
               top: signUpOverlayRect.top,
               left: signUpOverlayRect.left,
               width: signUpOverlayRect.width,
               height: signUpOverlayRect.height,
-              cursor: 'not-allowed',
-              background: 'transparent',
-              zIndex: 2,
+              pointerEvents: 'none',
             }}
-            aria-hidden="true"
           />
         )}
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
-
-        <p style={{ marginTop: '10px', fontSize: '0.9rem' }}>
-          <span style={{ color: 'red' }}>*</span> Required fields
-        </p>
       </div>
 
-      {showEmailConfirmModal && (
-        <Modal onClose={handleCloseEmailModal}>
-          <h3 style={{ marginTop: 0 }}>🎉 You’re almost there!</h3>
-          <p>
-            We have sent a confirmation email to <strong>{form.email || 'your email'}</strong>.
-          </p>
-          <ul style={{ margin: '8px 0 12px 18px' }}>
-            <li>Please check your <strong>Inbox</strong>.</li>
-            <li>If it is not there, look in <strong>Spam/Junk</strong> or <strong>Promotions</strong>.</li>
-            <li>Open the link to activate your account.</li>
-          </ul>
-          <button
-            className="landing-button"
-            onClick={handleCloseEmailModal}
-            style={{ width: '100%' }}
-          >
-            I will check my email
-          </button>
-        </Modal>
-      )}
+      <Modal isOpen={showEmailConfirmModal} onClose={() => { setShowEmailConfirmModal(false); navigate('/login'); }}>
+        <p>Please check your email to confirm your account.</p>
+      </Modal>
     </div>
   );
 }
