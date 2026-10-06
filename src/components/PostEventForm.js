@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
 import '../styles/float.css';
 
 const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
+  const { currentUser } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [showMissing, setShowMissing] = useState(false);
   const [eventName, setEventName] = useState(initialValues.event_name || '');
@@ -11,7 +13,7 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   const [city, setCity] = useState(initialValues.city || '');
   const [country, setCountry] = useState(initialValues.country || '');
   const [mainPhoto, setMainPhoto] = useState(initialValues.mainphoto || '');
-  const [ownerId, setOwnerId] = useState(null);
+  const ownerId = currentUser?.id || null;
   const [contactEmail, setContactEmail] = useState(initialValues.contact_email || '');
   const [phone, setPhone] = useState(initialValues.contact_phone || '');
   const [altPhone, setAltPhone] = useState(initialValues.alt_phone || '');
@@ -45,18 +47,6 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
     "United States", "Uruguay", "Vanuatu", "Venezuela", "Vietnam"
   ];
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError || !authData?.user) {
-        toast.error('You must log in first.');
-        return;
-      }
-      setOwnerId(authData.user.id);
-    };
-    fetchUser();
-  }, []);
-
   const highlightClass = (missing) => (missing ? 'missing-required' : '');
   const eventNameMissing = !eventName.trim();
   const cityMissing = !city.trim();
@@ -80,6 +70,10 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
       : undefined;
 
   const handleMainPhotoUpload = async (e) => {
+    if (!currentUser?.id) {
+      toast.error('You must log in first.');
+      return;
+    }
     const file = e.target.files[0];
     if (!file) return;
     const fileName = `main-${Date.now()}-${file.name}`;
@@ -110,6 +104,10 @@ const PostEventForm = ({ initialValues = {}, onSubmit, mode = 'create' }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setShowMissing(false);
+    if (!currentUser?.id) {
+      toast.error('You must log in first.');
+      return;
+    }
     if (!formReady) {
       setShowMissing(true);
       toast.error('Please fill in all required fields.');
