@@ -1,5 +1,6 @@
 // src/pages/tabs/UsersTab.js
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { applyAdminUserSearchFilter } from '../adminUserSearch';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../supabase';
 import Modal from '../../components/Modal';
@@ -158,7 +159,9 @@ function UsersTab({ currentUser }) {
   const [chatLoading, setChatLoading] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState('');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
+  const fetchGenerationRef = useRef(0);
   const [bulkFromPage, setBulkFromPage] = useState(1);
   const [bulkToPage, setBulkToPage] = useState(1);
   const [bulkCvLinks, setBulkCvLinks] = useState([]);
@@ -201,71 +204,49 @@ function UsersTab({ currentUser }) {
   }
 
   useEffect(() => {
+    const handle = window.setTimeout(() => {
+      setDebouncedSearch(String(search || '').trim());
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [search]);
+
+  useEffect(() => {
     fetchUsers();
-    // eslint-disable-next-line
-  }, [page, search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, debouncedSearch]);
 
   async function fetchUsers() {
+    const generation = ++fetchGenerationRef.current;
     setLoading(true);
     setProgressByUserId({});
-    const trimmedSearch = String(search || '').trim().toLowerCase();
-    let data = [];
-    let error = null;
-    let count = 0;
 
-    if (trimmedSearch) {
-      const chunkSize = 500;
-      let offset = 0;
-      const allRows = [];
+    const from = (page - 1) * rowsPerPage;
+    const to = from + rowsPerPage - 1;
 
-      while (true) {
-        const { data: chunk, error: chunkError } = await supabase
-          .from('users')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .range(offset, offset + chunkSize - 1);
+    let query = supabase
+      .from('users')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false });
 
-        if (chunkError) {
-          error = chunkError;
-          break;
-        }
+    query = applyAdminUserSearchFilter(query, debouncedSearch);
+    const response = await query.range(from, to);
 
-        const rows = chunk || [];
-        allRows.push(...rows);
-        if (rows.length < chunkSize) break;
-        offset += chunkSize;
-      }
+    if (generation !== fetchGenerationRef.current) return;
 
-      data = allRows;
-      count = allRows.length;
-    } else {
-      const from = (page - 1) * rowsPerPage;
-      const to = from + rowsPerPage - 1;
-      const response = await supabase
-        .from('users')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range(from, to);
-
-      data = response.data || [];
-      error = response.error || null;
-      count = response.count || 0;
+    const error = response.error || null;
+    if (error) {
+      console.error('UsersTab fetchUsers failed:', error);
+      setUsers([]);
+      setTotalUsersCount(0);
+      setLoading(false);
+      setSelectedUserId(null);
+      return;
     }
 
-    if (!error) {
-      const rows = data || [];
-      setTotalUsersCount(Number.isFinite(count) ? count : 0);
-
-      if (!rows.length) {
-        setUsers([]);
-        setLoading(false);
-        setSelectedUserId(null);
-        return;
-      }
-
-      setUsers(rows);
-    }
-
+    const rows = response.data || [];
+    const count = response.count ?? 0;
+    setTotalUsersCount(Number.isFinite(count) ? count : 0);
+    setUsers(rows);
     setLoading(false);
     setSelectedUserId(null);
   }
@@ -342,17 +323,10 @@ function UsersTab({ currentUser }) {
 
   const columns = useMemo(() => buildColumnOrder(enrichedUsers[0]), [enrichedUsers]);
 
-  const filteredUsers = enrichedUsers.filter((user) =>
-    columns.some((col) =>
-      String(user[col] ?? '').toLowerCase().includes(search.toLowerCase())
-    )
-  );
-
-  const pagedUsers = filteredUsers;
-  const totalVisibleCount = search ? filteredUsers.length : totalUsersCount;
-  const totalPages = search
-    ? Math.ceil(filteredUsers.length / rowsPerPage)
-    : Math.ceil(totalUsersCount / rowsPerPage);
+  const pagedUsers = enrichedUsers;
+  const totalVisibleCount = totalUsersCount;
+  const totalPages =
+    totalUsersCount > 0 ? Math.ceil(totalUsersCount / rowsPerPage) : 0;
 
   useEffect(() => {
     let cancelled = false;
