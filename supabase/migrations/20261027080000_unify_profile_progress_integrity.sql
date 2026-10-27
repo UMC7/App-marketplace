@@ -15,7 +15,7 @@ BEGIN
   END IF;
 
   RETURN QUERY
-  SELECT d.id, d.title, cert.issued_on, cert.expires_on, d.visibility
+  SELECT d.id, d.title, cert.issued_on, cert.expires_on, d.visibility::text
   FROM public.public_documents d
   LEFT JOIN LATERAL (
     SELECT c.issued_on, c.expires_on
@@ -58,7 +58,7 @@ BEGIN
   WHERE d.profile_id = profile_uuid
     AND trim(coalesce(d.title, '')) <> ''
     AND cert.issued_on IS NOT NULL
-    AND trim(coalesce(d.visibility, 'after_contact')) <> '';
+    AND d.visibility IS NOT NULL;
 
   v_checks := jsonb_set(v_checks, '{documents,count_ge_3}', to_jsonb(coalesce(v_docs_ok, false)), true);
   SELECT NOT EXISTS (
@@ -75,8 +75,10 @@ BEGIN
 END;
 $function$;
 
-CREATE OR REPLACE FUNCTION public.rpc_recompute_share_ready(profile_uuid uuid)
-RETURNS public.public_profiles LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+REVOKE ALL ON FUNCTION public.fn_profile_minimums_v3(uuid) FROM PUBLIC, anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.fn_recompute_share_ready(profile_uuid uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
 AS $function$
 DECLARE v_ok boolean; v_row public.public_profiles;
 BEGIN
@@ -90,21 +92,126 @@ BEGIN
     UPDATE public.users SET cv_mode = 'lite'
     WHERE id = v_row.user_id AND cv_mode = 'professional';
   END IF;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.fn_recompute_share_ready(uuid) FROM PUBLIC, anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.rpc_recompute_share_ready(profile_uuid uuid)
+RETURNS public.public_profiles LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+AS $function$
+DECLARE v_row public.public_profiles;
+BEGIN
+  IF profile_uuid IS NULL OR auth.uid() IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.public_profiles p WHERE p.id = profile_uuid AND p.user_id = auth.uid()
+    UNION ALL
+    SELECT 1 FROM public.users u WHERE u.id = auth.uid() AND u.role = 'admin'
+  ) THEN
+    RAISE EXCEPTION 'not authorized to recompute profile progress' USING ERRCODE = '42501';
+  END IF;
+  PERFORM public.fn_recompute_share_ready(profile_uuid);
+  SELECT * INTO v_row FROM public.public_profiles WHERE id = profile_uuid;
   RETURN v_row;
 END;
 $function$;
 
+REVOKE ALL ON FUNCTION public.rpc_recompute_share_ready(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.rpc_recompute_share_ready(uuid) TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.fn_recompute_lite_progress_for_user(target_user_id uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+AS $function$
+DECLARE profile_row record;
+BEGIN
+  FOR profile_row IN
+    SELECT p.id FROM public.public_profiles p WHERE p.user_id = target_user_id
+  LOOP
+    PERFORM public.fn_recompute_share_ready(profile_row.id);
+  END LOOP;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.fn_recompute_lite_progress_for_user(uuid) FROM PUBLIC, anon, authenticated;
+
+-- Keep legacy trigger entry points functional without exposing the authorized
+-- RPC to trigger context, where auth.uid() is intentionally absent.
+CREATE OR REPLACE FUNCTION public.apply_share_ready(p_profile_id uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+AS $function$
+BEGIN
+  PERFORM public.fn_recompute_share_ready(p_profile_id);
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.recompute_share_ready(p_profile_id uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+AS $function$
+BEGIN
+  PERFORM public.fn_recompute_share_ready(p_profile_id);
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.recompute_share_ready_by_profile(p_profile_id uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+AS $function$
+BEGIN
+  PERFORM public.fn_recompute_share_ready(p_profile_id);
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.recompute_share_ready_by_user(p_user_id uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+AS $function$
+BEGIN
+  PERFORM public.fn_recompute_lite_progress_for_user(p_user_id);
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.apply_share_ready(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.recompute_share_ready(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.recompute_share_ready_by_profile(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.recompute_share_ready_by_user(uuid) FROM PUBLIC, anon, authenticated;
+
 CREATE OR REPLACE FUNCTION public.trg_recompute_lite_progress()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
 AS $function$
-DECLARE v_profile_id uuid;
+DECLARE v_new_profile_id uuid; v_old_profile_id uuid;
 BEGIN
-  v_profile_id := CASE WHEN TG_TABLE_NAME = 'public_profiles'
-    THEN coalesce(NEW.id, OLD.id) ELSE coalesce(NEW.profile_id, OLD.profile_id) END;
-  IF v_profile_id IS NOT NULL THEN PERFORM public.rpc_recompute_share_ready(v_profile_id); END IF;
-  RETURN coalesce(NEW, OLD);
+  IF TG_OP = 'DELETE' THEN
+    v_old_profile_id := CASE WHEN TG_TABLE_NAME = 'public_profiles' THEN OLD.id ELSE OLD.profile_id END;
+  ELSE
+    v_new_profile_id := CASE WHEN TG_TABLE_NAME = 'public_profiles' THEN NEW.id ELSE NEW.profile_id END;
+    IF TG_OP = 'UPDATE' THEN
+      v_old_profile_id := CASE WHEN TG_TABLE_NAME = 'public_profiles' THEN OLD.id ELSE OLD.profile_id END;
+    END IF;
+  END IF;
+  IF v_old_profile_id IS NOT NULL THEN PERFORM public.fn_recompute_share_ready(v_old_profile_id); END IF;
+  IF v_new_profile_id IS NOT NULL AND v_new_profile_id IS DISTINCT FROM v_old_profile_id THEN
+    PERFORM public.fn_recompute_share_ready(v_new_profile_id);
+  END IF;
+  RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.trg_recompute_lite_progress() FROM PUBLIC, anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.trg_recompute_lite_progress_for_education()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+AS $function$
+DECLARE target_user_id uuid;
+BEGIN
+  target_user_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.user_id ELSE NEW.user_id END;
+  IF target_user_id IS NOT NULL THEN
+    PERFORM public.fn_recompute_lite_progress_for_user(target_user_id);
+  END IF;
+  IF TG_OP = 'UPDATE' AND NEW.user_id IS DISTINCT FROM OLD.user_id AND OLD.user_id IS NOT NULL THEN
+    PERFORM public.fn_recompute_lite_progress_for_user(OLD.user_id);
+  END IF;
+  RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.trg_recompute_lite_progress_for_education() FROM PUBLIC, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.trg_enforce_professional_mode()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
@@ -121,19 +228,31 @@ BEGIN
 END;
 $function$;
 
+REVOKE ALL ON FUNCTION public.trg_enforce_professional_mode() FROM PUBLIC, anon, authenticated;
+
 DROP TRIGGER IF EXISTS public_profiles_recompute_share_ready_trg ON public.public_profiles;
 CREATE TRIGGER public_profiles_recompute_share_ready_trg
 AFTER INSERT OR UPDATE OF first_name, last_name, email_public, phone_cc, phone_number, country, city_port, birth_month, birth_year, nationalities, primary_department, primary_role, about_me, prefs_skills, prefs_skills_lite, gallery ON public.public_profiles
 FOR EACH ROW EXECUTE FUNCTION public.trg_recompute_lite_progress();
 DROP TRIGGER IF EXISTS public_documents_recompute_lite_progress_trg ON public.public_documents;
-CREATE TRIGGER public_documents_recompute_lite_progress_trg AFTER INSERT OR UPDATE OR DELETE ON public.public_documents FOR EACH ROW EXECUTE FUNCTION public.trg_recompute_lite_progress();
+DROP TRIGGER IF EXISTS public_documents_recompute_share_ready_trg ON public.public_documents;
+CREATE TRIGGER public_documents_recompute_lite_progress_trg AFTER INSERT OR DELETE OR UPDATE OF profile_id, file_url, title, visibility ON public.public_documents FOR EACH ROW EXECUTE FUNCTION public.trg_recompute_lite_progress();
 DROP TRIGGER IF EXISTS candidate_certificates_recompute_lite_progress_trg ON public.candidate_certificates;
-CREATE TRIGGER candidate_certificates_recompute_lite_progress_trg AFTER INSERT OR UPDATE OR DELETE ON public.candidate_certificates FOR EACH ROW EXECUTE FUNCTION public.trg_recompute_lite_progress();
+CREATE TRIGGER candidate_certificates_recompute_lite_progress_trg AFTER INSERT OR DELETE OR UPDATE OF profile_id, file_url, issued_on ON public.candidate_certificates FOR EACH ROW EXECUTE FUNCTION public.trg_recompute_lite_progress();
 DROP TRIGGER IF EXISTS public_references_recompute_lite_progress_trg ON public.public_references;
+DROP TRIGGER IF EXISTS public_references_recompute_share_ready_trg ON public.public_references;
 CREATE TRIGGER public_references_recompute_lite_progress_trg AFTER INSERT OR UPDATE OR DELETE ON public.public_references FOR EACH ROW EXECUTE FUNCTION public.trg_recompute_lite_progress();
 DROP TRIGGER IF EXISTS profile_experiences_recompute_lite_progress_trg ON public.profile_experiences;
+DROP TRIGGER IF EXISTS trg_share_ready_on_profile_experiences ON public.profile_experiences;
 CREATE TRIGGER profile_experiences_recompute_lite_progress_trg AFTER INSERT OR UPDATE OR DELETE ON public.profile_experiences FOR EACH ROW EXECUTE FUNCTION public.trg_recompute_lite_progress();
+DROP TRIGGER IF EXISTS cv_education_recompute_lite_progress_trg ON public.cv_education;
+DROP TRIGGER IF EXISTS cv_education_recompute_share_ready_trg ON public.cv_education;
+CREATE TRIGGER cv_education_recompute_lite_progress_trg AFTER INSERT OR DELETE OR UPDATE OF user_id ON public.cv_education FOR EACH ROW EXECUTE FUNCTION public.trg_recompute_lite_progress_for_education();
 DROP TRIGGER IF EXISTS users_enforce_professional_mode_trg ON public.users;
 CREATE TRIGGER users_enforce_professional_mode_trg BEFORE UPDATE OF cv_mode ON public.users FOR EACH ROW EXECUTE FUNCTION public.trg_enforce_professional_mode();
+
+-- One controlled reconciliation makes existing profiles obey the same rules;
+-- it does not delete profile, document, or Professional preference data.
+SELECT public.fn_recompute_share_ready(p.id) FROM public.public_profiles p;
 
 COMMIT;

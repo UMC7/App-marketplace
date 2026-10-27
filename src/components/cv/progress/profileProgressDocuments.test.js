@@ -62,4 +62,14 @@ describe('profile progress document source and Professional gate', () => {
     ]);
     expect(rpc).toHaveBeenCalledWith('rpc_profile_documents_for_progress', { profile_uuid: 'profile-1' });
   });
+
+  test('propagates an authorization failure and never maps a document URL', async () => {
+    const unauthorized = new Error('not authorized to read profile progress documents');
+    await expect(loadProfileDocumentsForProgress({
+      rpc: jest.fn().mockResolvedValue({ data: null, error: unauthorized }),
+    }, 'another-profile')).rejects.toBe(unauthorized);
+    expect(mapProgressDocument({
+      id: 'private-doc', file_url: 'cv-docs/secret.pdf', visibility: 'private',
+    })).not.toHaveProperty('file_url');
+  });
 });

@@ -163,7 +163,6 @@ function hasRotationalContractSelected(value) {
   });
 
   const [educationCount, setEducationCount] = useState(0);
-  const [shareReadyPersistTimer, setShareReadyPersistTimer] = useState(null);
   const [docs, setDocs] = useState([]);
   const [gallery, setGallery] = useState([]);
   const [savingDocFlags, setSavingDocFlags] = useState(false);
@@ -1348,8 +1347,6 @@ const generateShortHandle = () => {
     return normalizeFlags(docFlags) !== normalizeFlags(docFlagsBaseline);
   }, [docFlags, docFlagsBaseline]);
 
-  const hasDeptRanks = !!(primaryDepartment && primaryRank);
-
   const isLite = profileMode === 'lite';
   const isProfessional = profileMode === 'professional';
   const showRequired = !isProfessional;
@@ -1423,30 +1420,6 @@ const liteProgressPercent = calculateProfileProgressPercent(liteProgressSections
       setProfileMode('lite');
     }
   }, [isAdminView, isShareReady, profileMode]);
-
-  useEffect(() => {
-    if (isAdminView) return;
-    if (!profile?.id) return;
-    if (shareReadyPersistTimer) clearTimeout(shareReadyPersistTimer);
-    const t = setTimeout(async () => {
-      try {
-        const { error } = await supabase.rpc('rpc_recompute_share_ready', {
-          profile_uuid: profile.id,
-        });
-        if (error) throw error;
-      } catch (_e) {
-        // silencioso
-      }
-    }, 600);
-    setShareReadyPersistTimer(t);
-    return () => clearTimeout(t);
-  }, [
-    profile?.id,
-    isShareReady,
-    personal, hasDeptRanks, expCount, status, availability,
-    languageLevels, deptSpecialties, lifestyleHabits,
-    educationCount, docs, docFlags, refsCount, gallery, profile?.about_me
-  ]);
 
   return (
     <>
