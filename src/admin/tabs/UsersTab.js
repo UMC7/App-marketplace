@@ -9,6 +9,7 @@ import {
   calculateProfileProgressPercent,
 } from '../../components/cv/progress/profileProgress';
 import { buildCandidateProfileProgressSections } from '../../components/cv/progress/candidateProfileProgressData';
+import { loadProfileDocumentsForProgress } from '../../components/cv/progress/profileProgressDocuments';
 
 const DERIVED_COLUMNS = ['lite_progress', 'professional_progress', 'cv_public_status', 'cv_link'];
 const NON_EDITABLE_COLUMNS = new Set(['id', 'created_at', 'is_blocked', ...DERIVED_COLUMNS]);
@@ -67,13 +68,6 @@ function buildProgressBadge(value) {
   };
 }
 
-function mapDbVisibilityToUi(v) {
-  const s = String(v || '').toLowerCase();
-  if (s === 'public') return 'public';
-  if (s === 'private') return 'private';
-  return 'unlisted';
-}
-
 function unavailableCvData() {
   return {
     lite_progress: null,
@@ -97,7 +91,8 @@ async function loadAdminCvData(userId) {
       { count: directRefsCount, error: directRefsError },
       refsResult,
     ] = await Promise.all([
-      supabase.rpc('rpc_public_docs_with_exp', { profile_uuid: profile.id }),
+      loadProfileDocumentsForProgress(supabase, profile.id)
+        .then((data) => ({ data, error: null }), (error) => ({ data: [], error })),
       profile.handle
         ? supabase.rpc('rpc_public_education_by_handle', { handle_in: profile.handle })
         : supabase.from('cv_education').select('id', { count: 'exact', head: true }).eq('user_id', profile.user_id),
@@ -108,15 +103,7 @@ async function loadAdminCvData(userId) {
         : Promise.resolve({ data: [], error: null }),
     ]);
 
-    const docs = docsError
-      ? []
-      : (docsRows || []).map((row) => ({
-          id: String(row.id || ''),
-          title: row.title || 'Untitled document',
-          issuedOn: row.issued_on || undefined,
-          expiresOn: row.expires_on || undefined,
-          visibility: mapDbVisibilityToUi(row.visibility),
-        }));
+    const docs = docsError ? [] : (docsRows || []);
     const educationCount = Array.isArray(educationResult?.data)
       ? educationResult.data.length
       : (educationResult?.count || 0);
