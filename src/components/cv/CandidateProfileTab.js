@@ -26,6 +26,10 @@ import Modal from '../Modal';
 import { hasValidAvailability } from '../../utils/availability';
 import { buildCandidateProfileProgressSections } from './progress/candidateProfileProgressData';
 import { calculateProfileProgressPercent } from './progress/profileProgress';
+import {
+  canUseProfessionalProfile,
+  loadProfileDocumentsForProgress,
+} from './progress/profileProgressDocuments';
 
 const CANDIDATE_PROFILE_MODAL_KEY = 'seajobs_candidate_profile_modal_seen';
 const CANDIDATE_PROFILE_MODAL_DELAY_MS = 5000;
@@ -294,7 +298,7 @@ function hasRotationalContractSelected(value) {
       setProfileMode(nextMode);
       return;
     }
-    if (nextMode === 'professional' && !isShareReady) return;
+    if (nextMode === 'professional' && !canUseProfessionalProfile(liteProgressPercent)) return;
     const prev = profileMode;
     setProfileMode(nextMode);
     if (!currentUser?.id) return;
@@ -649,60 +653,8 @@ function hasRotationalContractSelected(value) {
     })();
   }, [needsDocFlagsSave, isAdminView, canEdit, profile?.id, savingDocFlags, docFlags]);
 
-  const mapDbVisibilityToUi = (v) => {
-    const s = String(v || '').toLowerCase();
-    if (s === 'public') return 'public';
-    if (s === 'private') return 'private';
-    return 'unlisted';
-  };
-
   async function loadDocsForProfile(profileId) {
-    if (isAdminView) {
-      const { data: rows, error: docsErr } = await supabase
-        .rpc('rpc_public_docs_with_exp', { profile_uuid: profileId });
-      if (docsErr) throw docsErr;
-      return (rows || []).map((r) => ({
-        id: String(r.id || ''),
-        title: r.title || 'Untitled document',
-        issuedOn: r.issued_on || undefined,
-        expiresOn: r.expires_on || undefined,
-        visibility: mapDbVisibilityToUi(r.visibility),
-        mimeType: undefined,
-        sizeBytes: undefined,
-      }));
-    }
-
-    const { data: docsRows, error: docsErr } = await supabase
-      .from('public_documents')
-      .select('id, file_url, title, visibility, created_at')
-      .eq('profile_id', profileId)
-      .order('created_at', { ascending: false });
-
-    if (docsErr) throw docsErr;
-
-    const { data: certRows, error: certErr } = await supabase
-      .from('candidate_certificates')
-      .select('file_url, issued_on, expires_on')
-      .eq('profile_id', profileId);
-
-    if (certErr) throw certErr;
-
-    const certByPath = new Map(
-      (certRows || []).map((c) => [String(c.file_url || ''), c])
-    );
-
-    return (docsRows || []).map((r) => {
-      const cert = certByPath.get(String(r.file_url || ''));
-      return {
-        id: String(r.id),
-        title: (r.title || 'Untitled document'),
-        issuedOn: cert?.issued_on || undefined,
-        expiresOn: cert?.expires_on || undefined,
-        visibility: mapDbVisibilityToUi(r.visibility),
-        mimeType: undefined,
-        sizeBytes: undefined,
-      };
-    });
+    return loadProfileDocumentsForProgress(supabase, profileId);
   }
 
   useEffect(() => {
@@ -1201,7 +1153,9 @@ const generateShortHandle = () => {
             title: insertedDoc.title || 'Untitled document',
             issuedOn: doc.issuedOn || undefined,
             expiresOn: doc.expiresOn || undefined,
-            visibility: mapDbVisibilityToUi(insertedDoc.visibility),
+            visibility: String(insertedDoc.visibility || '').toLowerCase() === 'public'
+              ? 'public'
+              : (String(insertedDoc.visibility || '').toLowerCase() === 'private' ? 'private' : 'unlisted'),
             mimeType: doc.mimeType,
             sizeBytes: doc.sizeBytes,
           });
@@ -1461,7 +1415,7 @@ const liteProgressPercent = calculateProfileProgressPercent(liteProgressSections
   const lifestyleSaveDisabled = saving || !lifestyleDirty;
   const gallerySaveDisabled = savingGallery || !galleryDirty || !canEdit;
 
-  const isShareReady = liteProgressPercent === 100;
+  const isShareReady = canUseProfessionalProfile(liteProgressPercent);
 
   useEffect(() => {
     if (isAdminView) return;
