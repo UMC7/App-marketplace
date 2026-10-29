@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import supabase from '../supabase';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
 import '../styles/float.css';
 import {
   YACHT_EXPERIENCE_PREFERRED,
@@ -161,6 +162,9 @@ function YachtOfferForm({ user, onOfferPosted, initialValues, mode }) {
     initialValues ? { ...initialState, ...normalizeInitialValues(initialValues) } : initialState
   );
   const onboardBaseDocsSeededRef = useRef(false);
+  const { currentUser } = useAuth() || {};
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.app_metadata?.role === 'admin';
+  const adminParseRef = useRef(null);
   // Normaliza team para edición: boolean -> 'Yes'/'No'
 useEffect(() => {
   if (initialValues && typeof initialValues.team !== 'undefined') {
@@ -377,6 +381,43 @@ const autoFillFromText = async () => {
 
   setLoading(true);
 
+  if (isAdmin && mode !== 'edit') {
+    try {
+      const accessToken = await getValidatedAccessToken();
+      const res = await fetch('/api/parse-job', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ mode: 'admin', text: jobText, today: getLocalTodayISO() }),
+      });
+      const data = await readJsonResponse(res);
+      if (!res.ok || !data.admin) throw new Error(data.error || 'Admin auto-fill failed.');
+
+      const fields = { ...data.fields };
+      if (fields.work_environment === 'Onboard') {
+        fields.required_documents = withBaseRequiredDocuments(fields.required_documents);
+      }
+      onboardBaseDocsSeededRef.current = fields.work_environment === 'Onboard';
+      setFormData({ ...initialState, ...fields });
+      adminParseRef.current = { rawText: jobText, aiOutput: fields };
+
+      const uncertain = Array.isArray(data.uncertain) ? data.uncertain : [];
+      if (uncertain.length > 0) {
+        toast.warn(`Auto-filled. Please check: ${uncertain.join(', ').replace(/_/g, ' ')}`, { autoClose: 10000 });
+      } else {
+        toast.success('Auto-filled. Review and post.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Could not parse.');
+    } finally {
+      setLoading(false);
+    }
+    return;
+  }
+
   try {
     const accessToken = await getValidatedAccessToken();
     const res = await fetch('/api/parse-job', {
@@ -500,6 +541,23 @@ const autoFillFromText = async () => {
     toast.error(err.message || 'Could not parse.');
   } finally {
     setLoading(false);
+  }
+};
+
+const saveAdminParseExample = async ({ rawText, aiOutput }, finalForm) => {
+  try {
+    const accessToken = await getValidatedAccessToken();
+    const res = await fetch('/api/parse-job', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ action: 'save_example', raw_text: rawText, output: finalForm, ai_output: aiOutput }),
+    });
+    if (!res.ok) console.warn('save_example failed', res.status);
+  } catch (err) {
+    console.warn('save_example error', err);
   }
 };
 
@@ -1226,6 +1284,10 @@ const derivedEndDate = (() => {
     toast.error('Something went wrong. Please try again.');
   } else {
     toast.success('Offer posted successfully.');
+    if (isAdmin && adminParseRef.current) {
+      saveAdminParseExample(adminParseRef.current, formData);
+      adminParseRef.current = null;
+    }
     setFormData(initialState);
     onOfferPosted(); // en modo creación esto puede ser una recarga o mensaje
   }
@@ -1295,7 +1357,7 @@ const derivedEndDate = (() => {
           className="btn btn-secondary"
           style={{ marginTop: 8 }}
         >
-          Auto-Fill Fields
+          {isAdmin && mode !== 'edit' ? 'Auto-Fill Fields (Admin AI)' : 'Auto-Fill Fields'}
         </button>
       </div>
     </div>

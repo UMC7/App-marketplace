@@ -776,6 +776,8 @@ export const VISA_OPTIONS = [
   'Australian Work Rights',
 ];
 
+export const FLAG_OPTIONS = ['Foreign Flag', 'United States', 'Australia', 'Bahamas', 'Belgium', 'Bermuda', 'BVI', 'Canada', 'Cayman Islands', 'Cook Islands', 'Cyprus', 'Delaware', 'France', 'Germany', 'Gibraltar', 'Greece', 'Guernsey', 'Holland', 'Hong Kong', 'Isle of Man', 'Italy', 'Jamaica', 'Jersey', 'Luxembourg', 'Malta', 'Monaco', 'Marshall Islands', 'Panama', 'Poland', 'Portugal', 'San Marino', 'Singapore', 'Spain', 'UK'];
+
 export const COUNTRIES = [
   'Albania','Anguilla','Antigua and Barbuda','Argentina','Aruba','Australia','Bahamas','Bahrain','Barbados',
   'Belgium','Belize','Bermuda (UK)','Bonaire','Brazil','Brunei','Bulgaria','BVI (UK)','Cambodia','Canada','Cape Verde','Cayman Islands (UK)',

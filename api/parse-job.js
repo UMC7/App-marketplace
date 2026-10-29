@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import { generateRemarks as buildRemarks } from "../server/job-parser/remarks.js";
 import { requireSupabaseUser } from "./_lib/requireSupabaseUser.js";
 import { allowRequest } from "./_lib/rateLimit.js";
+import { isAdminUser, parseJobAsAdmin, saveAdminExample } from "./_lib/adminJobParser.js";
 
 function getOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -910,7 +911,43 @@ export default async function handler(req, res) {
   const user = await requireSupabaseUser(req, res);
   if (!user) return;
 
-  if (!allowRequest(`parse-job:${user.id}`, { limit: 20, windowMs: 15 * 60 * 1000 })) {
+  if (!allowRequest(`parse-job:${user.id}`, { limit: 60, windowMs: 15 * 60 * 1000 })) {
+    return res.status(429).json({ error: "Too many requests. Please try again shortly." });
+  }
+
+  const adminMode = req.body?.mode === "admin" || req.body?.action === "save_example";
+  if (adminMode) {
+    try {
+      if (!(await isAdminUser(user))) return res.status(403).json({ error: "Admin only" });
+      if (req.body.action === "save_example") {
+        await saveAdminExample({
+          user,
+          rawText: req.body.raw_text,
+          output: req.body.output,
+          aiOutput: req.body.ai_output,
+          offerId: req.body.offer_id,
+        });
+        return res.status(200).json({ ok: true });
+      }
+      const text = req.body?.text;
+      if (typeof text !== "string" || !text.trim() || text.length > 12000) {
+        return res.status(400).json({ error: "Job text must be 1 to 12,000 characters" });
+      }
+      const result = await parseJobAsAdmin({
+        openai: getOpenAIClient(),
+        text: text.trim(),
+        today: typeof req.body.today === "string" && /^\d{4}-\d{2}-\d{2}$/.test(req.body.today)
+          ? req.body.today
+          : new Date().toISOString().slice(0, 10),
+      });
+      return res.status(200).json({ admin: true, ...result });
+    } catch (err) {
+      console.error("parse-job admin error:", err);
+      return res.status(500).json({ error: "Admin auto-fill failed. Please try again." });
+    }
+  }
+
+  if (!allowRequest(`parse-job:user:${user.id}`, { limit: 20, windowMs: 15 * 60 * 1000 })) {
     return res.status(429).json({ error: "Too many requests. Please try again shortly." });
   }
 

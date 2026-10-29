@@ -11,6 +11,7 @@ import {
   types,
   VISA_OPTIONS,
   COUNTRIES,
+  FLAG_OPTIONS,
 } from './yachtOfferForm.constants';
 import { getDaySelectOptions } from './yachtOfferForm.utils';
 import { REGIONS, USES, VESSEL_TYPES } from './cv/candidate/shared/experienceCatalogs';
@@ -19,8 +20,6 @@ const COUNTRY_REGION_GROUPS = [
   { label: 'Regions', ranks: REGIONS.filter((region) => region !== 'Worldwide') },
   { label: 'Countries', ranks: COUNTRIES },
 ];
-
-const FLAG_OPTIONS = ['Foreign Flag', 'United States', 'Australia', 'Bahamas', 'Belgium', 'Bermuda', 'BVI', 'Canada', 'Cayman Islands', 'Cook Islands', 'Cyprus', 'Delaware', 'France', 'Germany', 'Gibraltar', 'Greece', 'Guernsey', 'Holland', 'Hong Kong', 'Isle of Man', 'Italy', 'Jamaica', 'Jersey', 'Luxembourg', 'Malta', 'Monaco', 'Marshall Islands', 'Panama', 'Poland', 'Portugal', 'San Marino', 'Singapore', 'Spain', 'UK'];
 
 function YachtOfferFormOnboardFields({
   formData,
