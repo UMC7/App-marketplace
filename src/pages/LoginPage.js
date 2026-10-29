@@ -11,21 +11,63 @@ function LoginPage() {
   const [recoveryMessage, setRecoveryMessage] = useState('');
   const navigate = useNavigate();
 
+  const signInDirectlyWithEmail = async (identifier) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: identifier,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+    } else if (data.user) {
+      navigate('/');
+    } else {
+      setError('Login failed. Please try again.');
+    }
+  };
+
   const handleLogin = async () => {
     setError('');
+    const identifier = email.trim();
+    const isEmail = identifier.includes('@');
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setError(error.message);
-      } else if (data.user) {
-        navigate('/');
-      } else {
-        setError('Login failed. Please try again.');
+      let res;
+      let body = null;
+      try {
+        res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier, password }),
+        });
+        body = await res.json();
+      } catch {
+        body = null;
       }
+
+      // Sin /api/login o con fallo del servidor: el email sigue entrando directo contra Supabase.
+      if (!body || res.status >= 500) {
+        if (isEmail) {
+          await signInDirectlyWithEmail(identifier);
+        } else {
+          setError('Nickname login is temporarily unavailable. Please use your email.');
+        }
+        return;
+      }
+
+      if (!res.ok || !body.access_token || !body.refresh_token) {
+        setError(body.error || 'Login failed. Please try again.');
+        return;
+      }
+
+      const { data, error } = await supabase.auth.setSession({
+        access_token: body.access_token,
+        refresh_token: body.refresh_token,
+      });
+      if (error || !data?.user) {
+        setError(error?.message || 'Login failed. Please try again.');
+        return;
+      }
+      navigate('/');
     } catch (err) {
       console.error('An unexpected error occurred while signing in:', err.message);
       setError('An unexpected error occurred while signing in.');
@@ -53,7 +95,7 @@ function LoginPage() {
 
   const handlePasswordRecovery = async () => {
     setRecoveryMessage('');
-    if (!email) {
+    if (!email || !email.includes('@')) {
       setRecoveryMessage('Please enter your email address.');
       return;
     }
@@ -91,8 +133,11 @@ function LoginPage() {
       <form className="login-form" onSubmit={handleSubmit}>
         <h2>Welcome Back</h2>
         <input
-          type="email"
-          placeholder="Email"
+          type={showRecovery ? 'email' : 'text'}
+          placeholder={showRecovery ? 'Email' : 'Email or nickname'}
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required

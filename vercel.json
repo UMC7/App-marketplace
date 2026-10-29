@@ -10,7 +10,19 @@
   "rewrites": [
     {
       "source": "/e/:id",
-      "destination": "/api/event-og?event=:id"
+      "destination": "/api/og?type=event&event=:id"
+    },
+    {
+      "source": "/api/event-og",
+      "destination": "/api/og?type=event"
+    },
+    {
+      "source": "/api/job-og",
+      "destination": "/api/og?type=job"
+    },
+    {
+      "source": "/api/service-og",
+      "destination": "/api/og?type=service"
     },
     {
       "source": "/((?!api/|.*\\..*).*)",
