@@ -1,4 +1,5 @@
 import React from 'react';
+import { parseLocalDate } from '../yachtOfferForm.utils';
 
 const ProfileDeletedTab = ({ deletedProducts, deletedJobs, onRestore }) => (
   <>
@@ -66,12 +67,12 @@ const ProfileDeletedTab = ({ deletedProducts, deletedJobs, onRestore }) => (
                   </p>
                   <p>
                     <strong>Start Date:</strong>{' '}
-                    {new Date(job.start_date).toLocaleDateString()}
+                    {parseLocalDate(job.start_date).toLocaleDateString()}
                   </p>
                   {job.end_date && (
                     <p>
                       <strong>End Date:</strong>{' '}
-                      {new Date(job.end_date).toLocaleDateString()}
+                      {parseLocalDate(job.end_date).toLocaleDateString()}
                     </p>
                   )}
                   {job.is_doe ? (

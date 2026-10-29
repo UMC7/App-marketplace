@@ -81,9 +81,20 @@ export const resolveDayValueForDate = (dayValue, monthValue) => {
   return String(maxDay).padStart(2, '0');
 };
 
+export const parseLocalDate = (value) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ''));
+  if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return new Date(value);
+};
+
+export const getLocalTodayISO = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
+
 export const formatOfferDate = (dateStr, { monthOnly = false, dayRange = '' } = {}) => {
   if (!dateStr) return '';
-  const date = new Date(dateStr);
+  const date = parseLocalDate(dateStr);
   if (Number.isNaN(date.getTime())) return String(dateStr);
 
   if (dayRange && !monthOnly) {

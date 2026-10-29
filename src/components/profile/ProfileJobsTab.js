@@ -4,7 +4,7 @@ import JobDashboard from '../jobs/JobDashboard';
 import Modal from '../Modal';
 import ChatPage from '../ChatPage';
 import supabase from '../../supabase';
-import { formatOfferDate } from '../yachtOfferForm.utils';
+import { formatOfferDate, parseLocalDate } from '../yachtOfferForm.utils';
 import { useAuth } from '../../context/AuthContext';
 
 const ProfileJobsTab = ({
@@ -51,9 +51,9 @@ const ProfileJobsTab = ({
   const getStartDateFilterValue = (offer) => {
     if (offer?.is_asap) return 'asap';
     if (!offer?.start_date) return '';
-    const date = new Date(offer.start_date);
+    const date = parseLocalDate(offer.start_date);
     if (Number.isNaN(date.getTime())) return '';
-    return `month:${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+    return `month:${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   };
 
   const getRankValues = (offer) =>
@@ -71,7 +71,7 @@ const ProfileJobsTab = ({
       const startLabel = offer?.is_asap
         ? 'ASAP'
         : offer?.start_date
-        ? new Date(offer.start_date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+        ? parseLocalDate(offer.start_date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
         : null;
 
       if (startValue && startLabel && !startDates.has(startValue)) {

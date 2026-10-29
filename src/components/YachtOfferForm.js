@@ -34,6 +34,7 @@ import {
   getInferredYear,
   getInferredEndYear,
   getDaysInMonth,
+  getLocalTodayISO,
   isDayRangeValue,
   readJsonResponse,
   resolveDayValueForDate,
@@ -435,12 +436,10 @@ const autoFillFromText = async () => {
         }
 
         if (k === "start_date" && v) {
-          const parsed = new Date(v);
-          if (!Number.isNaN(parsed.getTime())) {
-            const month = String(parsed.getMonth() + 1);
-            const day = String(parsed.getDate());
-            if (!merged.start_month) merged.start_month = month;
-            if (!merged.start_day) merged.start_day = day;
+          const parts = parseDateParts(v);
+          if (parts) {
+            if (!merged.start_month) merged.start_month = parts.month;
+            if (!merged.start_day) merged.start_day = parts.day;
           }
           continue;
         }
@@ -984,7 +983,7 @@ const buildOfferPayload = (sanitizedData, { forUpdate = false } = {}) => {
     country: sanitizedData.country ?? '',
     type: sanitizedData.type || null,
     start_date: sanitizedData.is_asap || (sanitizedData.is_flexible && !sanitizedData.start_date)
-      ? new Date().toISOString().split('T')[0]
+      ? getLocalTodayISO()
       : sanitizedData.start_date || null,
     start_day_range: sanitizedData.start_day_range || null,
     start_date_month_only: !!sanitizedData.start_date_month_only,
