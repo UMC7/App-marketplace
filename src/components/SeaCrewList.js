@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import supabase from '../supabase';
 import Slider from 'react-slick';
 import LoadingSpinner from './LoadingSpinner';
+import Modal from './Modal';
 import { isInNativeApp, postShareToNative } from '../utils/nativeShare';
 import '../styles/SeaCrewList.css';
 
@@ -159,6 +160,7 @@ const whatsAppShareBtnStyle = {
 
 const shareIconImgStyle = { width: 22, height: 22, display: 'block' };
 const shareIconStyle = { fontSize: 22, color: '#111' };
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const getScrollOffset = () => {
   const nav = document.querySelector('.navbar-container');
   const navHeight = nav ? nav.getBoundingClientRect().height : 0;
@@ -177,6 +179,9 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
       return [];
     }
   });
+  const [likeSummaries, setLikeSummaries] = useState({});
+  const [pendingLikeIds, setPendingLikeIds] = useState({});
+  const [likersModal, setLikersModal] = useState(null);
   const [resolvedCoverImages, setResolvedCoverImages] = useState({});
   const [resolvedExpandedImages, setResolvedExpandedImages] = useState({});
   const [visibleProfileIds, setVisibleProfileIds] = useState({});
@@ -271,6 +276,96 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
       }
 
       return updated;
+    });
+  };
+
+  const likeProfileIdsKey = useMemo(
+    () =>
+      items
+        .map((profile) => String(profile?.id || '').trim())
+        .filter((id) => UUID_RE.test(id))
+        .join(','),
+    [items]
+  );
+
+  useEffect(() => {
+    if (!likeProfileIdsKey) {
+      setLikeSummaries({});
+      return undefined;
+    }
+
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.rpc('rpc_seacrew_like_summaries', {
+        p_profile_ids: likeProfileIdsKey.split(','),
+      });
+      if (cancelled) return;
+      if (error) {
+        console.warn('SeaCrew like summaries failed:', error);
+        return;
+      }
+      const next = {};
+      (data || []).forEach((row) => {
+        next[String(row.profile_id)] = {
+          count: Number(row.like_count) || 0,
+          likedByMe: !!row.liked_by_me,
+        };
+      });
+      setLikeSummaries(next);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [likeProfileIdsKey, currentUserId]);
+
+  const toggleLike = async (profileId) => {
+    const id = String(profileId || '').trim();
+    if (!id || pendingLikeIds[id]) return;
+    if (!currentUserId) {
+      alert('Please log in to like profiles.');
+      return;
+    }
+
+    const prev = likeSummaries[id] || { count: 0, likedByMe: false };
+    const willLike = !prev.likedByMe;
+    setLikeSummaries((s) => ({
+      ...s,
+      [id]: { count: Math.max(0, prev.count + (willLike ? 1 : -1)), likedByMe: willLike },
+    }));
+    setPendingLikeIds((p) => ({ ...p, [id]: true }));
+
+    const { error } = willLike
+      ? await supabase.from('seacrew_profile_likes').insert({ profile_id: id, user_id: currentUserId })
+      : await supabase.from('seacrew_profile_likes').delete().eq('profile_id', id).eq('user_id', currentUserId);
+
+    if (error && !(willLike && error.code === '23505')) {
+      console.error('SeaCrew like toggle failed:', error);
+      setLikeSummaries((s) => ({ ...s, [id]: prev }));
+      alert('Could not update your like. Please try again.');
+    }
+    setPendingLikeIds((p) => {
+      const next = { ...p };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const openLikers = async (profile) => {
+    if (!currentUserId) {
+      alert('Please log in to see who liked this profile.');
+      return;
+    }
+    const id = String(profile?.id || '').trim();
+    setLikersModal({ profileId: id, name: profile?.userNickname || 'Candidate', loading: true, likers: [] });
+    const { data, error } = await supabase.rpc('rpc_seacrew_profile_likers', { p_profile_id: id });
+    setLikersModal((m) => {
+      if (!m || m.profileId !== id) return m;
+      if (error) {
+        console.error('SeaCrew likers failed:', error);
+        return { ...m, loading: false, error: true };
+      }
+      return { ...m, loading: false, likers: data || [] };
     });
   };
 
@@ -475,8 +570,11 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
         const rankLabel = getRank(profile);
         const isExpanded = expandedId === profile.id;
         const isMarked = markedProfiles.includes(profile.id);
+        const likeSummary = likeSummaries[String(profile.id)] || { count: 0, likedByMe: false };
         const shareUrl = getShareUrl(profile);
         const chatReceiverId = String(profile.chatReceiverId || '').trim();
+        const isOwnProfile = Boolean(currentUserId) && chatReceiverId === String(currentUserId).trim();
+        const canLike = UUID_RE.test(String(profile.id || '')) && !isOwnProfile;
         const canStartChat =
           Boolean(chatReceiverId) &&
           chatReceiverId !== String(currentUserId || '').trim() &&
@@ -577,18 +675,52 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
             <div className="seacrew-card-body">
               <div className="seacrew-card-header">
                 <h3 className="seacrew-card-name">{displayName}</h3>
-                <button
-                  type="button"
-                  className={`seacrew-mark-toggle no-toggle ${isMarked ? 'active' : ''}`}
-                  aria-label={isMarked ? 'Unmark candidate' : 'Mark candidate'}
-                  aria-pressed={isMarked}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    toggleMark(profile.id);
-                  }}
-                >
-                  {isMarked ? '♥' : '♡'}
-                </button>
+                <div className="seacrew-card-header-actions no-toggle">
+                  <div className={`seacrew-like ${likeSummary.likedByMe ? 'active' : ''}`}>
+                    <button
+                      type="button"
+                      className="seacrew-like-toggle no-toggle"
+                      aria-label={likeSummary.likedByMe ? 'Unlike profile' : 'Like profile'}
+                      aria-pressed={likeSummary.likedByMe}
+                      title={isOwnProfile ? 'You cannot like your own profile' : (likeSummary.likedByMe ? 'Unlike' : 'Like')}
+                      disabled={!canLike || !!pendingLikeIds[String(profile.id)]}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleLike(profile.id);
+                      }}
+                    >
+                      {likeSummary.likedByMe ? '♥' : '♡'}
+                    </button>
+                    <button
+                      type="button"
+                      className="seacrew-like-count no-toggle"
+                      aria-label={`See who liked (${likeSummary.count})`}
+                      title="See who liked"
+                      disabled={likeSummary.count === 0}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openLikers(profile);
+                      }}
+                    >
+                      {likeSummary.count}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className={`seacrew-mark-toggle no-toggle ${isMarked ? 'active' : ''}`}
+                    aria-label={isMarked ? 'Remove from favorites' : 'Add to favorites'}
+                    aria-pressed={isMarked}
+                    title={isMarked ? 'Remove from favorites' : 'Add to favorites (only you can see this)'}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggleMark(profile.id);
+                    }}
+                  >
+                    <span className="material-icons" aria-hidden="true">
+                      {isMarked ? 'bookmark' : 'bookmark_border'}
+                    </span>
+                  </button>
+                </div>
               </div>
               <p className="seacrew-card-title">{rankLabel}</p>
               {isExpanded && (
@@ -686,6 +818,28 @@ export default function SeaCrewList({ profiles, loading, currentUserId, onReques
           </article>
         );
       })}
+      {likersModal && (
+        <Modal onClose={() => setLikersModal(null)} contentClassName="seacrew-likers-modal">
+          <h3 className="seacrew-likers-title">Liked {likersModal.name}</h3>
+          {likersModal.loading ? (
+            <p className="seacrew-likers-empty">Loading...</p>
+          ) : likersModal.error ? (
+            <p className="seacrew-likers-empty">Could not load likes. Please try again.</p>
+          ) : likersModal.likers.length === 0 ? (
+            <p className="seacrew-likers-empty">No likes yet.</p>
+          ) : (
+            <ul className="seacrew-likers-list">
+              {likersModal.likers.map((liker) => (
+                <li key={liker.user_id} className="seacrew-likers-item">
+                  <span className="seacrew-likers-heart" aria-hidden="true">♥</span>
+                  <span>{liker.nickname}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="seacrew-likers-note">Likes are public. Favorites are private and only visible to you.</p>
+        </Modal>
+      )}
     </div>
   );
 }

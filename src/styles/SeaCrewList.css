@@ -279,23 +279,156 @@
   border-color: rgba(104, 173, 168, 0.7);
 }
 
-.seacrew-mark-toggle.active {
-  border-color: #c94e62;
-  background: #f8e5e7;
-  color: #b8324a;
-  box-shadow: 0 8px 18px rgba(201, 78, 98, 0.22);
-}
-
 body.dark-mode .seacrew-mark-toggle {
   background: rgba(255, 255, 255, 0.96) !important;
   border-color: rgba(15, 23, 42, 0.18) !important;
   color: #9b7b45 !important;
 }
 
+.seacrew-mark-toggle .material-icons {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.seacrew-mark-toggle.active {
+  border-color: rgba(104, 173, 168, 0.9);
+  background: #e3f3f1;
+  color: #2f7f78;
+  box-shadow: 0 8px 18px rgba(104, 173, 168, 0.25);
+}
+
 body.dark-mode .seacrew-mark-toggle.active {
+  background: #e3f3f1 !important;
+  border-color: rgba(104, 173, 168, 0.9) !important;
+  color: #2f7f78 !important;
+}
+
+.seacrew-card-header-actions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seacrew-like {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.seacrew-like.active {
+  border-color: #c94e62;
+  background: #f8e5e7;
+  box-shadow: 0 8px 18px rgba(201, 78, 98, 0.22);
+}
+
+.seacrew-like-toggle,
+.seacrew-like-count {
+  border: none;
+  background: transparent;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+  font-family: inherit;
+}
+
+.seacrew-like-toggle {
+  padding: 0 4px 0 10px;
+  color: #b8324a;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.seacrew-like-count {
+  padding: 0 10px 0 2px;
+  color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 700;
+  min-width: 18px;
+}
+
+body.dark-mode .seacrew-like {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
+}
+
+body.dark-mode .seacrew-like.active {
   background: #f8e5e7 !important;
   border-color: #c94e62 !important;
+}
+
+body.dark-mode .seacrew-like-toggle,
+body.dark-mode .seacrew-like-count {
+  background: transparent !important;
+  border: none !important;
+}
+
+body.dark-mode .seacrew-like-toggle {
   color: #b8324a !important;
+}
+
+body.dark-mode .seacrew-like-count {
+  color: #0f172a !important;
+}
+
+.seacrew-like-toggle:disabled,
+.seacrew-like-count:disabled {
+  cursor: default;
+}
+
+.seacrew-like-toggle:disabled {
+  opacity: 0.55;
+}
+
+.seacrew-like-count:not(:disabled):hover {
+  text-decoration: underline;
+}
+
+.seacrew-likers-modal {
+  max-width: 380px;
+}
+
+.seacrew-likers-title {
+  margin: 0 0 12px;
+}
+
+.seacrew-likers-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.seacrew-likers-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.seacrew-likers-heart {
+  color: #b8324a;
+}
+
+.seacrew-likers-empty {
+  margin: 8px 0;
+}
+
+.seacrew-likers-note {
+  margin: 14px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.7;
 }
 
 .seacrew-card-title {

@@ -95,7 +95,9 @@ const handleItemClick = async (e, n) => {
   const offerId = d?.offer_id;
 
   let url = null;
-  if (targetIsDashboard && dashboardOfferId) {
+  if (d?.type === "seacrew_like" && typeof d?.path === "string" && d.path.startsWith("/")) {
+    url = d.path;
+  } else if (targetIsDashboard && dashboardOfferId) {
     url = `/profile?tab=empleos&jobDashboard=${encodeURIComponent(dashboardOfferId)}`;
   } else if (targetIsSeaJobs && jobId) {
     const basePath = d?.path || "/yacht-works";

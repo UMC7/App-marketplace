@@ -1368,14 +1368,17 @@ const OfferTimeline = ({
     <button
       type="button"
       className={`seacrew-mark-toggle tick-marker ${markedOffers.includes(offer.id) ? 'active' : ''}`}
-      aria-label={markedOffers.includes(offer.id) ? 'Remove job from preferred cards' : 'Add job to preferred cards'}
+      aria-label={markedOffers.includes(offer.id) ? 'Remove job from favorites' : 'Add job to favorites'}
       aria-pressed={markedOffers.includes(offer.id)}
+      title={markedOffers.includes(offer.id) ? 'Remove from favorites' : 'Add to favorites (only you can see this)'}
       onClick={(e) => {
         e.stopPropagation();
         toggleMark(offer.id);
       }}
     >
-      {markedOffers.includes(offer.id) ? '♥' : '♡'}
+      <span className="material-icons notranslate" translate="no" aria-hidden="true">
+        {markedOffers.includes(offer.id) ? 'bookmark' : 'bookmark_border'}
+      </span>
     </button>
   )}
 </div>

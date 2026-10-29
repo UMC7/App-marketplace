@@ -22,7 +22,7 @@ import {
 } from './candidate/cvsections';
 import AboutMeSection from './candidate/cvsections/aboutmesection';
 import LifestyleHabitsSection from './candidate/cvsections/LifestyleHabitsSection';
-import Modal from '../Modal';
+import InformationalModal from '../InformationalModal';
 import { hasValidAvailability } from '../../utils/availability';
 import { buildCandidateProfileProgressSections } from './progress/candidateProfileProgressData';
 import { calculateProfileProgressPercent } from './progress/profileProgress';
@@ -1424,42 +1424,40 @@ const liteProgressPercent = calculateProfileProgressPercent(liteProgressSections
   return (
     <>
       {showCandidateProfileModal && (
-        <Modal onClose={handleCloseCandidateProfileModal}>
-          <div style={{ maxWidth: 520 }}>
-            <h3 style={{ marginTop: 0 }}>Welcome to Candidate Profile ⚓</h3>
-            <p>Where you build your professional crew profile on YachtDaywork.</p>
-            <p style={{ fontWeight: 600, marginTop: 20 }}>Lite Profile ⚓</p>
-            <p>
-              This is the foundation of your profile. When it reaches 100%, a Digital CV is created automatically.
-            </p>
-            <p>
-              You can share it externally with a unique link 🌐, send it to recruiters, and track analytics such as views 👀,
-              locations 🌍 and traffic sources 🧭.
-            </p>
-            <p style={{ fontWeight: 600, marginTop: 18 }}>Professional Profile 🧭</p>
-            <p>Used for applications within YachtDaywork and works together with Lite.</p>
-            <p>It unlocks only after Lite is 100% complete and must also be fully completed.</p>
-            <p>
-              Once completed, it enables direct applications and shows job compatibility with your preferences 🎯 on job cards.
-            </p>
-            <button className="landing-button" type="button" onClick={handleCloseCandidateProfileModal}>
-              Got it
-            </button>
-          </div>
-        </Modal>
+        <InformationalModal
+          kicker="Candidate Profile"
+          title="Welcome to Candidate Profile"
+          intro="Where you build your professional crew profile on YachtDaywork."
+          sections={[
+            {
+              title: 'Lite Profile',
+              description: 'The foundation of your profile.',
+              points: [
+                'When it reaches 100%, a Digital CV is created automatically.',
+                'Share it externally with a unique link and send it to recruiters.',
+                'Track analytics such as views, locations and traffic sources.',
+              ],
+            },
+            {
+              title: 'Professional Profile',
+              description: 'Used for applications within YachtDaywork and works together with Lite.',
+              points: [
+                'Unlocks only after Lite is 100% complete and must also be fully completed.',
+                'Enables direct applications.',
+                'Shows job compatibility with your preferences on job cards.',
+              ],
+            },
+          ]}
+          onClose={handleCloseCandidateProfileModal}
+        />
       )}
       {showUnlockModal && (
-        <Modal onClose={handleCloseUnlockModal}>
-          <div style={{ maxWidth: 520 }}>
-            <h3 style={{ marginTop: 0 }}>Complete Lite to unlock Professional</h3>
-            <p>
-              Professional mode is locked until your Lite profile is 100% complete.
-            </p>
-            <button className="landing-button" type="button" onClick={handleCloseUnlockModal}>
-              Got it
-            </button>
-          </div>
-        </Modal>
+        <InformationalModal
+          kicker="Professional Profile"
+          title="Complete Lite to unlock Professional"
+          intro="Professional mode is locked until your Lite profile is 100% complete."
+          onClose={handleCloseUnlockModal}
+        />
       )}
       <div className={`candidate-profile-tab ${isLite ? 'cp-mode-lite' : 'cp-mode-professional'}${isAdminView ? ' cp-admin-view' : ''}`}>
         <h2>Candidate Profile</h2>

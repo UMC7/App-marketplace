@@ -268,6 +268,48 @@ body.dark-mode .chat-list-modal > .close-button,
   font-weight: 900;
 }
 
+.info-promo-modal-section {
+  margin-top: 20px;
+  padding: 18px 18px 16px;
+  border: 1px solid rgba(16, 78, 100, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.info-promo-modal-section-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #102842;
+}
+
+.info-promo-modal-section-desc {
+  margin: 6px 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #4c667a;
+}
+
+.info-promo-modal-section .info-promo-modal-points {
+  margin-top: 14px;
+}
+
+body.dark-mode .info-promo-modal-section,
+html[data-theme='dark'] .info-promo-modal-section {
+  border-color: rgba(111, 214, 214, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+body.dark-mode .info-promo-modal-section-title,
+html[data-theme='dark'] .info-promo-modal-section-title {
+  color: #ffffff;
+}
+
+body.dark-mode .info-promo-modal-section-desc,
+html[data-theme='dark'] .info-promo-modal-section-desc {
+  color: #bfd0dc;
+}
+
 .info-promo-modal-footer {
   display: flex;
   justify-content: flex-end;

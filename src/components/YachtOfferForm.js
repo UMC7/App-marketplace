@@ -51,8 +51,16 @@ const BASE_REQUIRED_DOCUMENTS = ['ENG1 Seafarer Medical Certificate', 'STCW Basi
 const withBaseRequiredDocuments = (documents) =>
   Array.from(new Set([...(Array.isArray(documents) ? documents : []), ...BASE_REQUIRED_DOCUMENTS]));
 
+/** Lee mes/día de 'YYYY-MM-DD' sin pasar por Date, para no desplazar el día según la zona horaria */
+const parseDateParts = (value) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ''));
+  if (!match) return null;
+  return { month: String(Number(match[2])), day: String(Number(match[3])) };
+};
+
 const initialState = {
   work_environment: '',
+  work_location: '',
   title: '',
   city: '',
   country: '',
@@ -163,11 +171,10 @@ useEffect(() => {
 }, [initialValues]);
 
 useEffect(() => {
-  if (!initialValues?.start_date) return;
-  const parsed = new Date(initialValues.start_date);
-  if (Number.isNaN(parsed.getTime())) return;
-  const month = String(parsed.getMonth() + 1);
-  const day = String(parsed.getDate());
+  if (initialValues?.is_asap || initialValues?.is_flexible) return;
+  const parsed = parseDateParts(initialValues?.start_date);
+  if (!parsed) return;
+  const { month, day } = parsed;
   setFormData(prev => ({
     ...prev,
     start_month: month,
@@ -176,11 +183,9 @@ useEffect(() => {
 }, [initialValues]);
 
   useEffect(() => {
-  if (!initialValues?.end_date) return;
-  const parsed = new Date(initialValues.end_date);
-  if (Number.isNaN(parsed.getTime())) return;
-  const month = String(parsed.getMonth() + 1);
-  const day = String(parsed.getDate());
+  const parsed = parseDateParts(initialValues?.end_date);
+  if (!parsed) return;
+  const { month, day } = parsed;
   setFormData(prev => ({
     ...prev,
     end_month: month,
